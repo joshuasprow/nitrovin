@@ -520,7 +520,8 @@ specifies.
   (`phonenumber`, `seller.email` and `part_name` alike), once at the first
   row with it (`personal-field`). Each
   finding but `model-qualifier` is one line on stderr at load,
-  `{"file", "line", "severity": "drift", "detail"}`, and the files are
+  `{"file", "line", "severity": "drift", "detail", "kind"}` as `vocab
+  check` prints it, and the files are
   served as written. `model-qualifier` is not measured at load: it builds
   the model values index, about 0.14 s and 80–100 MB of peak memory for an
   EPA-sized vocabulary, which would break load's 100 ms budget (ADR 0011)
@@ -561,9 +562,13 @@ specifies.
 - **`nitrovin vocab check <file|dir>…`** loads its arguments, and only
   them, beside the data (`--data` as for any command) and prints every
   finding on stdout as a JSON line,
-  `{"file", "line", "severity": "fault"|"drift", "detail"}`: the faults
-  when there are any, otherwise the drift. Exit 0 with no output when there
-  is none, 1 when there is any. Line 0 is a file that cannot be read. A
+  `{"file", "line", "severity": "fault"|"drift", "detail"}`, and on a drift
+  its `kind`: `make`, `model`, `qualifier`, `extension`, `model-years`,
+  `vehicle`, `redirect`, `model-qualifier`, `orphan` or `personal-field`,
+  the kinds `/v1/info` counts. A fault has no `kind`. The faults are
+  printed when there are any, otherwise the drift. Exit 0 with no output
+  when there is none, 1 when there is any. Line 0 is a file that cannot be
+  read. A
   catalog is checked like any file, so its spine and vehicle vocabulary
   must be among the arguments, and a stock file's catalog with them. A
   compiled catalog is read in full, its

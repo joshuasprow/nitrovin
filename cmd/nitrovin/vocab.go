@@ -14,7 +14,7 @@ func init() {
 	register(command{
 		name:     "vocab",
 		synopsis: "check <file|dir>... | compile -o <file> <file|dir>...",
-		summary: `Check vocabulary, extension set, spine and catalog files, loaded together against the data: one {"file", "line", "severity", "detail"} line per fault or drift; exit 1 on any. ` +
+		summary: `Check vocabulary, extension set, spine and catalog files, loaded together against the data: one {"file", "line", "severity", "detail"} line per fault or drift, a drift's with its "kind"; exit 1 on any. ` +
 			`compile checks them the same way, refuses on a fault, and writes the one catalog among them compiled to -o; drift is written to stderr and recorded in the file. ` +
 			`The arguments are what is checked, never --vocab or $NITROVIN_VOCAB.`,
 		setup: vocabSetup,

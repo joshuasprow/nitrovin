@@ -98,3 +98,13 @@ a VIN or a vPIC id to the spine.
   contract says so.
 - Once v1.0.0 is tagged with these routes, every field above is frozen for
   `/v1`.
+
+## Amendment (2026-11-14): a drift finding names its kind
+
+`nitrovin vocab check`'s drift lines, and a load's drift lines on stderr,
+add `"kind"`: the same drift kinds `/v1/info` counts (`make`, `model`,
+`qualifier`, `extension`, `model-years`, `vehicle`, `redirect`,
+`model-qualifier`, `orphan`, `personal-field`). A fault has none. A tool
+that keeps findings can then group and filter them without parsing
+`detail` ([#282](https://github.com/joshuasprow/nitrovin/issues/282)). The
+field is additive; the other four keep their meaning.
