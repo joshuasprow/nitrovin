@@ -401,7 +401,7 @@ nitrovin --vocab testdata/vocab/fitment --vocab testdata/vocab/stock info | jq -
 ```
 
 ```json
-{"file":".../testdata/vocab/stock/drift/shelf-orphans.jsonl","line":2,"severity":"drift","detail":"/number: catalog \"parts-catalog\" has no fitment {\"type\":\"mirror\",\"number\":\"MR-0000\",\"side\":\"right\"}, current or retired"}
+{"file":".../testdata/vocab/stock/drift/shelf-orphans.jsonl","line":2,"severity":"drift","detail":"/number: catalog \"parts-catalog\" has no fitment {\"type\":\"mirror\",\"number\":\"MR-0000\",\"side\":\"right\"}, current or retired","kind":"orphan"}
 {"name":"shelf-annex","kind":"stock","version":"2026.11.01","drift":[],"source":"shelf","catalog":"parts-catalog","as_of":"2026-10-30","rows":2}
 {"name":"shelf-stock","kind":"stock","version":"2026.11.01","release":"7.01","drift":[],"source":"shelf","catalog":"parts-catalog","as_of":"2026-11-01T08:00:00Z","rows":5}
 {"name":"yard-stock","kind":"stock","version":"2026.11.01","drift":[],"source":"yard","as_of":"2026-11-01T06:30:00Z","rows":4}
@@ -586,7 +586,11 @@ nitrovin tells two kinds of problem apart:
 
 `nitrovin vocab check` loads only its arguments, prints every finding as
 a JSON line on stdout and exits 1 on any, fault or drift, so CI can gate a
-vocabulary on the month it will run against:
+vocabulary on the month it will run against. A drift line names its
+`kind`, so a tool that keeps findings can group them without reading
+`detail`: `make`, `model`, `qualifier`, `extension`, `model-years`,
+`vehicle`, `redirect`, `model-qualifier`, `orphan` or `personal-field`,
+the kinds `/v1/info` counts. A fault has no `kind`.
 
 ```sh
 nitrovin vocab check testdata/vocab            # nothing printed, exit 0
@@ -596,7 +600,7 @@ nitrovin vocab check testdata/vocab/fitment/catalog.jsonl   # alone: two faults,
 ```
 
 ```json
-{"file":".../testdata/vocab/drift/yard.jsonl","line":4,"severity":"drift","detail":"/mappings/0/make: vPIC make 99999 is not in data month 2026_10"}
+{"file":".../testdata/vocab/drift/yard.jsonl","line":4,"severity":"drift","detail":"/mappings/0/make: vPIC make 99999 is not in data month 2026_10","kind":"make"}
 ```
 
 A fault:

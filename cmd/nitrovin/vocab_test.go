@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"maps"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
@@ -146,6 +147,58 @@ func TestVocabCheck(t *testing.T) {
 		if r := cli(t, nil, "", args...); r.exit != 2 || r.stdout != "" || !strings.Contains(r.stderr, "usage: nitrovin vocab check") {
 			t.Errorf("nitrovin %q: exit %d, stdout %q, stderr %q; want a usage error", args, r.exit, r.stdout, r.stderr)
 		}
+	}
+}
+
+// TestVocabCheckDriftKinds: each drift line of `vocab check` names its
+// kind, by the strings /v1/info counts, and a fault line has no kind
+// (#282). The drift fixture has one of each vocabulary kind; the catalog
+// and stock kinds come from the fitment and stock fixtures, each given one
+// more line that drifts.
+func TestVocabCheckDriftKinds(t *testing.T) {
+	fixtureData(t)
+	dir := t.TempDir()
+	copyWith := func(src string, extra ...string) {
+		data, err := os.ReadFile(src)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, l := range extra {
+			data = append(data, l+"\n"...)
+		}
+		if err := os.WriteFile(filepath.Join(dir, filepath.Base(src)), data, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	copyWith(filepath.Join(fitmentFixture, "part-types.jsonl"))
+	copyWith(filepath.Join(fitmentFixture, "catalog-models.jsonl"))
+	copyWith(filepath.Join(fitmentFixture, "catalog.jsonl"),
+		`{"redirect":{"vehicle":{"make":"Dodge","model":"Ram 1500"},"from":"engine","to":"mirror","first":2015}}`,
+		`{"fitment":{"type":"mirror","number":"MR-9001","side":"left"},"applications":[{"vehicle":{"make":"Dodge","model":"Dakota"},"first":2009,"last":2012,"options":""}]}`)
+	copyWith(filepath.Join(stockFixture, "drift", "shelf-orphans.jsonl"),
+		`{"id":"O-3","location":"south","type":"mirror","number":"MR-1001","side":"left","fields":{"seller_email":"x"}}`)
+
+	r := cli(t, nil, "", "vocab", "check", driftFixture, dir)
+	kinds := map[string]bool{}
+	for line := range strings.Lines(r.stdout) {
+		var f map[string]any
+		if err := json.Unmarshal([]byte(line), &f); err != nil {
+			t.Fatalf("not a JSON line: %q", line)
+		}
+		kind, ok := f["kind"].(string)
+		if f["severity"] != "drift" || !ok {
+			t.Errorf("want a drift line with a kind: %q", line)
+		}
+		kinds[kind] = true
+	}
+	want := []string{"extension", "make", "model", "model-qualifier", "model-years", "orphan", "personal-field", "qualifier", "redirect", "vehicle"}
+	if got := slices.Sorted(maps.Keys(kinds)); r.exit != 1 || !slices.Equal(got, want) {
+		t.Errorf("vocab check's drift kinds: exit %d, %q; want %q\nstdout:\n%s", r.exit, got, want, r.stdout)
+	}
+
+	r = cli(t, nil, "", "vocab", "check", faultyFile(t))
+	if r.exit != 1 || !strings.Contains(r.stdout, `"severity":"fault"`) || strings.Contains(r.stdout, `"kind"`) {
+		t.Errorf("vocab check on a faulty file: exit %d, stdout %q; want a fault line without a kind", r.exit, r.stdout)
 	}
 }
 

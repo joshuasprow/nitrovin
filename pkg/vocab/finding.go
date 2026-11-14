@@ -54,7 +54,8 @@ const (
 )
 
 // Finding is one fault or drift, about one line of one file: a line of
-// `nitrovin vocab check`, {"file", "line", "severity", "detail"}.
+// `nitrovin vocab check`, {"file", "line", "severity", "detail"}, and a
+// drift's "kind".
 type Finding struct {
 	// File is the file's Path.
 	File string `json:"file"`
@@ -63,8 +64,8 @@ type Finding struct {
 	Line     int      `json:"line"`
 	Severity Severity `json:"severity"`
 	Detail   string   `json:"detail"`
-	// Drift is the drift's kind, "" for a fault.
-	Drift DriftKind `json:"-"`
+	// Drift is the drift's kind, "" for a fault, which omits it.
+	Drift DriftKind `json:"kind,omitempty"`
 }
 
 // String is "file:line: detail", or "file: detail" for line 0.
