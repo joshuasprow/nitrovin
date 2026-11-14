@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"maps"
 	"os"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
@@ -91,7 +92,11 @@ func TestModelValuesAnotherModelsSeries(t *testing.T) {
 // which only a formula pattern's key holds.
 func TestModelValuesCoverDecodes(t *testing.T) {
 	d := embeddedDecoder(t)
-	f, err := os.Open("../../testdata/parity/2026_10/corpus.tsv")
+	corpora, err := filepath.Glob("../../testdata/parity/*/corpus.tsv")
+	if err != nil || len(corpora) != 1 {
+		t.Fatalf("committed corpus: %v %v, want one", corpora, err)
+	}
+	f, err := os.Open(corpora[0])
 	if err != nil {
 		t.Fatal(err)
 	}
