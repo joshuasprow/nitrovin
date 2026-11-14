@@ -152,12 +152,12 @@ func TestModelYearsDrift(t *testing.T) {
 		got = append(got, string(f.Drift)+" "+f.String())
 	}
 	want := []string{
-		`model-years yard:2: /mappings/0: model years 1985-1990 fall wholly outside vPIC model 9068's years in data month 2026_10: 1981-1981, 1997-1999`,
-		`model-years yard:3: /mappings/0: model years 1998-2002 fall partly outside vPIC model 9068's years in data month 2026_10: 1981-1981, 1997-1999`,
-		`model-years yard:9: /mappings/0: model years 2005- fall wholly outside vPIC model 9068's years in data month 2026_10: 1981-1981, 1997-1999`,
-		`model-years yard:10: /mappings/0: model years -1970 fall wholly outside vPIC model 9068's years in data month 2026_10: 1981-1981, 1997-1999`,
-		`model-years yard:11: /mappings/0: model years -1990 fall partly outside vPIC model 9068's years in data month 2026_10: 1981-1981, 1997-1999`,
-		`model-years yard:12: /mappings/0: model years -2010 fall wholly outside vPIC model 32453's years in data month 2026_10: 2019-`,
+		`model-years yard:2: /mappings/0: model years 1985-1990 fall wholly outside vPIC model 9068's years in data month ` + embedded.Month + `: 1981-1981, 1997-1999`,
+		`model-years yard:3: /mappings/0: model years 1998-2002 fall partly outside vPIC model 9068's years in data month ` + embedded.Month + `: 1981-1981, 1997-1999`,
+		`model-years yard:9: /mappings/0: model years 2005- fall wholly outside vPIC model 9068's years in data month ` + embedded.Month + `: 1981-1981, 1997-1999`,
+		`model-years yard:10: /mappings/0: model years -1970 fall wholly outside vPIC model 9068's years in data month ` + embedded.Month + `: 1981-1981, 1997-1999`,
+		`model-years yard:11: /mappings/0: model years -1990 fall partly outside vPIC model 9068's years in data month ` + embedded.Month + `: 1981-1981, 1997-1999`,
+		`model-years yard:12: /mappings/0: model years -2010 fall wholly outside vPIC model 32453's years in data month ` + embedded.Month + `: 2019-`,
 	}
 	if !slices.Equal(got, want) {
 		t.Errorf("drift:\n%s\nwant:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
