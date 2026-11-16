@@ -134,3 +134,12 @@ retires or moves about 1,700 applications.
   retired-number marks.
 - Synthetic fixtures need a small catalog with every line kind, for the
   documentation's examples.
+
+## Amendment (2026-11-16): the codes a fitment is filed under
+
+[ADR 0024](0024-the-codes-a-fitment-is-filed-under.md) takes up the rejected
+alternative "the system's own codes as a fitment attribute", narrowed: a catalog
+may name one part vocabulary and list, on each fitment, the entries it is filed
+under. The codes stay out of the identity, so a fitment is still one part. A part
+vocabulary alone says which codes belong to a part type, not which of them a given
+fitment is filed under ([#289](https://github.com/joshuasprow/nitrovin/issues/289)).
