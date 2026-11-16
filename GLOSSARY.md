@@ -355,6 +355,13 @@ Left, right, both or none: the one position a fitment states for itself. Front
 and rear, upper and lower live in the part type.
 _Avoid_: position (as the field's name), orientation
 
+**Filed under**:
+The codes of a system's own part vocabulary that a catalog says a fitment is
+kept under, as that system files its stock, prices and sales (ADR 0024). An
+attribute of the fitment, never part of its identity: a part filed under three
+codes is still one fitment.
+_Avoid_: part code alone (whose code?), listed under (a redirect's words), alias
+
 **Redirect**:
 A catalog's statement that, for a vehicle and years, one part type is listed
 under another. A request follows it one hop.
