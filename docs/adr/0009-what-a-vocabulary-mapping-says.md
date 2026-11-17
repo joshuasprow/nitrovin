@@ -76,3 +76,10 @@ with the author.
 - Part-type mappings reuse the entry fields, unmapped entries and provenance.
   Their spine reference, position and dependence on the vehicle are
   [the part-spine ticket's](https://github.com/joshuasprow/nitrovin/issues/121).
+
+## Amendment (2026-11-16): case-exact vocabularies
+
+[ADR 0026](0026-case-exact-vocabularies.md): a vocabulary whose header declares
+`"case": "exact"` matches its entries after the same normalization of spaces and
+none of case, so entries that differ only in case are distinct, and everything
+that names its entries follows it.

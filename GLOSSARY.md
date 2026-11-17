@@ -196,6 +196,13 @@ vocabulary declares the fields that name its entries (make and model; a
 catalog's own code); a model year is never one of them.
 _Avoid_: key, alias, row
 
+**Case-exact vocabulary**:
+A vocabulary whose header declares `"case": "exact"`: its entries match after
+trimming and collapsing white space, but never folding case, so two entries
+that differ only in case are two entries, and a spelling it does not hold is
+unknown (ADR 0026). Everything that names its entries follows it.
+_Avoid_: case-sensitive vocabulary (the header's word is exact), strict
+
 **Unmapped entry**:
 An entry a vocabulary lists without any mapping: known to it, but not yet
 placed on the spine. Distinct from a name the vocabulary does not have at all.
@@ -298,6 +305,13 @@ fitment's part types, a shelf whose
 catalog is not loaded, a stock row's part or vehicle the catalog's files lack. A fault stops nitrovin from
 starting; drift never does.
 _Avoid_: error (a decode's error codes are about the VIN), invalid
+
+**Unchecked**:
+A file `nitrovin vocab check` did not measure for drift: one with faults, or
+one linked, even through other files, to one with faults (ADR 0025). Its one
+`unchecked` line says which, so a tool that keeps findings keeps its last
+drift rather than clearing it.
+_Avoid_: skipped (a kind of drift a month cannot measure is skipped), clean
 
 ### Fitment
 
