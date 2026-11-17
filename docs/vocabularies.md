@@ -70,8 +70,24 @@ silently.
   built against, used only to explain drift. `fields` are the fields that
   name an entry, in order: a make and a model here, one code in a catalog.
   A model year is never a field.
-- **An entry** has exactly the header's fields. Two entries equal after
-  normalization refuse the file.
+- **An entry** has exactly the header's fields, and is matched after one
+  normalization: white space trimmed and every run of it collapsed to one
+  space, and case folded (ADR 0009). Two entries equal after it refuse the
+  file.
+- **`"case": "exact"`**, in the header, keeps case
+  ([ADR 0026](adr/0026-case-exact-vocabularies.md)), for a system whose
+  codes differ only in case and name different things: entries still match
+  after trimming and collapsing white space, but `old3` and `OLD3` are two
+  entries, not a duplicate, and a spelling the vocabulary does not hold is
+  unknown, never a guess between two that fold alike. It covers every
+  field, and everything that names the vocabulary's entries follows it:
+  translate and list requests, a catalog whose `vehicles` or `filed_under`
+  vocabulary it is (its applications', redirects' and fitments' entries,
+  which a catalog never declares itself), and stock rows. Any other value
+  is a fault; a release before it refuses the field as unknown.
+  [`testdata/vocab/case`](../testdata/vocab/case) has a case-exact vehicle
+  vocabulary (`OLD3`, `old3`) and part vocabulary (`MIR`, `mir`) with a
+  catalog and shelf naming both.
 - **A mapping** names exactly one spine entry: `{"make": <vPIC make id>}`,
   `{"model": <vPIC model id>}` (it implies its make) or
   `{"ext": "ext:<set>/<id>"}`. An entry has as many mappings as it
@@ -326,7 +342,9 @@ A catalog at a parts system's scale takes seconds and hundreds of MB to load
 as JSON Lines. `nitrovin vocab compile` checks it as `vocab check` does and
 writes it as a compiled catalog (ADR 0021): one indexed file that opens in
 milliseconds with a few MB, read in place, answering exactly as its source.
-It is compiled format 4 ([ADR 0024](adr/0024-the-codes-a-fitment-is-filed-under.md)),
+It is compiled format 5 ([ADR 0026](adr/0026-case-exact-vocabularies.md)),
+recording whether its vehicle and `filed_under` vocabularies were
+case-exact, since that decides which spellings are one vehicle or entry,
 carrying each fitment's entries and an index on (entry, number), and
 clustered by vehicle: a vehicle's part types and candidates are two or
 three reads of the file, and its related vehicles one plus one for about
@@ -344,7 +362,7 @@ nitrovin --vocab testdata/vocab/fitment/part-types.jsonl --vocab testdata/vocab/
 ```
 
 ```json
-{"format":4,"source_blake3":"…","writer":"v…","drift_month":"2026_10","drift_month_differs":false,"links_differ":false,"skipped_drift":[]}
+{"format":5,"source_blake3":"…","writer":"v…","drift_month":"2026_10","drift_month_differs":false,"links_differ":false,"skipped_drift":[]}
 ```
 
 A fault refuses the compile, and nothing is written; drift is written to
@@ -354,9 +372,11 @@ compile`, `model-years` and `model-qualifier` from a compile in a browser,
 whose spine bundle carries no model years or model values. `--vocab`
 recognises the file by its magic (name it itself: a directory loads only
 its `*.jsonl`) and refuses a compiled format the release cannot read
-(format 1, from v0.3.5, and formats 2 and 3 are refused with a message to
-recompile), and a spine, vehicle vocabulary or `filed_under` vocabulary
-that is not loaded or lacks a part type, vehicle or entry it was compiled with.
+(format 1, from v0.3.5, and formats 2, 3 and 4 are refused with a message to
+recompile), a spine, vehicle vocabulary or `filed_under` vocabulary
+that is not loaded or lacks a part type, vehicle or entry it was compiled with,
+and a vehicle or `filed_under` vocabulary that matches case otherwise than
+the one it was compiled against, naming the vocabulary and both ways.
 Loading it does not measure drift again in full: `/v1/info` shows the stored
 drift, the month it was measured against, and `drift_month_differs` when
 that is not the loaded month. Its `vehicle` drift alone is measured at load,
@@ -673,24 +693,52 @@ nitrovin tells two kinds of problem apart:
   so it is left out of load's stderr warnings: `nitrovin vocab check`
   runs it, and `/v1/info` counts it from its first request.
 
-`nitrovin vocab check` loads only its arguments, prints every finding as
-a JSON line on stdout and exits 1 on any, fault or drift, so CI can gate a
+`nitrovin vocab check` reads only its arguments, prints every finding as
+a JSON line on stdout and exits 1 on any, so CI can gate a
 vocabulary on the month it will run against. A drift line names its
 `kind`, so a tool that keeps findings can group them without reading
 `detail`: `make`, `model`, `qualifier`, `extension`, `model-years`,
 `vehicle`, `redirect`, `model-qualifier`, `orphan`, `personal-field`,
 `filed-under` or `unfiled`,
-the kinds `/v1/info` counts. A fault has no `kind`.
+the kinds `/v1/info` counts. A fault has no `kind`. A finding about a
+vocabulary's line carries `entry`, its fields as written, and one about an
+extension set's or spine's line `id`, faults and drift alike, so a tool
+need not read the file again to learn which entry it is about
+([ADR 0025](adr/0025-checks-at-scale.md)); a catalog's or stock file's
+finding, or one about a line that did not read, carries neither.
+
+A fault in one file does not hide the others' drift: every file that
+reads and links cleanly is measured. A file that has faults, or links,
+even through other files, to one that does (a catalog to its spine and
+vocabularies, a part vocabulary to its spine, a file to the extension sets
+it references, a stock file to its catalog), is **unchecked**: it gets one
+line at line 0, after its faults, saying which file has them, and a tool
+that keeps findings should keep its last drift rather than clear it.
+Exit codes are unchanged, and loading still refuses every file when any
+has a fault.
+
+A JSON Lines catalog is checked as `vocab compile` reads it, streamed, its
+compiled bytes written nowhere: like a compile it sorts in `$TMPDIR`, else
+`/tmp`, about twice the compiled file, removed when it ends, and its
+memory does not grow with the catalog's lines (191 MB at peak for 790,000
+fitments on one core, against a budget of 512 MiB). When a stock file
+being checked names the catalog, the catalog is compiled into that scratch
+and read from there.
 
 ```sh
 nitrovin vocab check testdata/vocab            # nothing printed, exit 0
 nitrovin vocab check testdata/vocab/drift      # seven drift lines, exit 1
 nitrovin vocab check testdata/vocab/fitment    # a catalog with its spine and vehicles: nothing, exit 0
-nitrovin vocab check testdata/vocab/fitment/catalog.jsonl   # alone: three faults, exit 1
+nitrovin vocab check testdata/vocab/fitment/catalog.jsonl   # alone: three faults and an unchecked line, exit 1
+nitrovin vocab check testdata/vocab/unchecked  # a fault, four files unchecked, and another file's drift, exit 1
 ```
 
 ```json
-{"file":".../testdata/vocab/drift/yard.jsonl","line":4,"severity":"drift","detail":"/mappings/0/make: vPIC make 99999 is not in data month 2026_10","kind":"make"}
+{"file":".../testdata/vocab/drift/yard.jsonl","line":4,"severity":"drift","detail":"/mappings/0/make: vPIC make 99999 is not in data month 2026_10","kind":"make","entry":{"make":"Imperial","model":"Other"}}
+{"file":".../testdata/vocab/unchecked/catalog.jsonl","line":0,"severity":"unchecked","detail":"its drift was not measured: it links through .../yard.jsonl to .../classics.jsonl, which has faults"}
+{"file":".../testdata/vocab/unchecked/classics.jsonl","line":3,"severity":"fault","detail":"malformed JSON: unexpected end of JSON input"}
+{"file":".../testdata/vocab/unchecked/classics.jsonl","line":0,"severity":"unchecked","detail":"its drift was not measured: it has faults"}
+{"file":".../testdata/vocab/unchecked/yard.jsonl","line":0,"severity":"unchecked","detail":"its drift was not measured: it links to .../classics.jsonl, which has faults"}
 ```
 
 A fault:
@@ -704,6 +752,7 @@ nitrovin --vocab bad.jsonl info    # refuses to start: exit 1
 
 ```json
 {"file":".../bad.jsonl","line":2,"severity":"fault","detail":"/mappings/0: first year 2014 is after last year 2012"}
+{"file":".../bad.jsonl","line":0,"severity":"unchecked","detail":"its drift was not measured: it has faults"}
 ```
 
 Check against the data you will serve: `--data` picks the month for

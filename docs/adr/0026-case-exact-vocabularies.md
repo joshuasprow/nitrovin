@@ -73,3 +73,33 @@ Format 4 files are refused with "recompile", as earlier formats are.
   only in case.
 - A build ticket on [the map](https://github.com/joshuasprow/nitrovin/issues/221)
   carries the work, with ADR 0025.
+
+## Amendment (2026-11-17): as built
+
+Building it ([#300](https://github.com/joshuasprow/nitrovin/issues/300))
+settled what this ADR left open:
+
+- **A JSON Lines catalog is read after the other files** a load opens, so
+  its vehicles and entries are keyed as their vocabularies match from the
+  first line; compile takes the mode from the files beside it. A catalog
+  read alone (Go's `vocab.Read`) is read folding case, and is refused
+  beside a case-exact vocabulary, as a compiled one is.
+- **The mismatch fault** names the vocabulary and both ways, at the
+  header's field: `/vehicles: vocabulary "codes" folds case, and the
+  catalog was compiled against it matching case exactly: compile it again
+  beside the vocabulary` (and `/filed_under: …` alike). Format 4 and older
+  files are refused with the message to recompile.
+- **Any `case` other than `exact`** is a header fault: `/case: unknown case
+  "Exact": exact, or no case to fold it`.
+- **A fit follows the mode end to end**: the request's vehicles carry their
+  vocabulary's identity, so a candidate's applications, related vehicles,
+  narrowing by a `filed_under` entry, a `filed_under` key and stock rows
+  (a file's and a connector's lists) all keep `OLD3` and `old3` apart.
+- **Extension and vPIC names** still match folding case: the mode is a
+  vocabulary's alone.
+
+### Measured (2026-11-17)
+
+Format 5 adds two strings to the meta section; on the catalog-scale
+fixture (folding case) compile took 4.3 s and 188.2 MB at peak and
+`vocab check` 4.7 s and 191.0 MB, one core (`GOMAXPROCS=1`), Apple M5 Pro.
