@@ -180,6 +180,8 @@ sample VINs valid. Neither was compared with the oracle.
   (read 2026-11-10). The ~10 a second is
   [Cardog's figure](https://cardog.app/blog/corgi-vin-decoder) ("Rate
   limits: ~10 requests/second", read 2026-11-10), which ultravin also cites.
+- **Fitment catalogs.** Not a decode measurement. A real catalog's compile, load
+  and memory are in [ADR 0021](adr/0021-a-compiled-catalog.md#measured-a-real-catalog-2026-11-16).
 
 Every other row was measured here, the SQL Server baseline included.
 

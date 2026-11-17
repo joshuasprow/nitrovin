@@ -174,3 +174,12 @@ a request about every part type uses (#262):
 
 [ADR 0023](0023-fitment-in-the-browser.md): a browser refuses to load a catalog when its server has one, so one
 nitrovin, server and browsers together, answers from one catalog.
+
+## Amendment (2026-11-16): the load budget is a regression guard
+
+The load budget above (15 s, 1.5 GiB, 500 MB) was the first user's interim budget
+until a compiled form existed. The first user now compiles its catalog and serves it
+within a 1 GiB limit ([ADR 0021](0021-a-compiled-catalog.md)'s "Measured: a real
+catalog", [#294](https://github.com/joshuasprow/nitrovin/issues/294)). The numbers
+stay as CI's regression guard on the JSON Lines loader, the benchmark in
+`bench/vocab`, and are no longer a deployment's requirement.
