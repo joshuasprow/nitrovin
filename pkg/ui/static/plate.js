@@ -179,6 +179,32 @@
     ask(vin, how(vin)).catch(console.error);
   });
 
+  // Enter sends the form: the field is a textarea (init), which would
+  // take it as a line's end.
+  document.addEventListener('keydown', (e) => {
+    if (e.target.id !== 'from-vin' || e.key !== 'Enter' || e.isComposing) return;
+    e.preventDefault();
+    e.target.form.requestSubmit();
+  });
+
+  // gapAt is the gap between characters nearest a point: before the cell
+  // under it or after, by the half the point is in, of the gaps the VIN
+  // reaches. The cells may be in two rows.
+  const gapAt = (x, y, n) => {
+    let gap = 0;
+    let nearest = Infinity;
+    document.querySelectorAll('#vin-form .cell').forEach((cell, i) => {
+      const r = cell.getBoundingClientRect();
+      const mid = (r.left + r.right) / 2;
+      const off = (y < r.top ? r.top - y : Math.max(y - r.bottom, 0)) * 1e4 + Math.abs(x - mid);
+      if (off < nearest) {
+        nearest = off;
+        gap = i + (x > mid ? 1 : 0);
+      }
+    });
+    return Math.min(gap, n);
+  };
+
   // The clicks, drags and keys are the input's own; the cells follow its
   // selection. Focused by anything but a pointer (the page opening, a
   // script), the caret goes after what is there, not before it.
@@ -197,9 +223,7 @@
   document.addEventListener('click', (e) => {
     const input = e.target;
     if (input.id !== 'from-vin' || !finger || e.detail > 1 || !input.closest('.live')) return;
-    const box = input.closest('.plate').querySelector('.cells').getBoundingClientRect();
-    const n = input.value.length;
-    const edge = Math.max(0, Math.min(n, Math.round((e.clientX - box.left) / box.width * LENGTH)));
+    const edge = gapAt(e.clientX, e.clientY, input.value.length);
     const put = () => {
       input.setSelectionRange(edge, edge);
       show();
@@ -231,8 +255,7 @@
   document.addEventListener('pointermove', (e) => {
     const input = e.target;
     if (input.id !== 'from-vin' || e.pointerType !== 'mouse' || e.buttons || !input.closest('.live')) return ghost(-1);
-    const box = input.closest('.plate').querySelector('.cells').getBoundingClientRect();
-    const at = Math.max(0, Math.min(input.value.length, Math.round((e.clientX - box.left) / box.width * LENGTH)));
+    const at = gapAt(e.clientX, e.clientY, input.value.length);
     const here = document.activeElement === input && input.selectionStart === at && input.selectionEnd === at;
     ghost(here ? -1 : at);
   });
@@ -293,8 +316,24 @@
   const init = () => {
     const form = document.getElementById('vin-form');
     if (!form) return;
+    // The field over the cells is a textarea in the input's place: its
+    // text wraps with the cells when they are in two rows. Without this
+    // script the input stays, and Enter sends it.
+    let input = document.getElementById('from-vin');
+    if (input.tagName === 'INPUT') {
+      const area = document.createElement('textarea');
+      for (const name of ['id', 'name', 'placeholder', 'autocomplete', 'autocapitalize', 'spellcheck', 'aria-describedby']) {
+        if (input.hasAttribute(name)) area.setAttribute(name, input.getAttribute(name));
+      }
+      area.rows = 1;
+      area.enterKeyHint = 'go';
+      area.value = input.value;
+      const focus = document.activeElement === input || input.autofocus;
+      input.replaceWith(area);
+      if (focus) area.focus({ preventScroll: true });
+      input = area;
+    }
     form.classList.add('live');
-    const input = document.getElementById('from-vin');
     paint(clean(input.value), false);
     // The page opens with the caret after what is there, not before it;
     // again once the browser has put back what a reload restores.

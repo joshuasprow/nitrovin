@@ -43,7 +43,7 @@ it is whole; data-done the groups whose characters are all typed. */}}
 {{define "answer" -}}
 <div id="answer" class="stage" data-vin="{{.VIN}}" data-label="{{.Label}}"{{if .Complete}} data-complete{{end}} data-done="{{range .Groups}}{{if .Done}}{{.Key}} {{end}}{{end}}">
 <div class="under" aria-hidden="true">
-{{range .Groups}}<span class="brk g-{{.Key}}{{if .Done}} done{{end}}"></span>
+{{range .Groups}}<span class="brk g-{{.Key}}{{if .Done}} done{{end}}"><span class="name">{{.Label}}</span></span>
 {{end}}</div>
 <svg class="leaders" viewBox="0 0 1020 36" preserveAspectRatio="none" aria-hidden="true" focusable="false">
 <path class="g-wmi" pathLength="1" d="M90 0V18H85V36" vector-effect="non-scaling-stroke"/>
