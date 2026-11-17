@@ -355,6 +355,7 @@ a.example:active { transform: translateY(2px); box-shadow: inset 0 1px 0 #fff; }
 button.linkish { border: 0; background: none; box-shadow: none; padding: 0 .25rem; color: var(--link); text-shadow: none; text-decoration: underline; text-transform: none; letter-spacing: 0; font: 13px system-ui, sans-serif; }
 button.linkish:active { transform: none; box-shadow: none; }
 .menu .linkish { display: block; margin: .6rem auto 0; }
+.menu .linkish[hidden] { display: none; }
 
 /* Motion: a group just completed draws its bracket and line in and pops
    its card; a character stamps into its cell. None of it for a visitor
@@ -421,6 +422,5 @@ button.linkish:active { transform: none; box-shadow: none; }
   .under > .g-serial { grid-column: 3 / span 6; }
   .under { padding-bottom: 18px; }
   .brk .name { display: block; margin-top: 12px; text-align: center; white-space: nowrap; font: 900 10px/1.2 var(--label-font); letter-spacing: .06em; text-transform: uppercase; color: var(--c); }
-  .live .plate textarea { padding-top: 6px; line-height: calc(var(--cell-h) + 8px); letter-spacing: calc(100cqw / 9 - 1ch - .02px); white-space: pre-wrap; word-break: break-all; }
-  .live .plate textarea::placeholder { line-height: calc(2 * var(--cell-h) + 8px); }
+  .live .plate textarea { padding-top: 6px; padding-bottom: 0; line-height: calc(var(--cell-h) + 8px); letter-spacing: calc(100cqw / 9 - 1ch - .02px); white-space: pre-wrap; word-break: break-all; }
 }
