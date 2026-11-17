@@ -34,8 +34,9 @@ summarises them against what the prototype does today.
   (findings 2, 5 and 6).
 - **Fitment drills down in place.** A count is the handle that opens the next
   level under its own row; alternates differ by one plain line of option text;
-  caveats are sentences where the doubt applies; the open state is in the URL
-  (findings 5 and 10 to 13).
+  caveats are sentences where the doubt applies; the open state is in the URL.
+  The people it is for value density and speed over looks, by the project
+  owner's account of RockAuto (findings 5 and 10 to 13).
 
 ## How to read the entries
 
@@ -44,15 +45,17 @@ pixels wide or, where an entry says so, fetched as text. "At 390" means the
 viewport was set to 390 pixels wide and the page looked at again. "Seen" means
 observed in the rendered page or in its DOM and CSS; CSS values quoted are the
 page's own. Anything deduced and not observed is marked [INFERENCE]; anything
-not tried says "not tested". §8 lists what could not be opened.
+not tried says "not tested". §8 lists what could not be opened. Where two
+surveys disagreed about a page, it was opened again the same day, at 1280×900
+and at 390×844, and the entry carries what that second look showed.
 
 Each entry gives the link, the specific element worth looking at, how it
 behaves, how it is drawn where that was read, any measurements, what it suggests
 for a VIN, and what does not transfer. The sections group references by what
 they are good for. Where a section keeps an order, it is the order of fit the
-survey gave, best first. The entries describe vehicles in the surveys' own
-terms; the surveys assumed seven VIN groups in places, and the page settled on
-six (§9).
+survey gave, best first. Each VIN example's entry states that example's own
+grouping of the 17 characters. They run from four groups to eight; the page
+settled on six (§9).
 
 ## 1. Annotated inputs and bracket diagrams
 
@@ -69,34 +72,53 @@ leader lines. In order of fit.
   it and a 1px leader line that drops from the bracket, runs out to a side
   gutter and ends in a dot beside a bordered help box. The boxes are one
   stacked column. Bracket, line, dot and box border share one colour per token,
-  from a small purple, green and blue set (`#dadaeb`, `#bcbddc`, …). State is
-  in `?cmd=`. The wordmark is script lettering with a drawn seashell.
-- **Behaviour:** Hovering a token or its box hides every other line, dims the
-  other tokens and boxes to 0.4 opacity and bolds the hovered token. An unknown
-  token gets no line.
-- **How it is drawn:** One full-width `<svg id="canvas">` overlay built with
-  d3 3.1.6, two paths per token (12 paths for six tokens):
+  taken from a list of 20 in `es.js` (blues, oranges, greens, purples and
+  greys, among them `#31a354`, `#bcbddc` and `#dadaeb`) that is shuffled on
+  every load. State is in `?cmd=`. The wordmark is script lettering with a
+  drawn seashell.
+- **Behaviour:** Hovering a token or its box hides every other token's lines
+  (`visibility: hidden`), dims the other tokens and boxes to 0.4 opacity and
+  bolds the hovered token. Seen from a token and from a box. An unknown token
+  gets no line.
+- **How it is drawn:** One `<svg id="canvas">` overlay built with d3 3.1.6,
+  absolutely positioned, as wide as the viewport, with `overflow: hidden`. Two
+  paths per token (10 for the five tokens of the first link, 12 for the six of
+  the second):
   - bracket: `M500,0V5H500V5H563V0H563`
-  - leader: `M532,5V19H75V125H155`, ending in a `circle r=4`
+  - leader: `M532,5V19H75V125H155`, ending in `<circle r="4">`, a dot 8px
+    across
   - Leaders are staggered: each drops 20px lower (y = 19, 39, 59, 79) and sits
     20px further in (x = 75, 95, 115, 135), so they nest and never cross.
     Left-half tokens route down a left gutter, right-half tokens down a right
     one. Each token is a span whose `helpref` attribute names its box.
+  - Positions come from `getBoundingClientRect`. `es.js` has no resize handler
+    of its own, but the page's inline script binds a throttled `draw()` to the
+    window's scroll and resize, so the paths are recomputed: narrowing the
+    window from 1280 to 700 without a reload turned the first leader into
+    `M362,5V19H-95V125H-15`.
 - **Scale:** Six lines are readable only because they nest (outermost token to
   lowest box) and hover isolates one. Box height is unbounded, so the boxes for
   the last tokens, and the ends of their lines, were below the fold at 900
   pixels high. One-to-many is not shown at all, and the lines carry no quality.
-- **At 390:** No reflow. The page stays 940px wide, the leader x-coordinates go
-  negative (−95…) and the lines are clipped at the left edge; the wordmark, the
-  command and the boxes run off the right.
+- **At 390:** No reflow, and redrawing does not save it. The layout is a fixed
+  940px container, so the document is 940px wide in a 390px viewport and
+  scrolls sideways. The help boxes fill that width (x = 1 to 939) and the
+  command's tokens sit at x = 330 to 631: the first token is cut by the right
+  edge of the screen, and the rest of the command, most of each box and the
+  wordmark run off the right until scrolled to. The lines are lost on both
+  sides. With the boxes at the left edge, the left-going leaders are computed
+  to negative x (−95, −75, −55, −35) and their end dots sit at x = −16 to −8,
+  off the left edge where no scroll reaches. The overlay is only 390px wide, so
+  the brackets and leaders beyond x = 390 fall outside it.
 - **Suggests:** A bracket under each VIN group, a staggered right-angled leader
   and a box per group, built from DOM spans and one SVG with no canvas library.
-  Mapping rows can sit inside or under the box the leader lands on, so the
-  lines stay at seven or fewer.
-- **Does not transfer:** Positions are read once from
-  `getBoundingClientRect`; `es.js` has no resize handler. The token spans have
-  no `tabindex` or ARIA, so it is hover-only. It pulls in jQuery and d3 for a
-  handful of `M/V/H` paths. The input is a small field, not the hero.
+  Mapping rows can sit inside or under the box the leader lands on, so there
+  are no more lines than groups.
+- **Does not transfer:** The drawing depends on measuring the DOM and redrawing
+  on every scroll and resize, and a fixed-width layout still defeats it on a
+  phone. The token spans have no `tabindex` or ARIA, so it is hover-only. It
+  pulls in jQuery and d3 for a handful of `M/V/H` paths. The input is a small
+  field, not the hero.
 
 ### Crew Chief "Explore a VIN": VIN tiles, CSS brackets, one detail panel
 
@@ -105,7 +127,8 @@ leader lines. In order of fit.
 - **Element:** Three stacked rows. 17 monospace tiles (44×56px) coloured by
   section: WMI blue, VDS amber, check digit red, VIS green. A row of position
   numbers 1–17 at the same widths. A bracket row: four `div.bracket` elements
-  with `border-top: 2px solid` and a label, coloured to match.
+  with `border-top: 2px solid` and a label, coloured to match. Its grouping is
+  four: WMI over positions 1–3, VDS over 4–8, CHECK over 9 and VIS over 10–17.
 - **Behaviour:** Hover, focus or tap lifts the tile (`translateY(-4px)`,
   shadow, border) and dims the other tiles to 0.5. One panel under the row
   fades in: "Position 11 of 17", a VIS badge, "Assembly Plant", a paragraph,
@@ -114,7 +137,10 @@ leader lines. In order of fit.
   status line read "11 of 17 characters entered." and then "Valid VIN — check
   digit verified." Typing a full VIN replaced the tiles above with that VIN.
 - **How it is drawn:** CSS only. Bracket widths are hard-coded from the tile
-  size: 140px, 236px, 44px and 380px (n × 44 plus 4px gaps).
+  size: 140px, 236px, 44px and 380px (n × 44 plus 4px gaps). The rows are flex
+  rows, and 17 tiles need 812px: in a 718px row at 1280 the tiles shrank to
+  38px and the brackets to 123, 207, 43 and 333px, within 3px of the tiles
+  above them.
 - **Narrow:** At 768px and below, tiles are 36×48 and the bracket widths are
   recalculated. At 540px and below, tiles are 30×40 and
   `.vin-brackets { display: none }`. At 380px and below, `overflow-x: auto`.
@@ -135,34 +161,42 @@ leader lines. In order of fit.
 - **Link:** <https://freevingenerator.com/vin-breakdown-visualizer> (enter
   `5YJSA1DG9DFP14705`, press Visualize).
 - **Element:** The same layout as the owner's reference image. Dark character
-  tiles in a row. Each group has a 4px coloured bar on one edge, a 4px vertical
-  line and a rounded coloured box. Boxes alternate above and below the row:
-  manufacturer, model/engine, year and serial above; country, type, check digit
-  and plant below.
+  tiles in a row. Its grouping is eight, each group with a 4px coloured bar on
+  one edge, a 4px vertical line and a rounded coloured box of its own: country
+  (position 1), manufacturer (2), type or division (3), the descriptor (4–8),
+  check digit (9), model year (10), plant (11) and serial (12–17). Boxes
+  alternate above and below the row: manufacturer, descriptor, year and serial
+  above; country, type, check digit and plant below.
 - **Behaviour:** Rendered only after pressing the button, not while typing.
   Hover adds a `.highlight` class (`brightness(1.2)` and a white drop-shadow)
   to the box and its tiles; the effect is faint.
 - **How it is drawn:** `<svg id="vinSvg" width="1402" height="800">` with eight
-  `<g class="group-…">`. Each holds `line.connecting-line`, `g.info-box` (a
-  `rect rx=10` and text), `line.underline` and one `g.vin-char-group` per
-  character (Courier New, 36px).
-- **Measured:** Fixed pixel coordinates in a 1402px SVG inside an
-  `overflow: auto` wrapper. At 1280 the serial box was already cut off; at 390
-  three of the 17 characters were visible.
-- **Suggests:** The alternating above-and-below layout fits every group
+  `<g class="group-…">` (country, wmi, type, vds, check, year, plant, serial).
+  Each holds one `line.connecting-line`, one `g.info-box` (a `rect rx=10` and
+  text), one `line.underline` and one `g.vin-char-group` per character
+  (Courier New, 36px).
+- **Measured:** Fixed pixel coordinates in a 1402×800 SVG inside an
+  `overflow: auto` wrapper. The drawing is the same eight groups and eight
+  boxes at every width; only the wrapper scrolls. At 1280 the wrapper is 1240px
+  wide: 15 of the 17 characters are fully in view and the serial box (x = 1092
+  to 1292) is cut at its right edge. At 390 the wrapper is 350px wide: three of
+  the 17 characters and three of the eight boxes are in view, and the page
+  itself does not overflow.
+- **Suggests:** The alternating above-and-below layout fits all eight groups
   without crossing lines. The lower boxes are where mapping branches could
   hang.
 - **Does not transfer:** The fixed coordinates. Boxes show the raw characters
-  ("SA1DG"), not decoded values. All labels are SVG text at 11px.
+  ("SA1DG"), not decoded values, and the serial box prints seven ("FP14705")
+  for a group of six. All labels are SVG text at 11px.
 
 ### GetVIN "Interactive Explainer": sticky VIN, one animated arch, scroll-spy
 
 - **Link:** <https://get.vin/decoder> (scroll to "Understand Your Vehicle's
   Identity").
 - **Element:** The example VIN `1GN ERGKW 5 J J 148668` sits in a sticky bar as
-  six rounded segment chips in bold monospace. One indigo arch (rounded top,
-  2px) rises from the active chip and ends in a dot above the explanation
-  column.
+  six rounded segment chips in bold monospace: a grouping of 3, 5, 1, 1, 1 and
+  6 characters. One indigo arch (rounded top, 2px) rises from the active chip
+  and ends in a dot above the explanation column.
 - **Behaviour:** Hovering a chip, or scrolling its section into view, fills
   the chip indigo and slides the arch to it. In the model-year section the
   lookup table highlights the cell matching the VIN's year character
@@ -300,8 +334,10 @@ leader lines. In order of fit.
   <https://checkervin.com/how-to-read-a-vin>.
 - **Element:** 17 rounded tiles holding position numbers. Above them are three
   solid bars (WMI · 1–3, VDS · 4–8, VIS · 9–17). Below are seven thin grey
-  brackets with a label and a sub-label each ("Manufacturer / & division"). The
-  check digit is the only orange item.
+  brackets, each with a label: Country (1), Manufacturer & division (2–3),
+  Model, body, engine, restraints (4–8), Check digit (9), Model year (10),
+  Assembly plant (11) and Sequential production number (12–17). The check
+  digit is the only orange item.
 - **How it is drawn:** A 6.9 KB hand-written SVG, `viewBox="0 0 1200 452"`.
   Each bracket is one path such as `<path d="M60 232 v8 h58 v-8"/>`. It has
   `role="img"` with `<title>` and `<desc>`.
@@ -368,7 +404,10 @@ down on a narrow screen and their labels become tiny.
 - **DRiV Parts, "Decoding your VIN"**:
   <https://www.drivparts.com/parts-matter/learning-center/by-the-numbers/about-vehicle-identification-numbers.html>.
   A JPG. The VIN is spaced into six groups with a numbered lollipop pin above
-  each. A numbered list 1–6 below carries the text.
+  each. A numbered list 1–6 below carries the text: the first three characters
+  (the first the country, the next two the manufacturer), the vehicle's
+  features, the ninth character as a check, the model year, the plant and a
+  sequential production number.
 - **MDN, "Anatomy of a URL"**:
   <https://developer.mozilla.org/en-US/docs/Learn_web_development/Howto/Web_mechanics/What_is_a_URL#basics_anatomy_of_a_url>.
   A PNG. Each segment has a highlighter fill and a small elbow arrow down to an
@@ -415,7 +454,8 @@ down on a narrow screen and their labels become tiny.
 - **Link:** <https://www.vindecode.app/blog/vin-number-anatomy>
 - **Element:** Coloured tile buttons, a "Checksum Valid" pill in the card
   header, and six legend cards (range, characters, name, sentence) in a
-  two-column grid. Hovering a tile ringed its card.
+  two-column grid: 1–3 WMI, 4–8 VDS, 9 Check Digit, 10 Model Year, 11 Assembly
+  Plant and 12–17 Sequence Number. Hovering a tile ringed its card.
 - **Measured:** The tile row is `flex-wrap`. In its 624px column the 17th tile
   dropped to a second line and the separate position-number row no longer
   lined up, at desktop width.
@@ -424,7 +464,7 @@ down on a narrow screen and their labels become tiny.
 
 | Technique | Seen at | Alignment source | Narrow-screen result |
 | --- | --- | --- | --- |
-| SVG overlay, right-angled paths computed from DOM rects | explainshell | `getBoundingClientRect` once at draw | breaks: no recompute, lines clipped |
+| SVG overlay, right-angled paths computed from DOM rects | explainshell | `getBoundingClientRect`, redrawn on scroll and resize | breaks: fixed 940px layout, lines fall outside a 390px overlay |
 | One fixed-coordinate SVG holding characters, lines and boxes | FreeVINGenerator, CheckerVIN | hard-coded x per tile | scrolls sideways (1402px and 800px minimum) |
 | CSS `border-top` divs in a flex row | Crew Chief | widths = n × tile + gaps, per breakpoint | brackets hidden at 540px and below |
 | One absolutely positioned bordered div, moved by script | GetVIN | inline `left` / `width` | hidden below the `lg` breakpoint |
@@ -681,21 +721,34 @@ the survey's list as the one that extends an annotated input with lines.
 
 ### ZOOMA: annotated text chips above a mapping table tinted by confidence
 
-- **Link:** <https://www.ebi.ac.uk/spot/zooma/> (the state is not linkable:
-  "Annotate Text" tab, paste a sentence, press "Annotate Text"; the sample text
-  was typed in).
-- **Element:** After submitting, the text is echoed in a bordered strip with
-  each recognised span turned into a pale green chip (with a ×). Directly
-  below, "Results (6 out of 7 mapped)" and a table: Text to Map · Term Label ·
-  Confidence · Term ID · Source · Prediction Type.
+- **Link:** <https://www.ebi.ac.uk/spot/zooma/> (the state is not linkable. On
+  the "Annotate Text" tab, type or paste a sentence and press "Annotate Text".
+  On the "Map Strings" tab, enter one string a line; "Load examples" fills in
+  ten).
+- **Element:** After "Annotate Text" the text is echoed in a strip with each
+  recognised span turned into a pale green chip (with a ×); text it does not
+  recognise stays plain. Directly below, a heading "Results (N out of M
+  mapped)" and a table: Text to Map · Term Label · Confidence · Term ID ·
+  Source · Prediction Type. "Map Strings" gives the same table with a Term
+  Type column.
 - **Quality:** Three signals at once. Row tint (pale green, pale yellow, grey;
   grey rows also get a warning mark after the label and grey text); a
   "Confidence" percentage; and a "Prediction Type" link reading Lexical,
   Embedding or Curated, which is the "how was this matched" column. Observed: a
-  lone 100% row was green, tied or lower rows yellow, 8.75% and 17.04% rows
-  grey [INFERENCE: thresholds].
-- **Empty:** Only the header count admits it; unmapped strings get no row,
-  which hides them.
+  lone 100% row was green; rows tied at 100%, and rows from 41% to 95%, were
+  yellow; rows from 8.75% to 17.5% were grey [INFERENCE: thresholds].
+- **Empty:** It depends on the tab. On "Annotate Text" a span with no mapping
+  gets no chip and no row, which hides it. On "Map Strings" an unmapped string
+  keeps its row: the string, blank cells, a dash for Confidence and for
+  Prediction Type, and no tint.
+- **The count:** The heading is not a count of terms. Four strings, two of
+  them nonsense, gave "2 out of 4 mapped". The ten built-in examples gave "11
+  out of 10 mapped" over 19 rows: the first number counted rows, not strings
+  [INFERENCE: rows at about 95% confidence or more]. On "Annotate Text" the
+  second number was the size of the last "Map Strings" run, not of the
+  sentence: the same sentence read "6 out of 10 mapped" and then "6 out of 4
+  mapped". The first look at the page recorded "6 out of 7" and "4 out of 7"
+  for a typed sample that was not kept (§8).
 - **One and ten:** One row per candidate, the source text repeated on every
   row; 14 rows fit a screen.
 - **Suggests:** Group chips in the VIN, then rows of group, target name,
@@ -1001,18 +1054,29 @@ structure is what was read.
   as chips (105 Amps / 110 Amps / 130 Amps).
 - **Measured:** Clicking "130 Amps" turned 17 listings into 1, and a red
   button appeared reading "Reset (16 listings hidden)".
-- **At 390:** Partly. The breadcrumb wraps to two lines and stays pinned and
-  the tree is readable, but the page is 492px wide and the tree sits in a short
-  window between a tall header and footer. RockAuto links a separate "Mobile
-  Site".
+- **At 390:** Partly. The document is 492px wide in a 390px viewport: the row
+  of section tabs is a 487px table whose last control ("Bigger", x = 437 to
+  492) sits off the right edge. On the category page the tree holds: its panel
+  is 385px wide, the labels fit, and the breadcrumb wraps to two lines and
+  stays pinned. On the candidates page the panel widens to 425px and each
+  listing row to 417px, so the last price column (x = 365 to 402) is cut at
+  the right edge until scrolled sideways; the qualifier chips and "Add to
+  Cart" fit. The tree scrolls inside a window 406px tall of the 844, between a
+  header and tab row of 285px and a footer of 151px; the document itself does
+  not scroll. RockAuto links a separate "Mobile Site".
+- **The owner's view:** Not something the survey observed. The project owner,
+  who buys parts, calls RockAuto "strangely the gold standard of auto parts
+  website UX. It's ugly, but so dense, intuitive, and quick, that every parts
+  buyer bookmarks it."
 - **Suggests:** Inline expansion under the parent keeps everything above it on
   screen. The growing breadcrumb is the cheapest "where am I" for three or four
   levels. Chips derived from the candidates themselves narrow "4WD / w/ towing
   package" without a form. Saying how many were hidden is the honest version
   of a filter.
-- **Does not transfer:** The visual density and table layout. No left or right
-  and no replaced part numbers are shown on this listing. The chips filter but
-  do not say which value your vehicle has.
+- **Does not transfer:** The survey listed the visual density and table layout
+  here; the owner's view disagrees about the density. No left or right and no
+  replaced part numbers are shown on this listing. The chips filter but do not
+  say which value your vehicle has.
 
 ### car-part.com: the option chooser, then stock rows that name the donor vehicle
 
@@ -1311,6 +1375,8 @@ page can borrow from. The static infographics (§1), crontab.guru and cidr.xyz
 
 - **Links:** <https://www.carwow.co.uk/sell-my-car>; a font to look at in
   place of Carwow's, K-Type Mandatory, <https://www.k-type.com/fonts/mandatory/>
+  (its poster:
+  <https://www.k-type.com/wp-content/uploads/2013/04/mandatory_poster-1.png>)
 - **Element:** A 313×48px white plate-shaped field labelled "Your vehicle
   registration". Computed style: `font-family: wowplate, monospace`, 40px,
   weight 700, `text-transform: uppercase`, centred, placeholder "ENTER REG" in
@@ -1499,7 +1565,10 @@ most.
    explanation. Lines are the first thing removed on small screens (Crew Chief
    hides its brackets at 540px, GetVIN its arch below `lg`). The two that keep
    lines at any width, explainshell and FreeVINGenerator, are the two that
-   break at 390. cidr.xyz and float.exposed wrap cleanly because colour is the
+   break at 390: explainshell redraws its lines on resize and still loses them,
+   because its layout is a fixed 940px and its overlay only as wide as the
+   screen, and FreeVINGenerator's fixed 1402px drawing shows three of its 17
+   characters. cidr.xyz and float.exposed wrap cleanly because colour is the
    only link; iFixit pairs seven chips with seven bullets by colour alone;
    Tesla, PartSelect and RealOEM pair by number. Where the mark and the row
    cannot sit side by side, the shared key still works and a drawn line does
@@ -1550,8 +1619,10 @@ most.
    "No AAAA records found." (nslookup.io), a grey "(not mapped)" row (FHIR),
    "please add this translation if you can" (Wiktionary), a "Search via …"
    link (HGNC), an em dash (OxO), a red cross (whatsmydns), an empty box
-   (RxNav). Finto, Wikidata and ZOOMA drop empty targets, and ZOOMA then needs
-   a count of how many mapped to admit it.
+   (RxNav). Finto and Wikidata drop empty targets. ZOOMA does both: its string
+   mapper keeps an unmapped string's row with dashes in it, while its text
+   annotator drops what it cannot map and leaves a heading count that does not
+   count terms.
 7. **Select one part, dim the rest, show one detail area.** explainshell dims
    to 0.4 and Crew Chief to 0.5, and each fills a single panel or box. The
    better ones work in both directions (RegExr, rvcodec.js, vindecode.app) and
@@ -1564,26 +1635,31 @@ most.
    (FreeVINGenerator, UAW, The Conversation), or step into a side gutter at
    staggered depths (explainshell). Nobody uses curves except GetVIN's single
    arch. The tools that position from tile size or the monospace grid stay
-   aligned; the one that measures the DOM (explainshell) never re-measures. A
-   row of 17 cells has to be sized to fit: vindecode.app's 17th tile wrapped in
-   a 624px column, and react-otp-input's 17 fields wrapped 11 + 6 in about
-   1070px.
+   aligned; the one that measures the DOM (explainshell) has to redraw on every
+   scroll and resize, and still loses its lines at 390. A row of 17 cells has
+   to be sized to fit: vindecode.app's 17th tile wrapped in a 624px column,
+   react-otp-input's 17 fields wrapped 11 + 6 in about 1070px, and Crew
+   Chief's 44px tiles shrank to 38px in a 718px row.
 9. **A second vocabulary goes on the opposite side or in a parallel row.**
    Node.js puts one naming scheme above the string and the other below.
    rvcodec.js and Polypane use parallel rows or cards that share the token's
    colour, which also handles one-to-many and split fields without forking a
    line.
 10. **Inline expansion and breadcrumbs survive 390; side-by-side does not.**
-    RockAuto's tree, PatternFly's panel and GitHub's breadcrumb held up. JSON
-    Hero refuses phones, finderjs overflows, Matuschak's stack drops to one
-    pane, and the GitHub pane and the PatternFly drawer become full-screen.
+    PatternFly's panel and GitHub's breadcrumb held up. RockAuto's tree and
+    pinned breadcrumb held up too, inside a page that is 492px wide at 390 and
+    whose candidate rows lose their last price column. JSON Hero refuses
+    phones, finderjs overflows, Matuschak's stack drops to one pane, and the
+    GitHub pane and the PatternFly drawer become full-screen.
 11. **Alternates share a position and differ by one plain line.** Tesla
     repeats "1." and "5.", RealOEM repeats "01" and "03", RockAuto and
     car-part.com list rows that differ only in the option line. Nobody hides
     the option text behind a tooltip: it is the second line of the row, in
     catalog shorthand. A replaced part number is likewise a line on the
     identity ("Alternate Item No" on BrickLink, "replaces these" on
-    PartSelect).
+    PartSelect). Density and speed are what the people who buy parts value
+    over looks: that is the project owner's view of RockAuto, recorded in its
+    entry (§4), not a survey observation.
 12. **State lives in the URL and follows what is typed or opened.**
     crontab.guru's hash, explainshell's `?cmd=`, Regexper's hash, tixy's
     `?code=`, the paths of what3words and http.cat, float.exposed, rvcodec.js,
@@ -1614,26 +1690,41 @@ most.
   the annotated inputs; headless Chromium or WebKit at 1280×900, or a plain
   text fetch, for the mapping pages; headless WebKit at 1280×800 for the
   playful inputs; headed WebKit (Chromium for Tesla) with 390×844 for the
-  fitment pages.
+  fitment pages. The second looks were in WebKit at 1280×900 and 390×844.
 - Of the mapping pages, only explainshell was looked at at 390. crontab.guru,
   BrickLink and 7zap were not checked at a narrow width at all. eBay's 390
   result is a resized desktop window, not a phone.
 - Typed input was used on ZOOMA and Mergely; neither state can be linked.
   car-part.com's results have no deep link, and Tesla's diagram link was
   reached by clicking a tile.
-- Not tested: explainshell's hover in one look at it (another exercised it);
-  whether GetVIN swaps in another VIN; a reduced-motion switch
-  in Rough Notation; hover and keyboard on Tesla's diagram and a callout tap at
+- Not tested: whether GetVIN swaps in another VIN; a reduced-motion switch in
+  Rough Notation; hover and keyboard on Tesla's diagram and a callout tap at
   390; the second count cell on PatternFly; the hover on jwt.io's claim keys;
   the dots on tixy.land; input-otp's `pasteTransformer`.
-- explainshell was looked at three times at 390. The notes agree that it does
-  not reflow and differ on which edge loses content: the lines are cut at the
-  left, the wordmark and boxes at the right. They also differ on small sizes
-  (the end dot as `circle r=4` or as "4px").
-- ZOOMA's count header is recorded as "6 out of 7 mapped" in one place and "4
-  out of 7 mapped" in another; which run each belongs to was not recorded.
-- FreeVINGenerator's SVG has eight groups and eight boxes; the survey's note
-  that its layout "fits all seven groups" counts one fewer.
+- Where the surveys disagreed, the page was opened again the same day. All of
+  them opened, and the entries, the findings and §9 carry what the second
+  look showed:
+  - **explainshell at 390.** One survey had the lines cut at the left, two had
+    the content running off the right. Both happen (§1). One had found no
+    resize handler in `es.js`: there is none there, but the page's inline
+    script has one, and the lines are redrawn. The end dot is
+    `<circle r="4">`, which one note gave as "4px". The dimming on hover,
+    exercised by one survey and not by another, was seen again. One note gave
+    the colours as a small purple, green and blue set; they are drawn from a
+    shuffled list of 20.
+  - **ZOOMA's count.** The first notes give "6 out of 7 mapped" in one place
+    and "4 out of 7 mapped" in another, for a typed sample that was not kept,
+    so neither could be reproduced. The heading turned out not to count terms
+    (§3), and neither figure is used.
+  - **RockAuto at 390.** Recorded both as "partly" and as having held up.
+    Partly is right (§4).
+  - **FreeVINGenerator.** Eight groups and eight boxes at every width; one
+    note said its layout fits seven.
+  - **VIN groupings.** Crew Chief, GetVIN, CheckerVIN, vindecode.app and DRiV
+    were read again for their own groupings (§1, §9). The UAW and The
+    Conversation diagrams are pictures and their groupings were not read.
+  - **Crew Chief's sizes.** Its style sheet has the 44px tiles and bracket
+    widths the survey recorded; in the second look they rendered smaller (§1).
 - regex101 showed "Engine Error" in the headless browser. Mix'n'match hung
   headless WebKit and loaded only in Chromium. Tesla's tile grid was
   unclickable in WebKit.
@@ -1704,17 +1795,18 @@ repaired.
   holds (I, O, Q) turns its cell red at once. The value itself stays clean:
   the grouping is drawn, not typed into the field (against Cleave.js).
 - **Six groups, the standard ones:** maker (positions 1–3), vehicle (4–8),
-  check digit (9), model year (10), plant (11), serial (12–17). The surveys
-  worked with seven in places (CheckerVIN's seven fine brackets; cells grouped
-  1 · 2 · 5 · 1 · 1 · 1 · 6, the first character apart from the next two).
-  GetVIN's six chips (3, 5, 1, 1, 1 and 6 characters) are the page's six, and
-  DRiV's image has six groups too. Each group's label sits on a short bracket
+  check digit (9), model year (10), plant (11), serial (12–17). The examples
+  do not agree on a grouping. Crew Chief brackets four (3, 5, 1 and 8
+  characters), CheckerVIN seven (1, 2, 5, 1, 1, 1, 6) and FreeVINGenerator
+  eight (1, 1, 1, 5, 1, 1, 1, 6). GetVIN, vindecode.app and DRiV have the
+  page's six (3, 5, 1, 1, 1, 6). Each group's label sits on a short bracket
   above the plate and a bracket closes under it.
 - **A fixed grid, nothing measured** (finding 8). One CSS grid of 17 columns
   holds labels, cells and brackets; the cards are six equal columns. The cells
   scale with the plate's width, so the row never wraps. No script reads a
   position, so the page with and without JavaScript is the same drawing, and
-  there is nothing to re-measure on resize (against explainshell).
+  there is nothing to redraw on scroll or resize (explainshell redraws on
+  both).
 - **Shown where it is wrong.** At 17 characters the check-digit card says
   "Checks out" or "Should be N" and opens the arithmetic (each character's
   value, weight and product, the sum, the remainder). The decoder's suggested
@@ -1852,7 +1944,9 @@ repaired.
   - the plate shrinks and stays pinned at the top while scrolling (RockAuto's
     pinned breadcrumb, 7zap's persistent vehicle header);
   - no exploded parts diagram, because the catalogs carry no drawings (what
-    Tesla, PartSelect and RealOEM cannot transfer).
+    Tesla, PartSelect and RealOEM cannot transfer);
+  - the card is to be judged against RockAuto's density: by the owner's view
+    (§4), a parts buyer values dense, quick and intuitive over good-looking.
 - **The input accepting other kinds** is decided in outline and not built:
   there is no guessing code and no tag. The one input would take a vehicle
   ("2015 F-150") or a part number as well, guess the kind and show it as a
