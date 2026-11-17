@@ -6,9 +6,10 @@ Decode sends it). Everything below the plate is the answer (#answer): the
 brackets under the plate, a card for each on its leader line, and the
 derived card "Also known as". The server draws it for whatever is typed so
 far; plate.js asks again as the visitor types and swaps #answer and #dev.
-What developers need is behind the Developers floating button (developers,
-decode.html). No inline script or style: CSP refuses both, so every
-position is a class on a fixed grid of 17 columns. */}}
+What developers need is behind the header's Developers button (developers,
+decode.html), and the VINs to try behind its VINs button (chips). No
+inline script or style: CSP refuses both, so every position is a class on
+a fixed grid of 17 columns. */}}
 {{define "home" -}}
 <h1 class="visually-hidden">VIN decoder</h1>
 {{template "plate" .}}
@@ -148,17 +149,19 @@ tag's note, a popover behind its button, say in words. */}}
 </li>
 {{- end}}
 
-{{/* chips are what to try: the recent VINs of this browser, which
-plate.js draws in place of the examples once it has any, and Surprise me. */}}
+{{/* chips are what to try, the menu the header's VINs button opens (a
+popover, so it opens without a script): the recent VINs of this browser,
+which plate.js draws in place of the examples once it has any, and
+Surprise me. */}}
 {{define "chips" -}}
-<nav class="chips" aria-label="VINs to try">
+<div id="vins" class="menu" popover aria-label="VINs to try">
 <ul id="recent" class="examples" aria-label="Recent" hidden></ul>
 <ul id="examples" class="examples" aria-label="Examples">
 {{range .Examples}}<li><a class="example" href="{{.Href}}" title="{{.Hint}}">{{.Label}}</a></li>
 {{end}}</ul>
 <a class="example surprise" href="/?surprise">Surprise me</a>
-<button type="button" id="clear-recent" class="linkish" hidden>Clear</button>
-</nav>
+<button type="button" id="clear-recent" class="linkish" hidden>Clear recent</button>
+</div>
 {{- end}}
 
 {{/* json is the button of the answer's JSON, and json-dialog its dialog,

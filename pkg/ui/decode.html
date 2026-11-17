@@ -1,13 +1,11 @@
 {{/* PROTOTYPE (prototype/pare-back-ui). developers is the Developers
-floating button and its dialog: the answer's own request with its JSON and
-NHTSA's decoder, then install, MCP, verify and links, each a label over
-what to copy. */}}
+dialog, which the header's button opens: the answer's own request with its
+JSON and NHTSA's decoder, then install, MCP, verify and links, each a
+label over what to copy. */}}
 
-{{/* developers takes the page: the floating button and its dialog, a
-popover in the page's fragment, so every answer redraws it with its own
-request first. */}}
+{{/* developers takes the page: the dialog, a popover in the page's
+fragment, so every answer redraws it with its own request first. */}}
 {{define "developers" -}}
-<button type="button" class="fab fab-dev" popovertarget="developers">Developers</button>
 <dialog id="developers" popover aria-labelledby="developers-h">
 <div class="dialog-head">
 <h2 id="developers-h">Developers</h2>
