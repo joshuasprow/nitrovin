@@ -220,6 +220,24 @@
   document.addEventListener('selectionchange', show);
   document.addEventListener('select', show);
 
+  // Under a mouse, the gap a click would put the caret in is marked: a
+  // click anywhere in a cell's nearer half picks it, which the mark shows.
+  const ghost = (at) => {
+    document.querySelectorAll('#vin-form .cell').forEach((cell, i) => {
+      cell.classList.toggle('ghost', i === at);
+      cell.classList.toggle('ghost-end', at === LENGTH && i === LENGTH - 1);
+    });
+  };
+  document.addEventListener('pointermove', (e) => {
+    const input = e.target;
+    if (input.id !== 'from-vin' || e.pointerType !== 'mouse' || e.buttons || !input.closest('.live')) return ghost(-1);
+    const box = input.closest('.plate').querySelector('.cells').getBoundingClientRect();
+    const at = Math.max(0, Math.min(input.value.length, Math.round((e.clientX - box.left) / box.width * LENGTH)));
+    const here = document.activeElement === input && input.selectionStart === at && input.selectionEnd === at;
+    ghost(here ? -1 : at);
+  });
+  document.addEventListener('pointerdown', () => ghost(-1));
+
   window.addEventListener('popstate', () => {
     const vin = clean(new URLSearchParams(location.search).get('from.vin') || '');
     const input = document.getElementById('from-vin');
@@ -278,9 +296,14 @@
     form.classList.add('live');
     const input = document.getElementById('from-vin');
     paint(clean(input.value), false);
-    // The page opens with the caret after what is there, not before it.
-    input.setSelectionRange(input.value.length, input.value.length);
-    show();
+    // The page opens with the caret after what is there, not before it;
+    // again once the browser has put back what a reload restores.
+    const toEnd = () => {
+      if (input.selectionStart === input.selectionEnd) input.setSelectionRange(input.value.length, input.value.length);
+      show();
+    };
+    toEnd();
+    window.addEventListener('pageshow', () => setTimeout(toEnd), { once: true });
     if (!history.state) history.replaceState({ whole: input.value.length === LENGTH }, '', location.href);
     chips();
     remember(document.getElementById('answer'));

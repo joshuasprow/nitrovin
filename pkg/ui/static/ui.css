@@ -201,6 +201,10 @@ form.filter label { flex-basis: 100%; }
 .live .plate:focus-within .cell.caret::before, .live .plate:focus-within .cell.caret-end::before { content: ""; position: absolute; left: -4px; top: 10%; bottom: 10%; width: 4px; border-radius: 2px; background: var(--on-metal); animation: blink 1s steps(2) infinite; }
 .live .plate:focus-within .cell.caret-end::before { left: auto; right: -4px; }
 @keyframes blink { 50% { opacity: 0; } }
+/* Under a mouse, the gap a click would pick: the caret's bar, faint. */
+.live .cell.ghost, .live .cell.ghost-end { position: relative; }
+.live .cell.ghost::after, .live .cell.ghost-end::after { content: ""; position: absolute; left: -4px; top: 10%; bottom: 10%; width: 4px; border-radius: 2px; background: var(--on-metal); opacity: .35; }
+.live .cell.ghost-end::after { left: auto; right: -4px; }
 .live .cell.sel { background: #16202b; color: #fff; text-shadow: none; border-radius: 4px; box-shadow: inset 0 0 0 3px var(--c); }
 .live .cell.sel.bad { background: var(--bad); }
 
