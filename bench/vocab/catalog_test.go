@@ -518,6 +518,47 @@ func BenchmarkCompileCatalog(b *testing.B) {
 	b.ReportMetric(peak/1e6, "peak-RSS-MB")
 }
 
+// BenchmarkCheckCatalog checks the catalog-scale fixture as `nitrovin
+// vocab check` does: stream the JSON Lines catalog through compile's
+// pass, writing the compiled bytes nowhere and sorting in a temporary
+// directory, beside its spine and vocabularies, reporting its findings and
+// a checking process's peak RSS. ADR 0025's budget: at most 512 MiB peak.
+func BenchmarkCheckCatalog(b *testing.B) {
+	dir := catalogDir(b)
+	var findings int
+	for b.Loop() {
+		n, err := checkCatalog(dir)
+		if err != nil {
+			b.Fatal(err)
+		}
+		findings = n
+	}
+	b.StopTimer()
+	peak, err := childPeakRSS(checkEnv, dir)
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.ReportMetric(float64(findings), "findings")
+	b.ReportMetric(peak/1e6, "peak-RSS-MB")
+}
+
+// checkCatalog checks the fixture in dir as `nitrovin vocab check` does:
+// the embedded Decoder's month and vocab.Check, sorting in a temporary
+// directory, removed after. It is how many findings it made.
+func checkCatalog(dir string) (int, error) {
+	d, err := nitrovin.Embedded()
+	if err != nil {
+		return 0, err
+	}
+	scratch, err := os.MkdirTemp("", "nitrovin-bench-scratch-")
+	if err != nil {
+		return 0, err
+	}
+	defer os.RemoveAll(scratch)
+	findings, err := vocab.Check(d.Month(), vocab.DirScratch(scratch), dir)
+	return len(findings), err
+}
+
 // countingWriter counts the bytes written to it, and keeps none.
 type countingWriter int64
 

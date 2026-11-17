@@ -108,3 +108,42 @@ The finding format is additive: a reader that ignores unknown fields keeps worki
   as compile's is.
 - A build ticket on [the map](https://github.com/joshuasprow/nitrovin/issues/221)
   carries the work, with ADR 0026.
+
+## Amendment (2026-11-17): as built
+
+Building it ([#300](https://github.com/joshuasprow/nitrovin/issues/300))
+settled what this ADR left open:
+
+- **A `vpic` catalog links to every extension set** checked beside it. Its
+  vehicles may name any of them, and which ones is known only once the
+  catalog has streamed by.
+- **A stock file's links** are a shelf's catalog, the catalog when a yard's
+  rows name a part or a catalog vehicle, and the part vocabularies and
+  spines its rows name.
+- **Stock beside a JSON Lines catalog.** A stock file's check reads its
+  catalog by number and by vehicle. When a stock file to be checked links to
+  the JSON Lines catalog, the catalog is compiled into the check's scratch,
+  not to nowhere, and read there as a loaded compiled catalog; its findings
+  are still the streaming pass's. Memory stays the compile's.
+- **A second catalog** among the arguments is a fault, `/kind: … is a
+  catalog too: a deployment loads one catalog`, as loading has it, so
+  only one is checked.
+- **The unchecked line's detail** is one of `its drift was not measured: it
+  has faults`, `… it links to <file>, which has faults`, or `… it links
+  through <file> to <file>, which has faults`, naming the faulty file and,
+  when the link is not direct, the file it is reached through. It comes
+  after the file's faults.
+- **A file whose header does not read** has no name, so a file naming it
+  gets the fault that it is not loaded, as before.
+- **Findings come file by file**, in the order of the arguments, each
+  file's faults in line order.
+- **`entry` is on a fault about a line that read**: a duplicate entry, an
+  extension reference or spine id no loaded file defines; `id` on a
+  duplicate id and an extension's unresolved make. A line refused as it
+  reads (malformed, a bad mapping) carries neither.
+
+### Measured (2026-11-17)
+
+`bench/vocab` on the catalog-scale fixture, one core (`GOMAXPROCS=1`),
+Apple M5 Pro: `vocab check` 4.7 s and 191.0 MB at peak, against the
+budget of 512 MiB; `vocab compile` 4.3 s and 188.2 MB.

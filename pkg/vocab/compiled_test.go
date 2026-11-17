@@ -693,7 +693,7 @@ type fullMonth struct{ modelMonth }
 func (fullMonth) ModelYears(int32) []YearRange { return nil }
 
 // TestCompiledRefused: --vocab refuses a compiled catalog in a format it
-// cannot read, format 1 included, saying to compile it again; one cut
+// cannot read, formats 1, 3 and 4 included, saying to compile it again; one cut
 // short or damaged; and one without the spine or vehicle vocabulary it
 // links to. Expand refuses one whose bytes do not hash to its header's
 // blake3. Compile refuses a catalog with a fault, a compiled one, and a
@@ -719,18 +719,20 @@ func TestCompiledRefused(t *testing.T) {
 		}
 		return p
 	}
-	version, format1, format3 := slices.Clone(good), slices.Clone(good), slices.Clone(good)
+	version, format1, format3, format4 := slices.Clone(good), slices.Clone(good), slices.Clone(good), slices.Clone(good)
 	binary.LittleEndian.PutUint32(version[8:], CompiledFormat+1)
 	binary.LittleEndian.PutUint32(format1[8:], 1)
 	binary.LittleEndian.PutUint32(format3[8:], 3)
+	binary.LittleEndian.PutUint32(format4[8:], 4)
 	for _, tc := range []struct {
 		name   string
 		paths  []string
 		detail string
 	}{
-		{"a format it cannot read", []string{write(version)}, "compiled catalog format 5: this nitrovin reads format 4 only; compile the catalog again with this release"},
-		{"format 1", []string{write(format1)}, "compiled catalog format 1: this nitrovin reads format 4 only; compile the catalog again with this release"},
-		{"format 3", []string{write(format3)}, "compiled catalog format 3: this nitrovin reads format 4 only; compile the catalog again with this release"},
+		{"a format it cannot read", []string{write(version)}, "compiled catalog format 6: this nitrovin reads format 5 only; compile the catalog again with this release"},
+		{"format 1", []string{write(format1)}, "compiled catalog format 1: this nitrovin reads format 5 only; compile the catalog again with this release"},
+		{"format 3", []string{write(format3)}, "compiled catalog format 3: this nitrovin reads format 5 only; compile the catalog again with this release"},
+		{"format 4", []string{write(format4)}, "compiled catalog format 4: this nitrovin reads format 5 only; compile the catalog again with this release"},
 		{"cut short", []string{write(good[:len(good)-1])}, "it was cut short or added to"},
 		{"shorter than a header", []string{write(good[:20])}, "shorter than its header"},
 		{"no spine", []string{byName["catalog-models"].Path, path}, `/spine: spine "part-types" is not loaded`},

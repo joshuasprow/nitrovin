@@ -5,7 +5,8 @@ import (
 	"strconv"
 )
 
-// Severity says whether a finding refuses the file or only warns.
+// Severity says whether a finding refuses the file, only warns, or says
+// the file was not measured.
 type Severity string
 
 const (
@@ -14,6 +15,10 @@ const (
 	// SeverityDrift warns: the file disagrees with the loaded data month,
 	// and is served anyway (ADR 0011).
 	SeverityDrift Severity = "drift"
+	// SeverityUnchecked says Check did not measure the file's drift: it
+	// has faults, or links, directly or through other files, to one that
+	// does (ADR 0025). It is one finding per such file, at line 0.
+	SeverityUnchecked Severity = "unchecked"
 )
 
 // DriftKind is what a drift finding is about.
@@ -61,8 +66,8 @@ const (
 )
 
 // Finding is one fault or drift, about one line of one file: a line of
-// `nitrovin vocab check`, {"file", "line", "severity", "detail"}, and a
-// drift's "kind".
+// `nitrovin vocab check`, {"file", "line", "severity", "detail"}, a
+// drift's "kind", and the "entry" or "id" the line holds (ADR 0025).
 type Finding struct {
 	// File is the file's Path.
 	File string `json:"file"`
@@ -73,6 +78,13 @@ type Finding struct {
 	Detail   string   `json:"detail"`
 	// Drift is the drift's kind, "" for a fault, which omits it.
 	Drift DriftKind `json:"kind,omitempty"`
+	// Entry is, for a finding about a vocabulary's line, its entry's
+	// fields by name, as written; nil otherwise, and for a line that did
+	// not read.
+	Entry map[string]string `json:"entry,omitempty"`
+	// ID is, for a finding about an extension set's or a declared spine's
+	// line, its id; "" otherwise, and for a line that did not read.
+	ID string `json:"id,omitempty"`
 }
 
 // String is "file:line: detail", or "file: detail" for line 0.
@@ -98,4 +110,16 @@ func (fs Faults) Error() string {
 
 func fault(file string, line int, format string, a ...any) Finding {
 	return Finding{File: file, Line: line, Severity: SeverityFault, Detail: fmt.Sprintf(format, a...)}
+}
+
+// ofEntry is g about entry e of vocabulary f: it names the entry.
+func ofEntry(g Finding, f *File, e *Entry) Finding {
+	g.Entry = f.FieldsOf(e)
+	return g
+}
+
+// ofID is g about the extension or spine entry id.
+func ofID(g Finding, id string) Finding {
+	g.ID = id
+	return g
 }

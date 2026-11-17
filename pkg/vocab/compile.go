@@ -251,7 +251,8 @@ func (c *compiler) batch(lines []byte, line *int) error {
 		start = end + 1
 	}
 	*line += slots
-	f := &File{Path: c.name, Kind: KindCatalog, Vehicles: c.hdr.Vehicles, FiledUnder: c.hdr.FiledUnder, Fitments: make([]Fitment, slots)}
+	f := &File{Path: c.name, Kind: KindCatalog, Vehicles: c.hdr.Vehicles, FiledUnder: c.hdr.FiledUnder,
+		VehiclesCase: c.hdr.VehiclesCase, FiledUnderCase: c.hdr.FiledUnderCase, Fitments: make([]Fitment, slots)}
 	inParallel(chunks, func() func(*chunk) {
 		r := newReader(f)
 		return func(ch *chunk) { r.read(ch, first-1, nil) }
@@ -285,6 +286,14 @@ func (c *compiler) header(text []byte, n int) error {
 	}
 	if f.Kind != KindCatalog {
 		return fmt.Errorf("%s is %s, not a catalog: compile a catalog", c.name, f.Kind.noun())
+	}
+	// Its vehicles and entries are one or two as their vocabularies match
+	// (ADR 0026): the file records how.
+	if g := c.byName[f.Vehicles]; f.Vehicles != Reserved && g != nil && g.Kind == KindVocabulary {
+		f.VehiclesCase = g.Case
+	}
+	if g := c.byName[f.FiledUnder]; f.FiledUnder != "" && g != nil && g.Kind == KindVocabulary {
+		f.FiledUnderCase = g.Case
 	}
 	c.hdr = f
 	ext := func(ref string) (*Extension, string) { return resolveExt(c.byName, ref) }
@@ -1036,13 +1045,14 @@ func (c *compiler) write(w io.Writer, drift []Finding) error {
 	return put(w, h.Sum(nil))
 }
 
-// meta is the meta section: the catalog's header, the source's hash, the
-// files it was linked against, the writer, the drift and its month, the
-// kinds skipped, and the counts.
+// meta is the meta section: the catalog's header, the case of its
+// vehicle and filed-under vocabularies, the source's hash, the files it
+// was linked against, the writer, the drift and its month, the kinds
+// skipped, and the counts.
 func (c *compiler) meta(drift []Finding) []byte {
 	f := c.hdr
 	e := &encoder{}
-	for _, s := range []string{f.Name, f.Version, f.Release, f.DataMonth, f.Spine, f.Vehicles, f.FiledUnder} {
+	for _, s := range []string{f.Name, f.Version, f.Release, f.DataMonth, f.Spine, f.Vehicles, f.FiledUnder, string(f.VehiclesCase), string(f.FiledUnderCase)} {
 		e.str(s)
 	}
 	e.b = append(e.b, c.hash[:]...)

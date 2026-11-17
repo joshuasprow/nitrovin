@@ -441,10 +441,17 @@ specifies.
   (ADR 0021), which `nitrovin vocab compile` writes: it opens in
   milliseconds, is read in place, and answers exactly as its JSON Lines
   source. A directory loads only its `*.jsonl`, so name a compiled file
-  itself. It is refused, as a fault about the file as a whole (line 0), in
-  a compiled format this release cannot read, cut short, or when its spine
-  or vehicle vocabulary is not loaded, or is loaded without a part type or
-  vehicle the catalog was compiled with. Its drift is not measured in full
+  itself. It is compiled format 5, which records whether its vehicle and
+  `filed_under` vocabularies were case-exact
+  ([ADR 0026](../adr/0026-case-exact-vocabularies.md)). It is refused, as a
+  fault about the file as a whole (line 0), in a compiled format this
+  release cannot read (format 4 and earlier: recompile), cut short, or when
+  its spine or vehicle vocabulary is not loaded, or is loaded without a
+  part type or vehicle the catalog was compiled with, or a vehicle or
+  `filed_under` vocabulary matches case otherwise than when it was
+  compiled (`/vehicles: vocabulary "codes" folds case, and the catalog was
+  compiled against it matching case exactly: compile it again beside the
+  vocabulary`). Its drift is not measured in full
   at load: it is the drift its compiling measured and stored, but for its
   `vehicle` drift, measured again against the vehicle vocabulary loaded
   (one look per vehicle).
@@ -458,7 +465,9 @@ specifies.
   first year 2014 is after last year 2012 (and 2 more)`). Faults are a file
   that cannot be read; a malformed line; an unknown format, kind, subject or
   field; a missing or ill-typed field; entry fields other than the header's;
-  two entries equal after normalization, or two extensions or spine entries
+  two entries equal after normalization (white space trimmed and
+  collapsed, case folded unless the vocabulary's header says `"case":
+  "exact"`, [ADR 0026](../adr/0026-case-exact-vocabularies.md)), or two extensions or spine entries
   with one id; a mapping naming no spine entry, or two; a first year after
   the last; qualifiers on an extension mapping, or on a catalog application
   whose vehicle is an extension; a reference to an extension
@@ -571,20 +580,45 @@ specifies.
   compile in a browser ([ADR 0023](../adr/0023-fitment-in-the-browser.md)),
   which `nitrovin vocab check` measures. It is `[]` when
   nothing is loaded, as for every `nitrovin_open` handle.
-- **`nitrovin vocab check <file|dir>…`** loads its arguments, and only
+- **`nitrovin vocab check <file|dir>…`** reads its arguments, and only
   them, beside the data (`--data` as for any command) and prints every
   finding on stdout as a JSON line,
-  `{"file", "line", "severity": "fault"|"drift", "detail"}`, and on a drift
-  its `kind`: `make`, `model`, `qualifier`, `extension`, `model-years`,
+  `{"file", "line", "severity": "fault"|"drift"|"unchecked", "detail"}`,
+  on a drift its `kind`: `make`, `model`, `qualifier`, `extension`, `model-years`,
   `vehicle`, `redirect`, `model-qualifier`, `orphan`, `personal-field`,
   `filed-under` or `unfiled`,
-  the kinds `/v1/info` counts. A fault has no `kind`. The faults are
-  printed when there are any, otherwise the drift. Exit 0 with no output
-  when there is none, 1 when there is any. Line 0 is a file that cannot be
-  read. A
-  catalog is checked like any file, so its spine, vehicle vocabulary and
+  the kinds `/v1/info` counts (a fault has no `kind`), and on a finding
+  about a line that read the entry or id it holds
+  ([ADR 0025](../adr/0025-checks-at-scale.md)): `entry`, a vocabulary
+  line's fields as written, or `id`, an extension set's or declared
+  spine's line's id. Catalog and stock findings, and a line that did not
+  read, carry neither; the field is additive, so a reader that ignores
+  unknown fields keeps working:
+  `{"file":"…/models.jsonl","line":42,"severity":"drift","detail":"/mappings/0/model: vPIC model 88888 is not in data month 2026_11","kind":"model","entry":{"code":"0003"}}`.
+  Every fault of every file is printed, and the drift of every file that
+  reads and links cleanly, even when another has faults. A file is
+  **unchecked** when it has faults, or links, directly or through other
+  files, to one that does: a catalog to its spine, vehicle vocabulary and
+  `filed_under` vocabulary (a `vpic` catalog to every extension set); a
+  part vocabulary to its spine; a vocabulary or extension set to the
+  extension sets it references; a stock file to its catalog and the
+  vocabularies and spines its rows name. Each unchecked file gets one line,
+  after its faults, at line 0, with `"severity":"unchecked"` and a
+  `detail` of `its drift was not measured: it has faults`, `… it links to
+  <file>, which has faults`, or `… it links through <file> to <file>,
+  which has faults`; a tool that keeps findings keeps such a file's last
+  drift rather than clearing it. Exit 0 with no output when there is
+  nothing, 1 on any finding, unchecked lines included. Line 0 is also a
+  file that cannot be read. Loading (`--vocab`, `serve`) still refuses
+  every file when any has a fault. A
+  catalog is checked with the files it names, so its spine, vehicle vocabulary and
   `filed_under` vocabulary must be among the arguments, and a stock file's
-  catalog with them. A
+  catalog with them. A JSON Lines catalog is checked by streaming, as
+  `vocab compile` reads it, the compiled bytes written nowhere: it sorts in
+  `$TMPDIR` (else `/tmp`), about twice the compiled file, removed when it
+  ends, and its memory does not grow with its lines (191 MB peak on the
+  790,000-fitment benchmark catalog, one core). When a stock file being
+  checked names it, it is compiled into that scratch and read there. A
   compiled catalog is read in full, its
   bytes checked against its header's hash, then checked line by line and
   its drift measured again against the loaded month, as its source would
@@ -674,7 +708,7 @@ MCP and C surfaces carry the same object.
 | Field | Type | Default | Rule |
 | --- | --- | --- | --- |
 | `of` | string | none | `vpic` or a loaded file's name. None asks for the catalog |
-| `where` | object | none | Fields matched exactly after the fixed normalization: a vocabulary's fields; for `vpic`, `make`, a make id, which lists that make's models, and with it `year`, one model year; or `model` and `element` together, a model id and a public element id, which list the model's values for the element. Spines and extension sets take none |
+| `where` | object | none | Fields matched exactly after the vocabulary's normalization (white space trimmed and collapsed, case folded unless it is case-exact, ADR 0026): a vocabulary's fields; for `vpic`, `make`, a make id, which lists that make's models, and with it `year`, one model year; or `model` and `element` together, a model id and a public element id, which list the model's values for the element. Spines and extension sets take none |
 | `limit` | int | 100 | 1 to 1,000 entries a page |
 | `after` | string | none | The previous page's `next` |
 

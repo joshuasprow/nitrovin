@@ -337,7 +337,8 @@ var catalogLookups = []struct{ name, label, budget string }{
 
 // catalog is the catalog's table, both forms side by side (ADR 0017,
 // ADR 0021), "" when its load did not run: its file, its load at each
-// GOMAXPROCS, its compiling, and its lookups on one core.
+// GOMAXPROCS, its compiling, its checking (ADR 0025) and its lookups on
+// one core.
 func (r *results) catalog() string {
 	var procs []int
 	for k := range r.bench {
@@ -386,6 +387,12 @@ func (r *results) catalog() string {
 	}
 	row("compile, 1 core: time, peak in process", "time recorded; ≤ 256 MiB peak", func(form string) string {
 		if m, ok := r.bench[key{"CompileCatalog", 1}]; ok && form == "compiled" {
+			return fmt.Sprintf("%s, %s", duration(m["ns/op"]), size(m["peak-RSS-MB"]))
+		}
+		return "—"
+	})
+	row("check, 1 core: time, peak in process", "≤ 512 MiB peak", func(form string) string {
+		if m, ok := r.bench[key{"CheckCatalog", 1}]; ok && form == "jsonl" {
 			return fmt.Sprintf("%s, %s", duration(m["ns/op"]), size(m["peak-RSS-MB"]))
 		}
 		return "—"

@@ -48,11 +48,11 @@ func Link(files []*File) error {
 					switch mp := &e.Mappings[j]; {
 					case mp.Ext != "":
 						if _, why := ext(mp.Ext); why != "" {
-							faults = append(faults, fault(f.Path, e.Line, "/mappings/%d/ext: %s", j, why))
+							faults = append(faults, ofEntry(fault(f.Path, e.Line, "/mappings/%d/ext: %s", j, why), f, e))
 						}
 					case mp.ID != "":
 						if _, ok := spine.SpineEntry(mp.ID); !ok {
-							faults = append(faults, fault(f.Path, e.Line, "/mappings/%d/id: spine %q has no id %q", j, f.Spine, mp.ID))
+							faults = append(faults, ofEntry(fault(f.Path, e.Line, "/mappings/%d/id: spine %q has no id %q", j, f.Spine, mp.ID), f, e))
 						}
 					}
 				}
@@ -64,9 +64,9 @@ func Link(files []*File) error {
 				}
 				switch mk, why := ext(x.MakeExt); {
 				case why != "":
-					faults = append(faults, fault(f.Path, x.Line, "/make: %s", why))
+					faults = append(faults, ofID(fault(f.Path, x.Line, "/make: %s", why), x.ID))
 				case !mk.IsMake():
-					faults = append(faults, fault(f.Path, x.Line, "/make: %s is an extension model, not a make", x.MakeExt))
+					faults = append(faults, ofID(fault(f.Path, x.Line, "/make: %s is an extension model, not a make", x.MakeExt), x.ID))
 				}
 			}
 		case KindCatalog:
@@ -185,6 +185,8 @@ func newCatalogLink(f *File, byName map[string]*File, ext func(string) (*Extensi
 		case l.vehicles.Subject != SubjectVehicle:
 			l.faults = append(l.faults, fault(f.Path, header, "/vehicles: %q is a part vocabulary, not a vehicle vocabulary", f.Vehicles))
 			l.vehicles = nil
+		case l.vehicles.Case != f.VehiclesCase:
+			l.faults = append(l.faults, caseFault(f, header, "/vehicles", l.vehicles, f.VehiclesCase))
 		}
 	}
 	if f.FiledUnder != "" {
@@ -200,9 +202,22 @@ func newCatalogLink(f *File, byName map[string]*File, ext func(string) (*Extensi
 		case l.filed.Spine != f.Spine:
 			l.faults = append(l.faults, fault(f.Path, header, "/filed_under: vocabulary %q maps onto spine %q, not the catalog's spine %q", f.FiledUnder, l.filed.Spine, f.Spine))
 			l.filed = nil
+		case l.filed.Case != f.FiledUnderCase:
+			l.faults = append(l.faults, caseFault(f, header, "/filed_under", l.filed, f.FiledUnderCase))
 		}
 	}
 	return l
+}
+
+// caseFault refuses catalog f, whose vehicles or entries match as keyed
+// does, beside vocabulary g, named at ptr in its header on line header,
+// which matches case otherwise: f was compiled beside another g, or, JSON
+// Lines, read without g (Read), folding case (ADR 0026).
+func caseFault(f *File, header int, ptr string, g *File, keyed Case) Finding {
+	if f.compiled != nil {
+		return fault(f.Path, header, "%s: vocabulary %q %s, and the catalog was compiled against it %s: compile it again beside the vocabulary", ptr, g.Name, g.Case.of(), keyed.as())
+	}
+	return fault(f.Path, header, "%s: vocabulary %q %s, and the catalog was read %s: open it beside the vocabulary", ptr, g.Name, g.Case.of(), keyed.as())
 }
 
 // vehicle checks vehicle v, before any line naming it.

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -25,12 +26,15 @@ import (
 // The synthetic fixture: testdata/vocab loads clean against the embedded
 // month (its headers say 2026_10; its ids and values are long-lived), its
 // drift/ variant with one drift of each kind, and fitment/ a catalog with
-// its spine and vehicle vocabulary, and stock/ a shelf and a yard on it.
+// its spine and vehicle vocabulary, and stock/ a shelf and a yard on it;
+// unchecked/ has a faulty file, files linked to it and through it, and a
+// clean file with drift (ADR 0025).
 var (
-	fixture        = abs("../../testdata/vocab")
-	driftFixture   = abs("../../testdata/vocab/drift")
-	fitmentFixture = abs("../../testdata/vocab/fitment")
-	stockFixture   = abs("../../testdata/vocab/stock")
+	fixture          = abs("../../testdata/vocab")
+	driftFixture     = abs("../../testdata/vocab/drift")
+	fitmentFixture   = abs("../../testdata/vocab/fitment")
+	stockFixture     = abs("../../testdata/vocab/stock")
+	uncheckedFixture = abs("../../testdata/vocab/unchecked")
 )
 
 func abs(path string) string {
@@ -129,9 +133,10 @@ func TestVocabCheck(t *testing.T) {
 
 	faulty := faultyFile(t)
 	r := cli(t, nil, "", "vocab", "check", faulty)
-	if fs := findings(t, r.stdout); r.exit != 1 || r.stderr != "" || len(fs) != 1 ||
-		fs[0].File != faulty || fs[0].Line != 2 || fs[0].Severity != vocab.SeverityFault || !strings.Contains(fs[0].Detail, "first year 2014 is after last year 2012") {
-		t.Errorf("vocab check on a faulty file: exit %d, stdout %q, stderr %q; want exit 1 and one fault at line 2", r.exit, r.stdout, r.stderr)
+	if fs := findings(t, r.stdout); r.exit != 1 || r.stderr != "" || len(fs) != 2 ||
+		fs[0].File != faulty || fs[0].Line != 2 || fs[0].Severity != vocab.SeverityFault || !strings.Contains(fs[0].Detail, "first year 2014 is after last year 2012") ||
+		fs[1].File != faulty || fs[1].Line != 0 || fs[1].Severity != vocab.SeverityUnchecked {
+		t.Errorf("vocab check on a faulty file: exit %d, stdout %q, stderr %q; want exit 1, one fault at line 2 and the file unchecked", r.exit, r.stdout, r.stderr)
 	}
 
 	r = cli(t, nil, "", "vocab", "check", driftFixture)
@@ -146,6 +151,187 @@ func TestVocabCheck(t *testing.T) {
 	for _, args := range [][]string{{"vocab"}, {"vocab", "check"}, {"vocab", "lint", fixture}} {
 		if r := cli(t, nil, "", args...); r.exit != 2 || r.stdout != "" || !strings.Contains(r.stderr, "usage: nitrovin vocab check") {
 			t.Errorf("nitrovin %q: exit %d, stdout %q, stderr %q; want a usage error", args, r.exit, r.stdout, r.stderr)
+		}
+	}
+}
+
+// TestVocabFindingsNameTheirEntry: a finding about a vocabulary's line
+// carries "entry", its fields as written, and one about an extension
+// set's line "id" (ADR 0025): drift and faults alike, from `vocab check`,
+// `vocab compile` and load's stderr. A catalog's finding carries neither.
+func TestVocabFindingsNameTheirEntry(t *testing.T) {
+	fixtureData(t)
+	about := func(fs []vocab.Finding) []string {
+		var out []string
+		for _, f := range fs {
+			b, err := json.Marshal(map[string]any{"entry": f.Entry, "id": f.ID})
+			if err != nil {
+				t.Fatal(err)
+			}
+			out = append(out, filepath.Base(f.File)+":"+strconv.Itoa(f.Line)+" "+string(b))
+		}
+		return out
+	}
+	ext, ram := `classics.jsonl:2 {"entry":null,"id":"silverado"}`, `yard.jsonl:2 {"entry":{"make":"Dodge","model":"Ram 1500"},"id":""}`
+
+	r := cli(t, nil, "", "vocab", "check", driftFixture)
+	if got := about(findings(t, r.stdout)); r.exit != 1 || len(got) < 2 || got[0] != ext || got[1] != ram {
+		t.Errorf("vocab check on the drift fixture: exit %d, %q; want %q, %q first", r.exit, got, ext, ram)
+	}
+	r = cli(t, []string{"NITROVIN_VOCAB=" + driftFixture}, "", "info")
+	if got := about(findings(t, r.stderr)); r.exit != 0 || len(got) < 2 || got[0] != ext || got[1] != ram {
+		t.Errorf("load's stderr with the drift fixture: exit %d, %q; want %q, %q first", r.exit, got, ext, ram)
+	}
+
+	dup := filepath.Join(t.TempDir(), "dup.jsonl")
+	data := `{"format":1,"kind":"vocabulary","name":"dup","version":"1","subject":"vehicle","fields":["make","model"]}` + "\n" +
+		`{"entry":{"make":"Dodge","model":"Ram"},"mappings":[]}` + "\n" +
+		`{"entry":{"make":"DODGE","model":" ram"},"mappings":[]}` + "\n"
+	if err := os.WriteFile(dup, []byte(data), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	fault := `dup.jsonl:3 {"entry":{"make":"DODGE","model":" ram"},"id":""}`
+	for _, tc := range []struct {
+		args []string
+		want []string
+	}{
+		{[]string{"vocab", "check", dup}, []string{fault, `dup.jsonl:0 {"entry":null,"id":""}`}},
+		{[]string{"vocab", "compile", "-o", filepath.Join(t.TempDir(), "c"), fitmentFixture, dup}, []string{fault}},
+	} {
+		r := cli(t, nil, "", tc.args...)
+		if got := about(findings(t, r.stdout)); r.exit != 1 || !slices.Equal(got, tc.want) {
+			t.Errorf("nitrovin %q: exit %d, %q; want %q", tc.args, r.exit, got, tc.want)
+		}
+	}
+
+	dir := t.TempDir()
+	for _, name := range []string{"part-types.jsonl", "catalog-models.jsonl", "part-codes.jsonl", "catalog.jsonl"} {
+		b, err := os.ReadFile(filepath.Join(fitmentFixture, name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if name == "catalog.jsonl" {
+			b = append(b, `{"redirect":{"vehicle":{"make":"Dodge","model":"Ram 1500"},"from":"engine","to":"mirror","first":2015}}`+"\n"...)
+		}
+		if err := os.WriteFile(filepath.Join(dir, name), b, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	r = cli(t, nil, "", "vocab", "check", dir)
+	if got, want := about(findings(t, r.stdout)), []string{`catalog.jsonl:9 {"entry":null,"id":""}`}; r.exit != 1 || !slices.Equal(got, want) {
+		t.Errorf("vocab check on a drifting catalog: exit %d, %q; want %q", r.exit, got, want)
+	}
+}
+
+// TestVocabCheckBesideAFault: `vocab check` measures the drift of every
+// file that reads and links cleanly though another has faults, and gives
+// each file it did not measure one "unchecked" line at line 0: the faulty
+// one, one linked to it, and those linked through it (ADR 0025). Exit 1,
+// as on any finding. Loading the same files still refuses them all.
+func TestVocabCheckBesideAFault(t *testing.T) {
+	fixtureData(t)
+	at := func(name string) string { return filepath.Join(uncheckedFixture, name) }
+	r := cli(t, nil, "", "vocab", "check", uncheckedFixture)
+	var got []string
+	for _, f := range findings(t, r.stdout) {
+		got = append(got, string(f.Severity)+" "+filepath.Base(f.File)+":"+strconv.Itoa(f.Line)+": "+f.Detail)
+	}
+	want := []string{
+		"unchecked catalog.jsonl:0: its drift was not measured: it links through " + at("yard.jsonl") + " to " + at("classics.jsonl") + ", which has faults",
+		"fault classics.jsonl:3: malformed JSON: unexpected end of JSON input",
+		"unchecked classics.jsonl:0: its drift was not measured: it has faults",
+		"unchecked shelf.jsonl:0: its drift was not measured: it links through " + at("catalog.jsonl") + " to " + at("classics.jsonl") + ", which has faults",
+		"drift trucks.jsonl:3: " + fmt.Sprintf("/mappings/0/make: vPIC make 99999 is not in data month %s", embedded.Month),
+		"unchecked yard.jsonl:0: its drift was not measured: it links to " + at("classics.jsonl") + ", which has faults",
+	}
+	if r.exit != 1 || r.stderr != "" || !slices.Equal(got, want) {
+		t.Errorf("vocab check: exit %d, stderr %q, findings\n%s\nwant exit 1 and\n%s", r.exit, r.stderr, strings.Join(got, "\n"), strings.Join(want, "\n"))
+	}
+
+	r = cli(t, nil, "", "--vocab", uncheckedFixture, "info")
+	if p := problem(t, r); r.exit != 1 || r.stdout != "" || !strings.HasPrefix(p.Detail, "--vocab: "+at("classics.jsonl")+":3: ") {
+		t.Errorf("info with the files: exit %d, stdout %q, problem %+v; want every file refused", r.exit, r.stdout, p)
+	}
+}
+
+// TestVocabCheckStreamsCatalog: `vocab check` streams a JSON Lines catalog
+// as compile does (ADR 0025), and finds what loading it whole finds:
+// on the fixture's catalog clean, drifting, faulty, beside stock and
+// alone, its findings, but for its unchecked lines, are those of the
+// files opened, expanded and loaded beside the data. Its scratch, under
+// TMPDIR, is gone when it ends, and it writes no other file.
+func TestVocabCheckStreamsCatalog(t *testing.T) {
+	fixtureData(t)
+	d, err := nitrovin.Embedded()
+	if err != nil {
+		t.Fatal(err)
+	}
+	// whole is what checking the files loaded whole finds.
+	whole := func(paths []string) []vocab.Finding {
+		files, err := vocab.Open(paths...)
+		for i := 0; err == nil && i < len(files); i++ {
+			files[i], err = files[i].Expand()
+		}
+		var tr *nitrovin.Translator
+		if err == nil {
+			tr, err = nitrovin.NewTranslator(d, files...)
+		}
+		if faults, ok := errors.AsType[vocab.Faults](err); ok {
+			return faults
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+		return tr.AllDrift()
+	}
+	catalogWith := func(lines ...string) string {
+		dir := t.TempDir()
+		data, err := os.ReadFile(filepath.Join(fitmentFixture, "catalog.jsonl"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, l := range lines {
+			data = append(data, l+"\n"...)
+		}
+		if err := os.WriteFile(filepath.Join(dir, "catalog.jsonl"), data, 0o644); err != nil {
+			t.Fatal(err)
+		}
+		return dir
+	}
+	beside := []string{filepath.Join(fitmentFixture, "part-types.jsonl"), filepath.Join(fitmentFixture, "catalog-models.jsonl"), filepath.Join(fitmentFixture, "part-codes.jsonl")}
+	drifting := catalogWith(
+		`{"redirect":{"vehicle":{"make":"Dodge","model":"Ram 1500"},"from":"engine","to":"mirror","first":2015}}`,
+		`{"fitment":{"type":"mirror","number":"MR-9001","side":"left"},"filed_under":[{"code":"MIRX"}],"applications":[{"vehicle":{"make":"Dodge","model":"Dakota"},"first":2009,"last":2012,"options":""}]}`,
+		`{"fitment":{"type":"mirror","number":"MR-9002","side":"left"},"applications":[{"vehicle":{"make":"Dodge","model":"Ram 1500"},"first":2009,"last":2012,"options":""}]}`)
+	faulty := catalogWith(`{"fitment":{"type":"mirror","number":"MR-1001","side":"left"},"applications":[]}`, `{"fitment":`)
+	for _, tc := range []struct {
+		name  string
+		paths []string
+		n     int // findings, unchecked lines aside
+	}{
+		{"clean", []string{fitmentFixture}, 0},
+		{"drifting", append(slices.Clone(beside), drifting), 4},
+		{"faulty", append(slices.Clone(beside), faulty), 2},
+		{"beside stock", []string{fitmentFixture, stockFixture, filepath.Join(stockFixture, "drift")}, 1},
+		{"drifting beside stock", append(slices.Clone(beside), drifting, stockFixture, filepath.Join(stockFixture, "drift")), 5},
+		{"alone", []string{filepath.Join(fitmentFixture, "catalog.jsonl")}, 3},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tmp := t.TempDir()
+			r := cli(t, []string{"TMPDIR=" + tmp}, "", append([]string{"vocab", "check"}, tc.paths...)...)
+			got := slices.DeleteFunc(findings(t, r.stdout), func(f vocab.Finding) bool { return f.Severity == vocab.SeverityUnchecked })
+			want := whole(tc.paths)
+			if len(want) != tc.n || !reflect.DeepEqual(got, want) || r.stderr != "" {
+				t.Errorf("vocab check: exit %d, stderr %q, findings\n%#v\nwant the %d of the files loaded whole:\n%#v", r.exit, r.stderr, got, tc.n, want)
+			}
+			if left, err := os.ReadDir(tmp); err != nil || len(left) > 0 {
+				t.Errorf("TMPDIR after vocab check: %v, %v; want it empty", left, err)
+			}
+		})
+	}
+	for _, dir := range []string{fitmentFixture, drifting} {
+		if entries, err := os.ReadDir(dir); err != nil || slices.ContainsFunc(entries, func(e os.DirEntry) bool { return !strings.HasSuffix(e.Name(), ".jsonl") }) {
+			t.Errorf("%s after vocab check: %v, %v; want its files alone", dir, entries, err)
 		}
 	}
 }
@@ -340,7 +526,7 @@ func TestVocabCheckCatalog(t *testing.T) {
 	for _, f := range findings(t, r.stdout) {
 		got = append(got, string(f.Severity)+" "+strconv.Itoa(f.Line)+": "+f.Detail)
 	}
-	if want := []string{`fault 1: /spine: spine "part-types" is not loaded`, `fault 1: /vehicles: vocabulary "catalog-models" is not loaded`, `fault 1: /filed_under: vocabulary "part-codes" is not loaded`}; r.exit != 1 || !slices.Equal(got, want) {
+	if want := []string{`fault 1: /spine: spine "part-types" is not loaded`, `fault 1: /vehicles: vocabulary "catalog-models" is not loaded`, `fault 1: /filed_under: vocabulary "part-codes" is not loaded`, `unchecked 0: its drift was not measured: it has faults`}; r.exit != 1 || !slices.Equal(got, want) {
 		t.Errorf("vocab check on the catalog alone: exit %d, findings %v; want exit 1 and %v", r.exit, got, want)
 	}
 

@@ -526,8 +526,13 @@ func TestLibraryCatalogStale(t *testing.T) {
 	// A file this release cannot open: another compiled format.
 	binary.LittleEndian.PutUint32(disk.catalogData[8:], 1)
 	l = openWith(t, s, disk)
-	if got := stored(l); len(got) != 2 || !strings.Contains(got[1], "compiled catalog format 1: this nitrovin reads format 4 only") || !strings.HasSuffix(got[1], recompile) {
+	if got := stored(l); len(got) != 2 || !strings.Contains(got[1], "compiled catalog format 1: this nitrovin reads format 5 only") || !strings.HasSuffix(got[1], recompile) {
 		t.Errorf("format 1: %q", got)
+	}
+	binary.LittleEndian.PutUint32(disk.catalogData[8:], 4)
+	l = openWith(t, s, disk)
+	if got := stored(l); len(got) != 2 || !strings.Contains(got[1], "compiled catalog format 4: this nitrovin reads format 5 only") || !strings.HasSuffix(got[1], recompile) {
+		t.Errorf("format 4: %q", got)
 	}
 	noCatalog(l)
 

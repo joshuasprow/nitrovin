@@ -52,10 +52,12 @@ import (
 // peakEnv makes the test binary a child that loads the paths it names
 // (separated by the OS's list separator) and exits: BenchmarkLoad reads its
 // peak RSS. compileEnv makes it one that compiles the catalog-scale
-// fixture in the directory it names, as BenchmarkCompileCatalog does.
+// fixture in the directory it names, as BenchmarkCompileCatalog does, and
+// checkEnv one that checks it, as BenchmarkCheckCatalog does.
 const (
 	peakEnv    = "NITROVIN_BENCH_PEAK"
 	compileEnv = "NITROVIN_BENCH_COMPILE"
+	checkEnv   = "NITROVIN_BENCH_CHECK"
 )
 
 // decodeVIN is decode's budget VIN, and the EPA and MVL sets' translate VIN.
@@ -76,6 +78,13 @@ func TestMain(m *testing.M) {
 	}
 	if dir := os.Getenv(compileEnv); dir != "" {
 		if err := compileCatalog(io.Discard, dir); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		os.Exit(0)
+	}
+	if dir := os.Getenv(checkEnv); dir != "" {
+		if _, err := checkCatalog(dir); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}

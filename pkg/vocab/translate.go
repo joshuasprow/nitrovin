@@ -553,7 +553,7 @@ func (s *Set) match(f *File, spine []Reached, c conditions) Translated {
 	keys := make(map[*Entry][]string, len(ms))
 	for i := range ms {
 		ms[i].Unconfirmed = unconfirmedOf(ms[i].Via)
-		keys[ms[i].Entry] = normalized(ms[i].Entry.Fields)
+		keys[ms[i].Entry] = normalized(ms[i].Entry.Fields, f.Case)
 	}
 	slices.SortFunc(ms, func(a, b Match) int { return compareKeys(keys[a.Entry], keys[b.Entry]) })
 	return Translated{Vocabulary: f, Matches: ms}

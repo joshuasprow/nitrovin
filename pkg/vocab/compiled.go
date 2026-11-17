@@ -52,7 +52,8 @@ import (
 //	  24  [8]byte  zero
 //	  32  [32]byte blake3 of the file with these 32 bytes zero
 //	directory, at 64: per section, uint64 offset and uint64 length
-//	meta    the catalog's header, the source's blake3, the files it was
+//	meta    the catalog's header, the case of its vehicle and filed-under
+//	        vocabularies (ADR 0026), the source's blake3, the files it was
 //	        linked against, the writer, the data month its drift was
 //	        measured against and those findings, the drift kinds it did
 //	        not measure, and its counts
@@ -95,8 +96,9 @@ import (
 // same bytes.
 
 // CompiledFormat is the compiled catalog format this package writes, and
-// the only one it reads.
-const CompiledFormat = 4
+// the only one it reads: 5, which records the case of the vocabularies it
+// was compiled against (ADR 0026).
+const CompiledFormat = 5
 
 // compiledMagic begins a compiled catalog. No JSON Lines file begins so.
 const compiledMagic = "nvcatalg"
@@ -327,6 +329,11 @@ func openCompiled(path string, r io.ReaderAt, size int64) (*File, error) {
 func (c *compiled) readMeta(f *File, b []byte) error {
 	d := &decoder{b: b}
 	f.Name, f.Version, f.Release, f.DataMonth, f.Spine, f.Vehicles, f.FiledUnder = d.str(), d.str(), d.str(), d.str(), d.str(), d.str(), d.str()
+	for _, k := range []*Case{&f.VehiclesCase, &f.FiledUnderCase} {
+		if *k = Case(d.str()); *k != CaseFolded && *k != CaseExact {
+			d.fail("a vocabulary of case %q", *k)
+		}
+	}
 	m := &c.meta
 	m.Format = CompiledFormat
 	m.SourceHash = d.hash()
@@ -341,7 +348,8 @@ func (c *compiled) readMeta(f *File, b []byte) error {
 		m.Skipped = append(m.Skipped, DriftKind(d.str()))
 	}
 	c.info = CatalogInfo{
-		Name: f.Name, Version: f.Version, Release: f.Release, DataMonth: f.DataMonth, Spine: f.Spine, Vehicles: f.Vehicles, FiledUnder: f.FiledUnder, Hash: m.SourceHash,
+		Name: f.Name, Version: f.Version, Release: f.Release, DataMonth: f.DataMonth, Spine: f.Spine, Vehicles: f.Vehicles, FiledUnder: f.FiledUnder,
+		VehiclesCase: f.VehiclesCase, FiledUnderCase: f.FiledUnderCase, Hash: m.SourceHash,
 		Fitments: int(d.uint()), Applications: int(d.uint()), Redirects: int(d.uint()), Retired: int(d.uint()), Filings: int(d.uint()),
 	}
 	if d.err == nil && len(d.b) > 0 {
@@ -395,7 +403,7 @@ func (c *compiled) readDict(b []byte) error {
 		}
 		at += bl.head + bl.body
 		c.blocks = append(c.blocks, bl)
-		key = appendVehicleKey(key[:0], v)
+		key = appendVehicleKey(key[:0], v, c.info.VehiclesCase)
 		v.key = string(key)
 		c.vehicleAt[v.key] = v.id
 		c.vehicles = append(c.vehicles, v)
@@ -465,7 +473,7 @@ func (c *compiled) readEntries(d *decoder) {
 			name := d.str()
 			entry[name] = d.str()
 		}
-		e := newFiled(entry, entryKey(entry))
+		e := newFiled(entry, entryKey(entry, c.info.FiledUnderCase))
 		e.id = int32(i)
 		var types []FitmentKey
 		for range d.count() {
@@ -1383,7 +1391,7 @@ func (c *compiled) retiredAt(r *cursor, rec keyedRecord) *Retired {
 // and number, one read, then each fitment's record in keyed, one read
 // each.
 func (c *compiled) byFiled(entry map[string]string, number string, side *Side) []*Fitment {
-	id, ok := c.filedAt[entryKey(entry)]
+	id, ok := c.filedAt[entryKey(entry, c.info.FiledUnderCase)]
 	if !ok || len(c.filedPages) == 0 {
 		return nil
 	}
@@ -1561,7 +1569,8 @@ func (f *File) Expand() (g *File, err error) {
 			g, err = nil, Faults{fault(f.Path, 0, "%v", e)}
 		}
 	}()
-	g = &File{Path: f.Path, Hash: f.Hash, Kind: f.Kind, Name: f.Name, Version: f.Version, DataMonth: f.DataMonth, Spine: f.Spine, Vehicles: f.Vehicles, Release: f.Release, FiledUnder: f.FiledUnder}
+	g = &File{Path: f.Path, Hash: f.Hash, Kind: f.Kind, Name: f.Name, Version: f.Version, DataMonth: f.DataMonth, Spine: f.Spine, Vehicles: f.Vehicles, Release: f.Release, FiledUnder: f.FiledUnder,
+		VehiclesCase: f.VehiclesCase, FiledUnderCase: f.FiledUnderCase}
 	// Its own vehicles and entries: indexLines numbers them.
 	own := make(map[*Vehicle]*Vehicle, len(c.vehicles))
 	for _, v := range c.vehicles {
