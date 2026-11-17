@@ -645,11 +645,25 @@ func idAt(raw []byte, ptr string) (int32, error) {
 	return int32(n), nil
 }
 
+// extIDClass is a character of an extension id, defined or in an
+// extension reference: any but '/' and white space as Normalize has it,
+// unicode.IsSpace (Unicode 17.0.0 under go1.27): tab, line feed, vertical
+// tab, form feed, carriage return and space, U+0085 (NEL), U+00A0 (NBSP)
+// and category Z, U+1680, U+2000–U+200A, U+2028, U+2029, U+202F, U+205F
+// and U+3000. It is written as those characters, not as \s, so that RE2
+// here and ECMA-262 in docs/api/vocabulary.schema.json read one class:
+// RE2's \s is ASCII without \v, and ECMA-262's holds NBSP and U+FEFF but
+// not NEL.
+const extIDClass = "[^/\t\n\v\f\r \u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]"
+
+// extIDRefused says which characters extIDClass refuses.
+const extIDRefused = "'/' nor white space (tab, line feed, vertical tab, form feed, carriage return, space, U+0085, U+00A0, U+1680, U+2000–U+200A, U+2028, U+2029, U+202F, U+205F or U+3000)"
+
 var (
 	namePattern  = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]*$`)
 	monthPattern = regexp.MustCompile(`^[0-9]{4}_(0[1-9]|1[0-2])$`)
-	extPattern   = regexp.MustCompile(`^ext:([a-z0-9][a-z0-9._-]*)/([^/\s]+)$`)
-	idPattern    = regexp.MustCompile(`^[^/\s]+$`)
+	extPattern   = regexp.MustCompile(`^ext:([a-z0-9][a-z0-9._-]*)/(` + extIDClass + `+)$`)
+	idPattern    = regexp.MustCompile(`^` + extIDClass + `+$`)
 	// elementPattern is a qualifier's element id.
 	elementPattern = regexp.MustCompile(`^[1-9][0-9]*$`)
 )
@@ -1046,10 +1060,15 @@ func qualifiersAt(raw []byte, ptr string) ([]Qualifier, error) {
 	return qs, nil
 }
 
+// IsExtRef reports whether s is an extension reference, ext:<set>/<id>,
+// as vocabulary.schema.json's ExtensionRef has it: a set's name, and an id
+// of extIDClass's characters.
+func IsExtRef(s string) bool { return extPattern.MatchString(s) }
+
 // extRefAt reads raw, at ptr, as an extension reference, ext:<set>/<id>.
 func extRefAt(raw []byte, ptr string) (string, error) {
 	s, err := stringAt(raw, ptr)
-	if err == nil && !extPattern.MatchString(s) {
+	if err == nil && !IsExtRef(s) {
 		err = errAt(ptr, "%q is not an extension reference, ext:<set>/<id>", s)
 	}
 	return s, err
@@ -1085,7 +1104,7 @@ func extension(n int, line []byte) (Extension, error) {
 		return Extension{}, err
 	}
 	if !idPattern.MatchString(x.ID) {
-		return Extension{}, errAt("/id", "%q may contain neither '/' nor white space", x.ID)
+		return Extension{}, errAt("/id", "%q may contain neither "+extIDRefused, x.ID)
 	}
 	hasMakeName, hasMake, hasName := v[1] != nil, v[2] != nil, v[3] != nil
 	switch {

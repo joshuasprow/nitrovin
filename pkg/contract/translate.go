@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/joshuasprow/nitrovin/pkg/vocab"
 )
 
 // TranslateRequest is one translation request, the same on every surface
@@ -55,10 +57,6 @@ type SpineRef struct {
 
 // IsZero reports whether r names nothing.
 func (r SpineRef) IsZero() bool { return r == SpineRef{} }
-
-// extPattern is an extension reference, vocabulary.schema.json's
-// ExtensionRef.
-var extPattern = regexp.MustCompile(`^ext:[a-z0-9][a-z0-9._-]*/[^/\s]+$`)
 
 // Validate checks r against the request rules a Go caller can break:
 // exactly one from, VIN lengths after trimming, a VIN given once, the range
@@ -131,7 +129,7 @@ func (r SpineRef) validate(ptr string) *Problem {
 		return NewProblem(InvalidRequest, ptr+"/make", "make must be a vPIC make id, from 1")
 	case r.Model < 0:
 		return NewProblem(InvalidRequest, ptr+"/model", "model must be a vPIC model id, from 1")
-	case r.Ext != "" && !extPattern.MatchString(r.Ext):
+	case r.Ext != "" && !vocab.IsExtRef(r.Ext):
 		return NewProblem(InvalidRequest, ptr+"/ext", fmt.Sprintf("%q is not an extension reference, ext:<set>/<id>", r.Ext))
 	case (r.Spine != "" || r.ID != "") && r.Spine == "":
 		return NewProblem(InvalidRequest, ptr+"/spine", "spine is required beside id")

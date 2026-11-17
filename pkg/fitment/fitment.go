@@ -29,7 +29,7 @@
 //	cat := set.Catalog()                              // a Reader
 //	tr, _ := set.Translate(vocab.Query{From: …, To: []string{cat.Info().Vehicles}})
 //	vehicles := fitment.Vehicles(cat.Info(), tr)      // the seam
-//	candidates := cat.ByVehicle(partType, vehicles, year, nil)
+//	candidates := cat.ByVehicle(partType, vehicles, year)
 package fitment
 
 import (
@@ -42,12 +42,14 @@ type Reader interface {
 	// ByVehicle returns the candidates for part type partType, "" for
 	// every part type: each fitment with an application to one of vehicles
 	// (the catalog's own; see Vehicles) whose years hold year, nil for any
-	// year, and whose side is *side, nil for any side, with those
-	// applications. They come ordered by part type, side, then number. A
-	// request about every part type of a vehicle asks once with "", which
-	// a compiled catalog answers from one read of the vehicle's block
-	// (ADR 0023).
-	ByVehicle(partType string, vehicles []vocab.Vehicle, year *int, side *vocab.Side) []vocab.Candidate
+	// year, with those applications, of every side. They come ordered by
+	// part type, side, then number. A request about every part type of a
+	// vehicle asks once with "", which a compiled catalog answers from one
+	// read of the vehicle's block (ADR 0023). Which sides a request keeps
+	// is the request's rule, applied to these (ADR 0018): left keeps left,
+	// both and no side; right likewise; both keeps both and no side; no
+	// side keeps every side.
+	ByVehicle(partType string, vehicles []vocab.Vehicle, year *int) []vocab.Candidate
 	// Matching is ByVehicle answering with only the applications that
 	// matched: each candidate's Fitment holds the fitment's key, line,
 	// note and entries it is filed under, and only those applications, in
@@ -57,7 +59,7 @@ type Reader interface {
 	// compiled catalog answers
 	// Matching from the vehicle's block alone, never reading the rest of a
 	// fitment of many applications (ADR 0023).
-	Matching(partType string, vehicles []vocab.Vehicle, year *int, side *vocab.Side) []vocab.Candidate
+	Matching(partType string, vehicles []vocab.Vehicle, year *int) []vocab.Candidate
 	// ByFiled returns the fitments filed under the entry of the catalog's
 	// filed-under vocabulary with fields entry (matched after Normalize),
 	// with that number and side *side, nil for any side, in key order
@@ -103,7 +105,7 @@ type Reader interface {
 // fit reads related vehicles through Shared when its Reader is a Sharer,
 // and through ByVehicle otherwise.
 type Sharer interface {
-	Shared(vehicles []vocab.Vehicle, year *int, side *vocab.Side, keep func(*vocab.Candidate) bool) *vocab.Shared
+	Shared(vehicles []vocab.Vehicle, year *int, keep func(*vocab.Candidate) bool) *vocab.Shared
 	// Vehicles are every vehicle the catalog names, once each, in the
 	// order of the first line naming each: a SharedSpan's Vehicle is its
 	// index here.

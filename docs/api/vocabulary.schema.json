@@ -66,7 +66,7 @@
         },
         "case": {
           "const": "exact",
-          "description": "Entries match after trimming and collapsing white space, never folding case: two entries that differ only in case are two, and a spelling the vocabulary does not hold is unknown (ADR 0026). Absent, entries match after folding case too."
+          "description": "Entries match after trimming and collapsing white space (Entry's entry says which), never folding case: two entries that differ only in case are two, and a spelling the vocabulary does not hold is unknown (ADR 0026). Absent, entries match after folding case too."
         }
       },
       "if": { "properties": { "subject": { "const": "part" } } },
@@ -104,7 +104,7 @@
         "entry": {
           "type": "object",
           "additionalProperties": { "type": "string" },
-          "description": "The entry's fields, exactly the header's fields. Matched after trimming, collapsing whitespace and Unicode lower-casing; two entries equal after that refuse the file."
+          "description": "The entry's fields, exactly the header's fields. Matched after one normalization: white space trimmed and every run of it collapsed to one space, white space being Go's unicode.IsSpace (tab, line feed, vertical tab, form feed, carriage return, space, U+0085, U+00A0 and Unicode's category Z: U+1680, U+2000–U+200A, U+2028, U+2029, U+202F, U+205F, U+3000); then case folded by Go's strings.ToLower, each character's simple lower-case mapping with no locale, unless the vocabulary's case is exact; nothing else, no Unicode normalization form. The Unicode version is the Go release's that built nitrovin (17.0.0 for go1.27). Two entries equal after it refuse the file."
         },
         "mappings": {
           "type": "array",
@@ -141,8 +141,8 @@
     },
     "ExtensionRef": {
       "type": "string",
-      "pattern": "^ext:[a-z0-9][a-z0-9._-]*/[^/\\s]+$",
-      "description": "ext:<extension set>/<id>. The set must be loaded and define the id."
+      "pattern": "^ext:[a-z0-9][a-z0-9._-]*/[^/\t\n\u000b\f\r \u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]+$",
+      "description": "ext:<extension set>/<id>. The set must be loaded and define the id, whose characters are an Extension id's."
     },
     "Extension": {
       "type": "object",
@@ -154,7 +154,7 @@
         { "required": ["make", "name"], "not": { "required": ["make_name"] } }
       ],
       "properties": {
-        "id": { "type": "string", "minLength": 1, "pattern": "^[^/\\s]+$" },
+        "id": { "type": "string", "minLength": 1, "pattern": "^[^/\t\n\u000b\f\r \u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]+$", "description": "Any characters but '/' and white space as entry fields' normalization has it (Go's unicode.IsSpace): tab, line feed, vertical tab, form feed, carriage return, space, U+0085, U+00A0, U+1680, U+2000–U+200A, U+2028, U+2029, U+202F, U+205F and U+3000. The class lists those characters, not \\s, so that ECMA-262 and RE2 read it alike." },
         "make_name": { "type": "string", "minLength": 1, "description": "An extension make: a marque vPIC has no entry for." },
         "make": {
           "oneOf": [
@@ -279,7 +279,7 @@
         "location": { "type": "string", "description": "Opaque: a fit's location filters on it." },
         "type": { "type": "string", "minLength": 1, "description": "The fitment key's part type." },
         "number": { "type": "string", "minLength": 1, "description": "The catalog's number." },
-        "side": { "enum": ["left", "right", "both"] },
+        "side": { "enum": ["left", "right", "both"], "description": "The fitment key's side. A row without one joins only the fitment with no side." },
         "part": {
           "description": "A row with no number's part type: an entry of the catalog's spine, or of a part vocabulary on it.",
           "oneOf": [

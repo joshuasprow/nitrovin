@@ -117,3 +117,39 @@ load misses this budget.
 file that reads and links cleanly even when another has faults, and gives each
 file it did not measure an `unchecked` line. Loading still refuses every file when
 any has a fault.
+
+## Amendment (2026-11-17): the normalization and extension ids, stated exactly
+
+"Trimming, collapsing whitespace and Unicode lower-casing" left out the character
+sets, so a re-implementation could not agree with nitrovin without reading its
+code; the first user's SQL had to discover that NBSP and NEL count
+([#292](https://github.com/joshuasprow/nitrovin/issues/292)). Exactly:
+
+- **White space** is Go's `unicode.IsSpace`: tab, line feed, vertical tab, form
+  feed, carriage return and space (U+0009–U+000D, U+0020), U+0085 (NEL), U+00A0
+  (NBSP), and Unicode's category Z (U+1680, U+2000–U+200A, U+2028, U+2029,
+  U+202F, U+205F, U+3000). It is trimmed from both ends, and each run of it inside
+  becomes one space.
+- **Lower-casing** is Go's `strings.ToLower`: each character's simple lower-case
+  mapping, with no locale and no special casing. A case-exact vocabulary
+  ([ADR 0026](0026-case-exact-vocabularies.md)) skips it.
+- **Nothing else**: no Unicode normalization form.
+- **The Unicode version** is `unicode.Version` of the Go release that built
+  nitrovin: 17.0.0 for go1.27, the release `go.mod` names.
+
+**An extension id**, and the id in an extension reference, holds any characters
+but `/` and that white space. Go checked `^[^/\s]+$` and the schema had the same
+pattern, but RE2's `\s` is tab, line feed, form feed, carriage return and space,
+and ECMA-262's, the dialect JSON Schema names, adds vertical tab, NBSP, U+FEFF and
+category Z, without NEL; so an id with an NBSP loaded and failed the schema. Both
+now hold one class that lists its characters, which RE2 and ECMA-262 read alike,
+and the refusal lists them. A schema test reads the schema's pattern as ECMA-262
+does and checks that it and the loader refuse the same ids.
+
+The class is white space as matching has it, not the class that refused nothing
+that loaded before (RE2's `\s`, ASCII): one meaning of white space in the file
+format, and an id with an NBSP, which reads as a space and which the published
+schema already refused, is refused. That is a breaking change for a file whose
+extension ids or references hold a vertical tab, NEL, NBSP or another category Z
+space: it loaded, and is refused. Of those, the schema accepted only NEL. An id
+with U+FEFF, which the schema refused, now validates, as it always loaded.

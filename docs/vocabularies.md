@@ -19,10 +19,11 @@ The rules are the
 and for catalogs [0016](adr/0016-what-a-fitment-says.md) and
 [0017](adr/0017-the-catalog-file.md).
 
-Matching is exact. nitrovin compares names after trimming them, collapsing
-white space and lower-casing, and nothing else: no fuzzy matching, no
-rules. Deciding that your `Chevy Silverado` is vPIC's Chevrolet Silverado
-is the vocabulary author's work, done before the file is written.
+Matching is exact. nitrovin compares names after one normalization,
+trimming and collapsing white space and folding case (stated exactly under
+**A vehicle vocabulary**), and nothing else: no fuzzy matching, no rules.
+Deciding that your `Chevy Silverado` is vPIC's Chevrolet Silverado is the
+vocabulary author's work, done before the file is written.
 
 The examples run from a checkout of this repository, with `nitrovin` built
 from it on `PATH`, against the synthetic vocabularies in
@@ -71,9 +72,23 @@ silently.
   name an entry, in order: a make and a model here, one code in a catalog.
   A model year is never a field.
 - **An entry** has exactly the header's fields, and is matched after one
-  normalization: white space trimmed and every run of it collapsed to one
-  space, and case folded (ADR 0009). Two entries equal after it refuse the
-  file.
+  normalization (ADR 0009). Two entries equal after it refuse the file. A
+  re-implementation, in SQL say, agrees with nitrovin only if it follows
+  it exactly:
+  - **White space** is trimmed from both ends, and every run of it inside
+    becomes one space (U+0020). White space is Go's `unicode.IsSpace`:
+    tab, line feed, vertical tab, form feed, carriage return and space
+    (U+0009–U+000D, U+0020), U+0085 (NEL), U+00A0 (NBSP), and Unicode's
+    category Z (U+1680, U+2000–U+200A, U+2028, U+2029, U+202F, U+205F,
+    U+3000). Nothing else is: U+FEFF and the zero-width characters stay.
+  - **Case** is folded by Go's `strings.ToLower`: each character's simple
+    lower-case mapping, one character to one, with no locale and no
+    special casing (`İ` is `i`, a final `Σ` is `σ`). A case-exact
+    vocabulary skips it (below).
+  - **Nothing else**: no Unicode normalization form, so `é` as one
+    character and as `e` with a combining accent are two spellings.
+  - **The Unicode version** is the Go release's that built nitrovin,
+    `unicode.Version`: 17.0.0 for go1.27, the release `go.mod` names.
 - **`"case": "exact"`**, in the header, keeps case
   ([ADR 0026](adr/0026-case-exact-vocabularies.md)), for a system whose
   codes differ only in case and name different things: entries still match
@@ -162,6 +177,14 @@ No decode lands on an extension, so an extension mapping takes no
 qualifiers and is reached from names only. When vPIC gains the vehicle,
 map to its id instead; until then `vocab check` warns if an extension is
 named like a vPIC make, or like a vPIC model under the same make.
+
+An extension's `id` holds any characters but `/` and white space as the
+normalization above has it (`unicode.IsSpace`): an extension line whose
+id holds one is refused, its message listing them, and an extension
+reference whose id does is malformed. The schema's pattern lists them
+rather than writing `\s`, which Go's regular expressions (ASCII, without
+the vertical tab) and JSON Schema's (ECMA-262: with NBSP and U+FEFF,
+without NEL) read differently.
 
 ## A part vocabulary and its spine
 
@@ -320,17 +343,20 @@ echo '{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-1001"}}}' |
 server's: while the server has none, a browser may compile one of its own
 (**In a browser**, below). In Go, a loaded
 catalog is a `fitment.Reader` ([`pkg/fitment`](../pkg/fitment)), the one
-interface every consumer reads it through (ADR 0017): `ByVehicle`,
-`ByNumber`, `ByFiled` (by an entry, a number and a side, `nil` for any),
-`Redirect`, `Fitments` (a page of fitments in key order) and
-`Info`. Its vehicles are the catalog's own; `fitment.Vehicles` turns a
-translation to the catalog's vehicle vocabulary into them:
+interface every consumer reads it through (ADR 0017): `ByVehicle` and
+`Matching` (a vehicle's fitments of every side), `ByNumber`, `ByFiled`
+(by an entry, a number and a side, `nil` for any), `Redirect`,
+`Fitments` (a page of fitments in key order) and `Info`. Which sides a
+request keeps is the request's own rule, applied to what `ByVehicle`
+answers ([the API's side filter](api/README.md#fit-fit)). Its vehicles
+are the catalog's own; `fitment.Vehicles` turns a translation to the
+catalog's vehicle vocabulary into them:
 
 ```go
 t, _ := nitrovin.NewTranslator(d, files...) // files from vocab.Open("testdata/vocab/fitment")
 cat := t.Catalog()                           // nil when no catalog is loaded
 ram := vocab.Vehicle{Entry: map[string]string{"make": "Dodge", "model": "Ram 1500"}}
-for _, c := range cat.ByVehicle("mirror", []vocab.Vehicle{ram}, new(2010), nil) {
+for _, c := range cat.ByVehicle("mirror", []vocab.Vehicle{ram}, new(2010)) {
 	fmt.Println(c.Fitment.Key.Number, c.Fitment.Key.Side, len(c.Applications)) // MR-1001 left 2, MR-1001 right 1
 }
 fit, retired := cat.ByNumber("brake-rotor-front", "BR-1999", vocab.SideNone) // BR-2001, through the retired number
@@ -471,6 +497,15 @@ through. nitrovin interprets only how a row names what it is:
 | `yard` | `vin`: decoded by nitrovin, once, at load | `vin` |
 | `yard` | `vehicle` and `year`: the catalog's own vehicle | `catalog-vehicle` |
 
+A numbered row joins the fitment with exactly its key, side included: a
+row with no `side` joins only the fitment with no side, never the left or
+right fitment of its number. A system that leaves the side off a part the
+catalog lists by side marks the side itself, in its view or its lines. A
+row with no number is matched by `part`, `vehicle` and `year` alone: a
+stock file refuses one that also gives `type` or `side`, and a connector,
+whose relation has those columns on every row, does not read them where
+`number` is null.
+
 A yard row uses the first of its routes that gives a vPIC model and year.
 One whose VIN decodes no model, or a model and no year, falls to its
 `vehicle` and `year`; with no vehicle, a model without a year is in every
@@ -564,7 +599,7 @@ view renames a system's own columns. Each is read in one of a few types:
 
 | Source | Columns |
 | --- | --- |
-| `shelf` | `id`, `location` (text); `type`, `number`, `side` (text; null on a row with no number, `side` null for a fitment with none); `part_type` (text, a spine id, for a row with no number); the vehicle columns; `year` (integer); `fields` (jsonb or json); `as_of` (optional) |
+| `shelf` | `id`, `location` (text); `type`, `number`, `side` (text; `side` null for a fitment with none; `number` null on a row with no number, whose `type` and `side` are not read); `part_type` (text, a spine id, for a row with no number); the vehicle columns; `year` (integer); `fields` (jsonb or json); `as_of` (optional) |
 | `yard` | `id`, `location` (text); `decoded_make`, `decoded_model`, `decoded_year` (integer, the source's own vPIC decode of the vehicle's VIN); the vehicle columns; `year` (integer); `fields` (jsonb or json); `as_of` (optional) |
 
 The vehicle columns are `vehicle_<field>` (text) for each field of the
@@ -581,8 +616,11 @@ carry left to the source: a yard row is matched by its decode when all
 three `decoded_*` columns are set (`matched: "vin"`; nitrovin never
 decodes a connector's VIN, so a source keeps its decodes fresh itself,
 for example with `POST /v1/decode`), else by its vehicle and `year`; a
-vehicle matches when its columns equal the catalog's values exactly, as
-the catalog writes them; a row with a null `id` or `location` is never
+numbered shelf row matches a key's `side IS NOT DISTINCT FROM` its own,
+so a null `side` joins only the fitment with no side, as a file's row
+with no `side` does; a vehicle matches when its columns equal the
+catalog's values exactly, as the catalog writes them; a row with a null
+`id` or `location` is never
 served; `fields` that are null, or not an object, are served as `{}`.
 Each list's rows come in `id` order (bytewise), and its block's `as_of`
 is the oldest of that list's own rows: two candidates' shelves can say
@@ -606,21 +644,47 @@ equality, and the other two `IS NULL`, which the same index serves.
 parts system's table and a yard system's, the views the connectors read,
 and a role that reads only the views; CI loads the synthetic rows into it
 and checks that the connectors answer every fit as the same rows loaded as
-files do. The shelf's view:
+files do. The shelf's view, and the role:
 
 ```sql
 CREATE INDEX shelf_by_number ON parts.shelf (part_class, catalog_no, hand);
 CREATE INDEX shelf_by_vehicle ON parts.shelf (spine_part, make, model, model_year) WHERE catalog_no IS NULL;
 
-CREATE VIEW stock.shelf_stock AS
+CREATE VIEW stock.shelf_stock WITH (security_barrier) AS
 SELECT stock_id AS id, bin AS location,
        part_class AS type, catalog_no AS number, hand AS side, spine_part AS part_type,
        make AS vehicle_make, model AS vehicle_model, model_year AS year,
        attrs AS fields
 FROM parts.shelf WHERE shelf = 'main';
-CREATE VIEW stock.shelf_stock_release AS
+CREATE VIEW stock.shelf_stock_release WITH (security_barrier) AS
 SELECT release FROM parts.release WHERE shelf = 'main';
+
+CREATE ROLE nitrovin_stock LOGIN PASSWORD 'stock-reader';
+DO $$ BEGIN
+  EXECUTE format('REVOKE TEMPORARY ON DATABASE %I FROM PUBLIC', current_database());
+END $$;
+GRANT USAGE ON SCHEMA stock TO nitrovin_stock;
+GRANT SELECT ON ALL TABLES IN SCHEMA stock TO nitrovin_stock;
+ALTER DEFAULT PRIVILEGES IN SCHEMA stock GRANT SELECT ON TABLES TO nitrovin_stock;
 ```
+
+The role sees what the views show and no more, should its DSN reach
+anyone but nitrovin:
+
+- **`security_barrier`** runs a view's `WHERE` before any condition of
+  the query reading it. A plain view lets the planner run a cheap
+  condition first, so a function the reader wrote, which can raise or
+  log its arguments, would see the rows the view leaves out.
+- **`TEMPORARY` revoked from `PUBLIC`** leaves the role nowhere to write
+  such a function. Every role holds `TEMPORARY` through `PUBLIC`, and it
+  lets a role create one in `pg_temp`; a database made by Postgres 15 or
+  later already grants `PUBLIC` no `CREATE` on schema `public` (revoke it
+  on an older one). A `NOINHERIT` role would not do: `PUBLIC`'s
+  privileges reach every role whatever it inherits. Grant `TEMPORARY`
+  back to the roles that need temporary tables.
+- **`ALTER DEFAULT PRIVILEGES`** grants `SELECT` on the views the
+  script's role makes in `stock` later: `GRANT … ON ALL TABLES` covers
+  only those that exist when it runs.
 
 A system without a jsonb column builds `fields` in the view, which is
 also where it leaves out what it would not show a customer (ADR 0019):

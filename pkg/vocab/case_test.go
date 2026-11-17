@@ -132,7 +132,7 @@ func TestCaseExactCatalog(t *testing.T) {
 			t.Errorf("%s: %d vehicles; want OLD3 and old3", name, n)
 		}
 		for spelling, want := range map[string]string{"OLD3": "P1:a", "old3": "P1:a P2:a", " old3 ": "P1:a P2:a", "Old3": ""} {
-			cs := c.ByVehicle("pads", []Vehicle{{Entry: map[string]string{"code": spelling}}}, nil, nil)
+			cs := c.ByVehicle("pads", []Vehicle{{Entry: map[string]string{"code": spelling}}}, nil)
 			if got := strings.Join(numbers(cs), " "); got != want {
 				t.Errorf("%s: by vehicle %q: %q; want %q", name, spelling, got, want)
 			}

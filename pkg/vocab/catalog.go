@@ -1115,15 +1115,16 @@ type Candidate struct {
 
 // ByVehicle returns the fitments of part type partType ("" for every part
 // type) with an application to one of vehicles whose years hold year (nil:
-// any year), and of side *side (nil: any side), each with its matching
-// applications. Candidates come in key order: part type, side, then
-// number. The vehicles are the catalog's own, as its lines name them;
-// turning a request's VIN or another vocabulary's entry into them is a
-// translation's work, not the catalog's. Qualifiers are not checked: that
-// takes a decode.
-func (c *Catalog) ByVehicle(partType string, vehicles []Vehicle, year *int, side *Side) []Candidate {
+// any year), of every side, each with its matching applications.
+// Candidates come in key order: part type, side, then number. Which sides
+// a request keeps is the request's rule (ADR 0018), not the catalog's. The
+// vehicles are the catalog's own, as its lines name them; turning a
+// request's VIN or another vocabulary's entry into them is a translation's
+// work, not the catalog's. Qualifiers are not checked: that takes a
+// decode.
+func (c *Catalog) ByVehicle(partType string, vehicles []Vehicle, year *int) []Candidate {
 	if cc := c.f.compiled; cc != nil {
-		return cc.byVehicle(c, partType, vehicles, year, side, true)
+		return cc.byVehicle(c, partType, vehicles, year, true)
 	}
 	x := c.f.catalog
 	types := []string{partType}
@@ -1151,7 +1152,7 @@ func (c *Catalog) ByVehicle(partType string, vehicles []Vehicle, year *int, side
 	for _, p := range ps {
 		fit := &c.f.Fitments[x.order[p.rank]]
 		a := &fit.Applications[p.app]
-		if side != nil && fit.Key.Side != *side || !holds(a.First, a.Last, year) {
+		if !holds(a.First, a.Last, year) {
 			continue
 		}
 		if n := len(out); n > 0 && out[n-1].Fitment == fit {
@@ -1169,11 +1170,11 @@ func (c *Catalog) ByVehicle(partType string, vehicles []Vehicle, year *int, side
 // points at. A fitment's other applications are another vehicle's: a
 // part-type summary or a candidate needs none of them, and a compiled
 // catalog answers without reading those of a wide fitment (ADR 0023).
-func (c *Catalog) Matching(partType string, vehicles []Vehicle, year *int, side *Side) []Candidate {
+func (c *Catalog) Matching(partType string, vehicles []Vehicle, year *int) []Candidate {
 	if cc := c.f.compiled; cc != nil {
-		return cc.byVehicle(c, partType, vehicles, year, side, false)
+		return cc.byVehicle(c, partType, vehicles, year, false)
 	}
-	return matching(c.ByVehicle(partType, vehicles, year, side))
+	return matching(c.ByVehicle(partType, vehicles, year))
 }
 
 // matching turns ByVehicle's candidates of a JSON Lines catalog into
@@ -1266,12 +1267,12 @@ func (s *Shared) Spans(each func(k int, spans []SharedSpan)) {
 // nothing more. keep's candidate is valid only until it returns. A
 // compiled catalog reads that much of a wide fitment, not the fitment
 // whole, and holds one read's bytes of it at a time (ADR 0023).
-func (c *Catalog) Shared(vehicles []Vehicle, year *int, side *Side, keep func(*Candidate) bool) *Shared {
+func (c *Catalog) Shared(vehicles []Vehicle, year *int, keep func(*Candidate) bool) *Shared {
 	if cc := c.f.compiled; cc != nil {
-		return cc.shared(c, vehicles, year, side, keep)
+		return cc.shared(c, vehicles, year, keep)
 	}
 	s := &Shared{}
-	cs := c.ByVehicle("", vehicles, year, side)
+	cs := c.ByVehicle("", vehicles, year)
 	for i := range cs {
 		whole := cs[i].Fitment
 		matching(cs[i : i+1])

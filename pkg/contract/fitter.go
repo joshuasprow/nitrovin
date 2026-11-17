@@ -291,7 +291,7 @@ type reached struct {
 // answer from.
 func (f Fitter) readEvery(v *reached) {
 	v.every, v.byType, v.redirects = true, map[string][]vocab.Candidate{}, map[string][]*vocab.Redirect{}
-	for _, c := range f.Catalog.Matching("", v.vehicles, v.year, nil) {
+	for _, c := range f.Catalog.Matching("", v.vehicles, v.year) {
 		t := c.Fitment.Key.Type
 		v.byType[t] = append(v.byType[t], c)
 	}
@@ -309,7 +309,7 @@ func (f Fitter) byVehicle(t string, v *reached, by *vocab.Vehicle) []vocab.Candi
 		if by != nil {
 			vehicles = []vocab.Vehicle{*by}
 		}
-		return f.Catalog.Matching(t, vehicles, v.year, nil)
+		return f.Catalog.Matching(t, vehicles, v.year)
 	}
 	if by == nil {
 		return v.byType[t]
@@ -1351,13 +1351,13 @@ func (rr *relatedRows) sets(rows []relatedRow) [][]int32 {
 // vehicles by key as they come.
 func (f Fitter) shared(v *reached, keep func(*vocab.Candidate) bool) ([]*vocab.Vehicle, func(func(int, []vocab.SharedSpan))) {
 	if s, ok := f.Catalog.(fitment.Sharer); ok {
-		return s.Vehicles(), s.Shared(v.vehicles, v.year, nil, keep).Spans
+		return s.Vehicles(), s.Shared(v.vehicles, v.year, keep).Spans
 	}
 	var vehicles []*vocab.Vehicle
 	ids := map[string]int32{}
 	var spans []vocab.SharedSpan
 	at := []int{0}
-	for _, c := range f.Catalog.ByVehicle("", v.vehicles, v.year, nil) {
+	for _, c := range f.Catalog.ByVehicle("", v.vehicles, v.year) {
 		if !keep(&c) {
 			continue
 		}

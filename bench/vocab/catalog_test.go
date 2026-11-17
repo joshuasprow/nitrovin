@@ -610,12 +610,12 @@ func BenchmarkCatalogReader(b *testing.B) {
 			measure := func(b *testing.B, f func() error) { measureReads(b, f, counter) }
 			b.Run("by-vehicle", func(b *testing.B) {
 				measure(b, cycle(func(i int) int {
-					return len(cat.ByVehicle(catalogTypeOf(i), vehicles(i), new(catalogFirstOf(i, 0)), nil))
+					return len(cat.ByVehicle(catalogTypeOf(i), vehicles(i), new(catalogFirstOf(i, 0))))
 				}))
 			})
 			b.Run("summary", func(b *testing.B) {
 				measure(b, cycle(func(i int) int {
-					return len(cat.ByVehicle("", vehicles(i), new(catalogFirstOf(i, 0)), nil))
+					return len(cat.ByVehicle("", vehicles(i), new(catalogFirstOf(i, 0))))
 				}))
 			})
 			b.Run("by-number", func(b *testing.B) {

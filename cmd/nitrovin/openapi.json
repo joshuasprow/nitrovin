@@ -2138,7 +2138,7 @@
           },
           "ext": {
             "type": "string",
-            "pattern": "^ext:[a-z0-9][a-z0-9._-]*/[^/\\s]+$",
+            "pattern": "^ext:[a-z0-9][a-z0-9._-]*/[^/\t\n\u000b\f\r    - \u2028\u2029  　]+$",
             "description": "An extension, ext:<set>/<id>."
           },
           "spine": {
@@ -2789,7 +2789,7 @@
           },
           "ext": {
             "type": "string",
-            "pattern": "^ext:[a-z0-9][a-z0-9._-]*/[^/\\s]+$"
+            "pattern": "^ext:[a-z0-9][a-z0-9._-]*/[^/\t\n\u000b\f\r    - \u2028\u2029  　]+$"
           },
           "id": {
             "type": "string",
@@ -2908,7 +2908,7 @@
                 "properties": {
                   "ext": {
                     "type": "string",
-                    "pattern": "^ext:[a-z0-9][a-z0-9._-]*/[^/\\s]+$",
+                    "pattern": "^ext:[a-z0-9][a-z0-9._-]*/[^/\t\n\u000b\f\r    - \u2028\u2029  　]+$",
                     "description": "An extension, ext:<set>/<id>."
                   }
                 },
@@ -3409,7 +3409,7 @@
             "properties": {
               "ext": {
                 "type": "string",
-                "pattern": "^ext:[a-z0-9][a-z0-9._-]*/[^/\\s]+$"
+                "pattern": "^ext:[a-z0-9][a-z0-9._-]*/[^/\t\n\u000b\f\r    - \u2028\u2029  　]+$"
               }
             },
             "additionalProperties": false
