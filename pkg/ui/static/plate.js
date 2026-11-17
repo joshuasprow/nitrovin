@@ -13,11 +13,10 @@
 //   entry, so Back steps through VINs and not keystrokes;
 // - a group whose characters were just completed is marked fresh, which
 //   the stylesheet draws in;
-// - the plate edits as a text field does, drawn on the cells: a click
-//   puts the caret between two characters, where typing inserts and
-//   Backspace takes out the one before; a drag selects the cells it
-//   crosses and a double click one, and typing replaces what is selected.
-//   A whole VIN takes no more: nothing is pushed off its end;
+// - the plate edits as a text field does, because it is one: the input's
+//   characters are spaced a cell apart (ui.css), so its own caret and
+//   selection, by click, drag, touch or key, fall on the cells, which
+//   draw them. A whole VIN takes no more: nothing is pushed off its end;
 // - whole VINs that decoded are kept in this browser (the last 8) and
 //   offered as chips in the examples' place.
 //
@@ -130,18 +129,6 @@
       cell.classList.toggle('caret-end', caret && from === LENGTH && i === LENGTH - 1);
     });
   };
-  // edgeAt is the gap between cells nearest x, of those the VIN reaches;
-  // cellAt the cell under x.
-  const where = (x) => {
-    const box = document.querySelector('#vin-form .cells').getBoundingClientRect();
-    return (x - box.left) / box.width * LENGTH;
-  };
-  const edgeAt = (x, n) => Math.max(0, Math.min(n, Math.round(where(x))));
-  const cellAt = (x) => Math.max(0, Math.min(LENGTH - 1, Math.floor(where(x))));
-  const select = (input, a, b) => {
-    input.setSelectionRange(Math.min(a, b), Math.max(a, b), b < a ? 'backward' : 'forward');
-    show();
-  };
 
   // A whole VIN takes no more: a character typed at the caret is refused,
   // not let push the last one off. One no VIN holds is not typed at all:
@@ -192,45 +179,40 @@
     ask(vin, how(vin)).catch(console.error);
   });
 
-  // A click puts the caret in the gap nearest it, a drag selects the
-  // cells it crosses, Shift and a click selects from the caret to there,
-  // a double click the cell under it and a third the whole VIN. The
-  // input's text is not where the cells are, so its own click is not used.
-  let anchor = -1;
-  document.addEventListener('mousedown', (e) => {
+  // The clicks, drags and keys are the input's own; the cells follow its
+  // selection. Focused by anything but a pointer (the page opening, a
+  // script), the caret goes after what is there, not before it.
+  let touched = -Infinity;
+  let finger = false;
+  for (const type of ['pointerdown', 'pointerup']) {
+    document.addEventListener(type, (e) => {
+      touched = performance.now();
+      finger = e.pointerType === 'touch';
+    }, true);
+  }
+  // A finger's tap is the exception: a phone puts the caret at the end of
+  // the word tapped, and a VIN is one word, so the tap's gap is worked
+  // out here (seen in the iPhone simulator, iOS 26.5). Its double taps,
+  // drags and handles stay the phone's own.
+  document.addEventListener('click', (e) => {
     const input = e.target;
-    if (input.id !== 'from-vin' || e.button !== 0 || !input.closest('.live')) return;
-    e.preventDefault();
-    input.focus({ preventScroll: true });
+    if (input.id !== 'from-vin' || !finger || e.detail > 1 || !input.closest('.live')) return;
+    const box = input.closest('.plate').querySelector('.cells').getBoundingClientRect();
     const n = input.value.length;
-    if (e.detail > 2) {
-      select(input, 0, n);
-      return;
-    }
-    if (e.detail === 2) {
-      const i = Math.min(cellAt(e.clientX), n);
-      select(input, i, Math.min(i + 1, n));
-      return;
-    }
-    const edge = edgeAt(e.clientX, n);
-    anchor = edge;
-    if (e.shiftKey) anchor = input.selectionDirection === 'backward' ? input.selectionEnd : input.selectionStart;
-    select(input, anchor, edge);
+    const edge = Math.max(0, Math.min(n, Math.round((e.clientX - box.left) / box.width * LENGTH)));
+    const put = () => {
+      input.setSelectionRange(edge, edge);
+      show();
+    };
+    put();
+    setTimeout(put);
   });
-  document.addEventListener('mousemove', (e) => {
-    if (anchor < 0) return;
-    if (e.buttons !== 1) {
-      anchor = -1;
-      return;
-    }
-    const input = document.getElementById('from-vin');
-    select(input, anchor, edgeAt(e.clientX, input.value.length));
-  });
-  document.addEventListener('mouseup', () => { anchor = -1; });
-
-  // The keys are the input's own; the cells follow its selection.
   document.addEventListener('focusin', (e) => {
-    if (e.target.id === 'from-vin') show();
+    const input = e.target;
+    if (input.id !== 'from-vin') return;
+    const n = input.value.length;
+    if (performance.now() - touched > 700 && input.selectionStart === input.selectionEnd) input.setSelectionRange(n, n);
+    show();
   });
   document.addEventListener('focusout', (e) => {
     if (e.target.id === 'from-vin') setTimeout(show);
@@ -296,6 +278,9 @@
     form.classList.add('live');
     const input = document.getElementById('from-vin');
     paint(clean(input.value), false);
+    // The page opens with the caret after what is there, not before it.
+    input.setSelectionRange(input.value.length, input.value.length);
+    show();
     if (!history.state) history.replaceState({ whole: input.value.length === LENGTH }, '', location.href);
     chips();
     remember(document.getElementById('answer'));
