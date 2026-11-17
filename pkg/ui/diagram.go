@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"cmp"
 	"slices"
 	"strconv"
 	"strings"
@@ -428,6 +429,12 @@ func (d *diagram) names(tr contract.Translation, cat []contract.CatalogEntry, el
 		row.Names = all
 		d.Names.Rows = append(d.Names.Rows, row)
 	}
+	// The lines above end on the first stack, so a vocabulary with a name
+	// goes before one without: a line never ends on a blank plate while a
+	// name is there to take it.
+	slices.SortStableFunc(d.Names.Rows, func(a, b akaRow) int {
+		return cmp.Compare(min(len(b.Names), 1), min(len(a.Names), 1))
+	})
 }
 
 // The check digit (49 CFR 565.15): each character's value, each
