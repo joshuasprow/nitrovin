@@ -141,3 +141,21 @@ the file's lines. `vocab check` reports field names that look personal (`email`,
   them.
 - [#241](https://github.com/joshuasprow/nitrovin/issues/241) builds `fit`. A stock
   ticket adds `stock`, `location` and the stock file to it.
+
+## Amendment (2026-11-17): a shelf row's side
+
+[#292](https://github.com/joshuasprow/nitrovin/issues/292) states what the shelf
+row above left implicit:
+
+- **A numbered row joins the fitment of exactly its key, side included.** A row
+  with no side joins only the fitment with no side, never the left or right one of
+  its number: the connector matches `side IS NOT DISTINCT FROM` the key's side
+  (ADR 0020), and a stock file looks the row up by its whole key. `fit`'s side
+  filter (ADR 0018) chooses among fitments, not among rows. A system that leaves
+  the side off a part the catalog lists by side marks the side itself, in its view
+  or its lines: the first user's shelf has 3,917 (code, number) pairs on two
+  sides, and its view marks them.
+- **A row with no number ignores `type` and `side`.** It is matched by part type,
+  vehicle and year alone. A connector does not read those columns where `number`
+  is null; a stock file, whose row names its part one way or the other, refuses a
+  row that gives either without a number.

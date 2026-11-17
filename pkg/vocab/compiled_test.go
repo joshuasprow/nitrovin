@@ -106,9 +106,9 @@ func compiledFixture(t *testing.T) *Catalog {
 // describeShared is what Shared answers, keeping every other candidate:
 // each candidate passed to keep, as Matching's, and the spans of each
 // kept, through two calls of Spans, which must agree.
-func describeShared(c *Catalog, vs []Vehicle, y *int, s *Side) string {
+func describeShared(c *Catalog, vs []Vehicle, y *int) string {
 	var cands []string
-	sh := c.Shared(vs, y, s, func(cand *Candidate) bool {
+	sh := c.Shared(vs, y, func(cand *Candidate) bool {
 		cands = append(cands, describeCandidates([]Candidate{*cand}))
 		return len(cands)%2 == 1
 	})
@@ -407,46 +407,44 @@ func TestCompiledAnswersAsJSONLines(t *testing.T) {
 			for _, typ := range types {
 				for _, vs := range vehicles {
 					for _, y := range years {
-						for _, s := range sides {
-							got, want := describeCandidates(cc.ByVehicle(typ, vs, y, s)), describeCandidates(jl.ByVehicle(typ, vs, y, s))
-							if got != want {
-								t.Fatalf("ByVehicle(%q, %d vehicles, %v, %v):\n%s\nwant\n%s", typ, len(vs), y, s, got, want)
-							}
-							matched := describeCandidates(jl.Matching(typ, vs, y, s))
-							cm := cc.Matching(typ, vs, y, s)
-							if got := describeCandidates(cm); got != matched {
-								t.Fatalf("Matching(%q, %d vehicles, %v, %v):\n%s\nwant\n%s", typ, len(vs), y, s, got, matched)
-							}
-							for _, c := range cm {
-								if len(c.Applications) != len(c.Fitment.Applications) {
-									t.Fatalf("Matching(%q, …): %s holds %d applications, %d matched", typ, c.Fitment.Key, len(c.Fitment.Applications), len(c.Applications))
-								}
-							}
-							asked += strings.Count(want, "matched")
-							if typ == "" {
-								shared := describeShared(jl, vs, y, s)
-								if got := describeShared(cc, vs, y, s); got != shared {
-									t.Fatalf("Shared(%d vehicles, %v, %v):\n%s\nwant\n%s", len(vs), y, s, got, shared)
-								}
-								// Of every fitment ByVehicle has, Matching's
-								// candidate, and every other one's every
-								// application's span.
-								var b strings.Builder
-								for i, c := range jl.ByVehicle("", vs, y, s) {
-									b.WriteString(describeCandidates(jl.Matching("", vs, y, s)[i : i+1]))
-									if i%2 == 1 {
-										continue
-									}
-									for j := range c.Fitment.Applications {
-										b.WriteString(describeSpan(sharedSpan(&c.Fitment.Applications[j])))
-									}
-								}
-								if shared != b.String() {
-									t.Fatalf("Shared(%d vehicles, %v, %v):\n%s\nwant\n%s", len(vs), y, s, shared, b.String())
-								}
+						got, want := describeCandidates(cc.ByVehicle(typ, vs, y)), describeCandidates(jl.ByVehicle(typ, vs, y))
+						if got != want {
+							t.Fatalf("ByVehicle(%q, %d vehicles, %v):\n%s\nwant\n%s", typ, len(vs), y, got, want)
+						}
+						matched := describeCandidates(jl.Matching(typ, vs, y))
+						cm := cc.Matching(typ, vs, y)
+						if got := describeCandidates(cm); got != matched {
+							t.Fatalf("Matching(%q, %d vehicles, %v):\n%s\nwant\n%s", typ, len(vs), y, got, matched)
+						}
+						for _, c := range cm {
+							if len(c.Applications) != len(c.Fitment.Applications) {
+								t.Fatalf("Matching(%q, …): %s holds %d applications, %d matched", typ, c.Fitment.Key, len(c.Fitment.Applications), len(c.Applications))
 							}
 						}
-						got, want := describeRedirects(cc.Redirect(typ, vs, y)), describeRedirects(jl.Redirect(typ, vs, y))
+						asked += strings.Count(want, "matched")
+						if typ == "" {
+							shared := describeShared(jl, vs, y)
+							if got := describeShared(cc, vs, y); got != shared {
+								t.Fatalf("Shared(%d vehicles, %v):\n%s\nwant\n%s", len(vs), y, got, shared)
+							}
+							// Of every fitment ByVehicle has, Matching's
+							// candidate, and every other one's every
+							// application's span.
+							var b strings.Builder
+							for i, c := range jl.ByVehicle("", vs, y) {
+								b.WriteString(describeCandidates(jl.Matching("", vs, y)[i : i+1]))
+								if i%2 == 1 {
+									continue
+								}
+								for j := range c.Fitment.Applications {
+									b.WriteString(describeSpan(sharedSpan(&c.Fitment.Applications[j])))
+								}
+							}
+							if shared != b.String() {
+								t.Fatalf("Shared(%d vehicles, %v):\n%s\nwant\n%s", len(vs), y, shared, b.String())
+							}
+						}
+						got, want = describeRedirects(cc.Redirect(typ, vs, y)), describeRedirects(jl.Redirect(typ, vs, y))
 						if got != want {
 							t.Fatalf("Redirect(%q, %d vehicles, %v):\n%s\nwant\n%s", typ, len(vs), y, got, want)
 						}
@@ -983,7 +981,7 @@ func TestCompiledFarRecordOutOfRange(t *testing.T) {
 					t.Errorf("far record at %v: recovered %v; want the file is damaged", place, r)
 				}
 			}()
-			c.blockHit(&cursor{c, string(b), 0}, 0, 0, nil, nil)
+			c.blockHit(&cursor{c, string(b), 0}, 0, 0, nil)
 		}()
 	}
 }
@@ -1065,16 +1063,16 @@ func FuzzOpenCompiled(f *testing.F) {
 		for _, v := range c.Vehicles() {
 			vehicles = append(vehicles, *v)
 		}
-		c.ByVehicle("", vehicles, nil, nil)
-		c.ByVehicle("", vehicles[:min(1, len(vehicles))], new(2005), new(SideLeft))
-		c.Matching("", vehicles, nil, nil)
+		c.ByVehicle("", vehicles, nil)
+		c.ByVehicle("", vehicles[:min(1, len(vehicles))], new(2005))
+		c.Matching("", vehicles, nil)
 		all := func(*Candidate) bool { return true }
-		c.Shared(vehicles, nil, nil, all).Spans(func(int, []SharedSpan) {})
-		c.Shared(vehicles[:min(1, len(vehicles))], new(2005), new(SideLeft), all).Spans(func(int, []SharedSpan) {})
+		c.Shared(vehicles, nil, all).Spans(func(int, []SharedSpan) {})
+		c.Shared(vehicles[:min(1, len(vehicles))], new(2005), all).Spans(func(int, []SharedSpan) {})
 		c.Redirect("", vehicles, nil)
 		for _, typ := range file.compiled.types {
-			c.ByVehicle(typ.name, vehicles, nil, nil)
-			c.ByVehicle(typ.name, vehicles[:min(1, len(vehicles))], new(2005), new(SideLeft))
+			c.ByVehicle(typ.name, vehicles, nil)
+			c.ByVehicle(typ.name, vehicles[:min(1, len(vehicles))], new(2005))
 			c.Redirect(typ.name, vehicles, nil)
 			for _, fit := range c.Fitments(typ.name, nil, 3) {
 				c.ByNumber(fit.Key.Type, fit.Key.Number, fit.Key.Side)

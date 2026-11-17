@@ -67,12 +67,15 @@ func withUser(u *url.URL, user, password string) string {
 	return v.String()
 }
 
+// resetViews drops what testdata/vocab/stock/live/views.sql makes, and
+// grants back the TEMPORARY it revokes from PUBLIC.
 const resetViews = `DROP SCHEMA IF EXISTS stock, parts, yard CASCADE;
 DO $$ BEGIN
   IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'nitrovin_stock') THEN
     EXECUTE 'DROP OWNED BY nitrovin_stock';
     DROP ROLE nitrovin_stock;
   END IF;
+  EXECUTE format('GRANT TEMPORARY ON DATABASE %I TO PUBLIC', current_database());
 END $$`
 
 // seeded is a stock file's rows as the parts and yard systems of

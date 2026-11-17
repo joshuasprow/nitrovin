@@ -825,8 +825,8 @@ func compareHits(a, b *hit) int {
 // part type: its head, then that type's records. Of a far record,
 // Matching reads nothing more, and ByVehicle its fitment whole, in keyed;
 // only Shared reads wide.
-func (c *compiled) byVehicle(cat *Catalog, partType string, vehicles []Vehicle, year *int, side *Side, whole bool) []Candidate {
-	hits := c.hits(cat, partType, vehicles, year, side)
+func (c *compiled) byVehicle(cat *Catalog, partType string, vehicles []Vehicle, year *int, whole bool) []Candidate {
+	hits := c.hits(cat, partType, vehicles, year)
 	if len(hits) == 0 {
 		return nil
 	}
@@ -841,8 +841,8 @@ func (c *compiled) byVehicle(cat *Catalog, partType string, vehicles []Vehicle, 
 // where its applications' vehicles and years lie, for Spans to read: a
 // near record's after its key, line and note, in the block; a far one's
 // in wide.
-func (c *compiled) shared(cat *Catalog, vehicles []Vehicle, year *int, side *Side, keep func(*Candidate) bool) *Shared {
-	hits := c.hits(cat, "", vehicles, year, side)
+func (c *compiled) shared(cat *Catalog, vehicles []Vehicle, year *int, keep func(*Candidate) bool) *Shared {
+	hits := c.hits(cat, "", vehicles, year)
 	far := 0
 	for _, h := range hits {
 		if h.far {
@@ -969,10 +969,9 @@ func (c *compiled) within(sec int, off, n int64) bool {
 
 // hits are the fitments of part type partType ("" for every one) the
 // vehicles' blocks hold with an application to one of vehicles whose
-// years hold year, of side *side: every part type is one read of each
-// vehicle's whole block; one part type, its head, then that type's
-// records.
-func (c *compiled) hits(cat *Catalog, partType string, vehicles []Vehicle, year *int, side *Side) []*hit {
+// years hold year: every part type is one read of each vehicle's whole
+// block; one part type, its head, then that type's records.
+func (c *compiled) hits(cat *Catalog, partType string, vehicles []Vehicle, year *int) []*hit {
 	t, ok := uint32(0), true
 	if partType != "" {
 		if t, ok = c.typeAt[partType]; !ok {
@@ -1006,7 +1005,7 @@ func (c *compiled) hits(cat *Catalog, partType string, vehicles []Vehicle, year 
 				c.damaged("vehicle %d's part type %d runs past its block", id, r.typ)
 			}
 			for range r.n {
-				h := c.blockHit(&body, r.typ, uint32(id), year, side)
+				h := c.blockHit(&body, r.typ, uint32(id), year)
 				if h != nil {
 					hits = append(hits, h)
 				}
@@ -1036,14 +1035,13 @@ func (c *compiled) typeRuns(head *cursor) []typeRun {
 }
 
 // blockHit reads one record of a vehicle's body, of part type typ: a hit
-// when it has an application to vehicle whose years hold year, and its
-// side is *side.
-func (c *compiled) blockHit(body *cursor, typ, vehicle uint32, year *int, side *Side) *hit {
+// when it has an application to vehicle whose years hold year.
+func (c *compiled) blockHit(body *cursor, typ, vehicle uint32, year *int) *hit {
 	switch kind := body.byte(); kind {
 	case recNear:
 		start := *body
 		s, number, keep := body.matching(vehicle, year, nil)
-		if len(keep) == 0 || side != nil && s != *side {
+		if len(keep) == 0 {
 			return nil
 		}
 		return &hit{typ: typ, side: s, number: number, rec: start, keep: keep}
@@ -1067,7 +1065,7 @@ func (c *compiled) blockHit(body *cursor, typ, vehicle uint32, year *int, side *
 		if !c.within(secKeyed, h.off, h.n) || !c.within(secWide, h.soff, h.sn) {
 			c.damaged("vehicle %d's far record is out of range", vehicle)
 		}
-		if len(h.keep) == 0 || side != nil && h.side != *side {
+		if len(h.keep) == 0 {
 			return nil
 		}
 		h.filed = filed.entries()

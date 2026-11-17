@@ -67,7 +67,7 @@ func TestCatalogLoads(t *testing.T) {
 		t.Fatalf("vehicles reached: %+v", vehicles)
 	}
 	var got []string
-	for _, c := range cat.ByVehicle("mirror", vehicles, new(2010), nil) {
+	for _, c := range cat.ByVehicle("mirror", vehicles, new(2010)) {
 		got = append(got, c.Fitment.Key.Number+" "+c.Fitment.Key.Side.String()+" "+strconv.Itoa(len(c.Applications)))
 	}
 	if want := []string{"MR-1001 left 2", "MR-1001 right 1"}; !slices.Equal(got, want) {
@@ -306,7 +306,7 @@ func TestCompiledCatalog(t *testing.T) {
 				t.Errorf("Catalog().Info() %+v; want %+v", cat.Info(), jsonl.Catalog().Info())
 			}
 			var numbers []string
-			for _, c := range cat.ByVehicle("mirror", ram, new(2010), nil) {
+			for _, c := range cat.ByVehicle("mirror", ram, new(2010)) {
 				numbers = append(numbers, c.Fitment.Key.Number+" "+c.Fitment.Key.Side.String()+" "+strconv.Itoa(len(c.Applications)))
 			}
 			if want := []string{"MR-1001 left 2", "MR-1001 right 1"}; !slices.Equal(numbers, want) {

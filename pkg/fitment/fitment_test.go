@@ -56,7 +56,7 @@ var spine = []string{`{"format":1,"kind":"spine","name":"parts","version":"1"}`,
 // numbers is the candidates' numbers.
 func numbers(r Reader, vehicles []vocab.Vehicle) []string {
 	var out []string
-	for _, c := range r.ByVehicle("pads", vehicles, nil, nil) {
+	for _, c := range r.ByVehicle("pads", vehicles, nil) {
 		out = append(out, c.Fitment.Key.Number)
 	}
 	return out

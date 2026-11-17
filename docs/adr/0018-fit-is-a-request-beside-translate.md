@@ -169,3 +169,14 @@ name can be, come in the order the catalog first lists them among the shared
 fitments: by part type, fitment and application
 ([#267](https://github.com/joshuasprow/nitrovin/issues/267)). The order among them
 was unstated, and was whatever an unstable sort left.
+
+## Amendment (2026-11-17): the side filter
+
+The request table's `side` is "to filter on", and never said how. The rule, as the
+API README states it: `left` keeps `left`, `both` and fitments with no side;
+`right` likewise; `both` keeps `both` and fitments with no side; no `side` keeps
+every fitment. A part for both sides goes on either, and a fitment that states no
+side is never ruled out by one, as an unknown value keeps an application
+(ADR 0009). `fitment.Reader` answers every side and `fit` applies the rule
+([ADR 0017](0017-the-catalog-file.md)'s amendment,
+[#292](https://github.com/joshuasprow/nitrovin/issues/292)).

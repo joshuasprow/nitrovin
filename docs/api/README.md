@@ -456,8 +456,14 @@ specifies.
   `vehicle` drift, measured again against the vehicle vocabulary loaded
   (one look per vehicle).
 - **Matching.** An entry's fields match after trimming, collapsing every
-  run of white space to one space and Unicode lower-casing, nothing more.
-  Qualifier values match exactly.
+  run of white space to one space and lower-casing, nothing more: white
+  space is Go's `unicode.IsSpace` (tab, line feed, vertical tab, form
+  feed, carriage return, space, U+0085, U+00A0 and Unicode's category Z),
+  lower-casing is Go's `strings.ToLower` (each character's simple mapping,
+  no locale; skipped for a case-exact vocabulary, ADR 0026), and the
+  Unicode version is the Go release's that built nitrovin (17.0.0 for
+  go1.27). [The vocabulary guide](../vocabularies.md#a-vehicle-vocabulary)
+  states it in full. Qualifier values match exactly.
 - **Faults refuse.** A fault stops every command before it answers: exit 1
   and an `#internal` problem whose `detail` names the flag or variable, the
   file and line, and a JSON Pointer into the line where there is one, then
@@ -468,7 +474,8 @@ specifies.
   two entries equal after normalization (white space trimmed and
   collapsed, case folded unless the vocabulary's header says `"case":
   "exact"`, [ADR 0026](../adr/0026-case-exact-vocabularies.md)), or two extensions or spine entries
-  with one id; a mapping naming no spine entry, or two; a first year after
+  with one id; an extension id, or an extension reference's, holding `/`
+  or white space as matching has it; a mapping naming no spine entry, or two; a first year after
   the last; qualifiers on an extension mapping, or on a catalog application
   whose vehicle is an extension; a reference to an extension
   or spine id no loaded file defines; a part vocabulary whose spine is not
@@ -1016,9 +1023,12 @@ row, and its `fields`, verbatim and never interpreted:
 
 - a shelf row with a number: `matched: "fitment"`, its `fitment` key as
   the row wrote it, and `reached`: `direct`, or `retired` when that key is
-  a retired number the fitment replaced;
+  a retired number the fitment replaced. It joins the fitment of exactly
+  that key, side included: a row with no `side` joins only the fitment
+  with no side;
 - a shelf row with no number: `matched: "vehicle"`, its `part` type,
-  `vehicle` and `year`;
+  `vehicle` and `year`. A connector does not read its `type` and `side`;
+  a stock file refuses a row that gives either without a `number`;
 - a yard row matched by vPIC model, its source's `decoded` model and year
   or its `vin` decoded once at load: `matched: "vin"`. A VIN that decodes
   no model, or a model and no year on a row that names its `vehicle` and

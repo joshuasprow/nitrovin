@@ -2,12 +2,16 @@ package vocab
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
+	"unicode"
+	"unicode/utf8"
 
+	"github.com/dlclark/regexp2"
 	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
@@ -123,5 +127,95 @@ func TestSchema(t *testing.T) {
 		if validLine(s, line) == nil {
 			t.Errorf("%s validates; the schema should refuse it as Read does", line)
 		}
+	}
+}
+
+// ecmaRegexp is a pattern as ECMA-262, the dialect JSON Schema names,
+// reads it: regexp2's ECMAScript mode, whose \s is ECMA-262's, where Go's
+// regexp (RE2) has \s ASCII and without \v.
+type ecmaRegexp regexp2.Regexp
+
+func (re *ecmaRegexp) MatchString(s string) bool {
+	ok, err := (*regexp2.Regexp)(re).MatchString(s)
+	return err == nil && ok
+}
+
+func (re *ecmaRegexp) String() string { return (*regexp2.Regexp)(re).String() }
+
+// ecmaSchema is the schema's definition def, its patterns read as
+// ECMA-262 reads them.
+func ecmaSchema(t *testing.T, def string) *jsonschema.Schema {
+	t.Helper()
+	f, err := os.Open(schemaPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	doc, err := jsonschema.UnmarshalJSON(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := jsonschema.NewCompiler()
+	c.UseRegexpEngine(func(s string) (jsonschema.Regexp, error) {
+		re, err := regexp2.Compile(s, regexp2.ECMAScript)
+		if err != nil {
+			return nil, err
+		}
+		return (*ecmaRegexp)(re), nil
+	})
+	if err := c.AddResource(schemaURL, doc); err != nil {
+		t.Fatal(err)
+	}
+	s, err := c.Compile(schemaURL + "#/$defs/" + def)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return s
+}
+
+// TestExtensionIDs: Read and the schema, its patterns read as ECMA-262
+// reads them, refuse and accept the same extension ids, and the same ids
+// in an extension reference: those with '/' or white space as entry
+// fields' normalization has it (unicode.IsSpace), NBSP, NEL and \v among
+// it, refused; any other character, U+FEFF (in ECMA-262's \s, not
+// unicode.IsSpace) among them, accepted. Every character of the Basic
+// Multilingual Plane, where every white space character is, and some
+// beyond it.
+func TestExtensionIDs(t *testing.T) {
+	ext, ref := ecmaSchema(t, "Extension"), ecmaSchema(t, "ExtensionRef")
+	ids := []string{"packard", "a\u00a0b", "a\u0085b", "a\vb", "a\ufeffb", "a b", "a/b", "a\U0001F697b", "a\U0010FFFFb"}
+	for r := rune(0); r <= 0xFFFF; r++ {
+		if utf8.ValidRune(r) {
+			ids = append(ids, "a"+string(r)+"b")
+		}
+	}
+	bad := 0
+	for _, id := range ids {
+		want := !strings.ContainsFunc(id, func(r rune) bool { return r == '/' || unicode.IsSpace(r) })
+		line, err := json.Marshal(map[string]string{"id": id, "make_name": "Packard"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, readErr := extension(1, line)
+		schemaErr := ext.Validate(map[string]any{"id": id, "make_name": "Packard"})
+		raw, err := json.Marshal("ext:classics/" + id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, refErr := extRefAt(raw, "/ext")
+		refSchemaErr := ref.Validate("ext:classics/" + id)
+		for _, got := range []struct {
+			what string
+			err  error
+		}{{"Read's id", readErr}, {"the schema's id", schemaErr}, {"Read's reference", refErr}, {"the schema's reference", refSchemaErr}} {
+			if (got.err == nil) != want {
+				if bad++; bad <= 20 {
+					t.Errorf("%+q: %s: %v; want accepted %v", id, got.what, got.err, want)
+				}
+			}
+		}
+	}
+	if bad > 20 {
+		t.Errorf("and %d more", bad-20)
 	}
 }

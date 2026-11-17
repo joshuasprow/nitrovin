@@ -525,7 +525,7 @@
       "properties": {
         "make": { "type": "integer", "minimum": 1, "maximum": 2147483647, "description": "A vPIC make id." },
         "model": { "type": "integer", "minimum": 1, "maximum": 2147483647, "description": "A vPIC model id." },
-        "ext": { "type": "string", "pattern": "^ext:[a-z0-9][a-z0-9._-]*/[^/\\s]+$", "description": "An extension, ext:<set>/<id>." },
+        "ext": { "type": "string", "pattern": "^ext:[a-z0-9][a-z0-9._-]*/[^/\t\n\u000b\f\r \u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]+$", "description": "An extension, ext:<set>/<id>." },
         "spine": { "type": "string", "minLength": 1, "description": "A declared spine's name, beside id." },
         "id": { "type": "string", "minLength": 1, "description": "An entry id of the declared spine." }
       },
@@ -788,7 +788,7 @@
       "properties": {
         "make": { "type": "integer", "minimum": 1 },
         "model": { "type": "integer", "minimum": 1 },
-        "ext": { "type": "string", "pattern": "^ext:[a-z0-9][a-z0-9._-]*/[^/\\s]+$" },
+        "ext": { "type": "string", "pattern": "^ext:[a-z0-9][a-z0-9._-]*/[^/\t\n\u000b\f\r \u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]+$" },
         "id": { "type": "string", "minLength": 1 },
         "first": { "type": "integer" },
         "last": { "type": "integer" },
@@ -841,7 +841,7 @@
             {
               "type": "object",
               "required": ["ext"],
-              "properties": { "ext": { "type": "string", "pattern": "^ext:[a-z0-9][a-z0-9._-]*/[^/\\s]+$", "description": "An extension, ext:<set>/<id>." } },
+              "properties": { "ext": { "type": "string", "pattern": "^ext:[a-z0-9][a-z0-9._-]*/[^/\t\n\u000b\f\r \u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]+$", "description": "An extension, ext:<set>/<id>." } },
               "additionalProperties": false
             },
             {
@@ -1026,7 +1026,7 @@
         },
         {
           "required": ["ext"],
-          "properties": { "ext": { "type": "string", "pattern": "^ext:[a-z0-9][a-z0-9._-]*/[^/\\s]+$" } },
+          "properties": { "ext": { "type": "string", "pattern": "^ext:[a-z0-9][a-z0-9._-]*/[^/\t\n\u000b\f\r \u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]+$" } },
           "additionalProperties": false
         }
       ]

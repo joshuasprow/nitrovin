@@ -277,7 +277,7 @@ func TestCatalogFiledUnder(t *testing.T) {
 		t.Errorf("entries %q; want 10,9,B,a", got)
 	}
 	var matched []*Fitment
-	for _, cand := range c.Matching("pads", []Vehicle{*c.Vehicles()[0]}, nil, nil) {
+	for _, cand := range c.Matching("pads", []Vehicle{*c.Vehicles()[0]}, nil) {
 		matched = append(matched, cand.Fitment)
 	}
 	if got := keys(matched); !slices.Equal(got, []string{`{"type":"pads","number":"P2"} BP,PD`, `{"type":"pads","number":"P1","side":"left"} PD`, `{"type":"pads","number":"P1","side":"right"} PD`}) {
@@ -334,33 +334,29 @@ func TestCatalogReader(t *testing.T) {
 func testCatalogReader(t *testing.T, c *Catalog, hash [32]byte) {
 	ram := Vehicle{Entry: map[string]string{"make": "Dodge", "model": "Ram 1500"}}
 	silverado := Vehicle{Entry: map[string]string{"make": "chevrolet", "model": "SILVERADO  1500"}} // matched after Normalize
-	left, both := SideLeft, SideBoth
 	for _, tc := range []struct {
 		name     string
 		partType string
 		vehicles []Vehicle
 		year     *int
-		side     *Side
 		want     []string
 	}{
-		{"both sides, one number", "mirror", []Vehicle{ram}, new(2010), nil, []string{"MR-1001/left:aa", "MR-1001/right:a"}},
-		{"a side", "mirror", []Vehicle{ram}, new(2010), &left, []string{"MR-1001/left:aa"}},
-		{"a side none has", "mirror", []Vehicle{ram}, new(2010), &both, nil},
-		{"a year outside every application", "mirror", []Vehicle{ram}, new(2014), nil, nil},
-		{"any year", "brake-rotor-front", []Vehicle{ram}, nil, nil, []string{"BR-2001:a", "BR-2002:a"}},
-		{"an open range", "brake-rotor-front", []Vehicle{ram}, new(2030), nil, []string{"BR-2002:a"}},
-		{"several vehicles", "brake-rotor-front", []Vehicle{silverado, ram, ram}, new(2010), nil, []string{"BR-2001:aa"}},
-		{"a vehicle the catalog lacks", "mirror", []Vehicle{{Entry: map[string]string{"make": "Dodge", "model": "Dakota"}}}, nil, nil, nil},
-		{"a vpic vehicle in a vocabulary's catalog", "mirror", []Vehicle{{Target: Target{Model: 1938}}}, nil, nil, nil},
-		{"a part type with no fitment", "brake-rotor-rear", []Vehicle{silverado}, nil, nil, nil},
+		{"both sides, one number", "mirror", []Vehicle{ram}, new(2010), []string{"MR-1001/left:aa", "MR-1001/right:a"}},
+		{"a year outside every application", "mirror", []Vehicle{ram}, new(2014), nil},
+		{"any year", "brake-rotor-front", []Vehicle{ram}, nil, []string{"BR-2001:a", "BR-2002:a"}},
+		{"an open range", "brake-rotor-front", []Vehicle{ram}, new(2030), []string{"BR-2002:a"}},
+		{"several vehicles", "brake-rotor-front", []Vehicle{silverado, ram, ram}, new(2010), []string{"BR-2001:aa"}},
+		{"a vehicle the catalog lacks", "mirror", []Vehicle{{Entry: map[string]string{"make": "Dodge", "model": "Dakota"}}}, nil, nil},
+		{"a vpic vehicle in a vocabulary's catalog", "mirror", []Vehicle{{Target: Target{Model: 1938}}}, nil, nil},
+		{"a part type with no fitment", "brake-rotor-rear", []Vehicle{silverado}, nil, nil},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			if got := numbers(c.ByVehicle(tc.partType, tc.vehicles, tc.year, tc.side)); !slices.Equal(got, tc.want) {
+			if got := numbers(c.ByVehicle(tc.partType, tc.vehicles, tc.year)); !slices.Equal(got, tc.want) {
 				t.Errorf("ByVehicle %v; want %v", got, tc.want)
 			}
 		})
 	}
-	cs := c.ByVehicle("mirror", []Vehicle{ram}, new(2010), &left)
+	cs := c.ByVehicle("mirror", []Vehicle{ram}, new(2010))
 	if a := cs[0].Applications[1]; a.Options != "4WD, w/ towing package" || len(a.Qualifiers) != 1 || a.Qualifiers[0].Element != 15 || a.Vehicle.Entry["model"] != "Ram 1500" {
 		t.Errorf("MR-1001's second application: %+v", a)
 	}
@@ -615,7 +611,7 @@ func TestCatalogAcrossChunks(t *testing.T) {
 				want++
 			}
 		}
-		pads, rotors := c.ByVehicle("pads", v, nil, nil), c.ByVehicle("rotor", v, nil, nil)
+		pads, rotors := c.ByVehicle("pads", v, nil), c.ByVehicle("rotor", v, nil)
 		if len(pads) != want {
 			t.Errorf("model %d: %d pads; want %d", m, len(pads), want)
 		}

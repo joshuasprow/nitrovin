@@ -375,12 +375,14 @@ compile in tiny batches and sort runs to the same bytes, and
 `testdata/vocab/stock/live/` reads the same three sources through
 connectors ([ADR 0020](docs/adr/0020-request-time-stock-the-postgres-connector.md)):
 a header each, and `views.sql`, a synthetic parts system's and yard
-system's tables with the views the connectors read. `go test
+system's tables with the views the connectors read, and their reader's
+role, hardened as the guide's worked view explains. `go test
 ./pkg/stock/pg` checks the connector with no database (an unset or
 malformed DSN, a refused connection and its 5 s retry, each error's fixed
 reason) and that no package the C library or the browser builds links the
 driver. Its `*Postgres` tests need a database they own, by URL in
-`NITROVIN_STOCK_PG_DSN`: `TestParityPostgres` fills the views with the
+`NITROVIN_STOCK_PG_DSN` (`views.sql` revokes `TEMPORARY` on it from
+`PUBLIC`, which the tests grant back when they end): `TestParityPostgres` fills the views with the
 synthetic rows and holds every fit to the same rows loaded as files; the
 others check missing and mistyped columns, credentials, as_of, the
 `READ ONLY` transaction, a cancelled and a timed-out query, a full pool,

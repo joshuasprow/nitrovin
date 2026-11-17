@@ -183,3 +183,19 @@ within a 1 GiB limit ([ADR 0021](0021-a-compiled-catalog.md)'s "Measured: a real
 catalog", [#294](https://github.com/joshuasprow/nitrovin/issues/294)). The numbers
 stay as CI's regression guard on the JSON Lines loader, the benchmark in
 `bench/vocab`, and are no longer a deployment's requirement.
+
+## Amendment (2026-11-17): a retired number given twice, and a reader without a side
+
+[#292](https://github.com/joshuasprow/nitrovin/issues/292) found two statements
+here behind the code:
+
+- **Faults** add a retired number given twice: two `retired` lines with one key.
+  The loader refuses it (`/retired: duplicate retired number: line N retires it
+  too`), and the guide lists it.
+- **`ByVehicle(partType, vehicles, year)`**, `Matching` and a `Sharer`'s `Shared`
+  take no side: they answer a vehicle's fitments of every side. They took one and
+  filtered on it exactly, but only tests passed one. Every request passed none and
+  applied its own rule, which keeps more than an exact filter does, so the
+  parameter read as the request's rule. The side filter is the request's alone
+  ([ADR 0018](0018-fit-is-a-request-beside-translate.md)'s amendment). `ByNumber`
+  and `ByFiled` keep their side, which is part of the key they look up.

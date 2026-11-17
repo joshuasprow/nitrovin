@@ -4,6 +4,11 @@ go 1.27
 
 require (
 	github.com/andybalholm/brotli v1.3.0
+	// regexp2 (MIT) reads the published schemas' patterns as ECMA-262, the
+	// dialect JSON Schema names, where Go's regexp is RE2
+	// (pkg/vocab/schema_test.go): tests only, no binary links it.
+	// jsonschema's own tests already required it.
+	github.com/dlclark/regexp2 v1.11.0
 	// chromedp drives headless Chrome over the DevTools protocol for
 	// TestForm's browser runs (cmd/nitrovin/browser_test.go): tests only, no
 	// binary links it. go-json-experiment below is its own.
