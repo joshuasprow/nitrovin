@@ -110,3 +110,10 @@ entries in under 15 ms.
 
 So the compiled form stays deferred. It is reconsidered only if a measured
 load misses this budget.
+
+## Amendment (2026-11-16): drift beside a fault
+
+[ADR 0025](0025-checks-at-scale.md): `nitrovin vocab check` measures drift for every
+file that reads and links cleanly even when another has faults, and gives each
+file it did not measure an `unchecked` line. Loading still refuses every file when
+any has a fault.
