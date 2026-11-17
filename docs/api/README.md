@@ -10,6 +10,11 @@ Every surface decodes through one contract. This directory holds it:
 | [`vocabulary.schema.json`](vocabulary.schema.json) | One line of a vocabulary, extension set or declared spine file, as `--vocab` loads it |
 | this file | what none of them can express: layouts, item order, the clock, stdio framing, MCP results, the CLI mapping, loading vocabularies, translating and listing, the C ABI, versioning |
 
+Every GitHub release, from v0.3.11, attaches the two schemas as assets,
+`decode.schema.json` and `vocabulary.schema.json`, listed in its
+`checksums.txt` and each with a cosign bundle, so a client or a file's
+writer validates against the schema of the tag it runs.
+
 Words are `GLOSSARY.md`'s. The why behind the surprising choices is
 [ADR 0004](../adr/0004-decode-contract.md).
 
@@ -593,7 +598,11 @@ specifies.
   blake3, the catalog's name, version and `release`, the spine and vehicle
   vocabulary it was linked against, the writer, and the data month and
   drift its check found. The same arguments, data month and nitrovin
-  version give the same bytes.
+  version give the same bytes. It sorts in a temporary directory,
+  `$TMPDIR` or else `/tmp`, of about twice the compiled file, and writes
+  the file beside `-o` before renaming it into place. The release image
+  has an empty `/tmp` its user owns, so a build stage from it compiles in
+  `RUN` ([the guide's recipe](../vocabularies.md#at-image-build)).
 
 ## Translation (`translate`)
 
