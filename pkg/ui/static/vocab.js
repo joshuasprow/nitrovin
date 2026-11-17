@@ -54,7 +54,7 @@
   };
 
   if (!('serviceWorker' in navigator)) {
-    say('unsupported', 'This browser has no Service Workers, which keep and translate your own files here: they cannot be loaded. Translation through vPIC and this server\'s own files works.');
+    say('unsupported', 'No Service Workers in this browser: no own files');
     return;
   }
   const sw = navigator.serviceWorker;
@@ -104,9 +104,9 @@
 
   const watchUpdates = (reg) => {
     const waiting = () => {
-      update = ' A new release of nitrovin is ready: it starts once every nitrovin tab is closed, or now with Update now.';
+      update = ' · New release ready';
       section.dataset.update = 'waiting';
-      status.textContent = status.textContent.replace(/ A new release.*$/, '') + update;
+      status.textContent = status.textContent.replace(/ · New release.*$/, '') + update;
       updateNow.hidden = false;
     };
     // track waits for w, a worker installing, to be installed.
@@ -123,10 +123,8 @@
   // has the browser look for the new release's worker.
   const outdated = (mine) => {
     const server = mine && mine.server && mine.server.includes('/') ? mine.server : release;
-    const what = !mine ? 'does not answer this page, so it is of another release of nitrovin than this server\'s'
-      : version(mine.release) !== version(server) ? 'is nitrovin ' + version(mine.release) + ', and this server runs ' + version(server)
-        : 'is of another release of nitrovin than this server\'s';
-    say('outdated', 'Your own files are paused: the translator in this browser ' + what + '. Until it updates, every page comes from the server.');
+    const what = mine && version(mine.release) !== version(server) ? version(mine.release) + ' here, ' + version(server) + ' on the server' : 'another release here';
+    say('outdated', 'Own files paused: ' + what);
     if (registration && !registration.waiting && !registration.installing) registration.update().catch(() => {});
   };
   // The worker in control tells the page once it learns the server runs
@@ -152,13 +150,13 @@
   const start = () => {
     if (!starting) {
       starting = (async () => {
-        say('starting', 'Starting the translator in this browser…');
+        say('starting', 'Starting…');
         const before = await sw.getRegistration('/');
         if (before && before.active && !sw.controller) {
           // Installed, yet not in control: this load bypassed it (a hard reload).
           registration = before;
           watchUpdates(before);
-          say('paused', 'Your own files are paused for this load: a hard reload bypasses the Service Worker that holds them. Reload the page normally to use them.');
+          say('paused', 'Own files paused by a hard reload: reload normally');
           return;
         }
         const reg = await sw.register(section.dataset.worker, { scope: '/' });
@@ -171,7 +169,7 @@
           return;
         }
         await showFiles();
-        say('ready', 'Your files stay in this browser and are translated here.');
+        say('ready', 'Files stay in this browser');
         // The panel settled before the page was ready, so what a compile
         // not finished left is dropped and said now.
         usage().catch(() => {});
@@ -245,20 +243,11 @@
   });
 
   // htmx asks with the href a link had when it was drawn: an example
-  // asks for its targets as relink sets them, and any other link to a
-  // lookup that names no target, a map's card among them, for the
-  // targets ticked now on the answer's spine.
+  // asks for its targets as relink sets them.
   document.addEventListener('htmx:configRequest', (e) => {
     const a = e.detail.elt;
-    if (!a.matches || !a.matches('#ui-main a[href]')) return;
-    if (a.matches('#controls a.example')) {
-      e.detail.path = retarget(e.detail.path, a.dataset.spine, (a.dataset.to || '').split(' ').filter(Boolean));
-      return;
-    }
-    const url = new URL(e.detail.path, location.origin);
-    if (url.pathname !== '/' || url.searchParams.has('to') || ![...url.searchParams.keys()].some((k) => k.startsWith('from.'))) return;
-    const result = document.getElementById('result');
-    e.detail.path = retarget(e.detail.path, result && result.dataset.spine, []);
+    if (!a.matches || !a.matches('#controls a.example')) return;
+    e.detail.path = retarget(e.detail.path, a.dataset.spine, (a.dataset.to || '').split(' ').filter(Boolean));
   });
 
   // A file removed changes what the page's forms and answer are over.
@@ -528,7 +517,7 @@
       said.push(done.message);
     }
     section.dataset.demoMs = String(Math.round(performance.now() - t0));
-    tell('Loaded the demo set in ' + ((performance.now() - t0) / 1000).toFixed(1) + ' s. ' + said.join(' ') + ' Its examples are on the fit page.');
+    tell('Loaded the demo set in ' + ((performance.now() - t0) / 1000).toFixed(1) + ' s. ' + said.join(' '));
   };
   document.addEventListener('click', (e) => {
     const button = e.target.closest && e.target.closest('#load-demo');

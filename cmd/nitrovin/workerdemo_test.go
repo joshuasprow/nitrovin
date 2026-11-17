@@ -2,12 +2,9 @@ package main
 
 import (
 	"encoding/json"
-	"html"
 	"net/http/httptest"
-	"net/url"
 	"os"
 	"path/filepath"
-	"regexp"
 	"slices"
 	"strings"
 	"testing"
@@ -15,98 +12,15 @@ import (
 	"github.com/chromedp/chromedp"
 )
 
-// demoExample is one request of the demo set's list
-// (pkg/ui/demo/demo-examples.json).
-type demoExample struct {
-	Stories []int  `json:"stories"`
-	Label   string `json:"label"`
-	Href    string `json:"href"`
-}
-
-func demoExamples(t *testing.T) []demoExample {
-	t.Helper()
-	b, err := os.ReadFile(filepath.Join(demoDir, "demo-examples.json"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	var out []demoExample
-	if err := json.Unmarshal(b, &out); err != nil {
-		t.Fatal(err)
-	}
-	return out
-}
-
-// demoTab is the fit page's tab that offers href, a request of the demo's
-// list: the one whose form asks its from, a VIN, a vehicle vocabulary's
-// entry, a vPIC id or an extension, or a fitment's key.
-func demoTab(t *testing.T, href string) string {
-	t.Helper()
-	i := strings.IndexByte(href, '?')
-	if i < 0 {
-		t.Fatalf("%s: no query", href)
-	}
-	q, err := url.ParseQuery(href[i+1:])
-	if err != nil {
-		t.Fatal(err)
-	}
-	switch {
-	case q.Has("from.vin"):
-		return "vin"
-	case q.Has("from.vocabulary"):
-		return "entry"
-	case q.Has("from.make"), q.Has("from.model"), q.Has("from.ext"):
-		return "id"
-	case q.Has("from.fitment.type"), q.Has("from.fitment.number"):
-		return "fitment"
-	}
-	t.Fatalf("%s: no from the fit page asks", href)
-	return ""
-}
-
-// demoOf is the request of the demo's list that shows story.
-func demoOf(t *testing.T, examples []demoExample, story int) demoExample {
-	t.Helper()
-	i := slices.IndexFunc(examples, func(e demoExample) bool { return slices.Contains(e.Stories, story) })
-	if i < 0 {
-		t.Fatalf("no request of the demo's list shows story %d", story)
-	}
-	return examples[i]
-}
-
-// demoPageShows is what the page of the demo's request that shows a user
-// story of #278 says, in words, so a visitor sees what the story promises.
-var demoPageShows = map[int][]string{
-	5:  {"Alternator", "Transfer Case", "3"},
-	6:  {"DEMO-1001", "DEMO-1002", "DEMO-1003"},
-	7:  {"DEMO-4301", "Not checked: Drive Type"},
-	8:  {"3.5L V6 EcoBoost (VIN G, 8th digit)"},
-	9:  {"DEMO-1101"},
-	10: {"DEMO-5301, both", "DEMO-5302, left"},
-	11: {"DEMO-2101", "redirect"},
-	12: {"DEMO-1001", "DEMO-0901", "retired"},
-	13: {"Toyota Camry", "Toyota RAV4"},
-	14: {"Honda CR-V"},
-	15: {"DEMO-4103", "DEMO-4111"},
-	16: {"DEMO-S-01", "demo-north"},
-	17: {"DEMO-Y-07", "DEMO-Y-08"},
-	18: {"DEMO-S-02", "DEMO-0901"},
-	19: {"its numbers are under release DEMO-1, not the loaded catalog's"},
-	20: {"demo-north"},
-	21: {"Volkswagen Type 2", "Brake Rotor, Front"},
-	22: {"Dodge Ram 1500", "13620"},
-	23: {"Silverado C15 2WD"},
-}
-
 // TestWorkerDemo runs the demo set (#278) in a fresh profile against a
-// server that loaded nothing, as nitrovin.app: without JavaScript the
-// dialog says the demo needs it, and a link to one of its requests says
-// how to load it. "Load the demo" loads it in one click, its catalog
-// compiled in the browser; the fit page then offers its list of requests,
-// each tab the ones its own form asks, every tab at least one, and each,
-// clicked from its tab, shows what its user stories promise, as the server
-// draws it from the same files (`serve --vocab pkg/ui/demo`), at a
-// phone's width too. It survives a reload, Remove the demo removes every
-// file of it, and the only requests that ever carried a body to the
+// server that loaded nothing, as nitrovin.app. "Load demo" loads it in one
+// click, its catalog compiled in the browser, and the panel lists every
+// file of it. One of its VINs then translates into its vehicle vocabulary
+// and EPA's, loaded beside it, as on a server that loaded the same files
+// (`serve --vocab pkg/ui/demo`), and its catalog, downloaded, fits on a
+// server as the demo's own file does. A demo file of another version
+// makes the offer a refresh. It survives a reload, Remove demo removes
+// every file of it, and the only requests that ever carried a body to the
 // server were the yard's VINs, in decode batches. It logs the module's
 // retained memory with the demo loaded, against ADR 0023's 64 MiB.
 func TestWorkerDemo(t *testing.T) {
@@ -127,20 +41,8 @@ func TestWorkerDemo(t *testing.T) {
 	wire := &wireLog{h: vocabServer(t, &module)}
 	srv := httptest.NewServer(wire)
 	t.Cleanup(srv.Close)
-	examples := demoExamples(t)
-
-	// Without JavaScript, the dialog says the demo needs it.
-	off := newTab(t, path, srv.URL, &requestLog{}, false)
-	off.do(chromedp.Navigate(srv.URL + "/"))
-	if s := off.html("#browser-status"); !strings.Contains(s, "The demo set loads into this browser in one click, so it needs JavaScript too.") {
-		t.Errorf("JS off, the dialog says: %s", s)
-	}
 
 	tb := newTab(t, path, srv.URL, &requestLog{}, true)
-	tb.do(chromedp.Navigate(srv.URL + examples[0].Href))
-	if s := text(tb.html("#fit-status")); !strings.Contains(s, "open Vocabularies and Load the demo") {
-		t.Errorf("a demo link before the demo is loaded says %q", s)
-	}
 	tb.do(chromedp.Navigate(srv.URL + "/"))
 	tb.vocabularies()
 	tb.do(chromedp.Click(chromedp.CSS("#load-demo")))
@@ -158,80 +60,42 @@ func TestWorkerDemo(t *testing.T) {
 		t.Errorf("stored %q; want %q", got, demoFiles)
 	}
 	if n := tb.count("#remove-demo"); n != 1 {
-		t.Error("the panel offers no Remove the demo once it is loaded")
+		t.Error("the panel offers no Remove demo once it is loaded")
 	}
 	// EPA's vocabulary beside it, for the translation into its names.
 	tb.do(chromedp.Click(chromedp.CSS("#load-epa")))
 	tb.waitPrefix("#load-status", "Loaded ")
+	tb.audit("the dialog, the demo and EPA's vocabulary held")
 
-	// The fit page offers the demo's list, each tab the requests its own
-	// form asks, and each request shows what its stories promise, as the
-	// server draws it on the same files.
+	// The yard's Ram, of make Ram, translates into the demo's vehicle
+	// vocabulary, as the server draws it on the same files.
 	same := vocabServer(t, nil, demoDir, epaPath)
-	v1 := regexp.MustCompile(`<p class="hint"><a href="/v1/fit[^"]*"[^>]*>The same request on /v1</a></p>`)
-	tb.closeVocabularies()
-	for _, tab := range []string{"vin", "entry", "id", "fitment"} {
-		var want []string
-		for _, e := range examples {
-			if demoTab(t, e.Href) == tab {
-				want = append(want, e.Href)
-			}
-		}
-		tb.do(chromedp.Navigate(srv.URL + "/ui/fit?tab=" + tab))
-		tb.ticked()
-		hrefs := eval[[]string](tb, `[...document.querySelectorAll("#fit-controls a.example")].map(a => a.getAttribute("href"))`)
-		if len(hrefs) == 0 || !slices.Equal(hrefs, want) {
-			t.Fatalf("the fit page's %s tab's examples:\n%s\nwant the demo's requests of that tab:\n%s", tab, strings.Join(hrefs, "\n"), strings.Join(want, "\n"))
-		}
+	target := "/?from.vin=1C6RR7LT6FS512345&to=demo-vehicles&to=epa-vehicles" + pinned
+	got := eval[[]string](tb, `fetch(`+jsString(target)+`, {headers: {"HX-Request": "true"}}).then(async r => [String(r.status), await r.text()])`)
+	if want := mainOf(t, same, srv.URL, target, true); got[0] != "200" || got[1] != want {
+		t.Errorf("%s: the worker's page differs from the server's\nworker: %s %s\nserver: %s", target, got[0], got[1], want)
 	}
-	tb.do(chromedp.Navigate(srv.URL + "/ui/fit"))
-	tb.ticked()
-	bare := eval[string](tb, `fetch("/ui/fit", {headers: {"HX-Request": "true"}}).then(r => r.text())`)
-	if w := mainOf(t, same, srv.URL, "/ui/fit", true); bare != w {
-		t.Errorf("the worker's fit page differs from the server's\nworker: %s\nserver: %s", bare, w)
-	}
-	covered := map[int]bool{}
-	for _, e := range examples {
-		tb.do(chromedp.Navigate(srv.URL + "/ui/fit?tab=" + demoTab(t, e.Href)))
-		tb.ticked()
-		tb.do(chromedp.Click(chromedp.CSS(`#fit-controls a.example[href="` + e.Href + `"]`)))
-		tb.until(e.Label, `location.pathname + location.search === `+jsString(e.Href)+` && document.getElementById("result") !== null`)
-		words := strings.Join(strings.Fields(html.UnescapeString(tag.ReplaceAllString(tb.html("#ui-main"), " "))), " ")
-		if strings.HasPrefix(e.Href, "/ui/fit?") && !strings.Contains(words, "The demo set is loaded: every part number, location, stock row and field value in it is invented.") {
-			t.Errorf("%s: the page does not say the demo's data is invented", e.Href)
-		}
-		for _, story := range e.Stories {
-			covered[story] = true
-			for _, w := range demoPageShows[story] {
-				if !strings.Contains(words, w) {
-					t.Errorf("story %d, %s: the page lacks %q: %s", story, e.Href, w, words)
-				}
-			}
-		}
-		target := e.Href + pinned
-		got := eval[[]string](tb, `fetch(`+jsString(target)+`, {headers: {"HX-Request": "true"}}).then(async r => [String(r.status), await r.text()])`)
-		if w := mainOf(t, same, srv.URL, target, true); got[0] != "200" || got[1] != v1.ReplaceAllString(w, "") {
-			t.Errorf("%s: the worker's page differs from the server's\nworker: %s %s\nserver: %s", target, got[0], got[1], w)
-		}
-	}
-	for story := range demoPageShows {
-		if !covered[story] {
-			t.Errorf("story %d: no example on the fit page shows it", story)
-		}
+	if !strings.Contains(text(got[1]), "Dodge Ram 1500") {
+		t.Errorf("%s: the page lacks the demo's Dodge Ram 1500: %s", target, got[1])
 	}
 
-	// A phone's width: the candidates with their stock read there.
-	tb.do(chromedp.Navigate(srv.URL + demoOf(t, examples, 16).Href))
-	tb.wait(`#result[data-kind="candidates"]`)
-	tb.do(chromedp.EmulateViewport(390, 844))
-	if !eval[bool](tb, `document.documentElement.scrollWidth <= innerWidth`) {
-		t.Error("at a phone's width the demo's candidates scroll sideways")
+	// The catalog compiled here, downloaded, fits as the demo's own file.
+	var files []string
+	for _, n := range []string{"demo-classics", "demo-part-codes", "demo-part-types", "demo-vehicles"} {
+		files = append(files, filepath.Join(demoDir, n+".jsonl"))
 	}
-	tb.audit("the demo's candidates at a phone's width")
-	tb.do(chromedp.EmulateViewport(1280, 900))
+	fitsAsServer(t, tb.download(`#browser-files a[href="/ui/files/catalog"]`), files, filepath.Join(demoDir, "demo-catalog.jsonl"),
+		"from.vin=1FTEW1EG7FFA12345",
+		"from.vin=1FTEW1EG7FFA12345&part.spine=demo-part-types&part.id=alternator",
+		"from.vin=2HKRW2H53KH612345&part.spine=demo-part-types&part.id=transfer-case",
+		"from.vin=2HKRW2H53KH612345&part.vocabulary=demo-part-codes&part.entry.code=DEMO-ROT",
+		"from.vocabulary=demo-vehicles&from.entry.make=Honda&from.entry.model=Civic&model_year=2018&related=true",
+		"from.ext=ext:demo-classics/vw-type-2&model_year=1974",
+		"from.fitment.type=alternator&from.fitment.number=DEMO-0901",
+	)
 
 	// What the module holds with the demo loaded.
-	timing := tb.timeFetch(demoOf(t, examples, 14).Href + pinned).Timing
+	timing := tb.timeFetch("/ui/files").Timing
 	memory, heap := timingDesc(timing, "memory"), timingDesc(timing, "heap")
 	t.Logf("retained with the demo loaded: Go heap %.1f MiB, WebAssembly memory %.1f MiB", float64(heap)/(1<<20), float64(memory)/(1<<20))
 	if memory == 0 || memory > 64<<20 {
@@ -252,7 +116,7 @@ func TestWorkerDemo(t *testing.T) {
 	tb.vocabularies()
 	tb.do(chromedp.SetUploadFiles(chromedp.CSS("#vocab-files"), []string{older}))
 	tb.waitPrefix("#load-status", "Loaded demo-shelf")
-	if s := tb.html("#load-demo"); !strings.Contains(s, "Refresh the demo") {
+	if s := tb.html("#load-demo"); !strings.Contains(s, "Refresh demo") {
 		t.Errorf("with an older demo file held, the offer: %s", s)
 	}
 	tb.do(chromedp.Click(chromedp.CSS("#load-demo")))
@@ -261,8 +125,8 @@ func TestWorkerDemo(t *testing.T) {
 		t.Errorf("after the refresh the demo is not held: %s", tb.html("#browser-files"))
 	}
 
-	// A reload keeps it; Remove the demo removes every file of it, and
-	// the offer is back.
+	// A reload keeps it; Remove demo removes every file of it, and the
+	// offer is back.
 	tb.do(chromedp.Navigate(srv.URL + "/"))
 	tb.vocabularies()
 	if got := stored(); !slices.Equal(got, append(slices.Clone(demoFiles), "epa-vehicles")) {
@@ -271,7 +135,7 @@ func TestWorkerDemo(t *testing.T) {
 	tb.do(chromedp.Click(chromedp.CSS("#remove-demo")))
 	tb.wait("#load-demo")
 	if got := stored(); !slices.Equal(got, []string{"epa-vehicles"}) {
-		t.Errorf("after Remove the demo: stored %q", got)
+		t.Errorf("after Remove demo: stored %q", got)
 	}
 
 	// Nothing but the yard's VINs ever carried a body to the server.

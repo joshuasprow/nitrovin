@@ -72,19 +72,19 @@ func (tb *tab) point(sel string) {
 	tb.do(chromedp.MouseEvent(input.DispatchMouseEventTypeMouseMoved, xy[0], xy[1]))
 }
 
-// translationMap: a lookup's answer is its translation's map, each line
-// from its card to its card. Every card is a link, the From card to the
-// answer itself, and its name says what its lines draw. A card focused
-// lights the route through it, and one under the pointer its own until
-// the pointer leaves, the focused card's then; a long name shows whole
-// under the pointer. A narrow window stacks the columns, hiding the lines
-// and showing each card's relation. A card's link is the page from it,
-// which htmx follows, and back and forward ask the server, so nothing
-// left on the page by a script, here an empty style attribute, comes back
-// for CSP to refuse. Without JavaScript the map is drawn the same. axe
-// audits each state.
+// translationMap: a VIN's answer to a vocabulary is its translation's
+// map, each line from its card to its card. The From card alone is a
+// link, to the answer itself, and its name says what it is; the others
+// take focus. A card focused lights the route through it, and one under
+// the pointer its own until the pointer leaves, the focused card's then;
+// a long name shows whole under the pointer. A narrow window stacks the
+// columns, hiding the lines and showing each card's relation. An example
+// is another answer, which htmx follows, and back and forward ask the
+// server, so nothing left on the page by a script, here an empty style
+// attribute, comes back for CSP to refuse. Without JavaScript the map is
+// drawn the same. axe audits each state.
 func translationMap(t *testing.T, path, base string) {
-	const translation = "/?from.vocabulary=yard&from.entry.make=Dodge&from.entry.model=Ram+1500&to=yard"
+	const translation = "/?from.vin=1D7RV1GT5AS123456&to=yard"
 	drawn := func(tb *tab, step string, lines int) {
 		t.Helper()
 		if got := tb.count(".map-edges path"); got != lines {
@@ -105,53 +105,55 @@ func translationMap(t *testing.T, path, base string) {
 	tb.do(chromedp.EmulateViewport(1440, 900))
 	tb.open(translation)
 	tb.wait(".map")
-	drawn(tb, "the map", 10)
-	if links, cards := tb.count(".map a.node[href]"), tb.count(".map .node"); links != cards || cards != 9 {
-		t.Errorf("%d of %d cards are links; want all 9", links, cards)
+	// The VIN to its model, the model to its make, the model's two
+	// entries and the make's one.
+	drawn(tb, "the map", 5)
+	if links, cards := tb.count(".map a.node[href]"), tb.count(".map .node"); links != 1 || cards != 6 {
+		t.Errorf("%d of %d cards are links; want the From card alone of 6", links, cards)
 	}
 	if href := attributes(tb, ".map-col:nth-child(1) a.node"); len(href) != 1 || href[0]["href"] != translation {
 		t.Errorf("the From card: %v; want a link to %s", href, translation)
 	}
 	// Its relation is part of its name; the browser spaces out each part.
-	const otherName = "Dodge Other , reached through Dodge ; 1 mapping"
-	if got := accName(tb, ".map-col:nth-child(3) a.node"); got != otherName {
-		t.Errorf("Dodge Other's name %q; want %q", got, otherName)
+	const fromName = "1D7RV1GT5AS123456 , what was translated, a link to this answer ; VIN, model year 2010"
+	if got := accName(tb, ".map-col:nth-child(1) a.node"); got != fromName {
+		t.Errorf("the From card's name %q; want %q", got, fromName)
 	}
 	tb.audit("the map")
 
 	// Dodge Other, reached through the make, which the model led to. A
 	// click first: a page never clicked has no focus to move.
-	tb.do(chromedp.Click(chromedp.CSS("h1")), chromedp.Focus(chromedp.CSS(".map-col:nth-child(3) a.node")))
+	const other, ram1500 = ".map-col:nth-child(3) .node:nth-of-type(1)", ".map-col:nth-child(3) .node:nth-of-type(2)"
+	tb.do(chromedp.Click(chromedp.CSS(".map-key")), chromedp.Focus(chromedp.CSS(other)))
 	lit(tb, "Dodge Other focused", 4, 3)
-	// The pointer over the make Ram lights its route, which Dodge Other is
-	// not on; leaving it gives the light back to Dodge Other.
-	const other, ram = ".map-col:nth-child(3) a.node:nth-of-type(1)", ".map-col:nth-child(2) a.node:nth-of-type(3)"
-	tb.point(ram)
-	if tb.count(ram+".lit") != 1 || tb.count(other+".lit") != 0 {
-		t.Errorf("the make Ram under the pointer: its route not lit, or Dodge Other's")
+	// The pointer over Dodge Ram 1500 lights its route, which Dodge Other
+	// is not on; leaving it gives the light back to Dodge Other.
+	tb.point(ram1500)
+	if tb.count(ram1500+".lit") != 1 || tb.count(other+".lit") != 0 {
+		t.Errorf("Dodge Ram 1500 under the pointer: its route not lit, or Dodge Other's")
 	}
-	tb.point("h1")
+	tb.point(".map-key")
 	lit(tb, "the pointer gone, Dodge Other focused", 4, 3)
 	tb.audit("the map, a route lit")
 
 	// A name too long for two lines shows whole under the pointer, over
 	// the cards below, which stay put.
-	tb.do(chromedp.Click(chromedp.CSS("h1")))
-	const long = `document.querySelector(".map-col:nth-child(3) a.node:nth-of-type(2) .name")`
-	const below = `document.querySelector(".map-col:nth-child(3) a.node:nth-of-type(3)").offsetTop`
+	tb.do(chromedp.Click(chromedp.CSS(".map-key")))
+	const long = `document.querySelector(".map-col:nth-child(3) .node:nth-of-type(2) .name")`
+	const below = `document.querySelector(".map-col:nth-child(3) .node:nth-of-type(3)").offsetTop`
 	eval[bool](tb, long+`.textContent = "Dodge Ram 1500 Quad Cab Long Bed Heavy Duty Cummins Turbo Diesel Laramie Longhorn Limited Edition", true`)
 	if h := eval[float64](tb, long+`.getBoundingClientRect().height`); h > 41 {
 		t.Errorf("a long name: %v px; want two lines at most", h)
 	}
 	before := eval[float64](tb, below)
-	tb.point(".map-col:nth-child(3) a.node:nth-of-type(2)")
+	tb.point(ram1500)
 	if whole := eval[bool](tb, `(n => n.scrollHeight <= n.clientHeight && n.getBoundingClientRect().height > 41)(`+long+`)`); !whole {
 		t.Errorf("a long name under the pointer is not whole")
 	}
 	if after := eval[float64](tb, below); after != before {
 		t.Errorf("a long name under the pointer moved the card below from %v to %v", before, after)
 	}
-	tb.point("h1")
+	tb.point(".map-key")
 
 	tb.do(chromedp.EmulateViewport(390, 844))
 	if !eval[bool](tb, stacked) {
@@ -160,30 +162,26 @@ func translationMap(t *testing.T, path, base string) {
 	tb.audit("the map, narrow")
 	tb.do(chromedp.EmulateViewport(1440, 900))
 
-	// A spine card's link is the page from it, to the same vocabularies.
-	// A script's empty style attribute left on the page first.
+	// An example is another answer, to the same vocabulary, which htmx
+	// follows. A script's empty style attribute left on the page first.
 	eval[bool](tb, `window.kept = true`)
 	eval[bool](tb, `(n => { n.style.color = "red"; n.style.color = ""; return n.hasAttribute("style"); })(document.querySelector(".map .node"))`)
-	tb.do(chromedp.Click(chromedp.CSS(".map-col:nth-child(2) a.node.under")))
-	const from = "/?from.model=1938&to=yard"
-	tb.until("the model's card", `location.pathname + location.search === "`+from+`" && document.querySelector(".map .node .meta").textContent === "vPIC model 1938"`)
+	const example = teslaExample + "&to=yard"
+	tb.do(chromedp.Click(chromedp.CSS(`#controls a.example[href="` + example + `"]`)))
+	tb.until("the example", `location.pathname + location.search === "`+example+`" && document.querySelector(".map .node .meta").textContent === "VIN, model year 2018"`)
 	if !eval[bool](tb, `window.kept === true`) {
-		t.Errorf("the model's card loaded as a page; want htmx's swap")
+		t.Errorf("the example loaded as a page; want htmx's swap")
 	}
-	if tabs := attributes(tb, `#tab-id[aria-current="page"]`); len(tabs) != 1 {
-		t.Errorf("the model's card: not on the vPIC id tab")
-	}
-	// The model to its make, itself to the model, and the model's two
-	// entries and the make's one.
-	drawn(tb, "the map from a model", 5)
+	// The VIN to its model and the model to its make: yard has no Tesla.
+	drawn(tb, "the map of an example", 2)
 
-	// Back is the translation again, forward the model's, each from the
+	// Back is the translation again, forward the example's, each from the
 	// server: CSP refuses nothing.
 	eval[bool](tb, `history.back(), true`)
-	tb.until("back", `location.search === "`+translation[1:]+`" && document.querySelectorAll(".map-edges path").length === 10`)
-	drawn(tb, "back", 10)
+	tb.until("back", `location.search === "`+translation[1:]+`" && document.querySelectorAll(".map-edges path").length === 5`)
+	drawn(tb, "back", 5)
 	eval[bool](tb, `history.forward(), true`)
-	tb.until("forward", `location.pathname + location.search === "`+from+`" && document.querySelectorAll(".map-edges path").length === 5`)
+	tb.until("forward", `location.pathname + location.search === "`+example+`" && document.querySelectorAll(".map-edges path").length === 2`)
 	if !eval[bool](tb, `window.kept === true`) {
 		t.Errorf("back and forward reloaded the page")
 	}
@@ -195,8 +193,8 @@ func translationMap(t *testing.T, path, base string) {
 	off.do(chromedp.EmulateViewport(1440, 900))
 	off.open(translation)
 	off.wait(".map")
-	if got := off.count(".map-edges path"); got != 10 {
-		t.Errorf("JS off, the map: %d lines; want 10", got)
+	if got := off.count(".map-edges path"); got != 5 {
+		t.Errorf("JS off, the map: %d lines; want 5", got)
 	}
 	off.audit("the map, JS off")
 	off.do(chromedp.EmulateViewport(390, 844))

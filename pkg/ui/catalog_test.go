@@ -8,8 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"html/template"
-	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -435,24 +433,6 @@ func TestLibraryCatalogRefusals(t *testing.T) {
 	}
 	if err := l.Remove([]string{"parts-catalog"}, false); err != nil || disk.catalog != nil {
 		t.Errorf("removing it: %v, %v", err, disk.catalog)
-	}
-}
-
-// TestBrowserFitServerCatalog: while the server has the catalog, a fit
-// link naming one of the browser's files, which the worker never sends to
-// the server, is refused in the browser in words.
-func TestBrowserFitServerCatalog(t *testing.T) {
-	d := embedded(t)
-	s := newDecoderServer(t, d, "part-types", "catalog-models")
-	s.info.Vocabularies = append(s.info.Vocabularies, contract.VocabularyFile{Name: "their-catalog", Kind: "catalog", Blake3: "ab12"})
-	l := openWith(t, s, newDisk())
-	if _, err := l.Load([]Picked{{FileName: "part-codes.jsonl", Data: fitmentFile(t, "part-codes")}}, quiet); err != nil {
-		t.Fatal(err)
-	}
-	h := NewInBrowser(l, BrowserConfig{}, log.New(io.Discard, "", 0))
-	status, _, body := response(t, h, "GET", "/ui/fit?from.vocabulary=catalog-models&from.entry.make=Dodge&from.entry.model=Ram+1500&model_year=2010&part.vocabulary=part-codes&part.entry.code=ROT", htmx)
-	if status != http.StatusConflict || !strings.Contains(body, "This link names part-codes, a file of this browser&#39;s. This server&#39;s catalog, their-catalog, answers fit") {
-		t.Errorf("a fit naming the browser's file:\n%s", body)
 	}
 }
 

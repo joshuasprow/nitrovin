@@ -5,11 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -277,6 +279,16 @@ func TestLibraryStockRefusals(t *testing.T) {
 	}
 }
 
+var (
+	tagRE   = regexp.MustCompile(`<[^>]*>`)
+	spaceRE = regexp.MustCompile(`\s+`)
+)
+
+// plain is markup's text, its whitespace collapsed.
+func plain(markup string) string {
+	return strings.TrimSpace(spaceRE.ReplaceAllString(html.UnescapeString(tagRE.ReplaceAllString(markup, " ")), " "))
+}
+
 // TestFilesPanelStock: the dialog's panel lists a stock file as a shelf
 // or yard with its rows, and repeats ADR 0019's warning about personal
 // data.
@@ -292,8 +304,7 @@ func TestFilesPanelStock(t *testing.T) {
 	text := plain(body)
 	for _, want := range []string{
 		"shelf-stock stock, a shelf of parts-catalog, 5 rows", "yard-stock stock, a yard, 4 rows", "Drift: 1 orphan",
-		"Connectors run on a server.",
-		"a stock file supplies no personal data: no names, contact details or identity numbers of owners, sellers, customers or staff, and nothing it would not show a customer, such as cost.",
+		"no personal data in stock",
 	} {
 		if !strings.Contains(text, want) {
 			t.Errorf("the panel lacks %q:\n%s", want, text)

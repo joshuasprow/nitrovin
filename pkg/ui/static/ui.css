@@ -1,117 +1,97 @@
-/* The /ui pages' one stylesheet (pkg/ui). CSP allows no inline style. Each
-   color scheme names its own colors, each pair at least 4.5:1. */
-:root { color-scheme: light dark; --fg: #111827; --bg: #ffffff; --link: #1d4ed8; --muted: #4b5563; --line: #d1d5db; --bad: #b91c1c; --ok: #15803d; --warn: #b45309; }
+/* PROTOTYPE (prototype/pare-back-ui, local://vin-page-spec.md). The pages'
+   one stylesheet (pkg/ui). CSP allows no inline style, so every position
+   is a class.
+
+   The look is a stamped VIN plate, after the UAW "What's in a VIN?"
+   diagram the page began from (pale blue ground, heavy black caps, boxes
+   on bracket lines) and Tactile UI's odometer (a brushed plate with a
+   screw at each end). Everything a visitor presses or reads a heading
+   from is the same metal: the plate, the buttons, the chips, the brand
+   and the dialogs' heads. The cards are tags hung from their lines.
+
+   The texture is two things. Gradients and shadows give the metal its
+   body and depth. brushed.svg, noise stretched along the brush
+   (feTurbulence), is laid over it as light streaks and, as a mask-image
+   on a dark layer, cuts the dark ones between them. A radial mask punches
+   the eyelet each tag hangs by. */
+
+/* ---- Shared ---------------------------------------------------------- */
+:root { color-scheme: light dark; }
+body { --bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint: #a9bccb; --card-bg: #ffffff; --link: #0b4fa8; --bad: #b91c1c;
+  --c-wmi: #c8102e; --c-vds: #0b4fa8; --c-check: #5b2d8e; --c-year: #b3540a; --c-plant: #0f6b46; --c-serial: #3d4650; --on: #ffffff;
+  --label-font: "Arial Black", "Helvetica Neue", system-ui, sans-serif; --cell-font: ui-monospace, monospace;
+  /* The metal, the same in both colour schemes: its body, its edge, the
+     colour struck or printed on it, a rivet, and a slotted screw. */
+  --steel: #6f7b86; --steel-dark: #58626c; --on-metal: #232930;
+  --metal: url(brushed.svg) 0 0 / 600px 120px, linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc);
+  --raised: inset 0 1px 0 #fff, 0 2px 0 var(--steel);
+  --emboss: 0 1px 0 rgb(255 255 255 / .9), 0 -1px 1px rgb(0 0 0 / .45);
+  font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 1rem 1rem 8rem; color: var(--fg); background: var(--bg); }
 @media (prefers-color-scheme: dark) {
-  :root { --fg: #e5e7eb; --bg: #111827; --link: #93c5fd; --muted: #9ca3af; --line: #4b5563; --bad: #fca5a5; --ok: #86efac; --warn: #fcd34d; }
+  body { --bg: #16222d; --fg: #eef2f5; --muted: #a9b6c2; --line: #45566a; --faint: #3a4a5c; --card-bg: #1f2d3a; --link: #8ec5ff; --bad: #ff8a8a;
+    --c-wmi: #ff6b81; --c-vds: #7db4ff; --c-check: #c9a2ff; --c-year: #ffb067; --c-plant: #6fdcab; --c-serial: #b8c4cf; --on: #14181d; }
 }
-body { font: 15px/1.5 system-ui, sans-serif; max-width: 62rem; margin: 1rem auto; padding: 0 1rem; color: var(--fg); background: var(--bg); }
 a { color: var(--link); }
-/* The header: the brand and the running release's version, small and
-   muted, and the navigation at the other end: translate, fit, the
-   vocabularies' button and the API's documentation, the page shown in
-   the text's color and underlined. A narrow window wraps it below. */
-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; margin: .5rem 0 1rem; padding-bottom: .5rem; border-bottom: 1px solid var(--line); }
-header a.brand { font-weight: 700; color: var(--fg); text-decoration: none; }
-header .version, header .version a { font-size: 13px; color: var(--muted); }
-header button { padding: .25rem 1rem; }
-nav.site ul { list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: .25rem 1.25rem; margin: 0; padding: 0; }
-nav.site a { display: inline-block; padding: .25rem 0; min-height: 24px; }
-nav.site a[aria-current=page] { color: var(--fg); font-weight: 600; text-decoration-thickness: 2px; text-underline-offset: 4px; }
-h1 { font-size: 1.4rem; margin: .5rem 0; }
+header, main, #ui-error { max-width: 62rem; margin-inline: auto; }
+header { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .75rem; margin-bottom: 1.5rem; }
+/* The brand is a small plate of its own, a rivet at each end. */
+header a.brand { padding: .2rem 1.5rem; font: 900 13px var(--label-font); letter-spacing: .22em; text-transform: uppercase; text-decoration: none; color: var(--on-metal); text-shadow: var(--emboss);
+  border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised);
+  background: radial-gradient(circle at .65rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), radial-gradient(circle at calc(100% - .65rem) 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--metal); }
+header .version, header .version a { font: 600 11px var(--cell-font); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 900 1.3rem var(--label-font); letter-spacing: .04em; text-transform: uppercase; margin: .5rem 0; }
 h2 { font-size: 1.1rem; margin: 1.5rem 0 .5rem; }
-h3 { font-size: 1rem; margin: 1.25rem 0 .4rem; }
-h4 { font-size: .95rem; margin: 1rem 0 .3rem; }
+h3 { font: 900 12px var(--label-font); letter-spacing: .08em; text-transform: uppercase; margin: 1.5rem 0 .5rem; padding-bottom: .2rem; border-bottom: 3px solid var(--c-vds); }
 #ui-error:empty { display: none; }
-#ui-error { color: var(--bad); border-left: 4px solid var(--bad); padding-left: .6rem; margin: 0 0 1rem; }
-a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible, pre:focus-visible, .wide:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
-code, pre, .mono { font-family: ui-monospace, monospace; }
-p code { overflow-wrap: anywhere; }
+#ui-error { color: var(--bad); border-left: 4px solid var(--bad); padding-left: .6rem; margin-bottom: 1rem; }
+a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible, pre:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
+code, pre, .mono { font-family: var(--cell-font); }
 .hint { color: var(--muted); font-weight: 400; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-footer { margin-top: 2.5rem; color: var(--muted); font-size: 13px; }
+.error { color: var(--bad); margin: .5rem 0; }
+/* A button is a key of the plate's metal: raised, and pressed in. */
+button { font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase; padding: .45rem .9rem; cursor: pointer;
+  color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); background: var(--metal); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised); }
+button:active { transform: translateY(2px); box-shadow: inset 0 1px 0 #fff; }
+input[type=text], input[type=search] { font: inherit; padding: .35rem .5rem; box-sizing: border-box; color: var(--fg); background: var(--card-bg); border: 1px solid var(--steel); border-radius: 2px; box-shadow: inset 0 2px 3px rgb(0 0 0 / .18); }
+label { font-weight: 600; }
 
-/* Forms. */
-form { display: grid; gap: .75rem; padding: 1rem; border: 1px solid var(--line); border-radius: 6px; }
-label, legend { font-weight: 600; }
-fieldset { border: 0; padding: 0; margin: 0; }
-fieldset label, label.check { font-weight: 400; margin-right: 1rem; display: inline-block; }
-input[type=text] { font: inherit; padding: .3rem .5rem; width: 100%; max-width: 22rem; box-sizing: border-box; display: block; }
-input#from-vin { font-family: ui-monospace, monospace; }
-input[aria-invalid=true], select[aria-invalid=true] { border: 2px solid var(--bad); }
-input[readonly] { background: transparent; border-style: dashed; }
-.error { color: var(--bad); margin: .2rem 0 0; }
-button { font: inherit; padding: .35rem 1.2rem; justify-self: start; }
-select { font: inherit; padding: .25rem; }
-form p.hint { margin: 0; }
-.vin-row { display: flex; gap: .5rem; align-items: stretch; flex-wrap: wrap; }
-.vin-row input#from-vin { flex: 1; min-width: 12rem; }
-form details.options { margin: 0; }
-form details.options[open] > summary { margin-bottom: .5rem; }
-form details.options > div, form details.options > fieldset { margin-bottom: .5rem; }
-
-/* The page's controls (page.html): a box, its tabs along the top, each a
-   link, the current one joined to the form below it. */
-.controls { border: 1px solid var(--line); border-radius: 8px; margin: 1rem 0; }
-.tabs { display: flex; flex-wrap: wrap; gap: 0 .25rem; padding: .5rem .75rem 0; border-bottom: 1px solid var(--line); }
-.tabs a { padding: .45rem .9rem; margin-bottom: -1px; text-decoration: none; border: 1px solid transparent; border-bottom: 0; border-radius: 6px 6px 0 0; }
-.tabs a:hover { text-decoration: underline; }
-.tabs a[aria-current=page] { color: var(--fg); font-weight: 600; border-color: var(--line); background: var(--bg); }
-.controls form { border: 0; }
-.controls > .error { margin: 1rem 1rem 0; }
-.controls .try { margin: 0 1rem; }
-/* The examples, side by side as the line allows. */
-ul.examples { list-style: none; padding: 0; margin: .25rem 1rem 1rem; display: flex; flex-wrap: wrap; gap: .4rem 1.5rem; }
-a.example { display: inline-block; font-family: ui-monospace, monospace; padding: .2rem .6rem; border: 1px solid var(--line); border-radius: 4px; }
-
-/* The dialogs, popovers behind their buttons: the answer's JSON, and the
-   vocabularies, whose button is in the header. */
-dialog[popover] { box-sizing: border-box; width: min(56rem, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); padding: 1rem 1.25rem; border: 1px solid var(--line); border-radius: 8px; color: var(--fg); background: var(--bg); overflow: auto; box-shadow: 0 8px 32px rgb(0 0 0 / .4); }
-dialog[popover]::backdrop { background: rgb(0 0 0 / .45); }
-.dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-.dialog-head h2 { margin: 0; }
-
-/* The answer (page.html's result, decode.html). */
-#result { margin-top: 1.5rem; }
+/* The dialogs, popovers behind their buttons: a panel under a head of the
+   plate's metal, a slotted screw at each end of it. */
+dialog[popover] { box-sizing: border-box; width: min(56rem, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); padding: 0 1.25rem 1.25rem; border: 2px solid var(--steel); border-radius: 6px; color: var(--fg); background: var(--card-bg); overflow: auto; box-shadow: 0 3px 0 var(--steel-dark), 0 18px 40px rgb(0 0 0 / .45); }
+dialog[popover]::backdrop { background: rgb(10 18 26 / .55); }
+.dialog-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 0 -1.25rem 1rem; padding: .55rem 2.1rem; border-bottom: 2px solid var(--steel); box-shadow: inset 0 1px 0 #fff, 0 2px 4px rgb(0 0 0 / .2);
+  background: linear-gradient(var(--steel-dark), var(--steel-dark)) .65rem 50% / 9px 2px no-repeat, linear-gradient(var(--steel-dark), var(--steel-dark)) calc(100% - .65rem) 50% / 9px 2px no-repeat,
+    radial-gradient(circle at calc(.65rem + 4.5px) 50%, #f4f6f8 0 5px, var(--steel) 5.5px 6.5px, transparent 7px), radial-gradient(circle at calc(100% - .65rem - 4.5px) 50%, #f4f6f8 0 5px, var(--steel) 5.5px 6.5px, transparent 7px), var(--metal); }
+.dialog-head h2 { margin: 0; font: 900 13px var(--label-font); letter-spacing: .14em; text-transform: uppercase; color: var(--on-metal); text-shadow: var(--emboss); }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; }
+dl.snippets { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: .4rem .75rem; margin: .5rem 0; align-items: start; }
+dl.snippets dt { font: 800 11px var(--label-font); letter-spacing: .06em; text-transform: uppercase; padding-top: .6rem; }
+dl.snippets dd { margin: 0; min-width: 0; }
+dl.snippets .copyable { margin: 0; }
+ul.links { list-style: none; padding: 0; margin: .5rem 0; display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; }
+ul.links a { display: inline-block; min-height: 24px; }
+@media (max-width: 40rem) {
+  dl.snippets { grid-template-columns: minmax(0, 1fr); }
+}
 table { border-collapse: collapse; width: 100%; }
-th, td { text-align: left; vertical-align: top; padding: .25rem .75rem .25rem 0; border-bottom: 1px solid var(--line); }
-table.kv th { width: 40%; font-weight: 600; }
-/* A table that scrolls sideways (.wide, .scroll) breaks no word. The two
-   that do not, a decode's elements and the install commands, must fit
-   the page: their cells may break anywhere, else an element's long name
-   beside its value, or a command's line, pushes the page sideways. */
-table.kv td, table.install th, table.install td { overflow-wrap: anywhere; }
+th, td { text-align: left; vertical-align: top; padding: .3rem .75rem .3rem 0; border-bottom: 1px solid var(--line); }
+thead th { font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase; border-bottom: 3px solid var(--steel); }
 td ul { margin: 0; padding-left: 1.1rem; }
-pre { margin: 0; padding: .5rem .75rem; border: 1px solid var(--line); border-radius: 4px; overflow-x: auto; font-size: 13px; }
+/* Text to copy sits in a recess. */
+pre { margin: 0; padding: .5rem .75rem; border: 1px solid var(--line); border-radius: 2px; overflow-x: auto; font-size: 13px; background: color-mix(in srgb, var(--fg) 6%, var(--card-bg)); box-shadow: inset 0 2px 3px rgb(0 0 0 / .18); }
 pre.wrap { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 16rem; overflow-y: auto; }
 .copyable { display: flex; gap: .5rem; align-items: flex-start; margin: .25rem 0; }
 .copyable > pre { flex: 1; min-width: 0; }
-button.copy { font-size: 13px; padding: .3rem .8rem; flex: none; }
-mark { font-weight: 700; }
-details { border: 1px solid var(--line); border-radius: 6px; padding: .25rem .75rem; margin: .5rem 0; }
+button.copy { flex: none; }
+details { border: 1px solid var(--line); border-radius: 2px; padding: .25rem .75rem; margin: .5rem 0; }
 summary { cursor: pointer; font-weight: 600; padding: .25rem 0; }
-details table { margin-bottom: .5rem; }
-ul.codes { margin: .25rem 0; padding-left: 1.1rem; }
-.codes-clean { color: var(--ok); }
-p.summary { font-size: 1.2rem; font-weight: 600; margin: .25rem 0; }
-p.status { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; }
-.chip { display: inline-block; padding: .1rem .6rem; border-radius: 999px; font-weight: 600; font-size: 13px; }
-.chip-ok { color: var(--ok); border: 1px solid var(--ok); }
-details.dev { margin-top: 2rem; }
-.codes-flagged { color: var(--bad); }
-.null { color: var(--muted); font-style: italic; }
-.wide { overflow-x: auto; }
+.wide, .scroll { overflow-x: auto; }
+main > .wide { padding: .25rem 1rem 1rem; background: var(--card-bg); border: 2px solid var(--steel); border-radius: 2px; box-shadow: 3px 3px 0 rgb(0 0 0 / .18); }
 .wide table { font-size: 13px; }
-@media (max-width: 40rem) {
-  table.kv th { width: auto; }
-  table.install, table.install tbody, table.install tr, table.install th, table.install td { display: block; }
-  table.install thead { display: none; }
-  table.install th { border: 0; padding-top: .75rem; }
-}
 
 /* The vocabularies (vocab.html). */
-/* The catalog scrolls sideways on a narrow screen rather than breaking
-   words; a drift example may break anywhere. */
-.scroll { overflow-x: auto; margin: .5rem 0 1rem; }
+.scroll { margin: .5rem 0 1rem; }
 table.catalog th[scope=row] { white-space: nowrap; }
 table.catalog details { border: 0; padding: 0; margin: 0; }
 table.catalog summary { font-weight: 400; padding: 0; }
@@ -120,97 +100,254 @@ table.catalog details ul { margin: .25rem 0 0; padding-left: 1.1rem; overflow-wr
 table.catalog dl { margin: .25rem 0 0; display: grid; grid-template-columns: auto 1fr; gap: .1rem .6rem; }
 table.catalog dt { font-weight: 600; }
 table.catalog dd { margin: 0; overflow-wrap: anywhere; }
-table.catalog .actions { display: flex; flex-wrap: wrap; gap: .5rem .75rem; align-items: center; }
 table.catalog .actions a { display: inline-block; min-height: 24px; padding: .2rem 0; }
 table.catalog .actions button { min-height: 24px; min-width: 24px; }
-form.inline { display: inline; padding: 0; border: 0; }
-form.inline button { font-size: 13px; padding: .15rem .6rem; }
-.load, .offer { display: grid; gap: .25rem; margin: .75rem 0; }
-.load p, .offer p { margin: 0; }
+form.inline { display: inline; }
+.loaders { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: .75rem; margin: .75rem 0; }
+.load, .offer { display: grid; gap: .4rem; align-content: start; justify-items: start; }
+.offer { border: 2px solid var(--line); border-radius: 2px; padding: 1rem; }
+.load p, .offer p { margin: 0; font-size: 13px; }
+.load input[type=file] { max-width: 100%; }
 .refusal { border-left: 4px solid var(--bad); padding-left: .6rem; margin: .5rem 0; }
-.refusal form { border: 0; padding: .25rem 0; }
-/* Files dragged over the page: they load when dropped. */
-.dropzone { border: 2px dashed var(--line); border-radius: 6px; padding: 1rem; }
+.dropzone { border: 2px dashed var(--steel); border-radius: 2px; padding: 1rem; }
 section#browser.dropping #browser-files { outline: 2px dashed var(--link); outline-offset: 4px; }
 section#browser.dropping .dropzone { border-color: var(--link); }
 details.more { margin: .75rem 0; }
-form.filter { display: flex; flex-wrap: wrap; gap: .5rem; align-items: end; border: 0; padding: 0; margin: .5rem 0; }
+form.filter { display: flex; flex-wrap: wrap; gap: .5rem; align-items: end; margin: .5rem 0; }
 form.filter label { flex-basis: 100%; }
 
-/* map (map.go). The heights and widths are map.go's geometry, which draws
-   the lines from them: a column's heading 32px, a vocabulary's 26px, a
-   card 72px, 10px between any two; columns 26% wide, 11% apart, a model
-   10% in under its make. A card's box fills it, the name wrapping to two
-   lines; while the card is under the pointer or focused, its box grows to
-   show a longer name whole, over the cards below, which never move. What
-   the card's lines draw (.rel) is read with its name, and shown when the
-   columns stack (below). */
-.map-key { list-style: none; padding: 0; margin: .5rem 0; display: flex; flex-wrap: wrap; gap: .25rem 1.5rem; font-size: 13px; color: var(--muted); }
-.map-key li { display: flex; align-items: center; gap: .4rem; }
-.key-line { display: inline-block; width: 2rem; border-top: 2px solid var(--muted); }
-.key-line.derived { border-top-style: dashed; }
-.key-line.decoded { border-top-style: dotted; }
-.key-line.under { width: 1rem; height: .5rem; border-top: 0; border-left: 2px solid var(--line); border-bottom: 2px solid var(--line); }
-.key-card { display: inline-block; width: 1rem; height: .9rem; border: 1px solid var(--line); border-left: 4px solid var(--warn); border-radius: 3px; }
-.map { position: relative; min-width: 40rem; margin: 1rem 0; }
-.map-edges { position: absolute; top: 0; left: 0; pointer-events: none; overflow: visible; }
-.map-edges path { fill: none; stroke: var(--muted); stroke-width: 1.5; }
-.map-edges path.derived { stroke-dasharray: 6 4; }
-.map-edges path.decoded { stroke-dasharray: 2 3; }
-.map-edges path.under { stroke: var(--line); }
-.map-cols { position: relative; display: grid; grid-template-columns: 26% 26% 26%; column-gap: 11%; }
-.map-col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.map-head { height: 32px; line-height: 32px; margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
-.map-group { height: 26px; line-height: 26px; margin: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.map .node { position: relative; display: block; height: 72px; color: var(--fg); text-decoration: none; }
-.map .node.under { margin-left: 10%; }
-.map .node .box, .map-empty { box-sizing: border-box; padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); display: flex; flex-direction: column; justify-content: center; }
-.map .node .box { position: absolute; top: 0; left: 0; right: 0; min-height: 100%; }
-.map-empty { height: 72px; margin: 0; overflow: hidden; border-style: dashed; color: var(--muted); font-size: 13px; }
-.map .node.unchecked .box { border-left: 4px solid var(--warn); }
-.map .node .name { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; font-weight: 600; line-height: 20px; }
-.map .node .meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; line-height: 16px; color: var(--muted); }
-.map .node .rel { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.map .node:is(:hover, :focus-visible) { z-index: 1; }
-.map .node:is(:hover, :focus-visible) .name { display: block; }
-.map .node:is(:hover, :focus-visible) .meta { white-space: normal; overflow-wrap: anywhere; }
-.map a.node:focus-visible { outline: 0; }
-.map a.node:focus-visible .box { outline: 2px solid currentColor; outline-offset: 2px; }
-.map a.node:hover .box, .map a.node:focus-visible .box { border-color: var(--link); }
-.map a.node:hover .name { text-decoration: underline; }
-/* map.js lights the route through a card and quiets the rest: a quiet
-   card's name takes the muted color, still 4.5:1, never an opacity. */
-.map.lighting .node:not(.lit) .name { color: var(--muted); }
-.map.lighting .map-edges path:not(.lit) { opacity: .25; }
-.map .node.lit .box { border-color: var(--link); box-shadow: 0 0 0 1px var(--link); }
-.map-edges path.lit { stroke: var(--link); stroke-width: 2.5; }
-/* A window too narrow for the columns side by side (the map's 40rem and
-   the page's padding) stacks them: from, the spine, then the targets. The
-   lines, drawn for the columns side by side, hide with their key, and
-   each card shows what they drew as a line of its own. */
-@media (max-width: 42rem) {
-  .map-key .key-lines, .map-edges { display: none; }
-  .map { min-width: 0; }
-  .map-cols { display: flex; flex-direction: column; gap: 1rem; }
-  .map .node, .map-empty { height: auto; }
-  .map .node .box { position: static; }
-  .map .node .name { display: block; }
-  .map .node .meta { white-space: normal; overflow-wrap: anywhere; }
-  .map .node .rel { position: static; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal; font-size: 13px; line-height: 18px; }
-}
+/* ---- The diagram ------------------------------------------------------
+   One grid of 17 columns holds the labels over the plate, the cells and
+   the brackets under it; the cards are six columns of the same width. No
+   gaps: a gap would move a column's centre off the fraction of the width
+   the leader lines (page.html's SVGs, in 1020 units: 60 a cell, 170 a
+   card) are drawn to. Each group names its colour once (--c), which its
+   label, bracket, leader line and card all use, and the colour its mark
+   takes on metal (--cm), which is the same light metal in both colour
+   schemes. */
+.g-wmi { --c: var(--c-wmi); --cm: #c8102e; }
+.g-vds { --c: var(--c-vds); --cm: #0b4fa8; }
+.g-check { --c: var(--c-check); --cm: #5b2d8e; }
+.g-year { --c: var(--c-year); --cm: #b3540a; }
+.g-plant { --c: var(--c-plant); --cm: #0f6b46; }
+.g-serial { --c: var(--c-serial); --cm: #3d4650; }
 
-/* The fit page (fit.html): the answer's status in a sentence, its lists
-   as tables that scroll sideways, each candidate a box of its own with
-   its stock below, and the pages of a list. A stock row's fields are as
-   its source wrote them, and may break anywhere. */
-.status-sentence { font-size: 1.05rem; font-weight: 600; margin: .5rem 0; }
-ul.models { margin: .25rem 0; padding-left: 1.1rem; }
-.unchecked { color: var(--warn); }
-article.candidate { border: 1px solid var(--line); border-radius: 6px; padding: .25rem .9rem .75rem; margin: .75rem 0; }
-article.candidate h3 { margin-top: .75rem; }
-div.stock h3, div.stock h4 { margin-top: .75rem; }
-code.fields { display: block; min-width: 12rem; overflow-wrap: anywhere; font-size: 12px; }
-table.fit .nowrap { white-space: nowrap; }
-ul.sources { margin: .25rem 0; padding-left: 1.1rem; font-size: 13px; }
-p.pages { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; align-items: baseline; }
-nav.answers ul { margin: .5rem 0; padding-left: 1.1rem; }
+.stage { max-width: 62rem; margin-inline: auto; }
+.labels, .cells, .under { display: grid; grid-template-columns: repeat(17, minmax(0, 1fr)); }
+.labels > .g-wmi, .under > .g-wmi { grid-column: 1 / span 3; }
+.labels > .g-vds, .under > .g-vds { grid-column: 4 / span 5; }
+.labels > .g-check, .under > .g-check { grid-column: 9; }
+.labels > .g-year, .under > .g-year { grid-column: 10; }
+.labels > .g-plant, .under > .g-plant { grid-column: 11; }
+.labels > .g-serial, .under > .g-serial { grid-column: 12 / span 6; }
+
+.plate-form { margin: 0; }
+.plate, .labels { --plate-pad: 16px; }
+.labels { padding: 0 var(--plate-pad); }
+.lab { text-align: center; font: 900 11px/1.2 var(--label-font); letter-spacing: .06em; text-transform: uppercase; color: var(--c); white-space: nowrap; }
+.lab::after { content: ""; display: block; height: 7px; margin: 3px 3px 0; border: 3px solid var(--c); border-bottom: 0; }
+
+/* The plate: the metal's body, a slotted screw at each end, light streaks
+   of the brush over it (--metal), the dark streaks between them cut from a
+   dark layer by the same grain as a mask, and a band of light across it
+   that a gradient mask fades out. */
+.plate { position: relative; isolation: isolate; padding: 10px var(--plate-pad); container-type: inline-size; border: 2px solid var(--steel); border-radius: 8px;
+  box-shadow: inset 0 1px 0 #fff, inset 0 -3px 6px rgb(0 0 0 / .25), 0 3px 0 var(--steel-dark), 0 8px 16px rgb(0 0 0 / .25);
+  background: linear-gradient(var(--steel-dark), var(--steel-dark)) 3px 50% / 9px 2px no-repeat, linear-gradient(var(--steel-dark), var(--steel-dark)) calc(100% - 3px) 50% / 9px 2px no-repeat,
+    radial-gradient(circle at 7.5px 50%, #f4f6f8 0 5px, var(--steel) 5.5px 6.5px, transparent 7px), radial-gradient(circle at calc(100% - 7.5px) 50%, #f4f6f8 0 5px, var(--steel) 5.5px 6.5px, transparent 7px), var(--metal); }
+.plate::before, .plate::after { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: 6px; pointer-events: none; }
+.plate::before { background: #1c2630; opacity: .22; mask-image: url(brushed.svg); mask-size: 600px 120px; mask-position: 211px 47px; }
+.plate::after { background: linear-gradient(105deg, transparent 30%, #fff 45%, transparent 60%); opacity: .35; mask-image: linear-gradient(#000, transparent 70%); }
+/* A character is struck into the metal: dark, lit from above, over its
+   group's mark. */
+.cell { display: flex; align-items: center; justify-content: center; height: 13cqw; max-height: 5.2rem; min-height: 2.4rem; margin: 0 2px; box-sizing: border-box;
+  font: 700 clamp(15px, 5.1cqw, 46px)/1 var(--cell-font); color: var(--on-metal); text-shadow: var(--emboss); border-bottom: 4px solid var(--cm); }
+.cell .ch { display: inline-block; }
+.cell.bad { background: var(--bad); color: #fff; text-shadow: none; border-bottom-color: var(--bad); }
+.under { padding: 0 16px; }
+.brk { height: 9px; margin: 4px 3px 0; border: 3px solid var(--faint); border-top: 0; }
+.brk.done { border-color: var(--c); }
+.leaders, .joins { display: block; width: 100%; overflow: visible; padding: 0 16px; box-sizing: border-box; }
+.leaders { height: 36px; }
+.joins { height: 28px; }
+.leaders path, .joins path { fill: none; stroke: var(--faint); stroke-width: 3; stroke-dasharray: 1; }
+#answer[data-done~="wmi"] path.g-wmi, #answer[data-done~="vds"] path.g-vds, #answer[data-done~="check"] path.g-check,
+#answer[data-done~="year"] path.g-year, #answer[data-done~="plant"] path.g-plant, #answer[data-done~="serial"] path.g-serial { stroke: var(--c); }
+
+/* The input: below the plate until plate.js lays it over the cells. */
+.plate input { display: block; width: 100%; margin-top: 10px; font: 700 1.2rem var(--cell-font); letter-spacing: .1em; text-transform: uppercase; }
+.plate-form .decode { margin-top: .75rem; }
+.live .plate input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; outline: 0; box-shadow: none; background: transparent; color: transparent; caret-color: transparent; text-align: center; cursor: text; }
+.live .plate input::selection { background: transparent; color: transparent; }
+.live .plate input::placeholder { color: var(--steel-dark); font: 900 clamp(13px, 2.2cqw, 20px) var(--label-font); letter-spacing: .14em; text-transform: uppercase; text-shadow: var(--emboss); }
+.live .decode { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.live .plate:focus-within { outline: 3px solid var(--link); outline-offset: 3px; }
+.live .plate:focus-within .cell.next { box-shadow: inset 0 -6px 0 var(--link); animation: caret 1s steps(2) infinite; }
+@keyframes caret { 50% { box-shadow: none; } }
+
+/* The cards: six in a row, each a tag hung under its leader line by an
+   eyelet, a hole a radial mask punches through it (mask-clip keeps the
+   shadow) with a ring in the tag's heading around it. One there but empty
+   is faint. */
+.cards { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); padding: 0 16px; }
+.card { margin: 0 4px; padding: 0 .6rem .6rem; border: 3px solid var(--c); border-radius: 2px; background: var(--card-bg); min-width: 0; overflow-wrap: anywhere; box-shadow: 3px 3px 0 rgb(0 0 0 / .18);
+  mask-image: radial-gradient(circle at 50% 11px, transparent 3.5px, #000 4px); mask-clip: no-clip; }
+.card:not(.done) { border-style: dashed; border-color: var(--faint); box-shadow: none; }
+.card:not(.done) h2 { background: none; color: var(--muted); }
+.card h2 { margin: 0 -.6rem .5rem; padding: 17px .6rem .25rem; font: 900 11px/1.3 var(--label-font); letter-spacing: .06em; text-transform: uppercase; color: var(--on); display: flex; justify-content: space-between; gap: .5rem;
+  background: radial-gradient(circle at 50% 8px, transparent 3.9px, rgb(255 255 255 / .75) 4px 6px, transparent 6.5px), var(--c); }
+.card h2 .pos { font-weight: 400; opacity: .85; }
+.card dl { margin: 0; display: grid; gap: .35rem; }
+.card dt { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.card dd { margin: 0; font-weight: 600; line-height: 1.25; }
+.card .big { margin: 0; font: 700 1.5rem/1.2 var(--cell-font); }
+.card.g-check .big { font: 900 1rem/1.25 var(--label-font); }
+.card.bad { border-color: var(--bad); }
+.card.bad h2 { background: var(--bad); color: #fff; }
+.card .how { margin-top: .5rem; padding: .25rem .5rem; font-size: 10px; }
+ol.years { list-style: none; margin: .4rem 0 0; padding: 0; font-size: 11px; color: var(--muted); line-height: 1.35; }
+ol.years li.current { color: var(--fg); font-weight: 700; }
+table.sum { width: auto; font-size: 13px; }
+table.sum td { text-align: center; padding: .2rem .45rem; }
+table.sum .skip { color: var(--muted); }
+.problems { margin: .75rem 20px 0; color: var(--bad); }
+.problems p { margin: .2rem 0; }
+
+/* "Also known as" has no box: the maker's, the vehicle's and the year's
+   lines run on down through its stacks, one for each vocabulary. A name
+   is a small plate, its four columns fixed fractions of the width (130,
+   170, 465 and 255 of 1020, which the lines above are drawn to): the
+   vocabulary's stamp, then the make, the model and the years, each a word
+   struck over its group's mark, under its group's bracket. The line into
+   a plate is drawn by the plate (::after), in the gap above it, so the
+   lines run from plate to plate. A dashed line or bracket is a doubt.
+
+   A vocabulary with several names is a stack: the first plate on top and
+   the edges of up to three more under it (shadows), which the lines to
+   the next stack pass through. Its name on the top plate is the switch (a
+   checkbox's label). On, the stack is one plate: the names are rows of
+   it with no gap, under the top row's brackets and beside the one stamp. */
+.aka { position: relative; display: flow-root; margin: 0 16px; }
+.aka h2 { position: absolute; top: 10px; left: 0; margin: 0; font: 900 9px/1.2 var(--label-font); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
+.stack { position: relative; --under: 0px; }
+/* A closed stack: the plates under the top one are away, but for their
+   edges, each a little narrower and lower, and room for them. */
+.stack:has(.fan:not(:checked)) .tagplate.below { display: none; }
+.stack.d1:has(.fan:not(:checked)) { --under: 12px; }
+.stack.d2:has(.fan:not(:checked)) { --under: 22px; }
+.stack.d3:has(.fan:not(:checked)) { --under: 32px; }
+.stack { padding-bottom: var(--under); }
+.stack.d1:has(.fan:not(:checked)) .tagplate { box-shadow: var(--raised), 0 10px 0 -5px #d3dae0, 0 11px 0 -4px var(--steel); }
+.stack.d2:has(.fan:not(:checked)) .tagplate { box-shadow: var(--raised), 0 10px 0 -5px #d3dae0, 0 11px 0 -4px var(--steel), 0 20px 0 -10px #c3cbd2, 0 21px 0 -9px var(--steel); }
+.stack.d3:has(.fan:not(:checked)) .tagplate { box-shadow: var(--raised), 0 10px 0 -5px #d3dae0, 0 11px 0 -4px var(--steel), 0 20px 0 -10px #c3cbd2, 0 21px 0 -9px var(--steel), 0 30px 0 -15px #b3bcc5, 0 31px 0 -14px var(--steel); }
+/* The lines into the stack after a closed one start under its top plate. */
+.stack.d1:has(.fan:not(:checked)) + .stack .tagplate .seg::after { top: -43px; height: 31px; }
+.stack.d2:has(.fan:not(:checked)) + .stack .tagplate .seg::after { top: -53px; height: 41px; }
+.stack.d3:has(.fan:not(:checked)) + .stack .tagplate .seg::after { top: -63px; height: 51px; }
+.tagplate { position: relative; display: grid; grid-template-columns: 130fr 170fr 465fr 255fr; align-items: center; margin-top: 30px; min-height: 2.9rem;
+  color: var(--on-metal); background: var(--metal); border: 1px solid var(--steel); border-radius: 4px; box-shadow: var(--raised), 0 4px 8px rgb(0 0 0 / .2); }
+.tagplate .stamp { align-self: stretch; display: flex; align-items: center; gap: .35rem; padding: 0 .5rem 0 1.5rem; border-right: 1px solid var(--steel); min-width: 0;
+  font: 700 10px var(--cell-font); letter-spacing: .04em; text-transform: uppercase; text-shadow: 0 1px 0 rgb(255 255 255 / .8);
+  background: radial-gradient(circle at .7rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px); }
+.stamp .voc { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+/* The switch: the vocabulary's name on a line of its own, and under it
+   how many names its stack holds and which way it goes. */
+.stamp.switch { cursor: pointer; flex-wrap: wrap; align-content: center; row-gap: 2px; }
+.stamp.switch .voc { flex-basis: 100%; }
+.stamp .count { flex: none; padding: 0 .35rem; border: 1px solid var(--steel); border-radius: 999px; background: rgb(255 255 255 / .55); }
+.stamp.switch::after { content: "▾"; flex: none; font-size: 9px; }
+.fan:checked ~ ol .stamp.switch::after { content: "▴"; }
+.fan:focus-visible ~ ol .stamp.switch { outline: 3px solid var(--link); outline-offset: -3px; }
+.seg { position: relative; align-self: stretch; display: flex; align-items: center; justify-content: center; padding: .35rem .6rem; text-align: center; min-width: 0; }
+.seg .w { font: 700 1.05rem/1.2 var(--cell-font); text-shadow: var(--emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere; }
+.seg::before { content: ""; position: absolute; left: 8px; right: 8px; top: -12px; height: 5px; border: 3px solid var(--c); border-bottom: 0; }
+.seg::after { content: ""; position: absolute; left: calc(50% - 1.5px); top: -31px; height: 19px; border-left: 3px solid var(--c); }
+.seg.unsure::before, .seg.unsure .w { border-style: dashed; }
+.tagplate.rule .g-wmi::after, .tagplate.rule .g-vds::after { border-left-style: dashed; }
+.tagplate.rule .g-wmi .w, .tagplate.rule .g-vds .w { border-bottom-style: dashed; }
+.seg.none::before { display: none; }
+.seg.none .w { border: 0; }
+/* A fanned stack: one plate. The rows under the top one have no gap, no
+   brackets and no stamp, only a hairline between their names. */
+.tagplate.below { margin-top: 0; border-top: 0; border-radius: 0; box-shadow: none; }
+.tagplate.below .seg::before, .tagplate.below .seg::after { display: none; }
+.tagplate.below .seg, .tagplate.below .stamp { border-top: 1px solid rgb(111 123 134 / .45); }
+.tagplate.below .stamp { background: none; }
+.stack:has(.fan:checked) .tagplate { box-shadow: none; border-bottom: 0; }
+.stack:has(.fan:checked) .tagplate:first-child { border-radius: 4px 4px 0 0; box-shadow: inset 0 1px 0 #fff; }
+.stack:has(.fan:checked) .tagplate:last-child { border-bottom: 1px solid var(--steel); }
+.stack:has(.fan:checked) .tagplate:last-child { border-radius: 0 0 4px 4px; box-shadow: 0 2px 0 var(--steel), 0 6px 10px rgb(0 0 0 / .2); }
+.tagplate.blank { grid-template-columns: 130fr 890fr; color: var(--muted); background: none; border: 3px dashed var(--faint); box-shadow: none; }
+.tagplate.blank .stamp { border-right-color: var(--faint); background: none; padding-left: .6rem; text-shadow: none; }
+.tagplate.blank .none { grid-column: 2; padding: .5rem .75rem; }
+.tagplate.blank .none:first-child { grid-column: 1 / -1; }
+.tagplate .info { position: absolute; right: .45rem; top: 50%; transform: translateY(-50%); width: 1.35rem; height: 1.35rem; padding: 0; border-radius: 50%; font: italic 700 12px Georgia, serif; text-transform: none; letter-spacing: 0; }
+.tagplate .info:active { transform: translateY(calc(-50% + 2px)); }
+.note[popover] { max-width: min(30rem, calc(100vw - 2rem)); padding: .75rem 1rem; border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .4); }
+.note[popover]::backdrop { background: rgb(10 18 26 / .35); }
+
+/* The chips under the diagram: recent VINs or the examples, and Surprise
+   me, each a small tag of the plate's metal with a rivet. */
+.chips { max-width: 62rem; margin: 1.5rem auto 0; padding: 0 20px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; }
+/* TEMPORARY, while the cards below the plate are being designed: the chips
+   are out of the way. Delete this rule to bring them back. */
+.chips { display: none; }
+ul.examples { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: .6rem; }
+ul.examples[hidden] { display: none; }
+a.example { display: inline-block; padding: .3rem .8rem .3rem 1.4rem; font: 700 12px var(--cell-font); letter-spacing: .04em; text-decoration: none; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8);
+  border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised);
+  background: radial-gradient(circle at .7rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--metal); }
+a.example.recent, a.example.surprise { font: 900 11px var(--label-font); letter-spacing: .06em; text-transform: uppercase; }
+a.example:hover { border-color: var(--link); }
+a.example:active { transform: translateY(2px); box-shadow: inset 0 1px 0 #fff; }
+button.linkish { border: 0; background: none; box-shadow: none; padding: 0 .25rem; color: var(--link); text-shadow: none; text-decoration: underline; text-transform: none; letter-spacing: 0; font: 13px system-ui, sans-serif; }
+button.linkish:active { transform: none; box-shadow: none; }
+
+/* The floating buttons: two tags riveted to the window's corner. */
+button.fab { position: fixed; right: 1rem; z-index: 2; padding: .6rem 1rem .6rem 1.6rem; font-size: 12px; box-shadow: var(--raised), 0 6px 12px rgb(0 0 0 / .3);
+  background: radial-gradient(circle at .8rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--metal); }
+button.fab-vocab { bottom: 1rem; }
+button.fab-dev { bottom: 4rem; }
+
+/* Motion: a group just completed draws its bracket and line in and pops
+   its card; a character stamps into its cell. None of it for a visitor
+   who asked for less. */
+@media (prefers-reduced-motion: no-preference) {
+  .brk.fresh { animation: bracket .25s ease-out; transform-origin: center top; }
+  path.fresh { animation: draw .35s ease-out .1s backwards; }
+  .card.fresh { animation: pop .3s cubic-bezier(.3, 1.6, .5, 1) .25s backwards; }
+  .ch.stamp { animation: stamp .18s ease-out; }
+}
+@keyframes bracket { from { transform: scaleX(0); } }
+@keyframes draw { from { stroke-dashoffset: 1; } }
+@keyframes pop { from { transform: translateY(-8px) scale(.92); opacity: 0; } }
+@keyframes stamp { from { transform: scale(1.6); opacity: .2; } }
+
+/* A narrow window: the lines go, the brackets and colours stay, and the
+   cards stack in the brackets' order. The one-cell groups' labels have no
+   room: their cards name them. */
+@media (max-width: 46rem) {
+  body { padding-inline: .5rem; }
+  .leaders, .joins { display: none; }
+  .plate, .labels { --plate-pad: 18px; }
+  .under, .cards { padding-inline: 18px; }
+  .cell { margin: 0 1px; border-bottom-width: 3px; }
+  .lab { font-size: 9px; }
+  .lab.g-check span, .lab.g-year span, .lab.g-plant span { visibility: hidden; }
+  .cards { grid-template-columns: minmax(0, 1fr); gap: .5rem; margin-top: .75rem; padding-inline: 0; }
+  .card { margin: 0; }
+  .card dl { grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); }
+  .aka { margin: 1.25rem 0 0; }
+  .aka h2 { position: static; width: auto; margin-bottom: -6px; }
+  .tagplate { grid-template-columns: 1fr 2fr 1.4fr; }
+  .tagplate .stamp { grid-column: 1 / -1; padding-block: .2rem; border-right: 0; border-bottom: 1px solid var(--steel); }
+  .tagplate.below .stamp { display: none; }
+  .tagplate.blank { grid-template-columns: minmax(0, 1fr); }
+  .tagplate.blank .none { grid-column: 1; }
+  .seg::before, .seg::after { display: none; }
+  .seg .w { font-size: .9rem; }
+  .tagplate .info { top: .1rem; right: .3rem; width: 1.1rem; height: 1.1rem; font-size: 10px; transform: none; }
+  .tagplate .info:active { transform: none; }
+  .chips, .problems { padding-inline: 0; margin-inline: 0; }
+}

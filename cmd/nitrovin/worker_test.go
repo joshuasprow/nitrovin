@@ -233,7 +233,9 @@ func TestWorker(t *testing.T) {
 	module := buildWorker(t)
 	big := filepath.Join(t.TempDir(), "synthetic.jsonl")
 	const entries = 150_000
-	probe := "/?" + writeSynthetic(t, big, entries).Encode() + pinned
+	writeSynthetic(t, big, entries)
+	// The fixture's 2010 Ram, into the synthetic file and yard.
+	probe := "/?from.vin=1D7RV1GT5AS123456&to=synthetic&to=yard" + pinned
 
 	wire := &wireLog{h: vocabServer(t, &module, filepath.Join(fixture, "classics.jsonl"))}
 	srv := httptest.NewServer(wire)
@@ -268,15 +270,10 @@ func TestWorker(t *testing.T) {
 	}
 
 	queries := []string{
-		"from.vocabulary=yard&from.entry.make=Packard&from.entry.model=Clipper&to=yard",
-		"from.vocabulary=yard&from.entry.make=Dodge&from.entry.model=Ram+1500&model_year=2010&to=yard",
-		"from.vocabulary=yard&from.entry.make=Dodge&from.entry.model=Ram+1500+4x4&vin=1C6RR7LT5FS123456&to=yard",
 		"from.vin=1D7RV1GT5AS123456&to=yard",
 		"from.vin=1GCVKREC6EZ123456&to=yard",
-		"from.ext=ext:classics/packard-clipper&to=yard",
-		"from.vocabulary=listing&from.entry.category=Brake+Pads&vin=JH2PC40066M200001&to=listing",
-		"from.spine=parts&from.id=brake-pads&to=listing",
-		"from.vocabulary=yard&from.entry.make=Nobody&from.entry.model=Nothing&to=yard",
+		"from.vin=" + ram2015 + "&model_year=2015&to=yard",
+		"from.vin=JH2PC40066M200001&to=yard",
 	}
 	same1 := func(step, target string) {
 		t.Helper()
@@ -297,12 +294,10 @@ func TestWorker(t *testing.T) {
 			t.Errorf("%s %s: the worker's fragment differs from the server's\nworker: %s\nserver: %s", step, target, got[3], want)
 		}
 	}
-	// Each of the page's tabs, its targets named (unnamed, the browser
-	// ticks the visitor's selection, which the server has none of), and
-	// each lookup: a VIN's with its decode, which is the server's.
-	for _, target := range []string{"/?to=yard", "/?tab=entry&to=yard", "/?tab=entry-parts&to=listing", "/?tab=id&to=yard"} {
-		same1("the page", target)
-	}
+	// The page, its targets named (unnamed, the browser ticks the
+	// visitor's selection, which the server has none of), and each
+	// lookup: a VIN's with its decode, which is the server's.
+	same1("the page", "/?to=yard")
 	for _, q := range queries {
 		same1("lookup", "/?"+q+pinned)
 	}
@@ -311,9 +306,9 @@ func TestWorker(t *testing.T) {
 
 	// One URL, one meaning: a lookup naming no target is the server's,
 	// files stored or not, and its targets are the server's default, as
-	// with JavaScript off; one naming a file the browser holds, its from
-	// alone included, is the worker's. The forms tick the visitor's
-	// selection before anything names a browser file.
+	// with JavaScript off; one naming a file the browser holds is the
+	// worker's. The form ticks the visitor's selection before anything
+	// names a browser file.
 	since := len(wire.all())
 	served := func(target string) bool {
 		return slices.ContainsFunc(wire.all()[since:], func(r wireRequest) bool { return r.target == target })
@@ -329,7 +324,7 @@ func TestWorker(t *testing.T) {
 	if !served(bare) {
 		t.Errorf("%s, files stored: the worker answered it; want the server", bare)
 	}
-	// The answer is the server's: the forms above it tick the selection.
+	// The answer is the server's: the form above it ticks the selection.
 	want := eval[string](tb, `new DOMParser().parseFromString(`+jsString(mainOf(t, wire.h, srv.URL, bare, false))+`, "text/html").getElementById("result").outerHTML`)
 	if got := eval[string](tb, `(() => {
 		const result = document.getElementById("result").cloneNode(true);
@@ -341,21 +336,18 @@ func TestWorker(t *testing.T) {
 	if got := attributes(tb, `#result`); len(got) != 1 || got[0]["data-from"] != "vin" || got[0]["data-spine"] != "vpic" {
 		t.Errorf("%s: the answer's from %v; want vin on vpic", bare, got)
 	}
-	entry := "/?from.vocabulary=yard&from.entry.make=Packard&from.entry.model=Clipper" + pinned
-	tb.do(chromedp.Navigate(srv.URL + entry))
+	named := "/?" + queries[1] + pinned
+	tb.do(chromedp.Navigate(srv.URL + named))
 	tb.wait("#result")
-	if served(entry) {
-		t.Errorf("%s: the server answered it; want the worker, yard is the browser's", entry)
-	}
-	if got, want := mainHTML(tb), eval[string](tb, `new DOMParser().parseFromString(`+jsString(mainOf(t, same, srv.URL, entry, false))+`, "text/html").getElementById("ui-main").outerHTML`); got != want {
-		t.Errorf("%s: the worker's page differs from the server's\nworker: %s\nserver: %s", entry, got, want)
+	if served(named) {
+		t.Errorf("%s: the server answered it; want the worker, yard is the browser's", named)
 	}
 
 	// A stopped worker starts again on the next request and answers the same.
 	tb.stopWorkers()
-	same1("after a stop", "/?"+queries[3]+pinned)
+	same1("after a stop", "/?"+queries[0]+pinned)
 
-	// A hard reload bypasses the worker: the page says the files are paused.
+	// A hard reload bypasses the worker: the page is paused.
 	tb.do(chromedp.Navigate(srv.URL + "/"))
 	tb.waitState("ready")
 	tb.call(func(ctx context.Context) error {
@@ -363,9 +355,6 @@ func TestWorker(t *testing.T) {
 		return err
 	})
 	tb.waitState("paused")
-	if s := tb.html("#browser-status"); !strings.Contains(s, "paused for this load") {
-		t.Errorf("hard reload: %s", s)
-	}
 	if n := tb.count("#vocab-files"); n != 0 {
 		t.Errorf("hard reload: a file input with no worker to take the files")
 	}
@@ -412,8 +401,8 @@ func TestWorker(t *testing.T) {
 	same1("cold, 150,000 entries", probe)
 
 	// A new worker (here, /sw.js with other bytes) installs beside the one
-	// in control and waits for this page to close; the page says so, and
-	// the old one keeps answering.
+	// in control and waits for this page to close, and the old one keeps
+	// answering.
 	tb.do(chromedp.Navigate(srv.URL + "/"))
 	tb.waitState("ready")
 	wire.mu.Lock()
@@ -428,9 +417,6 @@ func TestWorker(t *testing.T) {
 		})();
 	})`); got != "waiting" {
 		t.Errorf("an update: data-update %q; want waiting", got)
-	}
-	if s := tb.html("#browser-status"); !strings.Contains(s, "starts once every nitrovin tab is closed") {
-		t.Errorf("an update: %s", s)
 	}
 	if eval[bool](tb, `navigator.serviceWorker.getRegistration().then(r => r.waiting === null || r.active === null)`) {
 		t.Error("an update: no worker waiting beside the active one")
@@ -554,9 +540,10 @@ func (tb *tab) timeFetch(target string) fetched {
 // writeSynthetic writes a vehicle vocabulary of n entries at the scale of
 // eBay's (make, model, trim, year: one entry per year), over the vPIC
 // models of the embedded month, each mapped to its model for its year and
-// every third with a Drive Type qualifier. The trims are made up. It
-// returns the query naming one entry from the middle of the file.
-func writeSynthetic(t *testing.T, path string, n int) url.Values {
+// every third with a Drive Type qualifier. The trims are made up, and the
+// years run back from 2010, the fixture's Ram's, so its VIN reaches its
+// model's entries.
+func writeSynthetic(t *testing.T, path string, n int) {
 	t.Helper()
 	d, err := nitrovin.Embedded()
 	if err != nil {
@@ -588,10 +575,9 @@ func writeSynthetic(t *testing.T, path string, n int) url.Values {
 	slices.SortFunc(all, func(a, b model) int { return int(a.id) - int(b.id) })
 	per := n/len(all) + 1
 	written := 0
-	var probe url.Values
-	for i, x := range all {
+	for _, x := range all {
 		for j := 0; j < per && written < n; j++ {
-			trim, year := fmt.Sprintf("Trim %d", j%8), fmt.Sprint(1981+j/8)
+			trim, year := fmt.Sprintf("Trim %d", j%8), fmt.Sprint(2010-j/8)
 			entry, _ := json.Marshal(map[string]string{"make": x.make, "model": x.name, "trim": trim, "year": year})
 			qualifiers := ""
 			if written%3 == 0 {
@@ -599,10 +585,6 @@ func writeSynthetic(t *testing.T, path string, n int) url.Values {
 			}
 			fmt.Fprintf(w, `{"entry":%s,"mappings":[{"model":%d,"first":%s,"last":%s%s,"origin":"derived"}]}`+"\n", entry, x.id, year, year, qualifiers)
 			written++
-			if i == len(all)/2 && j == 0 {
-				probe = url.Values{"from.vocabulary": {"synthetic"}, "from.entry.make": {x.make}, "from.entry.model": {x.name},
-					"from.entry.trim": {trim}, "from.entry.year": {year}, "to": {"synthetic", "yard"}}
-			}
 		}
 	}
 	if err := w.Flush(); err != nil {
@@ -611,8 +593,7 @@ func writeSynthetic(t *testing.T, path string, n int) url.Values {
 	if err := f.Close(); err != nil {
 		t.Fatal(err)
 	}
-	if written != n || probe == nil {
-		t.Fatalf("wrote %d entries, probe %v", written, probe)
+	if written != n {
+		t.Fatalf("wrote %d entries", written)
 	}
-	return probe
 }

@@ -1,15 +1,12 @@
-{{/* The one layout: every page is a route's fragment in its main, which is
-also what htmx restores on back and forward (hx-history-elt), from the
-server and never from a snapshot of the page (hx-history false): a
-snapshot keeps what a script or an extension left on the page, such as an
-empty style attribute, which CSP refuses when the snapshot is put back.
-Its error slot (#ui-error) is where htmx swaps a 4xx or 5xx fragment
-(htmx-config's responseHandling); a fragment that is no error clears it
-(clear-error). The header holds the brand, the running release's version
-beside it (linked to its release on GitHub when it is a tagged release),
-and the navigation (nav); beside the main is the Vocabularies dialog
-(VocabDialog, page.html's vocab-dialog), which no fragment replaces. No
-inline script or style: CSP refuses both. */}}
+{{/* PROTOTYPE (prototype/pare-back-ui): the pared-back layout. The header
+is the brand, the release and the data month, with no navigation: the page
+is the VIN decoder. Everything else is behind floating buttons (.fab), each
+opening a popover dialog: Vocabularies here, beside the main, on every page
+that draws its dialog (VocabDialog, page.html's vocab-dialog), and
+Developers in the page's own fragment (page.html's developers). The main is
+what htmx fills and restores (hx-history-elt, never from a snapshot); its
+error slot (#ui-error) takes a 4xx or 5xx fragment. No inline script or
+style: CSP refuses both. */}}
 {{define "page" -}}
 <!doctype html>
 <html lang="en">
@@ -22,7 +19,7 @@ inline script or style: CSP refuses both. */}}
 <link rel="stylesheet" href="{{.Assets}}/ui.css">
 <script src="{{.Assets}}/htmx.min.js" defer></script>
 <script src="{{.Assets}}/copy.js" defer></script>
-<script src="{{.Assets}}/map.js" defer></script>
+<script src="{{.Assets}}/plate.js" defer></script>
 {{- if .VocabDialog}}
 <script src="{{.Assets}}/vocab.js" defer></script>
 {{- end}}
@@ -30,37 +27,20 @@ inline script or style: CSP refuses both. */}}
 </head>
 <body>
 <header>
-<div class="title"><a class="brand" href="/">nitrovin</a>
-{{- with .Version}} <small class="version">{{if $.VersionURL}}<a href="{{$.VersionURL}}">{{.}}</a>{{else}}{{.}}{{end}}</small>{{end}}</div>
-{{template "nav" .Nav}}
+<a class="brand" href="/">nitrovin</a>
+<small class="version">{{with .Version}}{{if $.VersionURL}}<a href="{{$.VersionURL}}">{{.}}</a>{{else}}{{.}}{{end}}{{end}}{{with .DataMonth}} · data {{.}}{{end}}</small>
 </header>
 <div id="ui-error" role="alert"></div>
 <main id="ui-main" hx-history-elt hx-history="false">
 {{.Body}}
 </main>
+{{- if .VocabDialog}}
+<button type="button" class="fab fab-vocab open-vocabularies" popovertarget="vocabularies">Vocabularies</button>
+{{- end}}
 {{.VocabDialog}}
 </body>
 </html>
 {{end}}
-
-{{/* nav is the header's navigation, every page's way to every other:
-translate (/), fit (/ui/fit), the Vocabularies dialog's button on every
-page that draws the dialog (every page but an error's), and the API's
-documentation. Its links are plain
-page loads, never htmx's, so the page each marks current (aria-current)
-is always the one shown. */}}
-{{define "nav" -}}
-<nav class="site" aria-label="Pages">
-<ul>
-<li><a href="/"{{if eq .Current "translate"}} aria-current="page"{{end}}>Translate</a></li>
-<li><a href="/ui/fit"{{if eq .Current "fit"}} aria-current="page"{{end}}>Fit</a></li>
-{{- if .Vocabularies}}
-<li><button type="button" class="open-vocabularies" popovertarget="vocabularies">Vocabularies</button></li>
-{{- end}}
-<li><a href="{{.APIDocs}}">API docs</a></li>
-</ul>
-</nav>
-{{- end}}
 
 {{/* fragment-title starts every fragment that is no error: htmx takes it
 out and gives the document its page's title. */}}

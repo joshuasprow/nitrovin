@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
-	"net/url"
 	"path"
 	"slices"
 	"strings"
@@ -27,29 +26,19 @@ import (
 //
 // A server with the worker's module publishes them among the release's
 // assets, by blake3, as it does EPA's vocabulary, and the worker's panel
-// offers them as one "Load the demo": vocab.js loads the vocabularies as
+// offers them as one "Load demo": vocab.js loads the vocabularies as
 // one batch, compiles the catalog in the browser, and loads the shelf and
 // the yard, whose VINs alone go to the server to be decoded. One catalog
 // per nitrovin holds (ADR 0023): the offer is refused, in words, while
-// the server or the browser holds another catalog. Remove the demo removes
+// the server or the browser holds another catalog. Remove demo removes
 // every file of it at once.
-//
-// demo/demo-examples.json is the list of requests that show each feature,
-// each with the user stories of #278 it shows, grouped by the fit page's
-// tab its from is asked on: the fit page offers each tab its own as its
-// examples while the demo's catalog answers it, and docs/vocabularies.md
-// walks through the same list, tab by tab.
 
 //go:embed demo
 var demoFS embed.FS
 
-const (
-	// demoDir is the demo set's directory in the package, and in the
-	// repository pkg/ui/demo.
-	demoDir = "demo"
-	// demoExamplesName is the list of its requests, beside its files.
-	demoExamplesName = "demo-examples.json"
-)
+// demoDir is the demo set's directory in the package, and in the
+// repository pkg/ui/demo.
+const demoDir = "demo"
 
 // demoFile is one file of the demo set: its name (its header's), the file
 // it is picked as, its kind, version and blake3 in hex, and its bytes.
@@ -58,22 +47,11 @@ type demoFile struct {
 	data                                  []byte
 }
 
-// demoExample is one request of the demo set's list: the user stories of
-// #278 it shows, the link's label and hint, and the link, a fit page's or
-// the translate page's.
-type demoExample struct {
-	Stories []int  `json:"stories"`
-	Label   string `json:"label"`
-	Hint    string `json:"hint"`
-	Href    string `json:"href"`
-}
-
 // demoSet is the demo set: its files in name order, as --vocab loads a
-// directory, its catalog among them, and its list of requests.
+// directory, its catalog among them.
 type demoSet struct {
-	files    []demoFile
-	catalog  demoFile
-	examples []demoExample
+	files   []demoFile
+	catalog demoFile
 }
 
 // theDemo is the demo set built in, read on first need. It is the
@@ -114,13 +92,6 @@ func readDemo(fsys fs.FS) (*demoSet, error) {
 	}
 	if d.catalog.Name == "" {
 		return nil, fmt.Errorf("the demo set has no catalog")
-	}
-	b, err := fs.ReadFile(fsys, path.Join(demoDir, demoExamplesName))
-	if err != nil {
-		return nil, err
-	}
-	if err := json.Unmarshal(b, &d.examples); err != nil {
-		return nil, fmt.Errorf("the demo set's %s: %w", demoExamplesName, err)
 	}
 	return d, nil
 }
@@ -176,45 +147,7 @@ func (h *Handler) demoLoadable() bool {
 
 // demoLoadText is what a page says of the demo where a request needs it:
 // how to load it.
-const demoLoadText = "This nitrovin offers a demo set to load into your browser in one click: open Vocabularies and Load the demo."
-
-// isDemoCatalog reports whether info's catalog is the demo set's, by its
-// name and version: the fit page then offers the demo's requests.
-func isDemoCatalog(info contract.Info) bool {
-	c := theDemo().catalog
-	return slices.ContainsFunc(info.Vocabularies, func(f contract.VocabularyFile) bool {
-		return f.Kind == string(vocab.KindCatalog) && f.Name == c.Name && f.Version == c.Version
-	})
-}
-
-// demoExamples are the demo set's requests that what is loaded answers:
-// each whose files are loaded, among cat (the vocabularies, extension sets
-// and spines) or info's files (the catalog and stock), with the kinds of
-// stock it asks for. A request of another page than the fit page loads
-// whole (Elsewhere). The fit page keeps the current tab's (ownExamples).
-func demoExamples(info contract.Info, cat []contract.CatalogEntry) []example {
-	loaded := map[string]bool{}
-	for _, f := range info.Vocabularies {
-		loaded[f.Name] = true
-	}
-	for _, c := range cat {
-		loaded[c.Name] = true
-	}
-	stock := stockLoaded(info)
-	var out []example
-	for _, e := range theDemo().examples {
-		u, err := url.Parse(e.Href)
-		if err != nil {
-			continue
-		}
-		q := u.Query()
-		if !slices.ContainsFunc(fitNamed(q), func(n string) bool { return !loaded[n] }) &&
-			!slices.ContainsFunc(q["stock"], func(s string) bool { return !slices.Contains(stock, s) }) {
-			out = append(out, example{Label: e.Label, Hint: e.Hint, Href: e.Href, Elsewhere: u.Path != fitPath})
-		}
-	}
-	return out
-}
+const demoLoadText = "This nitrovin offers a demo set to load into your browser in one click: open Vocabularies and Load demo."
 
 // demoPublished is the demo's file published as name, its blake3 hash,
 // nil for none.

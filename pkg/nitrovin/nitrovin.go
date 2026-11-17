@@ -132,6 +132,11 @@ func (d *Decoder) decode(req contract.Request) (contract.Decode, error) {
 // Version is the decoder version a decode carries: this module's version
 // from the build info ("v1.2.0"), or "(devel)" when the build has none.
 func Version() string {
+	// PROTOTYPE (prototype/pare-back-ui), not for main: scripts/prototype-dev.sh
+	// names each build a release of its own, so no cache holds its assets.
+	if v := os.Getenv("NITROVIN_DEV_VERSION"); v != "" {
+		return v
+	}
 	bi, ok := debug.ReadBuildInfo()
 	if !ok {
 		return "(devel)"

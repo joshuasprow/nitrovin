@@ -716,17 +716,17 @@ func TestBrowserPages(t *testing.T) {
 		`<button type="submit">Remove<span class="visually-hidden"> yard</span></button>`,
 		`id="vocab-files"`,
 		`id="load-epa" data-url="` + testAssetsAttr + `/vocab/ff00/yard.jsonl" data-file="yard.jsonl"`,
-		"956 kB", "replacing version 2026.11",
+		"956 kB", "replaces 2026.11",
 	} {
 		if !strings.Contains(body, want) {
 			t.Errorf("files lack %s:\n%s", want, body)
 		}
 	}
-	if status != 200 || strings.Contains(body, "Remove parts") || strings.Contains(body, "No files are kept") {
+	if status != 200 || strings.Contains(body, "Remove parts") {
 		t.Errorf("files: %d\n%s", status, body)
 	}
 	offer.Blake3 = yard
-	if _, _, body := response(t, h, "GET", "/ui/files", htmx); strings.Contains(body, "load-epa") || !strings.Contains(body, "EPA's vocabulary, yard 2026.12, is kept in this browser.") {
+	if _, _, body := response(t, h, "GET", "/ui/files", htmx); strings.Contains(body, "load-epa") || !strings.Contains(body, "EPA 2026.12 loaded") {
 		t.Errorf("files with the offer held:\n%s", body)
 	}
 	form := func(v string, header http.Header) (int, http.Header, string) {
@@ -812,7 +812,7 @@ func TestServiceWorker(t *testing.T) {
 		t.Errorf("sw.wasm without a module: %d", status)
 	}
 	_, _, body := response(t, h, "GET", "/", nil)
-	if !strings.Contains(body, "built without its browser translator") || strings.Contains(body, "data-worker") {
+	if !strings.Contains(body, "Built without the browser translator") || strings.Contains(body, "data-worker") {
 		t.Errorf("the page without a module:\n%s", body)
 	}
 

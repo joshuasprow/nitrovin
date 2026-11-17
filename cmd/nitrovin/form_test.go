@@ -171,27 +171,26 @@ func TestForm(t *testing.T) {
 	}{
 		{"/", 200,
 			[]string{
-				`<form method="get" action="/" hx-get="/" hx-target="#ui-main" hx-swap="innerHTML show:window:top" hx-push-url="true" aria-labelledby="tab-vin">`,
 				`value="vpic" checked`, "data " + info.DataMonth, "decoder " + info.DecoderVersion,
 				`href="/?from.vin=1HGCM82633A004352"`, `href="/?from.vin=5YJ3E1EA2JF000316"`,
-				`href="https://vpic.nhtsa.dot.gov/"`, `href="https://vpic.nhtsa.dot.gov/api/"`, `href="https://vpic.nhtsa.dot.gov/decoder/"`,
+				`href="https://vpic.nhtsa.dot.gov/"`, `href="https://vpic.nhtsa.dot.gov/api/"`,
 				// A (devel) build is no release: the releases index, docs on main.
 				`href="https://github.com/joshuasprow/nitrovin/releases"`, `/blob/main/docs/parity.md"`,
 				// The embedded data's own release, and its month's report.
 				`href="https://github.com/joshuasprow/nitrovin-data/releases/tag/v1.` + strings.ReplaceAll(info.DataMonth, "_", "") + ".",
 				`href="https://github.com/joshuasprow/nitrovin/pulls?q=is%3Apr&#43;%22Refresh%3A&#43;data&#43;month&#43;` + info.DataMonth + `%22"`,
-				"TAG=vX.Y.Z\n", "This build, " + info.DecoderVersion + ", is not a release",
+				"TAG=vX.Y.Z\n",
 			},
 			[]string{`id="result"`, `class="error"`, "/releases/tag/v0", "<mark>"}},
 		{"/?from.vin=1HGCM82633A004352&model_year=&shape=vpic", 200,
 			[]string{
-				`<th scope="row">Make</th><td>HONDA</td>`, `<a href="/v1/decode/1HGCM82633A004352?shape=vpic"`, `<span class="chip chip-ok">Valid VIN</span>`,
-				`<h2 id="result-h">2003 Honda Accord</h2>`,
+				`<th scope="row">Make</th><td>HONDA</td>`, `href="/v1/decode/1HGCM82633A004352?shape=vpic"`, `<span class="chip chip-ok">Valid VIN</span>`,
+				`>2003 Honda Accord</h2>`,
 				`<p class="summary">2003 HONDA Accord EX-V6 · 3.0 L, 6 cylinders · built in MARYSVILLE, OHIO</p>`,
-				`value="1HGCM82633A004352"`, `<span class="name mono">1HGCM82633A004352</span><span class="rel"><span class="visually-hidden">, </span>what was translated, a link to this answer<span class="visually-hidden">;</span></span> <span class="meta">VIN, model year 2003</span>`,
+				`value="1HGCM82633A004352"`,
 				`href="https://vpic.nhtsa.dot.gov/decoder/VinDecoder?VIN=1HGCM82633A004352"`,
 			},
-			[]string{"<h3>Items", "Suggested VIN", `id="install"`}},
+			[]string{"<h3>Items", "Suggested VIN"}},
 		{"/?from.vin=5YJ3E1EA2JF000316&model_year=2018&shape=nitrovin&full=true", 200,
 			[]string{
 				`<th scope="row">Manufacturer Name</th><td>TESLA, INC.</td>`,
@@ -200,8 +199,8 @@ func TestForm(t *testing.T) {
 				`href="https://vpic.nhtsa.dot.gov/decoder/VinDecoder?VIN=5YJ3E1EA2JF000316&amp;ModelYear=2018"`,
 				`value="nitrovin" checked`, `value="true" checked`, "<h3>Items",
 			},
-			// The nitrovin shape has no empty values to hide.
-			[]string{"empty values hidden", "empty values shown"}},
+			// The nitrovin shape has no empty values to show or hide.
+			[]string{"Show empty", "Hide empty"}},
 		// A wrong check digit is error code 1, spelled out: a decode, not a
 		// refusal.
 		{"/?from.vin=1HGCM82633A004353", 200,
@@ -337,8 +336,8 @@ func TestFormGroups(t *testing.T) {
 			t.Errorf("group %s lacks %s\n%s", group, row, markup[group])
 		}
 	}
-	hidden := regexp.MustCompile(`(\d+) empty values hidden\. <a href="([^"]+)">Show them</a>`).FindStringSubmatch(body)
-	if hidden == nil || hidden[2] != "/?from.vin=1HGCM82633A004352&amp;show_empty=true" {
+	hidden := regexp.MustCompile(`<a href="([^"]+)"[^>]*>Show empty \((\d+)\)</a>`).FindStringSubmatch(body)
+	if hidden == nil || hidden[1] != "/?from.vin=1HGCM82633A004352&amp;show_empty=true" {
 		t.Fatalf("no link to show the empty values: %q\n%s", hidden, body)
 	}
 	if strings.Contains(body, `<th scope="row">BusLength</th>`) || slices.Contains(names, "Interior") {
@@ -347,11 +346,11 @@ func TestFormGroups(t *testing.T) {
 
 	// Shown, every element has a row and Interior appears; the link hides
 	// them again.
-	body = get(t, srv.URL+html.UnescapeString(hidden[2]), 200)
+	body = get(t, srv.URL+html.UnescapeString(hidden[1]), 200)
 	names, _, markup = groups(body)
 	rows := strings.Count(body, `<tr><th scope="row">`)
-	if shown := strings.Count(body, `<span class="null">empty</span>`); rows != len(d.Info().Elements) || strconv.Itoa(shown) != hidden[1] {
-		t.Errorf("%d rows, %d of them empty; want one per element, %s empty", rows, shown, hidden[1])
+	if shown := strings.Count(body, `<span class="null">empty</span>`); rows != len(d.Info().Elements) || strconv.Itoa(shown) != hidden[2] {
+		t.Errorf("%d rows, %d of them empty; want one per element, %s empty", rows, shown, hidden[2])
 	}
 	if !strings.Contains(markup["Exterior/Bus"], `<th scope="row">BusLength</th><td><span class="null">empty</span></td>`) {
 		t.Errorf("Exterior/Bus lacks the empty BusLength\n%s", markup["Exterior/Bus"])
@@ -359,7 +358,7 @@ func TestFormGroups(t *testing.T) {
 	if i := slices.Index(names, "Interior"); i < 0 || names[i-1] != "Exterior/Bus" {
 		t.Errorf("Interior missing or out of place: %q", names)
 	}
-	if !strings.Contains(body, `Empty values shown. <a href="/?from.vin=1HGCM82633A004352">Hide them</a>`) || !strings.Contains(body, `name="show_empty" value="true" checked`) {
+	if !regexp.MustCompile(`<a href="/\?from\.vin=1HGCM82633A004352"[^>]*>Hide empty</a>`).MatchString(body) || !strings.Contains(body, `name="show_empty" value="true" checked`) {
 		t.Errorf("no link to hide the empty values, or the box unchecked\n%s", body)
 	}
 
@@ -451,17 +450,21 @@ func TestFormREADME(t *testing.T) {
 		}
 	}
 
-	// Install: each channel's commands are the README's code spans.
+	// Install: each channel's commands are the README's code spans; the
+	// last row links the releases, and has none.
 	install := section(t, readme, "## Install")
 	page := body[strings.Index(body, `id="install"`):strings.Index(body, `id="mcp"`)]
 	var channels []string
-	for _, row := range regexp.MustCompile(`(?s)<tr><th scope="row">([^<]+)</th><td>(.*?)</td>`).FindAllStringSubmatch(page, -1) {
+	for _, row := range regexp.MustCompile(`(?s)<dt>([^<]+)</dt>\s*<dd>(.*?)</dd>`).FindAllStringSubmatch(page, -1) {
 		channel := html.UnescapeString(row[1])
-		channels = append(channels, channel)
 		var got []string
-		for _, code := range regexp.MustCompile(`(?s)<(?:pre|code)[^>]*>(.*?)</(?:pre|code)>`).FindAllStringSubmatch(row[2], -1) {
+		for _, code := range regexp.MustCompile(`(?s)<pre[^>]*>(.*?)</pre>`).FindAllStringSubmatch(row[2], -1) {
 			got = append(got, strings.Split(text(code[1]), "\n")...)
 		}
+		if got == nil {
+			continue
+		}
+		channels = append(channels, channel)
 		var want []string
 		for line := range strings.SplitSeq(install, "\n") {
 			if cells := strings.Split(line, " | "); len(cells) == 3 && cells[0] == "| "+channel {
@@ -474,7 +477,7 @@ func TestFormREADME(t *testing.T) {
 			t.Errorf("%s: %q; README %q", channel, got, want)
 		}
 	}
-	if want := []string{"Homebrew", "Scoop", "winget", "Docker", "Go 1.27+"}; !slices.Equal(channels, want) {
+	if want := []string{"Homebrew", "Scoop", "Docker", "Go 1.27+"}; !slices.Equal(channels, want) {
 		t.Errorf("channels %q; want %q", channels, want)
 	}
 

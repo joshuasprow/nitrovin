@@ -21,8 +21,14 @@ import (
 )
 
 // release is the embedded decoder reporting another decoder version in
-// its info and its translations, as a release build does.
+// its info, its decodes and its translations, as a release build does.
 type release struct{ versioned }
+
+func (r release) Decode(req contract.Request) (contract.Decode, error) {
+	d, err := r.versioned.Decode(req)
+	d.DecoderVersion = r.version
+	return d, err
+}
 
 func (r release) Translate(req contract.TranslateRequest) (contract.Translation, error) {
 	tr, err := r.versioned.Translate(req)
@@ -121,7 +127,7 @@ func TestWorkerUpdate(t *testing.T) {
 
 	// The old release's worker answers for yard; its page's header is the
 	// server's: nitrovin v0.3.2, linked to its release.
-	entry := "/?from.vocabulary=yard&from.entry.make=Packard&from.entry.model=Clipper&to=yard" + pinned
+	entry := "/?from.vin=1D7RV1GT5AS123456&to=yard" + pinned
 	since := len(wire.all())
 	tb.do(chromedp.Navigate(srv.URL + entry))
 	tb.wait("#result")
@@ -160,9 +166,8 @@ func TestWorkerUpdate(t *testing.T) {
 	// Update now; the dialog passes axe so.
 	tb.waitState("outdated")
 	tb.until("the update waiting", `document.getElementById("browser").dataset.update === "waiting" && !document.getElementById("update-now").hidden`)
-	if s := tb.html("#browser-status"); !strings.Contains(s, "Your own files are paused: the translator in this browser is nitrovin v0.3.2, and this server runs v0.3.3.") ||
-		!strings.Contains(s, "or now with Update now") {
-		t.Errorf("outdated: %s", s)
+	if s := tb.html("#browser-status"); !strings.Contains(s, "v0.3.2") || !strings.Contains(s, "v0.3.3") {
+		t.Errorf("outdated: the page names not both releases: %s", s)
 	}
 	// A load is refused in words.
 	tb.do(chromedp.Click(chromedp.CSS("button.open-vocabularies")))

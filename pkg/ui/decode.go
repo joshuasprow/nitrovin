@@ -65,6 +65,9 @@ type pageLinks struct {
 	// Parity is docs/parity.md at Tag, or on main; ParityReport finds the
 	// data month's report, the body of its refresh pull request.
 	Parity, ParityReport string
+	// APIDocs is the API's documentation (apiDocs), which the Developers
+	// dialog links.
+	APIDocs string
 }
 
 // decodeView is a decode as the page shows it.
@@ -382,6 +385,7 @@ func newFormLinks(info contract.Info) pageLinks {
 // the data release the server's build named (WithDataRelease).
 func (h *Handler) links(info contract.Info) pageLinks {
 	l := newFormLinks(info)
+	l.APIDocs = apiDocs(&info)
 	if h.dataRelease != "" {
 		l.DataRelease = h.dataRelease
 	}
@@ -394,10 +398,10 @@ func (h *Handler) links(info contract.Info) pageLinks {
 // translator decodes itself). The error is a refusal (a
 // *contract.Problem, or in the browser a *pageError when the server
 // cannot be asked) or a fault.
-func (h *Handler) decoded(r *http.Request, vin string, query url.Values, showEmpty bool) (*decodeView, *contract.VINDecode, error) {
+func (h *Handler) decoded(r *http.Request, vin string, query url.Values, showEmpty bool) (*decodeView, contract.Decode, *contract.VINDecode, error) {
 	req, err := contract.ParseQuery(vin, query)
 	if err != nil {
-		return nil, nil, err
+		return nil, contract.Decode{}, nil, err
 	}
 	var dec contract.Decode
 	var vd *contract.VINDecode
@@ -407,11 +411,11 @@ func (h *Handler) decoded(r *http.Request, vin string, query url.Values, showEmp
 		dec, vd, err = h.lib.decodeVIN(vin, req)
 	}
 	if err != nil {
-		return nil, nil, err
+		return nil, contract.Decode{}, nil, err
 	}
 	body, err := json.Marshal(dec) // as GET /v1/decode/{vin} writes it
 	if err != nil {
-		return nil, nil, err
+		return nil, contract.Decode{}, nil, err
 	}
 	elements := h.info().Elements
 	jsonURL := "/v1/decode/" + url.PathEscape(vin)
@@ -447,7 +451,7 @@ func (h *Handler) decoded(r *http.Request, vin string, query url.Values, showEmp
 			Source: it.Source, Keys: it.Keys, PatternID: it.PatternID, VinSchemaID: it.VinSchemaID,
 		})
 	}
-	return d, vd, nil
+	return d, dec, vd, nil
 }
 
 // requestOrigin is the scheme and host r was sent to, as the client named

@@ -9,9 +9,8 @@
 //   browser holds (its from or a target: named), the page without a
 //   lookup once it holds one (its forms over the browser's files too), an
 //   entry list (/ui/vocabularies/<name>) of a file it holds, and
-//   /ui/files, the fit page (/ui/fit) while it holds the catalog and the
-//   server has none (ADR 0023), or when it names a file this browser
-//   holds, and that catalog's download (/ui/files/catalog);
+//   /ui/files, and the browser's compiled catalog's download
+//   (/ui/files/catalog);
 //   everything else goes to the server unchanged, a lookup
 //   naming no target included, so one URL means one thing with
 //   JavaScript on or off, and in every browser.
@@ -46,7 +45,7 @@
 const config = self.nitrovinConfig;
 const CACHE = 'nitrovin ' + config.release;
 // The assets a page or the module needs, kept per release.
-const ASSETS = ['htmx.min.js', 'ui.css', 'copy.js', 'map.js', 'vocab.js', 'disk.js', 'worker.js', 'compile.js', 'wasm_exec.js', 'sw.wasm', 'spine.json']
+const ASSETS = ['htmx.min.js', 'ui.css', 'copy.js', 'plate.js', 'vocab.js', 'disk.js', 'worker.js', 'compile.js', 'wasm_exec.js', 'sw.wasm', 'spine.json']
   .map((name) => config.assets + '/' + name);
 // The header the server names its release in (pkg/ui's ReleaseHeader).
 const RELEASE = 'Nitrovin-Release';
@@ -204,10 +203,9 @@ function boot() {
 }
 
 // The page, and the page that translated before it, whose old links move
-// to it; the fit page; and the browser's compiled catalog, as a download.
+// to it; and the browser's compiled catalog, as a download.
 const PAGE = '/';
 const MOVED = '/ui/translate';
-const FIT = '/ui/fit';
 const DOWNLOAD = '/ui/files/catalog';
 
 // fileName is the name a downloaded catalog is saved as.
@@ -241,10 +239,6 @@ function named(q) {
   return out.filter(Boolean);
 }
 
-// fitNamed is what a fit names (pkg/ui, fitNamed): named, and the part's
-// vocabulary and spine.
-const fitNamed = (q) => named(q).concat([q.get('part.vocabulary'), q.get('part.spine')].filter(Boolean));
-
 // asks reports whether q asks a lookup: a from beside a vocabulary's
 // name, a form's choice.
 const asks = (q) => [...q].some(([k, v]) => k.startsWith('from.') && k !== 'from.vocabulary' && v.trim() !== '');
@@ -266,35 +260,16 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(own(e.request, download));
     return;
   }
-  // The fit page is the module's while this browser holds the catalog and
-  // the server has none, else the server's (ADR 0023): one catalog per
-  // nitrovin. A fit naming a file of this browser's never goes to the
-  // server: the module answers it, or refuses it in words.
-  if (url.pathname === FIT) {
-    const q = url.searchParams;
-    e.respondWith(Promise.all([heldCatalog(), storedNames()]).then(([name, stored]) => {
-      const mine = name && !config.catalog;
-      const names = fitNamed(q);
-      if (mine || names.some((n) => stored.has(n) || n === name)) return own(e.request, () => serve(e.request));
-      return network(e.request);
-    }));
-    return;
-  }
   // An old link may name a file of this browser's: it moves here, as the
   // server moves it, and the server never sees it.
   if (url.pathname === MOVED) {
     e.respondWith(own(e.request, async () => Response.redirect(new URL(PAGE + url.search, location.origin).href, 301)));
     return;
   }
+  // The page is the module's once this browser holds a file: its "Also
+  // known as" is over the browser's vocabularies and the server's.
   if (url.pathname === PAGE) {
-    const q = url.searchParams;
-    e.respondWith(storedNames().then((stored) => {
-      if (named(q).some((n) => stored.has(n)) || (stored.size > 0 && !asks(q))) return own(e.request, () => serve(e.request));
-      return network(e.request).then((r) => {
-        e.waitUntil(remember(q, e.request, r.clone()).catch(() => {}));
-        return r;
-      });
-    }));
+    e.respondWith(storedNames().then((stored) => (stored.size > 0 ? own(e.request, () => serve(e.request)) : network(e.request))));
     return;
   }
   // An entry list is the module's when the file is this browser's.

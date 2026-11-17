@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -14,19 +15,19 @@ import (
 	"github.com/chromedp/chromedp"
 )
 
-// TestVocabTranslate runs the page's forms in headless Chrome or
-// Chromium, each run in a fresh profile
+// TestVocabTranslate runs the page's form in headless Chrome or Chromium,
+// each run in a fresh profile
 // (https://github.com/joshuasprow/nitrovin/issues/194). Every example is a
-// link to the page with its tab's form filled in, and fills it: without
+// link to the page with the form filled in, and fills it: without
 // JavaScript as a page, on a server that loaded the fixture and the EPA
 // sample (cmd/nitrovin-epa/testdata); with JavaScript by htmx, the worker
-// drawing the forms over the files the browser holds. With JavaScript the
+// drawing the form over the files the browser holds. With JavaScript the
 // targets ticked are the visitor's selection, kept in IndexedDB beside the
 // files, by spine: a file loaded is ticked, and the selection survives a
 // second load, a removal (the removed file drops out), a reload and a
 // cold start of the worker, while a translation's or a link's own to=
-// replaces it on its spine alone. A translation is drawn as its map
-// (translationMap). axe audits every state.
+// replaces it. A translation is drawn as its map (translationMap). axe
+// audits every state.
 func TestVocabTranslate(t *testing.T) {
 	path := chromePath()
 	if path == "" {
@@ -54,62 +55,42 @@ func TestVocabTranslate(t *testing.T) {
 	selectionJSOn(t, path, on.URL, wire)
 }
 
-// The tabs' links, and the examples: a VIN's and a vPIC id's, which need
-// no file, and the fixture's listing's.
+// The examples: three VINs, which need no file.
 const (
-	vinTab   = "/"
-	entryTab = "/?tab=entry"
-	partsTab = "/?tab=entry-parts"
-	idTab    = "/?tab=id"
-
-	vinExample     = "/?from.vin=" + vin
-	teslaExample   = movedLink
-	ramExample     = "/?from.vin=" + ram2015
-	modelExample   = "/?from.model=1861&model_year=2003"
-	listingExample = "/?from.entry.category=Brake+Pads&from.vocabulary=listing&to=listing"
+	vinExample   = "/?from.vin=" + vin
+	teslaExample = movedLink
+	ramExample   = "/?from.vin=" + ram2015
 )
 
-// open loads the page at target, a tab's link or a lookup, and waits for
-// its controls.
+// open loads the page at target, bare or a lookup, and waits for its
+// controls.
 func (tb *tab) open(target string) {
 	tb.t.Helper()
 	tb.do(chromedp.Navigate(tb.base + target))
 	tb.wait("#controls")
 }
 
-// examplesJSOff: without JavaScript each tab has its examples: the VINs,
-// the vPIC model, and one for each of the tab's vocabularies whose first
-// mapped entry reaches another vocabulary on its spine (or the only one
-// on it); and every example is a page with its form filled in. On a page
-// asked with targets the examples go to them.
+// examplesJSOff: without JavaScript the page has its examples, the VINs,
+// and every example is a page with the form filled in. On a page asked
+// with targets the examples go to them.
 func examplesJSOff(t *testing.T, path, base string) {
 	tb := newTab(t, path, base, &requestLog{}, false)
-	tb.open(vinTab)
-	if got, want := tabHrefs(tb), []string{vinTab, entryTab, partsTab, idTab}; !slices.Equal(got, want) {
-		t.Errorf("JS off: tabs %q; want %q", got, want)
+	want := []string{vinExample, teslaExample, ramExample}
+	tb.open("/")
+	if got := exampleHrefs(tb, "#controls"); !slices.Equal(got, want) {
+		t.Errorf("JS off: examples\n%q\nwant\n%q", got, want)
 	}
-	for tabHref, want := range map[string][]string{
-		vinTab:   {vinExample, teslaExample, ramExample},
-		entryTab: nil, // neither vehicle vocabulary's first entry is in the other
-		partsTab: {listingExample},
-		idTab:    {modelExample},
-	} {
-		tb.open(tabHref)
-		if got := exampleHrefs(tb, "#controls"); !slices.Equal(got, want) {
-			t.Errorf("JS off, %s: examples\n%q\nwant\n%q", tabHref, got, want)
+	tb.audit("/, JS off")
+	for i, href := range want {
+		tb.open("/")
+		tb.do(chromedp.Click(chromedp.CSS(fmt.Sprintf("#controls ul.examples li:nth-child(%d) a", i+1))))
+		tb.wait("#result")
+		if got := tb.at(); got != href {
+			t.Errorf("JS off, example %d: at %s; want %s", i+1, got, href)
 		}
-		tb.audit(tabHref + ", JS off")
-		for i, href := range want {
-			tb.open(tabHref)
-			tb.do(chromedp.Click(chromedp.CSS(fmt.Sprintf("#controls ul.examples li:nth-child(%d) a", i+1))))
-			tb.wait("#result")
-			if got := tb.at(); got != href {
-				t.Errorf("JS off, %s, example %d: at %s; want %s", tabHref, i+1, got, href)
-			}
-			checkFilled(tb, "JS off, example "+href, href)
-			if i == 0 {
-				tb.audit("an example of " + tabHref + ", JS off")
-			}
+		checkFilled(tb, "JS off, example "+href, href)
+		if i == 0 {
+			tb.audit("an example, JS off")
 		}
 	}
 
@@ -124,7 +105,7 @@ func examplesJSOff(t *testing.T, path, base string) {
 
 // selectionJSOn: with JavaScript, in a fresh profile, against a server
 // that loaded classics, parts and listing, a vocabulary on the parts
-// spine, and offers the EPA sample.
+// spine, which a VIN's form never offers, and offers the EPA sample.
 func selectionJSOn(t *testing.T, path, base string, wire *wireLog) {
 	tb := newTab(t, path, base, &requestLog{}, true)
 	// stay opens the page at target and marks it: a page that reloads
@@ -135,7 +116,7 @@ func selectionJSOn(t *testing.T, path, base string, wire *wireLog) {
 		tb.ticked()
 		eval[bool](tb, `window.stayed = true`)
 	}
-	tb.open(vinTab)
+	tb.open("/")
 	tb.ticked()
 	if got := exampleHrefs(tb, "#controls"); !slices.Equal(got, []string{vinExample, teslaExample, ramExample}) {
 		t.Errorf("no file in the browser: examples %q", got)
@@ -143,11 +124,11 @@ func selectionJSOn(t *testing.T, path, base string, wire *wireLog) {
 	checkTicked(tb, "no file in the browser", nil)
 
 	// A file loaded is ticked, and a second load keeps the first. The
-	// page's tabs follow the files: yard brings the tab of its entries.
+	// page's form follows the files: yard is among its targets at once.
 	tb.vocabularies()
 	tb.do(chromedp.SetUploadFiles(chromedp.CSS("#vocab-files"), []string{filepath.Join(fixture, "yard.jsonl")}))
 	tb.waitPrefix("#load-status", "Loaded yard (")
-	tb.until("the tab of yard's entries", `document.getElementById("tab-entry") !== null`)
+	tb.until("yard among the form's targets", `document.querySelector('#controls input[name=to][value="yard"]') !== null`)
 	checkTicked(tb, "a load", selection{"vpic": {"yard"}})
 	tb.vocabularies()
 	tb.do(chromedp.Click(chromedp.CSS("#load-epa")))
@@ -155,47 +136,40 @@ func selectionJSOn(t *testing.T, path, base string, wire *wireLog) {
 	tb.audit("the dialog, two files loaded")
 	checkTicked(tb, "a second load", selection{"vpic": {"epa-vehicles", "yard"}})
 
-	// Each example fills its form by htmx, to the targets ticked on its
-	// spine, else to its own. listing's target becomes the selection on
-	// the parts spine, beside vPIC's.
+	// Each example fills the form by htmx, to the targets ticked.
 	const both = "&to=epa-vehicles&to=yard"
-	for tabHref, want := range map[string][]string{
-		vinTab:   {vinExample + both, teslaExample + both, ramExample + both},
-		partsTab: {listingExample},
-		idTab:    {modelExample + both},
-	} {
-		stay(tabHref)
-		if got := exampleHrefs(tb, "#controls"); !slices.Equal(got, want) {
-			t.Errorf("JS on, %s: examples\n%q\nwant\n%q", tabHref, got, want)
+	want := []string{vinExample + both, teslaExample + both, ramExample + both}
+	stay("/")
+	if got := exampleHrefs(tb, "#controls"); !slices.Equal(got, want) {
+		t.Errorf("JS on: examples\n%q\nwant\n%q", got, want)
+	}
+	for i, href := range want {
+		if i > 0 {
+			stay("/")
 		}
-		for i, href := range want {
-			if i > 0 {
-				stay(tabHref)
-			}
-			tb.do(chromedp.Click(chromedp.CSS(fmt.Sprintf("#controls ul.examples li:nth-child(%d) a", i+1))))
-			tb.wait("#result")
-			if got := tb.at(); got != href {
-				t.Errorf("JS on, %s, example %d: at %s; want %s", tabHref, i+1, got, href)
-			}
-			checkFilled(tb, "JS on, example "+href, href)
-			if !eval[bool](tb, `window.stayed === true`) {
-				t.Errorf("JS on, %s, example %d went as a page", tabHref, i+1)
-			}
-			if i == 0 {
-				tb.audit("an example of " + tabHref + " in the browser")
-			}
+		tb.do(chromedp.Click(chromedp.CSS(fmt.Sprintf("#controls ul.examples li:nth-child(%d) a", i+1))))
+		tb.wait("#result")
+		if got := tb.at(); got != href {
+			t.Errorf("JS on, example %d: at %s; want %s", i+1, got, href)
+		}
+		checkFilled(tb, "JS on, example "+href, href)
+		if !eval[bool](tb, `window.stayed === true`) {
+			t.Errorf("JS on, example %d went as a page", i+1)
+		}
+		if i == 0 {
+			tb.audit("an example in the browser")
 		}
 	}
-	all := selection{"parts": {"listing"}, "vpic": {"epa-vehicles", "yard"}}
+	all := selection{"vpic": {"epa-vehicles", "yard"}}
 	waitSelection(tb, "every example", all)
 
 	// A target cleared is dropped at once, and an example clicked then
-	// goes to what is ticked, the parts spine's untouched.
-	stay(vinTab)
+	// goes to what is ticked.
+	stay("/")
 	tb.waitState("ready")
 	tb.ticked()
 	tb.do(chromedp.Click(chromedp.CSS(`#controls input[name=to][value="yard"]`)))
-	cleared := selection{"parts": {"listing"}, "vpic": {"epa-vehicles"}}
+	cleared := selection{"vpic": {"epa-vehicles"}}
 	waitSelection(tb, "clearing yard", cleared)
 	tb.do(chromedp.Click(chromedp.CSS("#controls ul.examples li:nth-child(1) a")))
 	tb.wait("#result")
@@ -203,9 +177,7 @@ func selectionJSOn(t *testing.T, path, base string, wire *wireLog) {
 		t.Errorf("an example after clearing yard: at %s; want %s", got, want)
 	}
 	checkTicked(tb, "a translation", cleared)
-	tb.open(entryTab)
 	tb.waitState("ready")
-	tb.ticked()
 	tb.do(chromedp.Click(chromedp.CSS(`#controls input[name=to][value="yard"]`)))
 	waitSelection(tb, "ticking yard", all)
 
@@ -220,7 +192,7 @@ func selectionJSOn(t *testing.T, path, base string, wire *wireLog) {
 	tb.stopWorkers()
 	checkTicked(tb, "a cold start", cleared)
 
-	// A link's own to= replaces the selection on its spine.
+	// A link's own to= replaces the selection.
 	tb.vocabularies()
 	tb.do(chromedp.SetUploadFiles(chromedp.CSS("#vocab-files"), []string{filepath.Join(fixture, "yard.jsonl")}))
 	tb.waitPrefix("#load-status", "Loaded yard (")
@@ -229,7 +201,7 @@ func selectionJSOn(t *testing.T, path, base string, wire *wireLog) {
 	tb.open(link)
 	tb.wait("#result")
 	checkFilled(tb, "a link with to=", link)
-	linked := selection{"parts": {"listing"}, "vpic": {"yard"}}
+	linked := selection{"vpic": {"yard"}}
 	waitSelection(tb, "a link with to=", linked)
 	checkTicked(tb, "after a link with to=", linked)
 
@@ -242,9 +214,8 @@ func selectionJSOn(t *testing.T, path, base string, wire *wireLog) {
 		if err != nil || strings.HasPrefix(u.Path, "/ui/r/") {
 			continue
 		}
-		q := u.Query()
 		for _, name := range []string{"yard", "epa-vehicles"} {
-			if u.Path == "/ui/vocabularies/"+name || q.Get("from.vocabulary") == name || slices.Contains(q["to"], name) {
+			if u.Path == "/ui/vocabularies/"+name || slices.Contains(u.Query()["to"], name) {
 				t.Errorf("the server got %s, which names %s, a file the browser holds", r.target, name)
 			}
 		}
@@ -259,14 +230,18 @@ func selectionJSOn(t *testing.T, path, base string, wire *wireLog) {
 	}
 }
 
-// tabHrefs are the links of the page's tabs, in order, as the page has
-// them: no script needed.
-func tabHrefs(tb *tab) []string {
+// attributes are the attributes of each element sel matches, as the page
+// has them, none when it matches nothing: no script needed.
+func attributes(tb *tab, sel string) []map[string]string {
 	tb.t.Helper()
-	var out []string
-	for _, a := range attributes(tb, "#controls nav.tabs a") {
-		out = append(out, a["href"])
+	if tb.count(sel) == 0 {
+		return nil
 	}
+	var out []map[string]string
+	tb.call(func(ctx context.Context) (err error) {
+		out, err = chromedp.Run(ctx, chromedp.AttributesAll(chromedp.CSSAll(sel)))
+		return err
+	})
 	return out
 }
 
@@ -281,9 +256,9 @@ func exampleHrefs(tb *tab, sel string) []string {
 	return out
 }
 
-// checkFilled checks that the page asked with target is on the tab of
-// target's from, whose form holds each of target's values as the page has
-// them and ticks its targets alone: no script needed.
+// checkFilled checks that the form of the page asked with target holds
+// target's VIN as the page has it and ticks its targets alone: no script
+// needed.
 func checkFilled(tb *tab, step, target string) {
 	tb.t.Helper()
 	u, err := url.Parse(target)
@@ -291,31 +266,13 @@ func checkFilled(tb *tab, step, target string) {
 		tb.t.Fatal(err)
 	}
 	q := u.Query()
-	form, year := "entry", "#entry-model-year"
-	switch {
-	case q.Has("from.vin"):
-		form, year = "vin", "#model_year"
-	case q.Has("from.make") || q.Has("from.model"):
-		form, year = "id", "#vpic-model-year"
-	}
-	inForm := `#controls form[aria-labelledby="tab-` + form + `"] `
-	if form == "entry" {
-		// The tab is the vocabulary's spine's: the form names it.
-		inForm = `#controls form[aria-labelledby^="tab-entry"] `
-	}
+	const inForm = "#controls form "
 	var want []string
 	for k, vs := range q {
-		v := cssString(vs[0])
-		switch field, entry := strings.CutPrefix(k, "from.entry."); {
-		case entry:
-			want = append(want, inForm+"#entry-"+field+"[value="+v+"]")
-		case k == "from.vin" || k == "from.make" || k == "from.model":
-			want = append(want, inForm+"#"+strings.ReplaceAll(k, ".", "-")+"[value="+v+"]")
-		case k == "model_year":
-			want = append(want, inForm+year+"[value="+v+"]")
-		case k == "from.vocabulary":
-			want = append(want, inForm+`select[name="from.vocabulary"] option[value=`+v+"][selected]")
-		case k == "to":
+		switch k {
+		case "from.vin":
+			want = append(want, inForm+"#from-vin[value="+cssString(vs[0])+"]")
+		case "to":
 			for _, name := range vs {
 				want = append(want, inForm+"input[name=to][value="+cssString(name)+"][checked]")
 			}
@@ -343,19 +300,15 @@ func cssString(s string) string {
 // list sorted, no empty one.
 type selection map[string][]string
 
-// checkTicked loads each of the page's tabs and checks that its form
-// ticks want's targets on its spine alone, and that IndexedDB keeps
-// want. It leaves the tab on the page's last tab.
+// checkTicked loads the page and checks that its form ticks want's
+// targets on its spine alone, and that IndexedDB keeps want.
 func checkTicked(tb *tab, step string, want selection) {
 	tb.t.Helper()
-	tb.open(vinTab)
-	for _, href := range tabHrefs(tb) {
-		tb.open(href)
-		tb.ticked()
-		for _, f := range targetsOffered(tb, "#controls") {
-			if !slices.Equal(f.Ticked, want[f.Spine]) {
-				tb.t.Errorf("%s: the form %s ticks %q; want %q", step, f.Form, f.Ticked, want[f.Spine])
-			}
+	tb.open("/")
+	tb.ticked()
+	for _, f := range targetsOffered(tb, "#controls") {
+		if !slices.Equal(f.Ticked, want[f.Spine]) {
+			tb.t.Errorf("%s: the form ticks %q; want %q", step, f.Ticked, want[f.Spine])
 		}
 	}
 	if got := storedSelection(tb); fmt.Sprint(got) != fmt.Sprint(want) {
@@ -364,7 +317,7 @@ func checkTicked(tb *tab, step string, want selection) {
 }
 
 // ticked waits for the page's first tick of the visitor's selection to
-// be done (#browser's data-ticked), whatever came of it: the forms are
+// be done (#browser's data-ticked), whatever came of it: the form is
 // ticked once the worker answers, so a box read or clicked before then
 // is the page's as drawn, and the tick lands on it afterwards.
 func (tb *tab) ticked() {
@@ -372,10 +325,10 @@ func (tb *tab) ticked() {
 	tb.wait("#browser[data-ticked]")
 }
 
-// offered is the targets a tab's form offers, by name: the form's tab's
-// id, the spine its targets are on, all of them and those ticked.
+// offered is the targets a form offers, by name: the spine they are on,
+// all of them and those ticked.
 type offered struct {
-	Form, Spine     string
+	Spine           string
 	Targets, Ticked []string
 }
 
@@ -386,7 +339,6 @@ func targetsOffered(tb *tab, root string) []offered {
 	return eval[[]offered](tb, `[...document.querySelectorAll(`+jsString(root+" fieldset[data-spine]")+`)].map(f => {
 		const boxes = [...f.querySelectorAll("input[name=to]")];
 		return {
-			form: f.closest("form").getAttribute("aria-labelledby"),
 			spine: f.dataset.spine,
 			targets: boxes.map(b => b.value).sort(),
 			ticked: boxes.filter(b => b.checked).map(b => b.value).sort(),

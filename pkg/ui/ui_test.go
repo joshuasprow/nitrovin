@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -53,11 +52,6 @@ func (backend) Translate(req contract.TranslateRequest) (contract.Translation, e
 
 func (backend) List(contract.ListRequest) (contract.List, error) {
 	return contract.List{Entries: []contract.ListEntry{contract.CatalogEntry{Name: "vpic", Kind: "spine", Version: "2026_10", Subject: "vehicle"}}}, nil
-}
-
-// Fit answers from no catalog, as contract.Fitter does without one.
-func (backend) Fit(ctx context.Context, req contract.FitRequest) (contract.Fit, error) {
-	return contract.Fitter{}.Fit(ctx, req)
 }
 
 func (b backend) SpineBundle() ([]byte, error) {
@@ -152,7 +146,7 @@ func checkPage(t *testing.T, name, body, title string) {
 		`<script src="` + testAssetsAttr + `/htmx.min.js" defer></script>`,
 		`<script src="` + testAssetsAttr + `/copy.js" defer></script>`,
 		`<script src="` + testAssetsAttr + `/map.js" defer></script>`,
-		`<div class="title"><a class="brand" href="/">nitrovin</a> <small class="version">v0.1.9-0.20261110120000-0123456789ab&#43;dirty</small></div>`,
+		`<a class="brand" href="/">nitrovin</a>` + "\n" + `<small class="version">v0.1.9-0.20261110120000-0123456789ab&#43;dirty · data 2026_10</small>`,
 		`<div id="ui-error" role="alert"></div>`,
 		"</html>\n",
 	} {
@@ -266,7 +260,7 @@ func TestPanic(t *testing.T) {
 	}
 	checkHTMLOf(t, "panic", hdr, "")
 	if !strings.Contains(body, "<h1>Internal Server Error</h1>\n<p>nitrovin failed: injected fault</p>") || strings.Contains(body, "/ui/r/") ||
-		!strings.Contains(body, `<div class="title"><a class="brand" href="/">nitrovin</a></div>`) {
+		!strings.Contains(body, `<a class="brand" href="/">nitrovin</a>`+"\n"+`<small class="version"></small>`) {
 		t.Errorf("page:\n%s", body)
 	}
 }
@@ -277,17 +271,17 @@ func TestPanic(t *testing.T) {
 // assets and /sw.js included.
 func TestVersion(t *testing.T) {
 	for version, want := range map[string]string{
-		"v0.3.4":                `<small class="version"><a href="https://github.com/joshuasprow/nitrovin/releases/tag/v0.3.4">v0.3.4</a></small>`,
-		"v0.3.5-rc.1":           `<small class="version"><a href="https://github.com/joshuasprow/nitrovin/releases/tag/v0.3.5-rc.1">v0.3.5-rc.1</a></small>`,
-		"(devel)":               `<small class="version">(devel)</small>`,
-		testInfo.DecoderVersion: `<small class="version">v0.1.9-0.20261110120000-0123456789ab&#43;dirty</small>`,
+		"v0.3.4":                `<small class="version"><a href="https://github.com/joshuasprow/nitrovin/releases/tag/v0.3.4">v0.3.4</a>`,
+		"v0.3.5-rc.1":           `<small class="version"><a href="https://github.com/joshuasprow/nitrovin/releases/tag/v0.3.5-rc.1">v0.3.5-rc.1</a>`,
+		"(devel)":               `<small class="version">(devel)`,
+		testInfo.DecoderVersion: `<small class="version">v0.1.9-0.20261110120000-0123456789ab&#43;dirty`,
 	} {
 		info := testInfo
 		info.DecoderVersion = version
 		h := New(backend{info: info}, log.New(io.Discard, "", 0)).WithWorker(Worker{Module: []byte("\x00asm"), Exec: []byte("// go")})
 		for _, target := range []string{"/", "/ui/nothing"} {
 			_, hdr, body := response(t, h, "GET", target, nil)
-			if !strings.Contains(body, `<a class="brand" href="/">nitrovin</a> `+want+`</div>`) {
+			if !strings.Contains(body, `<a class="brand" href="/">nitrovin</a>`+"\n"+want) {
 				t.Errorf("%s %s: the header lacks %s\n%s", version, target, want, body)
 			}
 			if got := hdr.Get(ReleaseHeader); got != Release(info) {

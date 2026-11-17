@@ -5,10 +5,10 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
-	"regexp"
 	"slices"
 	"strings"
 	"testing"
@@ -27,8 +27,8 @@ import (
 // vehicle vocabulary, then compiles catalog.jsonl picked in the dialog
 // (in a dedicated worker), which is listed with the drift kinds it could
 // not measure, survives a reload, and downloads as a compiled catalog that
-// opens. The fit page is the server's until the browser holds the catalog,
-// and the worker's after, drawing what the server draws on the same files.
+// opens, and that a server loads and fits from as it does from the same
+// files.
 func TestWorkerCatalog(t *testing.T) {
 	path := chromePath()
 	if path == "" {
@@ -59,13 +59,8 @@ func TestWorkerCatalog(t *testing.T) {
 	tb = newTab(t, path, srv.URL, &requestLog{}, true)
 	tb.do(chromedp.Navigate(srv.URL + "/"))
 	tb.vocabularies()
-	fit := "/ui/fit?from.model=1938&model_year=2010" + pinned
 	served := func(target string) bool {
 		return slices.ContainsFunc(wire.all(), func(r wireRequest) bool { return r.target == target })
-	}
-	eval[int](tb, `fetch(`+jsString(fit)+`).then(r => r.status)`)
-	if !served(fit) {
-		t.Errorf("%s without a catalog in the browser: the worker answered it; want the server", fit)
 	}
 
 	tb.do(chromedp.SetUploadFiles(chromedp.CSS("#vocab-files"), []string{filepath.Join(fitment, "catalog-models.jsonl")}))
@@ -79,45 +74,14 @@ func TestWorkerCatalog(t *testing.T) {
 		t.Error("the server got a request with a body: a file left the browser")
 	}
 
-	// It survives a reload, and the fit page is then the worker's.
+	// It survives a reload.
 	tb.do(chromedp.Navigate(srv.URL + "/"))
 	tb.vocabularies()
 	if got := eval[[]string](tb, `[...document.querySelectorAll("#browser-files tr[data-where=browser] th")].map(th => th.textContent.trim())`); !slices.Equal(got, []string{"catalog-models", "parts-catalog"}) {
 		t.Errorf("after a reload: stored %q", got)
 	}
-	if s := tb.html("#browser-files"); !strings.Contains(s, "5 fitments, compiled in this browser") || !strings.Contains(s, "model-years, model-qualifier drift") {
+	if s := tb.html("#browser-files"); !strings.Contains(s, "catalog, 5 fitments") || !strings.Contains(s, "model-years, model-qualifier drift") {
 		t.Errorf("the panel: %s", s)
-	}
-	since := len(wire.all())
-	again := fit + "&side=left"
-	eval[int](tb, `fetch(`+jsString(again)+`).then(r => r.status)`)
-	if slices.ContainsFunc(wire.all()[since:], func(r wireRequest) bool { return r.target == again }) {
-		t.Errorf("%s with the browser's catalog: the server answered it; want the worker", again)
-	}
-
-	// The worker's fit page is the server's on the same files, the catalog
-	// as JSON Lines there, but for the server's link to the same request on
-	// /v1, which only the server answers.
-	same := vocabServer(t, nil, filepath.Join(fitment, "part-types.jsonl"), filepath.Join(fitment, "part-codes.jsonl"),
-		filepath.Join(fitment, "catalog-models.jsonl"), catalog)
-	v1 := regexp.MustCompile(`<p class="hint"><a href="/v1/fit[^"]*"[^>]*>The same request on /v1</a></p>`)
-	for _, q := range []string{
-		"from.model=1938&model_year=2010",
-		"from.vin=1D7RV1GT5AS123456",
-		"from.vocabulary=catalog-models&from.entry.make=Dodge&from.entry.model=Ram+1500&model_year=2010&part.spine=part-types&part.id=mirror&side=left",
-		"from.vocabulary=catalog-models&from.entry.make=Chevrolet&from.entry.model=Silverado+1500&part.vocabulary=part-codes&part.entry.code=ROT&to=catalog-models",
-		"from.model=1938&related=true",
-		"from.fitment.type=brake-rotor-front&from.fitment.number=BR-1999",
-	} {
-		target := "/ui/fit?" + q + pinned
-		got := eval[[]string](tb, `fetch(`+jsString(target)+`, {headers: {"HX-Request": "true"}}).then(async r => [String(r.status), await r.text()])`)
-		want := mainOf(t, same, srv.URL, target, true)
-		if !v1.MatchString(want) {
-			t.Errorf("%s: the server's page has no link to /v1", target)
-		}
-		if got[0] != "200" || got[1] != v1.ReplaceAllString(want, "") {
-			t.Errorf("%s: the worker's fit page differs from the server's\nworker: %s %s\nserver: %s", target, got[0], got[1], want)
-		}
 	}
 
 	// The compiled file downloads, and opens.
@@ -135,6 +99,18 @@ func TestWorkerCatalog(t *testing.T) {
 	if cc := f.Compiled(); f.Name != "parts-catalog" || !slices.Equal(cc.Skipped, []vocab.DriftKind{vocab.DriftModelYears, vocab.DriftModelQualifier}) {
 		t.Errorf("the download: %s, skipped %v", f.Name, cc.Skipped)
 	}
+
+	// A server that loads it fits from it as from the same catalog as
+	// JSON Lines.
+	files := []string{filepath.Join(fitment, "part-types.jsonl"), filepath.Join(fitment, "part-codes.jsonl"), filepath.Join(fitment, "catalog-models.jsonl")}
+	fitsAsServer(t, data, files, catalog,
+		"from.model=1938&model_year=2010",
+		"from.vin=1D7RV1GT5AS123456",
+		"from.vocabulary=catalog-models&from.entry.make=Dodge&from.entry.model=Ram+1500&model_year=2010&part.spine=part-types&part.id=mirror&side=left",
+		"from.vocabulary=catalog-models&from.entry.make=Chevrolet&from.entry.model=Silverado+1500&part.vocabulary=part-codes&part.entry.code=ROT",
+		"from.model=1938&related=true",
+		"from.fitment.type=brake-rotor-front&from.fitment.number=BR-1999",
+	)
 
 	// The Download link, clicked, saves those bytes, never asking the
 	// server: a browser may send a link's download past the worker.
@@ -163,9 +139,9 @@ func TestWorkerCatalog(t *testing.T) {
 // TestWorkerCatalogParts compiles in the browser a generated catalog of a
 // few MB, so its sorted runs and its compiled file are kept in IndexedDB in
 // several parts of a MiB, written across them and read across them: its
-// fit pages are the server's on the same files, and its download, clicked,
-// opens. A read IndexedDB never answers gives up after 10 s, in words,
-// and the next request is answered.
+// download, clicked, opens, and a server that loads it fits from it as
+// from the same file. A read IndexedDB never answers gives up after 10 s,
+// in words, and the next request is answered.
 func TestWorkerCatalogParts(t *testing.T) {
 	path := chromePath()
 	if path == "" {
@@ -193,23 +169,6 @@ func TestWorkerCatalogParts(t *testing.T) {
 	tb.do(chromedp.SetUploadFiles(chromedp.CSS("#vocab-files"), []string{catalog}))
 	tb.waitPrefix("#load-status", "Compiled parts-catalog (20,000 fitments")
 
-	same := vocabServer(t, nil, filepath.Join(fitment, "part-types.jsonl"), filepath.Join(fitment, "part-codes.jsonl"),
-		filepath.Join(fitment, "catalog-models.jsonl"), catalog)
-	v1 := regexp.MustCompile(`<p class="hint"><a href="/v1/fit[^"]*"[^>]*>The same request on /v1</a></p>`)
-	for _, q := range []string{
-		"from.model=1938&model_year=2010",
-		"from.model=1938&model_year=2010&part.spine=part-types&part.id=engine",
-		"from.model=1850&related=true",
-		"from.fitment.type=engine&from.fitment.number=GEN-000001",
-		"from.fitment.type=brake-rotor-front&from.fitment.number=GEN-019998",
-	} {
-		target := "/ui/fit?" + q + pinned
-		got := eval[[]string](tb, `fetch(`+jsString(target)+`, {headers: {"HX-Request": "true"}}).then(async r => [String(r.status), await r.text()])`)
-		if want := v1.ReplaceAllString(mainOf(t, same, srv.URL, target, true), ""); got[0] != "200" || got[1] != want {
-			t.Errorf("%s: the worker's fit page differs from the server's\nworker: %s %.2000s\nserver: %.2000s", target, got[0], got[1], want)
-		}
-	}
-
 	data := tb.download(`#browser-files a[href="/ui/files/catalog"]`)
 	f, err := vocab.OpenCompiled("parts-catalog.compiled", bytes.NewReader(data), int64(len(data)))
 	if err != nil {
@@ -218,24 +177,35 @@ func TestWorkerCatalogParts(t *testing.T) {
 	if n := f.Catalog().Info().Fitments; n != 20000 || len(data) < 3<<20 {
 		t.Errorf("the download: %d fitments in %d bytes; want 20,000 in several MiB parts", n, len(data))
 	}
+	files := []string{filepath.Join(fitment, "part-types.jsonl"), filepath.Join(fitment, "part-codes.jsonl"), filepath.Join(fitment, "catalog-models.jsonl")}
+	fitsAsServer(t, data, files, catalog,
+		"from.model=1938&model_year=2010",
+		"from.model=1938&model_year=2010&part.spine=part-types&part.id=engine",
+		"from.model=1850&related=true",
+		"from.fitment.type=engine&from.fitment.number=GEN-000001",
+		"from.fitment.type=brake-rotor-front&from.fitment.number=GEN-019998",
+	)
 
 	// IndexedDB stops answering a read: the request gives up after 10 s
 	// with a 503 in words, and the next one is answered. In the worker
-	// itself, all at once: its reads are held, a request is asked of the
-	// module, then they are let go and another is asked.
-	fit := srv.URL + "/ui/fit?from.fitment.type=engine&from.fitment.number=GEN-0000"
+	// itself, all at once: the module is made to open its files again,
+	// which reads the catalog, its reads are held and the panel is asked
+	// of it, then they are let go and it is asked again.
+	panel := srv.URL + "/ui/files"
 	got := eval[[]string](tb.serviceWorker(), `(async () => {
 		const slice = Blob.prototype.slice;
 		let held = 0;
 		Blob.prototype.slice = function (...a) { const b = slice.apply(this, a); b.arrayBuffer = () => { held++; return new Promise(() => {}); }; return b; };
+		self.nitrovin.reset();
 		const t0 = Date.now();
-		const r = await self.nitrovin.serve("GET", `+jsString(fit+"03"+pinned)+`, "true", "", "");
+		const r = await self.nitrovin.serve("GET", `+jsString(panel)+`, "true", "", "");
 		const took = Date.now() - t0;
 		Blob.prototype.slice = slice;
-		const next = await self.nitrovin.serve("GET", `+jsString(fit+"05"+pinned)+`, "true", "", "");
-		return [String(r.status), r.headers["Retry-After"] || "", new TextDecoder().decode(r.body), String(held), String(took), String(next.status)];
+		const next = await self.nitrovin.serve("GET", `+jsString(panel)+`, "true", "", "");
+		return [String(r.status), r.headers["Retry-After"] || "", new TextDecoder().decode(r.body), String(held), String(took), String(next.status),
+			String(new TextDecoder().decode(next.body).includes("/ui/vocabularies/parts-catalog"))];
 	})()`)
-	if got[0] != "503" || got[1] != "5" || got[2] != "This browser's storage did not answer a read of its files in 10 s. Reload the page to try again." || got[3] == "0" || got[5] != "200" {
+	if got[0] != "503" || got[1] != "5" || got[2] != "This browser's storage did not answer a read of its files in 10 s. Reload the page to try again." || got[3] == "0" || got[5] != "200" || got[6] != "true" {
 		t.Errorf("a read that never settles: %q", got)
 	}
 	// The worker holds its databases open, yet a page deleting one is not
@@ -256,6 +226,33 @@ func TestWorkerCatalogParts(t *testing.T) {
 	}
 	if bodies := slices.ContainsFunc(wire.all(), func(r wireRequest) bool { return r.body > 0 || r.target == "/ui/files/catalog" }); bodies {
 		t.Error("the server got the catalog or a request with a body")
+	}
+}
+
+// fitsAsServer holds a compiled catalog the browser made, data, to the
+// file it was compiled from, catalog: a server that loads it beside files
+// answers each query of /v1/fit as one that loaded catalog beside them
+// does.
+func fitsAsServer(t *testing.T, data []byte, files []string, catalog string, queries ...string) {
+	t.Helper()
+	compiled := filepath.Join(t.TempDir(), "catalog.compiled")
+	if err := os.WriteFile(compiled, data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	fit := func(h http.Handler, q string) string {
+		t.Helper()
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, httptest.NewRequest("GET", "/v1/fit?"+q+pinned, nil))
+		if w.Code != http.StatusOK {
+			t.Fatalf("/v1/fit?%s: HTTP %d\n%s", q, w.Code, w.Body)
+		}
+		return w.Body.String()
+	}
+	compiledIn, compiledOn := vocabServer(t, nil, append(slices.Clone(files), compiled)...), vocabServer(t, nil, append(slices.Clone(files), catalog)...)
+	for _, q := range queries {
+		if got, want := fit(compiledIn, q), fit(compiledOn, q); got != want {
+			t.Errorf("/v1/fit?%s: the browser's compiled catalog fits differently from the server's\nbrowser: %.2000s\nserver: %.2000s", q, got, want)
+		}
 	}
 }
 

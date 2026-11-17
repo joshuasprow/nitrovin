@@ -187,7 +187,7 @@ status=$(req page "$base/")
 [[ $status == 200 && $(header page content-type) == "text/html; charset=utf-8" ]] || fail "GET /: $status $(header page content-type)"
 [[ $(header page cache-control) == no-store ]] || fail "GET /: cache-control $(header page cache-control); want no-store"
 grep -q '^<!doctype html>' "$tmp/page.b" || fail "GET /: not a whole page"
-grep -qF 'Loading your own files needs JavaScript' "$tmp/page.b" ||
+grep -qF 'Own files need JavaScript' "$tmp/page.b" ||
 	fail "GET /: does not say that your own files need JavaScript (a build without scripts/sw.sh's module?)"
 grep -qF 'data-where="vpic"' "$tmp/page.b" || fail "GET /: no catalog"
 pass "GET /: 200, a whole page, no-store; says your own files need JavaScript, lists the catalog"

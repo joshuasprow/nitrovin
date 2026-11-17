@@ -448,24 +448,19 @@ new month and its data release carries `epa-vehicles.jsonl` (below).
 ([#278](https://github.com/joshuasprow/nitrovin/issues/278)): seven
 hand-authored, invented files named `demo-*` (a part spine, a part
 vocabulary, a vehicle vocabulary of popular vPIC models, an extension set,
-a catalog, a shelf and a yard), and `demo-examples.json`, the requests that
-show each feature, each with the user stories of #278 it shows. They are
-not fixtures: no test but the demo's own reads them, and they stay small
+a catalog, a shelf and a yard). They are not fixtures: no test but the
+demo's own reads them, and they stay small
 (15 kB) because `pkg/ui` embeds them, so the server publishes them and the
 module knows its list. Every number, location and field value in them says
 it is invented (`DEMO-`, `demo-north`, `demo: …`), and no field name looks
 personal.
 
-To change it, edit the files and the list together. The list is the fit
-page's examples while the demo's catalog answers it, and
-[The demo set](docs/vocabularies.md#the-demo-set) walks through the same
-requests in the same order (`TestDemoWalkthrough` holds the two alike).
-`TestLibraryDemoFit` (`pkg/ui`) loads the set as Load the demo does and
-asks every request of the list, and a sweep over its vehicles, VINs, part
-types, part codes, fitments, sides and stock, of the browser's `Library`
-and of a server's translator on the same files, byte for byte, and holds
-each request to what its stories promise (`demoPromises`): a story the list
-names must have a promise there, and every promise a request. Its VINs are
+To change it, edit the files and the requests
+[The demo set](docs/vocabularies.md#the-demo-set) walks through together.
+`TestLibraryDemoFit` (`pkg/ui`) loads the set as Load demo does and asks
+the browser's `Library` and a server's translator on the same files a
+sweep over its vehicles, VINs, part types, part codes, fitments, sides
+and stock, byte for byte. Its VINs are
 synthetic, with valid check digits, built on real patterns so they decode
 to the intended model (`nitrovin decode --shape nitrovin <vin>` shows
 which).
@@ -473,10 +468,10 @@ which).
 `TestDemoCheck` (`cmd/nitrovin`) runs `nitrovin vocab check pkg/ui/demo`
 on the embedded month, which must find nothing (the set has no deliberate
 drift), compiles its catalog, and decodes each VIN to the model, year and
-drive type its stories rest on. `TestDemoHints` holds the pages' word on
-loading the demo (a fit with no catalog, a link naming a demo file, the
-dialog without JavaScript) to where it can load: not beside a server's
-catalog or a file of a demo name, which make the panel refuse it, by the
+drive type the walkthrough rests on. `TestDemoHints` holds the page's word
+on loading the demo (a link naming a demo file) to where it can load: not
+beside a server's catalog or a file of a demo name, which make the panel
+refuse it, by the
 same rule (`demoServerRefusal`). `contract.yml` requires them, so a month that
 retires one of the set's vPIC ids or qualifier values fails the refresh's
 bump PR: fix the set, never skip.
@@ -515,7 +510,8 @@ which `serve` hands those paths to (and `/sw.js`) and the
 browser's Service Worker runs too, so it reaches its data through
 interfaces (`ui.Pages`, the server's `ui.Backend`) and builds for
 `js/wasm`. Each route answers a fragment of its templates (`ui.html`,
-`page.html`, `decode.html`, `vocab.html`, `fit.html`) for a request with `HX-Request`, its page's title first, and
+`page.html`, `decode.html`, `vocab.html`) for a request with
+`HX-Request`, its page's title first, and
 the same fragment in the one layout for any other, with
 `Vary: HX-Request` and the CSP (`ui.CSP`, `script-src 'self'`). Every error
 has its real status: the one error page, or the error fragment that the
@@ -527,15 +523,15 @@ main (`hx-history-elt`), and htmx keeps no snapshot of it
 again, so a page put back never carries what a script or an extension
 left on it, which CSP would refuse. The header shows the running
 release's version beside the brand, linked to its GitHub release when it
-is a tagged one, and the navigation (`ui.html`'s `nav`), one template on
-the server and in the worker: Translate (`/`), Fit (`/ui/fit`), the
-Vocabularies button and API docs (`docs/api/README.md` at the release's
-tag, else on `main`), the page shown marked `aria-current`. Its links
-are page loads, never htmx's, so the mark is always the page's. The
-Vocabularies button's dialog sits beside the main, and both are the
-whole page's; every page draws them but an error page, whose dialog
-would read the drift an unknown path must never cost
-(`TestPagesReadLoadInfo`). Every response names its
+is a tagged one, and the data month, and holds no navigation: the page
+is the VIN decoder, and everything else is behind two floating buttons,
+each opening a popover dialog. Vocabularies is the layout's (`ui.html`),
+one template on the server and in the worker: its button and its dialog
+sit beside the main, and every page draws them but an error page, whose
+dialog would read the drift an unknown path must never cost
+(`TestPagesReadLoadInfo`). Developers is the page's own (`decode.html`'s
+`developers`), in its fragment, so every answer redraws it with its own
+request. Every response names its
 release in the `Nitrovin-Release` header (`ui.ReleaseHeader`). The layout
 loads its stylesheet,
 htmx, `copy.js` (copy buttons) and `map.js` (the translation map's
@@ -555,58 +551,29 @@ assets, the published files and the page's routes; `TestUI` and
 `TestServePublished` in
 `cmd/nitrovin` the same through `serve`.
 
-The page (`page.go`, `page.html`) is everything a visitor does. Its
-controls (Translate from) are a box with a tab for each thing to
-translate from: VIN, which is decoded and translated; Year, make and
-model, an entry of the vehicle vocabularies; one for each declared
-spine, named by what its vocabularies name (Part (parts spine)), an
-entry of its vocabularies, since a translation crosses exactly one spine
-(ADR 0010); and vPIC id, a make or model id. A tab is a link (`/?tab=…`)
-and holds one form, which asks the page itself: its query is
-`GET /v1/translate`'s, with a VIN's decode options (`shape`, `full`)
-beside it, and a query's `from` says which tab it is of. A from that no
-form asks for, which a map's card links to, is shown in its tab's form
-too: an extension in a field of the vPIC id's form, a declared spine's
-entry read-only in its tab's. Below the controls the answer is a VIN's
-decode (`decode.go`, `decode.html`) and, for every translation, its map,
-with the JSON of both behind a button, in a dialog. A refusal is the page
-still, said in the controls beside the field holding the value its
-pointer names (`controls.field`), on every tab, else above the form.
-Both dialogs, the JSON's and the vocabularies', are popovers, so they
-open without a script; the vocabularies' is on each entry list too. Old
-links (`/?vin=…`, `/ui/decode`, `/ui/translate`, `/vocab`,
+The page (`page.go`, `page.html`) is the VIN decoder. Its controls are
+one form, which asks the page itself: its query is a VIN's from
+(`from.vin`) and targets (`to`) of `GET /v1/translate`'s, with the
+decode's options (`model_year`, `shape`, `full`) beside them. A query
+without `from.vin` draws the form alone, though a name it mentions that
+is not loaded is still refused. Below the controls the answer is the
+VIN's decode (`decode.go`, `decode.html`), the map of its translation
+when it has targets, and the JSON of both behind a button, in a dialog.
+A refusal is the page still, said in the controls beside the field
+holding the value its pointer names (`controls.field`), else above the
+form. The Developers dialog holds the answer's own request when there is
+one (its URL, `curl` and `nitrovin decode`), then install, MCP, verify
+and links, the API docs among them (`docs/api/README.md` at the
+release's tag, else on `main`). The dialogs, the JSON's, the
+vocabularies' and the developers', are popovers, so they open without a
+script; the vocabularies' is on each entry list too. Old links
+(`/?vin=…`, `/ui/decode`, `/ui/translate`, `/vocab`,
 `/ui/vocabularies`) move to the page with a `301`.
 
-The fit page (`fit.go`, `fit.html`: `/ui/fit`,
-[ADR 0023](docs/adr/0023-fitment-in-the-browser.md)) answers a fit from
-the catalog loaded where it is answered. Its query is `GET /v1/fit`'s, so
-a page link and an API call say the same thing: a form's empty fields,
-which `/v1/fit` refuses, move (`303`) to the same query without them. Its
-JSON dialog holds the fit and, on the server, links the same request on
-`/v1`, a document of its own that htmx never boosts. Its controls are
-the translate page's inputs as tabs (VIN; Year, make and model, the
-vehicle vocabularies' entries; vPIC id) and a fitment's key, each with
-its year, side and the vocabularies to name vehicles in. A vehicle's
-answer is its part types with their counts, each a link to its
-candidates; a candidate shows each application's `via` and
-`unconfirmed`, and its number links to the fitment's vehicles; related
-vehicles are a section of their own, which each vehicle's answer links.
-Every status is a sentence (`statusText`), `no-catalog` included; every
-list pages with the API's `after` and `next`. The links the page draws to
-candidates, a fitment's vehicles and related vehicles ask for every kind
-of stock loaded that each takes (`stock`), so stock lists show whenever
-stock is loaded; a list with an unavailable source says its stock is
-unknown, never empty. The examples on the empty page ask no stock source. The server and the Service Worker answer it through the
-same `Handler`, over `ui.Pages`' `Fit`. `go test ./pkg/ui` walks every
-kind of answer, the statuses, paging, refusals and the header on the
-synthetic catalog; `TestFitPageServer` holds every documented fit example
-to `/v1/fit`'s answer, `TestFitPageUnavailableStock` serves the
-connectors with no DSN, and `TestFitPageBrowser` runs the page in a browser
-with and without JavaScript under axe.
-
 The map (`map.go`) is from, the spine and the targets as three columns of
-cards, each mapping a line, each card a link to the page from it, the
-From card to the answer's own URL. Its key names the lines it draws: a
+cards, each mapping a line. The From card is a link to the answer's own
+URL; the others link nowhere, and take focus so a keyboard lights their
+routes too. Its key names the lines it draws: a
 mapping, one matched by rule (dashed), a model under its make, a VIN to
 the model it decodes to; and a marked card, not every qualifier or the
 model year checked. What a card's lines draw is in its text too (its
@@ -655,7 +622,7 @@ in place, sorts in IndexedDB and streams the compiled file there in parts of
 a MiB (`pkg/ui/static/disk.js`, database `nitrovin-catalog`), committed in one
 transaction once it opens and links. The Service Worker reads it back by
 range (`vocab.OpenCompiled` over a `ReaderAt` that awaits
-`slice().arrayBuffer()`), answers `/ui/fit` only while the browser holds it,
+`slice().arrayBuffer()`)
 and serves it as a download at `/ui/files/catalog`. One catalog per
 nitrovin: a server's (named in `/sw.js`'s config, never published) or one the
 browser holds refuses another; a stored catalog that no longer opens, or
@@ -687,8 +654,8 @@ on the way to a fit may call `Files` or `Info` with drift. `stock_test.go`
 holds the browser's fit, every request of `TestLibraryCatalogFit` asked
 with every kind of stock and at locations, to the server's on the same
 files, and `TestLibraryShelfDriftKept` counts the catalog's reads on a
-reopen, a fit and the panel; `TestWorkerStock` does the same for the fit
-page in Chrome, with what the module retains.
+reopen, a fit and the panel; `TestWorkerStock` does the same for the
+panel in Chrome, with what the module retains.
 `cmd/nitrovin-sw` is the module: `ui.NewInBrowser`
 over a `Library`, given IndexedDB and `fetch` by `pkg/ui/static/worker.js`,
 the worker script that `/sw.js` (its release and the server's files, never
@@ -723,19 +690,15 @@ removed first), and each
 target ticked or cleared to it by `postMessage`, never in a request,
 giving up on a load after a minute without progress, and saying in words
 why a load cannot be taken. After a load or a
-removal it asks for the page's main again: its forms and its answer are
+removal it asks for the page's main again: its form and its answer are
 over the files loaded.
 
-Each tab's form comes with
-examples, each a link to the page with the form filled in: VINs and the
-vPIC model one decodes to, which need no file, and on an entry tab one from
-each of its vocabularies, its first mapped entry in a year its mapping holds
-for, built from the file, so a private file gets one without its name in
-the repository. An example goes to the targets
-ticked on its spine, else to another vocabulary on it. Targets are
+The form comes with examples, each a link to the page with the form
+filled in: three VINs, which need no file. An example goes to the
+targets ticked on vPIC's spine, else to none. Targets are
 always explicit: the ticked ones travel in the URL (`to=`), and a link
-naming none means the same in every browser. With JavaScript the forms
-tick the visitor's selection, which
+naming none means the same in every browser. With JavaScript the form
+ticks the visitor's selection, which
 IndexedDB keeps beside the files, by spine, in a database of its own
 (`nitrovin-state`, so an older release still opens `nitrovin`): a file
 loaded joins it, a file removed leaves it, `vocab.js` changes it as the
@@ -763,7 +726,7 @@ or in `/Applications`; without one the browser runs skip, except in CI
 `scripts/sw.sh` (the builds must be the same bytes) and runs it in a fresh
 profile against a server that loaded `classics` alone: it loads `listing`,
 `yard` and `parts` as one batch, in an order that links only as a whole,
-and holds the page, with each tab and each translation, and each list page, as
+and holds the page, with each translation, and each list page, as
 page and fragment, to a server that
 loaded the same files; stops the worker and checks it answers again; checks
 a hard reload says the files are paused; stops the worker during a load,
@@ -806,49 +769,34 @@ clicked the moment the panel shows goes by htmx, and an unreachable server
 is said in words (8). `TestWorker` covers the stalled load (5). It also
 loads EPA's vocabulary in one click and drops a file on the page.
 
-`TestVocabTranslate` (`vocabtranslate_test.go`) clicks every example of
-every tab without JavaScript, against a server that loaded the fixture and
+`TestVocabTranslate` (`vocabtranslate_test.go`) clicks every example
+without JavaScript, against a server that loaded the fixture and
 the EPA sample, and with it, the files in the browser, and checks that
-each fills its form; with JavaScript, that a file loaded is ticked, that
+each fills the form; with JavaScript, that a file loaded is ticked, that
 the selection survives a second load, a removal, a reload and a cold start
-of the worker, and that a translation's or a link's `to=` replaces it on
-its spine alone. axe audits both runs.
-
-`TestVocabPartTargets` (`vocabparts_test.go`) adds, beside the fixture,
-`shelf`, a second part vocabulary on `parts`, and `bin-labels` on another
-spine, `bins`, both written from the fixture's files at run time. Without
-JavaScript it checks that each spine has its tab, whose form offers its own vocabularies
-alone, and that a `shelf` entry translates to a ticked `listing`; with it,
-that a batch loaded is ticked on each spine and the selection survives a
-tick, a reload, a cold start, a translation and a removal. axe audits both
-runs.
+of the worker, and that a translation's or a link's `to=` replaces it.
+axe audits both runs.
 
 `TestWorkerCatalog` (`workercatalog_test.go`) picks the fixture's
 catalog in the dialog: a server that has a catalog refuses it; one with its
 spine compiles it, after the browser loads its vehicle vocabulary, says
-which drift kinds it could not check, keeps it over a reload, answers
-`/ui/fit` from the worker only once it holds it, and downloads it as a
-compiled catalog that opens.
+which drift kinds it could not check, keeps it over a reload, and
+downloads it as a compiled catalog that opens.
 
 `TestWorkerStock` (`workerstock_test.go`) loads the synthetic shelves and
 yard beside that catalog: a shelf before it, and a connector's file, are
 refused in words; the yard's one VIN to decode is the only body the server
-gets; the worker's fit pages with stock are the server's on the same files
-in the same order, before and after a reload; it logs the module's retained
-memory, and checks the dialog's first opening drops a compile's leftovers.
-With a 2,000-row shelf and a 3,000-VIN yard loaded, the module stays within
-64 MiB, and the fit page and the panel after a start of the module read the
-catalog only as a fit does.
+gets; it logs the module's retained memory, and checks the dialog's first
+opening drops a compile's leftovers. With a 2,000-row shelf and a
+3,000-VIN yard loaded, the module stays within 64 MiB, and the panel
+after a start of the module reads the catalog no more than a fit does.
 
-`TestWorkerDemo` (`workerdemo_test.go`) clicks Load the demo against a
-server that loaded nothing, as nitrovin.app: without JavaScript the dialog
-says the demo needs it, and a link to one of its requests says how to load
-it; with it, the catalog compiles in the browser, the fit page offers the
-demo's list of requests, and each, clicked, shows what its user stories
-promise and is the server's page on the same files (`serve --vocab
-pkg/ui/demo`), at a phone's width too, audited by axe. A demo file of
+`TestWorkerDemo` (`workerdemo_test.go`) clicks Load demo against a
+server that loaded nothing, as nitrovin.app: without JavaScript a link
+naming one of its files says how to load it; with it, the catalog
+compiles in the browser, audited by axe. A demo file of
 another version makes the offer a refresh, which reloads it; it survives a
-reload, Remove the demo removes every file of it, and the only bodies the
+reload, Remove demo removes every file of it, and the only bodies the
 server ever gets are the yard's VINs, in decode batches. It logs the
 module's retained memory with the demo loaded.
 

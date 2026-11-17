@@ -15,17 +15,15 @@ import (
 	"github.com/chromedp/cdproto/input"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
-	"github.com/joshuasprow/nitrovin-data/pkg/embedded"
 )
 
 // TestVocabPage runs the page's Vocabularies dialog in headless Chrome or
 // Chromium, each run in a fresh profile, against a server that loaded the
 // drift fixture's classics and offers the EPA sample
 // (cmd/nitrovin-epa/testdata) as EPA's vocabulary. Without JavaScript the
-// dialog lists the server's catalog and says that your own files need
-// JavaScript; with it, the worker's panel lists the same rows and the
-// browser's beside them. Each finding of the browser prototype's first
-// review
+// dialog lists the server's catalog and offers no loading; with it, the
+// worker's panel lists the same rows and the browser's beside them. Each
+// finding of the browser prototype's first review
 // (https://github.com/joshuasprow/nitrovin/issues/147#issuecomment-6779155104)
 // has its step, marked "finding N"; TestWorker also covers 1 (hard
 // reload), 4 (batch order) and 5 (a stalled load). axe audits every state,
@@ -55,30 +53,25 @@ func TestVocabPage(t *testing.T) {
 }
 
 // offPages are what the JavaScript-off run saw, for the JavaScript-on
-// run to compare: the server's catalog row, and a translation through the
-// server's file.
+// run to compare: the server's catalog row, and a VIN's answer.
 type offPages struct {
 	serverRow, translation string
 }
 
-// throughServer names the server's file alone, and when it was asked: it
-// answers the same with JavaScript on and off.
-const throughServer = "/?from.ext=ext:classics/silverado" + pinned
+// throughServer is a VIN naming no file, and when it was asked: the
+// server's to answer, the same with JavaScript on and off.
+const throughServer = "/?from.vin=" + vin + pinned
 
 // vocabJSOff: the dialog without JavaScript, in a fresh profile, opens,
-// says your own files need JavaScript, offers no file input or EPA load,
-// and lists the server's catalog, its drift behind a disclosure;
-// translation and listing through the server's file work as pages, and
-// /ui/files says what it is for.
+// offers no file input or EPA load, and lists the server's catalog, its
+// drift behind a disclosure; a VIN's answer and the listing of the
+// server's file work as pages, and /ui/files says what it is for.
 func vocabJSOff(t *testing.T, path, base string) offPages {
 	tb := newTab(t, path, base, &requestLog{}, false)
 	tb.do(chromedp.Navigate(base + "/"))
 	tb.wait("#browser")
 	tb.do(chromedp.Click(chromedp.CSS("button.open-vocabularies")))
 	tb.wait("#vocabularies:popover-open")
-	if s := tb.html("#browser-status"); !strings.Contains(s, "Loading your own files needs JavaScript. Your files never leave this browser.") || !strings.Contains(s, "works without it") {
-		t.Errorf("JS off: %s", s)
-	}
 	if n := tb.count("#vocab-files, #load-epa"); n != 0 {
 		t.Errorf("JS off: %d file inputs or EPA buttons", n)
 	}
@@ -95,7 +88,7 @@ func vocabJSOff(t *testing.T, path, base string) offPages {
 	tb.do(chromedp.Navigate(base + throughServer))
 	tb.wait("#result")
 	p.translation = tb.html("#ui-main")
-	tb.audit("translation through the server's file, JS off")
+	tb.audit("a VIN's answer, JS off")
 
 	tb.do(chromedp.Navigate(base + "/ui/vocabularies/classics"))
 	tb.wait("#ui-main table")
@@ -119,16 +112,12 @@ func vocabJSOn(t *testing.T, path, base string, wire *wireLog, off offPages, epa
 
 	// Finding 6: the catalog does not flip. The worker's panel lists the
 	// server's rows as the server does, and the browser's beside them; a
-	// link through the server's file answers as it does without
-	// JavaScript.
+	// VIN naming no file answers as it does without JavaScript.
 	if got := catalogRows(tb); !slices.Equal(got, []string{"vpic vpic", "server classics"}) {
 		t.Errorf("ready: catalog %q", got)
 	}
 	if got := tb.html(`tr[data-where="server"]`); got != off.serverRow {
 		t.Errorf("ready: the server's row differs from JS off's\nJS on:  %s\nJS off: %s", got, off.serverRow)
-	}
-	if !strings.Contains(tb.html("#browser-files"), "No files are kept in this browser yet.") {
-		t.Error("ready: no word that the browser keeps no file")
 	}
 	tb.audit("the dialog ready, no file kept")
 	tb.do(chromedp.Navigate(base + throughServer))
@@ -181,19 +170,20 @@ func vocabJSOn(t *testing.T, path, base string, wire *wireLog, off offPages, epa
 	// EPA's vocabulary in one click, from the release's assets.
 	tb.do(chromedp.Click(chromedp.CSS("#load-epa")))
 	tb.waitPrefix("#load-status", "Loaded epa-vehicles (34 lines).")
-	if s := tb.html("#browser-files"); !strings.Contains(s, "EPA's vocabulary, epa-vehicles 2026-06-09+"+embedded.Month+", is kept in this browser.") || tb.count("#load-epa") != 0 {
-		t.Errorf("EPA loaded: %s", s)
+	if n := tb.count("#load-epa"); n != 0 {
+		t.Errorf("EPA loaded: the panel still offers it: %s", tb.html("#browser-files"))
 	}
 	tb.until("the storage usage", `(document.getElementById("storage-usage") || {}).textContent.startsWith("This site keeps ")`)
 	if got := catalogRows(tb); !slices.Equal(got, []string{"vpic vpic", "server classics", "browser epa-vehicles", "browser listing", "browser parts", "browser yard"}) {
 		t.Errorf("EPA loaded: catalog %q", got)
 	}
-	// It translates in the browser as on a server that loaded the same files.
+	// A VIN translates in the browser as on a server that loaded the same
+	// files.
 	same := vocabServer(t, nil, filepath.Join(driftDir, "classics.jsonl"), filepath.Join(fixture, "listing.jsonl"), filepath.Join(fixture, "parts.jsonl"),
 		filepath.Join(driftDir, "yard.jsonl"), epaPath)
 	for _, target := range []string{
-		"/?from.model=3876&model_year=2003&to=epa-vehicles" + pinned,
-		"/?from.vocabulary=epa-vehicles&from.entry.make=GMC&from.entry.model=Sierra+LTD+K15+4WD&to=yard" + pinned,
+		"/?from.vin=" + ram2015 + "&to=epa-vehicles&to=yard" + pinned,
+		"/?from.vin=1D7RV1GT5AS123456&model_year=2010&to=yard" + pinned,
 	} {
 		tb.do(chromedp.Navigate(base + target))
 		tb.wait("#result")

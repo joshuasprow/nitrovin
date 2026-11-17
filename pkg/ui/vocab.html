@@ -8,20 +8,20 @@ this server, this browser), with its drift or the fault that left it out.
 Manage, the worker's panel, adds a Remove to each of the browser's files. */}}
 {{define "catalog" -}}
 <div class="scroll"><table class="catalog">
-<thead><tr><th scope="col">Name</th><th scope="col">What it is</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+<thead><tr><th scope="col">Name</th><th scope="col">Holds</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
 <tbody>
 {{range .Rows}}<tr data-where="{{.Where}}"><th scope="row">{{if .Fault}}{{.Name}}{{else}}<a href="/ui/vocabularies/{{.Name}}">{{.Name}}</a>{{end}}</th>
-<td>{{.What}}{{with .File}}{{if .Catalog}}{{if .Fitments}}, {{.FitmentsText}} fitments, compiled in this browser{{end}}{{else if .Holds}}, a {{.Holds}}{{with .StockCatalog}} of {{.}}{{end}}, {{.Lines}} rows{{else if .Lines}}, {{.Lines}} lines{{end}}{{end}}{{if .Fault}}<br><span class="error">Left out: {{.Fault}}</span>{{end}}
+<td>{{.What}}{{with .File}}{{if .Catalog}}{{if .Fitments}}, {{.FitmentsText}} fitments{{end}}{{else if .Holds}}, a {{.Holds}}{{with .StockCatalog}} of {{.}}{{end}}, {{.Lines}} rows{{else if .Lines}}, {{.Lines}} lines{{end}}{{end}}{{if .Fault}}<br><span class="error">Left out: {{.Fault}}</span>{{end}}
 <details class="row-details"><summary>Details<span class="visually-hidden"> of {{.Name}}</span></summary><dl>
 <dt>Version</dt><dd class="version">{{.Version}}</dd>
 <dt>Kept in</dt><dd>{{.WhereText}}{{with .File}}: {{.FileName}}, {{.SizeText}}, stored {{.Stored.Format "2006-01-02 15:04"}} UTC{{end}}</dd>
 <dt>Status</dt><dd>{{if .Fault}}left out{{else if eq .Where "vpic"}}the data month{{else if .Drift}}<details><summary>Drift: {{.DriftText}}</summary><ul>{{range .DriftExamples}}<li>{{.}}</li>{{end}}</ul></details>{{else}}linked, no drift{{end}}</dd>
 {{- with .File}}{{if .Skipped}}
-<dt>Not checked</dt><dd class="skipped">{{.SkippedText}} drift: this browser has no vPIC model years or model values to measure it against. <code>nitrovin vocab check</code> on a server runs every check.</dd>{{end}}{{end}}
+<dt>Not checked</dt><dd class="skipped">{{.SkippedText}} drift <span class="hint">server only</span></dd>{{end}}{{end}}
 </dl></details></td>
-<td><div class="actions">{{if and (not .Fault) (eq .Kind "vocabulary")}}<a href="/?from.vocabulary={{.Name}}">Translate<span class="visually-hidden"> from {{.Name}}</span></a>{{end}}
+<td><div class="actions">
 {{- if and $.Manage .File}}{{if and .File.Catalog (not .Fault)}}
-<a href="/ui/files/catalog" download="{{.Name}}.compiled">Download<span class="visually-hidden"> {{.Name}}</span> compiled</a>{{end}}
+<a href="/ui/files/catalog" download="{{.Name}}.compiled">Download<span class="visually-hidden"> {{.Name}} compiled</span></a>{{end}}
 <form method="post" action="/ui/files/remove" hx-post="/ui/files/remove" hx-target="#browser-files" class="inline">
 <input type="hidden" name="name" value="{{.Name}}"><button type="submit">Remove<span class="visually-hidden"> {{.Name}}</span></button>
 </form>{{end}}</div></td></tr>
@@ -31,7 +31,7 @@ Manage, the worker's panel, adds a Remove to each of the browser's files. */}}
 
 {{define "entries" -}}
 <h1>{{.Name}}</h1>
-<p><a href="/">Decode and translate</a></p>
+<p><a href="/">VIN decoder</a></p>
 {{with .Filter}}<form method="get" action="/ui/vocabularies/{{$.Name}}" class="filter" role="search">
 <label for="entry-filter">Show only this {{.Field}}</label>
 <input type="search" id="entry-filter" name="where.{{.Field}}" value="{{.Value}}" autocomplete="off">
@@ -54,43 +54,38 @@ storage-usage, and says how a load went in #load-status, just above the
 panel, which a swap never replaces. */}}
 {{define "files" -}}
 {{with .Refusal}}<div class="refusal" role="alert">
-<p>{{.Error}} Remove them too?</p>
+<p>{{.Error}}</p>
 <form method="post" action="/ui/files/remove" hx-post="/ui/files/remove" hx-target="#browser-files">
 {{range .Names}}<input type="hidden" name="name" value="{{.}}">{{end}}
 <input type="hidden" name="all" value="true">
-<button type="submit">Remove all of them</button>
+<button type="submit">Remove all</button>
 </form>
 </div>{{end}}
+<div class="loaders">
 <div class="load dropzone">
-<label for="vocab-files">Drop your vocabulary files here, or choose them</label>
-<input type="file" id="vocab-files" multiple accept=".jsonl,application/jsonl" aria-describedby="vocab-files-hint stock-files-hint">
-<p id="vocab-files-hint" class="hint">Files loaded together are linked as one batch. A file with the same name as one you have replaces it. They stay in this browser.
-{{- if .ServerCatalog}} This server has a catalog, {{.ServerCatalog}}; one catalog per nitrovin, so this browser compiles none.
-{{- else}} A catalog picked on its own is compiled here, read in place and never stored as you picked it; keep the tab open while it compiles.{{end}}</p>
-<p id="stock-files-hint" class="hint">
-{{- if .ServerCatalog}}Stock beside this server's catalog loads on the server.
-{{- else}}Stock files load here too: a shelf beside the catalog this browser holds, and a yard, whose VINs alone go to this server, once, to be decoded.{{end}}
-Connectors run on a server. A stock row's fields are shown as they are on every fit page that lists it, so a stock file supplies no personal data: no names, contact details or identity numbers of owners, sellers, customers or staff, and nothing it would not show a customer, such as cost. Field names that look personal are reported as drift, but nitrovin cannot tell what a field holds.</p>
+<label for="vocab-files">Drop or choose .jsonl files</label>
+<input type="file" id="vocab-files" multiple accept=".jsonl,application/jsonl" aria-describedby="vocab-files-hint">
+<p id="vocab-files-hint" class="hint">Kept in this browser · same name replaces{{if .ServerCatalog}} · catalog on server: {{.ServerCatalog}}{{else}} · a catalog alone compiles here{{end}} · no personal data in stock</p>
 </div>
 {{with .Demo}}<div class="offer demo">
 {{if .Refused}}<p id="demo-refused">{{.Refused}}</p>
-{{else if .Held}}<p>The demo set, {{.Version}}, is kept in this browser: try its examples on the <a href="/ui/fit">fit page</a>. Every number, location and stock row in it is invented.</p>
-<form method="post" action="/ui/files/remove" hx-post="/ui/files/remove" hx-target="#browser-files" class="inline">
+{{else if .Held}}<form method="post" action="/ui/files/remove" hx-post="/ui/files/remove" hx-target="#browser-files" class="inline">
 {{range .Names}}<input type="hidden" name="name" value="{{.}}">{{end}}
-<button type="submit" id="remove-demo">Remove the demo</button>
+<button type="submit" id="remove-demo">Remove demo</button>
 </form>
-{{else}}<button type="button" id="load-demo" data-demo="{{.Load}}" aria-describedby="load-demo-hint">{{if .Stale}}Refresh the demo{{else}}Load the demo{{end}}</button>
-<p id="load-demo-hint" class="hint">The demo set, {{.Version}}, {{.SizeText}}: a small catalog of popular vehicles with its part and vehicle vocabularies, an extension set, a shelf and a yard, all invented: every number, location and stock row is made up. Its catalog compiles here, in this browser, and only the yard's VINs go to this server, to be decoded; the fit page then offers a request for each feature.{{with .Stale}} It replaces the demo files this browser holds: {{range $i, $n := .}}{{if $i}}, {{end}}{{$n}}{{end}}.{{end}}</p>
+<p class="hint">Demo {{.Version}} · invented data</p>
+{{else}}<button type="button" id="load-demo" data-demo="{{.Load}}" aria-describedby="load-demo-hint">{{if .Stale}}Refresh demo{{else}}Load demo{{end}}</button>
+<p id="load-demo-hint" class="hint">{{.Version}} · {{.SizeText}} · invented data{{with .Stale}} · replaces {{range $i, $n := .}}{{if $i}}, {{end}}{{$n}}{{end}}{{end}}</p>
 {{end}}</div>{{end}}
 {{with .Offer}}<div class="offer">
-{{if .Held}}<p>EPA's vocabulary, {{.Name}} {{.Version}}, is kept in this browser.</p>
-{{else}}<button type="button" id="load-epa" data-url="{{.URL}}" data-file="{{.Name}}.jsonl" aria-describedby="load-epa-hint">Load EPA's vocabulary</button>
-<p id="load-epa-hint" class="hint">{{.Name}} {{.Version}}, {{.SizeText}}: the make and model names of EPA's fuel-economy data, mapped onto this data month's vPIC makes and models. It is public, published with nitrovin's data; loaded, it is kept in this browser like your own files{{with .Replaces}}, replacing version {{.}}{{end}}.</p>
+{{if .Held}}<p class="hint">EPA {{.Version}} loaded</p>
+{{else}}<button type="button" id="load-epa" data-url="{{.URL}}" data-file="{{.Name}}.jsonl" aria-describedby="load-epa-hint">Load EPA</button>
+<p id="load-epa-hint" class="hint">{{.Name}} {{.Version}} · {{.SizeText}}{{with .Replaces}} · replaces {{.}}{{end}}</p>
 {{end}}</div>{{end}}
+</div>
 {{template "catalog" .Catalog}}
-{{if .NoneStored}}<p>No files are kept in this browser yet.</p>{{end}}
 <details class="more"><summary>Details</summary>
 <p id="storage-usage" class="hint"></p>
-<p class="hint">Translated in this browser by release <code>{{.Release}}</code>, data month {{.DataMonth}}.</p>
+<p class="hint">Release <code>{{.Release}}</code> · data {{.DataMonth}}</p>
 </details>
 {{- end}}
