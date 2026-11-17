@@ -204,11 +204,11 @@ func (t *texts) of(p []byte) string {
 	return t.b.String()[start:]
 }
 
-// normalized is Normalize(s), s itself when Normalize leaves it as it is.
-func (t *texts) normalized(s string) string {
-	if normalASCII(s) {
+// normalized is c.Normalize(s), s itself when that leaves it as it is.
+func (t *texts) normalized(s string, c Case) string {
+	if normalASCII(s, c.folds()) {
 		return s
 	}
-	t.scratch = appendNormalized(t.scratch[:0], s)
+	t.scratch = appendNormalized(t.scratch[:0], s, c.folds())
 	return t.of(t.scratch)
 }

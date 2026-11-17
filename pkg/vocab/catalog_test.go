@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"strconv"
 	"strings"
@@ -167,6 +168,9 @@ func TestCatalogFaults(t *testing.T) {
 			if f.File != filepath.Join(dir, tc.file) || f.Line != tc.line || f.Severity != SeverityFault || !strings.Contains(f.Detail, tc.detail) {
 				t.Errorf("fault %+v; want %s:%d, a fault naming %q", f, tc.file, tc.line, tc.detail)
 			}
+			if tc.file == "c.jsonl" && (f.Entry != nil || f.ID != "") {
+				t.Errorf("fault %+v names an entry or id; a catalog's names neither (ADR 0025)", f)
+			}
 			if tc.file != "c.jsonl" || tc.name == "second catalog" {
 				return // a fault about another file, or a second catalog
 			}
@@ -181,7 +185,7 @@ func TestCatalogFaults(t *testing.T) {
 				t.Fatal(err)
 			}
 			_, err = compileSource(t, io.Discard, month{}, beside, filepath.Join(dir, "c.jsonl"))
-			if got, ok := errors.AsType[Faults](err); !ok || !slices.Equal(got, faults) {
+			if got, ok := errors.AsType[Faults](err); !ok || !reflect.DeepEqual(got, faults) {
 				t.Errorf("Compile: %v; want %v", err, faults)
 			}
 		})

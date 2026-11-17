@@ -14,7 +14,8 @@ func init() {
 	register(command{
 		name:     "vocab",
 		synopsis: "check <file|dir>... | compile -o <file> <file|dir>...",
-		summary: `Check vocabulary, extension set, spine and catalog files, loaded together against the data: one {"file", "line", "severity", "detail"} line per fault or drift, a drift's with its "kind"; exit 1 on any. ` +
+		summary: `Check vocabulary, extension set, spine, catalog and stock files, linked together against the data: one {"file", "line", "severity", "detail"} line per fault or drift, a drift's with its "kind", a line's with its "entry" or "id"; ` +
+			`drift is measured for every file that reads and links cleanly, and each file with faults, or linked to one, gets one "unchecked" line; exit 1 on any. A JSON Lines catalog is streamed, sorting in scratch under $TMPDIR. ` +
 			`compile checks them the same way, refuses on a fault, and writes the one catalog among them compiled to -o; drift is written to stderr and recorded in the file. ` +
 			`The arguments are what is checked, never --vocab or $NITROVIN_VOCAB.`,
 		setup: vocabSetup,
@@ -22,10 +23,12 @@ func init() {
 }
 
 // vocabSetup is `nitrovin vocab check`: what loading the files would refuse
-// (faults) and, when nothing does, where they disagree with the data
-// (drift), for an author's CI; a compiled catalog is read in full and
-// checked and measured again. And `nitrovin vocab compile`: the same check,
-// then the one catalog among the files compiled (ADR 0021).
+// (faults) and where those that read and link cleanly disagree with the
+// data (drift), for an author's CI, each file it could not measure named
+// (ADR 0025): a JSON Lines catalog streamed as compile streams it, a
+// compiled one read in full and checked and measured again. And `nitrovin
+// vocab compile`: the same check, then the one catalog among the files
+// compiled (ADR 0021).
 func vocabSetup(fs *flag.FlagSet) func(*env, []string) error {
 	out := fs.String("o", "", "compile: write the compiled catalog to `file`")
 	return func(e *env, args []string) error {
@@ -52,18 +55,15 @@ func vocabSetup(fs *flag.FlagSet) func(*env, []string) error {
 			}
 			return writeFaults(e, err)
 		}
-		files, err := vocab.Open(args[1:]...)
-		for i := 0; err == nil && i < len(files); i++ {
-			files[i], err = files[i].Expand()
-		}
-		var t *nitrovin.Translator
-		if err == nil {
-			t, err = nitrovin.NewTranslator(d, files...)
-		}
+		scratch, err := os.MkdirTemp("", "nitrovin-check-")
 		if err != nil {
-			return writeFaults(e, err)
+			return err
 		}
-		findings := t.AllDrift()
+		defer os.RemoveAll(scratch)
+		findings, err := vocab.Check(d.Month(), vocab.DirScratch(scratch), args[1:]...)
+		if err != nil {
+			return err
+		}
 		for _, f := range findings {
 			if err := writeFinding(e.stdout, f); err != nil {
 				return err

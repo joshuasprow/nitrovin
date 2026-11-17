@@ -63,6 +63,10 @@
         "spine": {
           "$ref": "#/$defs/Name",
           "description": "The declared spine a part vocabulary maps onto; required for subject part, refused for subject vehicle. The spine must be loaded."
+        },
+        "case": {
+          "const": "exact",
+          "description": "Entries match after trimming and collapsing white space, never folding case: two entries that differ only in case are two, and a spelling the vocabulary does not hold is unknown (ADR 0026). Absent, entries match after folding case too."
         }
       },
       "if": { "properties": { "subject": { "const": "part" } } },

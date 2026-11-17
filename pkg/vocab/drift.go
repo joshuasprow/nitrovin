@@ -77,14 +77,18 @@ func (d *drifts) walk(files []*File) []Finding {
 		case KindVocabulary:
 			for i := range f.Entries {
 				e := &f.Entries[i]
+				d.entry = e
 				for j := range e.Mappings {
 					d.mapping(e.Line, j, &e.Mappings[j])
 				}
 			}
+			d.entry = nil
 		case KindExtensionSet:
 			for _, x := range f.Extensions {
+				d.id = x.ID
 				d.extension(x)
 			}
+			d.id = ""
 		case KindCatalog:
 			if c := f.compiled; c != nil {
 				d.compiled(c, byName[f.Vehicles], byName[f.FiledUnder])
@@ -114,6 +118,10 @@ type drifts struct {
 	mm    ModelMonth
 	month string // m's name
 	f     *File
+	// entry and id are the vocabulary entry, or the extension's id, the
+	// findings being added are about: a finding names it (ADR 0025).
+	entry *Entry
+	id    string
 	out   []Finding
 	// makes and models index vPIC's names, normalized, as needed.
 	makes  map[string]int32
@@ -138,7 +146,11 @@ func (d *drifts) add(line int, kind DriftKind, format string, a ...any) {
 	if d.f.DataMonth != "" && d.f.DataMonth != d.month {
 		detail += fmt.Sprintf(" (the file was built against %s)", d.f.DataMonth)
 	}
-	d.out = append(d.out, Finding{File: d.f.Path, Line: line, Severity: SeverityDrift, Detail: detail, Drift: kind})
+	g := Finding{File: d.f.Path, Line: line, Severity: SeverityDrift, Detail: detail, Drift: kind, ID: d.id}
+	if d.entry != nil {
+		g = ofEntry(g, d.f, d.entry)
+	}
+	d.out = append(d.out, g)
 }
 
 // mapping measures mapping i of the entry on line, building a finding's

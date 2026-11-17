@@ -137,14 +137,14 @@ func Vehicles(info vocab.CatalogInfo, t *vocab.Translation) []vocab.Vehicle {
 		return out
 	}
 	if t.Vocabulary != nil && t.Vocabulary.Name == info.Vehicles && t.Entry != nil {
-		return []vocab.Vehicle{{Entry: t.Vocabulary.FieldsOf(t.Entry)}}
+		return []vocab.Vehicle{t.Vocabulary.Vehicle(t.Entry)}
 	}
 	for _, to := range t.To {
 		if to.Vocabulary.Name != info.Vehicles {
 			continue
 		}
 		for _, m := range to.Matches {
-			out = append(out, vocab.Vehicle{Entry: to.Vocabulary.FieldsOf(m.Entry)})
+			out = append(out, to.Vocabulary.Vehicle(m.Entry))
 		}
 	}
 	return out

@@ -580,7 +580,7 @@ func stockVehicle(raw []byte, catalog, vehicles *File) (*Vehicle, error) {
 			return nil, err
 		}
 		v := &Vehicle{Target: t}
-		v.key = string(appendVehicleKey(nil, v))
+		v.key = string(appendVehicleKey(nil, v, catalog.VehiclesCase))
 		return v, nil
 	}
 	var entry map[string]string
@@ -597,14 +597,17 @@ func stockVehicle(raw []byte, catalog, vehicles *File) (*Vehicle, error) {
 		}
 	}
 	v := &Vehicle{Entry: entry}
-	v.key = string(appendVehicleKey(nil, v))
+	v.key = string(appendVehicleKey(nil, v, catalog.VehiclesCase))
 	return v, nil
 }
 
-// VehicleKey is v's identity: equal for vehicles equal after Normalize.
+// VehicleKey is v's identity: equal for vehicles of one catalog that its
+// vehicle vocabulary matches as one (its Case, ADR 0026). A vehicle a
+// catalog, a stock row or File.Vehicle made carries it; for one made
+// otherwise it is equal for vehicles equal after Normalize.
 func VehicleKey(v *Vehicle) string {
 	if v.key == "" {
-		return string(appendVehicleKey(nil, v))
+		return string(appendVehicleKey(nil, v, CaseFolded))
 	}
 	return v.key
 }

@@ -93,8 +93,8 @@ type Fitment struct {
 
 // Filed is an entry of a catalog's filed-under part vocabulary
 // (ADR 0024), by its fields, as a fitment's filed_under names it. Entries
-// equal after Normalize are one entry, shared by every fitment filed
-// under it.
+// equal after the vocabulary's normalization (its Case) are one entry,
+// shared by every fitment filed under it.
 type Filed struct {
 	// Entry is the entry's fields by name, as the file first writes them.
 	Entry map[string]string
@@ -104,10 +104,11 @@ type Filed struct {
 	id    int32  // index in the catalog's entries
 }
 
-// entryKey is the identity of the vocabulary entry with fields entry:
-// its fields in name order, each value normalized (appendVehicleKey's).
-func entryKey(entry map[string]string) string {
-	return string(appendVehicleKey(nil, &Vehicle{Entry: entry}))
+// entryKey is the identity of the vocabulary entry with fields entry in
+// a vocabulary of case c: its fields in name order, each value normalized
+// (appendVehicleKey's).
+func entryKey(entry map[string]string, c Case) string {
+	return string(appendVehicleKey(nil, &Vehicle{Entry: entry}, c))
 }
 
 // newFiled is the entry with fields entry, whose entryKey is key.
@@ -141,8 +142,8 @@ type Application struct {
 
 // Vehicle is a vehicle a catalog's line names: an entry of its vehicle
 // vocabulary, by its fields, or, when its vehicles are vpic, a vPIC make
-// or model or an extension. Vehicles equal after Normalize are one
-// vehicle.
+// or model or an extension. Vehicles equal after the vocabulary's
+// normalization (its Case) are one vehicle.
 type Vehicle struct {
 	// Entry is the vocabulary entry's fields by name, as the file first
 	// writes them; nil when the catalog's vehicles are vpic.
@@ -155,9 +156,10 @@ type Vehicle struct {
 	id  int32  // index in the catalog's vehicles
 }
 
-// appendVehicleKey appends v's identity to b: its entry fields in name
-// order, each value normalized, or its target.
-func appendVehicleKey(b []byte, v *Vehicle) []byte {
+// appendVehicleKey appends v's identity, in a vehicle vocabulary of case
+// c, to b: its entry fields in name order, each value normalized, or its
+// target.
+func appendVehicleKey(b []byte, v *Vehicle, c Case) []byte {
 	if v.Entry == nil {
 		return appendTargetKey(b, v.Target)
 	}
@@ -167,18 +169,18 @@ func appendVehicleKey(b []byte, v *Vehicle) []byte {
 	}
 	slices.Sort(names)
 	for _, name := range names {
-		b = appendField(b, name, v.Entry[name])
+		b = appendField(b, name, v.Entry[name], c)
 	}
 	return b
 }
 
 // appendField appends one entry field to a vehicle's key: its name as it
-// is, its value normalized, each length prefixed.
-func appendField[S ~string | ~[]byte](b []byte, name, value S) []byte {
+// is, its value normalized as c has it, each length prefixed.
+func appendField[S ~string | ~[]byte](b []byte, name, value S, c Case) []byte {
 	b = strconv.AppendInt(b, int64(len(name)), 10)
 	b = append(b, ':')
 	b = append(b, name...)
-	return appendNormalizedValue(b, value)
+	return appendNormalizedValue(b, value, c.folds())
 }
 
 // appendTargetKey appends a vpic vehicle's key, which no entry's key
@@ -427,7 +429,7 @@ func (r *reader) filedUnder(raw []byte) ([]*Filed, error) {
 	}
 	out := cr.filedS.take(len(cr.entries))
 	for i, e := range cr.entries {
-		if err := cr.entryFields(e, "names no field: an entry of vocabulary "+strconv.Quote(r.f.FiledUnder)+", by its fields"); err != nil {
+		if err := cr.entryFields(e, "names no field: an entry of vocabulary "+strconv.Quote(r.f.FiledUnder)+", by its fields", r.f.FiledUnderCase); err != nil {
 			return nil, under("/"+strconv.Itoa(i), err)
 		}
 		fd, ok := cr.filed[string(cr.buf)]
@@ -635,7 +637,7 @@ func (r *reader) vehicle(raw []byte) (*Vehicle, error) {
 			return nil, err
 		}
 		cr.buf = appendTargetKey(cr.buf[:0], t)
-	} else if err := cr.entryFields(raw, "names no field: a vehicle is an entry of vocabulary "+strconv.Quote(r.f.Vehicles)+", by its fields"); err != nil {
+	} else if err := cr.entryFields(raw, "names no field: a vehicle is an entry of vocabulary "+strconv.Quote(r.f.Vehicles)+", by its fields", r.f.VehiclesCase); err != nil {
 		return nil, err
 	}
 	if v, ok := cr.vehicles[string(cr.buf)]; ok {
@@ -653,10 +655,10 @@ func (r *reader) vehicle(raw []byte) (*Vehicle, error) {
 }
 
 // entryFields reads a vocabulary entry by its fields, an object of
-// strings, into pairs, each name and value as its text, and its key,
-// appendVehicleKey's, into buf. none is what an object of no field is
-// told. Its error's pointer is into the object.
-func (cr *catalogReader) entryFields(raw []byte, none string) error {
+// strings, into pairs, each name and value as its text, and its key in a
+// vocabulary of case c, appendVehicleKey's, into buf. none is what an
+// object of no field is told. Its error's pointer is into the object.
+func (cr *catalogReader) entryFields(raw []byte, none string, c Case) error {
 	cr.pairs = cr.pairs[:0]
 	if !eachMember(raw, func(key, value []byte) {
 		cr.pairs = append(cr.pairs, pair{key, value})
@@ -697,7 +699,7 @@ func (cr *catalogReader) entryFields(raw []byte, none string) error {
 	cr.pairs = kept
 	cr.buf = cr.buf[:0]
 	for _, p := range cr.pairs {
-		cr.buf = appendField(cr.buf, p.name, p.value)
+		cr.buf = appendField(cr.buf, p.name, p.value, c)
 	}
 	return nil
 }
@@ -879,7 +881,7 @@ type posting struct{ rank, app int32 }
 func (f *File) indexCatalog(chunks []*chunk) Faults {
 	var faults Faults
 	f.Fitments, faults = keep(f.Path, chunks, f.Fitments, func(x *Fitment) int { return x.Line },
-		func(*Fitment, int, int) error { return nil })
+		func(*Fitment, int, int) error { return nil }, nil)
 	nr, nt := 0, 0
 	for _, c := range chunks {
 		nr, nt = nr+len(c.redirects), nt+len(c.retired)
@@ -1299,7 +1301,7 @@ func (c *Catalog) vehicleID(v *Vehicle) (int32, bool) {
 		ids = c.f.catalog.vehicles
 	}
 	var buf [64]byte
-	id, ok := ids[string(appendVehicleKey(buf[:0], v))]
+	id, ok := ids[string(appendVehicleKey(buf[:0], v, c.f.VehiclesCase))]
 	return id, ok
 }
 
@@ -1404,7 +1406,8 @@ type filedNumber struct {
 }
 
 // ByFiled returns the fitments filed under the entry of the catalog's
-// filed-under vocabulary with fields entry, matched after Normalize, whose
+// filed-under vocabulary with fields entry, matched as the vocabulary's
+// entries match (FiledUnderCase), whose
 // number is number and whose side is *side (nil: any side), in key order
 // (ADR 0024). A number on two sides under one entry is two fitments. It
 // is none when the catalog names no filed-under vocabulary.
@@ -1413,7 +1416,7 @@ func (c *Catalog) ByFiled(entry map[string]string, number string, side *Side) []
 		return cc.byFiled(entry, number, side)
 	}
 	f, x := c.f, c.f.catalog
-	id, ok := x.filed[entryKey(entry)]
+	id, ok := x.filed[entryKey(entry, f.FiledUnderCase)]
 	if !ok {
 		return nil
 	}
@@ -1436,6 +1439,10 @@ type CatalogInfo struct {
 	// vocabulary its vehicles are entries of, or vpic; FiledUnder the part
 	// vocabulary whose entries its fitments are filed under, "" for none.
 	Spine, Vehicles, FiledUnder string
+	// VehiclesCase and FiledUnderCase are how its vehicles and filed-under
+	// entries match: the Case of its vocabularies when it was read beside
+	// them or compiled (ADR 0026).
+	VehiclesCase, FiledUnderCase Case
 	// Hash is the blake3 hash of the file's bytes: of a compiled catalog,
 	// of the JSON Lines file it was compiled from.
 	Hash                                       [32]byte
@@ -1453,7 +1460,7 @@ func (c *Catalog) Info() CatalogInfo {
 	f := c.f
 	return CatalogInfo{
 		Name: f.Name, Version: f.Version, Release: f.Release, DataMonth: f.DataMonth,
-		Spine: f.Spine, Vehicles: f.Vehicles, FiledUnder: f.FiledUnder, Hash: f.Hash,
+		Spine: f.Spine, Vehicles: f.Vehicles, FiledUnder: f.FiledUnder, VehiclesCase: f.VehiclesCase, FiledUnderCase: f.FiledUnderCase, Hash: f.Hash,
 		Fitments: len(f.Fitments), Applications: f.catalog.applications, Redirects: len(f.Redirects), Retired: len(f.Retired),
 		Filings: f.catalog.filings,
 	}

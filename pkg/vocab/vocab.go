@@ -104,19 +104,26 @@ type File struct {
 	// Subject, Fields and Spine are a vocabulary's: what its mappings name,
 	// the fields that name an entry in order, and the declared spine a part
 	// vocabulary maps onto ("" for a vehicle vocabulary). A catalog's Spine
-	// is the declared spine its part types come from.
+	// is the declared spine its part types come from. Case is how a
+	// vocabulary's entries match (ADR 0026).
 	Subject Subject
 	Fields  []string
 	Spine   string
+	Case    Case
 
 	// Vehicles, Release and FiledUnder are a catalog's: the vehicle
 	// vocabulary its applications and redirects name, or Reserved (vpic)
 	// for vPIC's makes and models and extensions; its publisher's release,
 	// "" when it says none; and the part vocabulary whose entries its
 	// fitments are filed under (ADR 0024), "" when it names none.
-	Vehicles   string
-	Release    string
-	FiledUnder string
+	// VehiclesCase and FiledUnderCase are how the catalog's vehicles and
+	// filed-under entries match: their vocabularies' Case, as it was read
+	// beside them (Open, Compile) or, compiled, recorded (ADR 0026).
+	Vehicles       string
+	Release        string
+	FiledUnder     string
+	VehiclesCase   Case
+	FiledUnderCase Case
 
 	// Holds (its header's source), AsOf and StockCatalog are a stock
 	// file's: shelf or yard, the time its rows are as of, and a shelf's
@@ -240,21 +247,58 @@ type SpineEntry struct {
 	Name string
 }
 
-// Normalize is the one normalization entry fields are matched after:
-// trimmed, every run of white space collapsed to one space, and Unicode
-// lower-cased.
-func Normalize(s string) string {
-	if normalASCII(s) {
+// Case is how a vocabulary's entries match (ADR 0009, ADR 0026).
+type Case string
+
+// The cases.
+const (
+	// CaseFolded matches after Normalize: trimmed, white space collapsed
+	// and case folded. A vocabulary that declares no case folds it.
+	CaseFolded Case = ""
+	// CaseExact matches after trimming and collapsing white space, never
+	// folding case: a vocabulary whose header says "case": "exact".
+	CaseExact Case = "exact"
+)
+
+// Normalize is s as an entry of a vocabulary of case c matches: trimmed,
+// every run of white space collapsed to one space, and, unless c is
+// CaseExact, Unicode lower-cased.
+func (c Case) Normalize(s string) string {
+	if normalASCII(s, c.folds()) {
 		return s
 	}
-	return string(appendNormalized(make([]byte, 0, len(s)), s))
+	return string(appendNormalized(make([]byte, 0, len(s)), s, c.folds()))
 }
 
-// normalASCII reports whether s is ASCII that Normalize leaves as it is.
-func normalASCII(s string) bool {
+func (c Case) folds() bool { return c != CaseExact }
+
+// of is how c is said of a vocabulary, and as is how of a catalog matched
+// beside it.
+func (c Case) of() string {
+	if c.folds() {
+		return "folds case"
+	}
+	return "matches case exactly"
+}
+
+func (c Case) as() string {
+	if c.folds() {
+		return "folding case"
+	}
+	return "matching case exactly"
+}
+
+// Normalize is the one normalization entry fields of a vocabulary that
+// folds case are matched after: trimmed, every run of white space
+// collapsed to one space, and Unicode lower-cased (CaseFolded's).
+func Normalize(s string) string { return CaseFolded.Normalize(s) }
+
+// normalASCII reports whether s is ASCII that normalizing leaves as it
+// is, folding case when fold.
+func normalASCII(s string, fold bool) bool {
 	for i := range len(s) {
 		switch c := s[i]; {
-		case c >= utf8.RuneSelf, 'A' <= c && c <= 'Z', c != ' ' && asciiSpace(c):
+		case c >= utf8.RuneSelf, fold && 'A' <= c && c <= 'Z', c != ' ' && asciiSpace(c):
 			return false
 		case c == ' ' && (i == 0 || i == len(s)-1 || s[i+1] == ' '):
 			return false
@@ -263,19 +307,24 @@ func normalASCII(s string) bool {
 	return true
 }
 
-// appendNormalized appends Normalize(s) to b: byte by byte when s is
-// ASCII, through Unicode's white space and case otherwise.
-func appendNormalized[S ~string | ~[]byte](b []byte, s S) []byte {
+// appendNormalized appends s normalized to b, folding case when fold:
+// byte by byte when s is ASCII, through Unicode's white space and case
+// otherwise.
+func appendNormalized[S ~string | ~[]byte](b []byte, s S, fold bool) []byte {
 	start, space := len(b), false
 	for i := range len(s) {
 		c := s[i]
 		switch {
 		case c >= utf8.RuneSelf:
-			return append(b[:start], strings.ToLower(strings.Join(strings.Fields(string(s)), " "))...)
+			t := strings.Join(strings.Fields(string(s)), " ")
+			if fold {
+				t = strings.ToLower(t)
+			}
+			return append(b[:start], t...)
 		case asciiSpace(c):
 			space = len(b) > start
 			continue
-		case 'A' <= c && c <= 'Z':
+		case fold && 'A' <= c && c <= 'Z':
 			c += 'a' - 'A'
 		}
 		if space {
@@ -293,19 +342,20 @@ func asciiSpace(c byte) bool {
 }
 
 // appendKey appends the key of an entry's field values to b, the key
-// parsing finds a repeated entry by: each value normalized, length
-// prefixed so no value can run into the next.
-func appendKey(b []byte, values []string) []byte {
+// parsing finds a repeated entry by: each value normalized, folding case
+// when fold, length prefixed so no value can run into the next.
+func appendKey(b []byte, values []string, fold bool) []byte {
 	for _, v := range values {
-		b = appendNormalizedValue(b, v)
+		b = appendNormalizedValue(b, v, fold)
 	}
 	return b
 }
 
-// appendNormalizedValue appends v normalized, length prefixed.
-func appendNormalizedValue[S ~string | ~[]byte](b []byte, v S) []byte {
+// appendNormalizedValue appends v normalized, folding case when fold,
+// length prefixed.
+func appendNormalizedValue[S ~string | ~[]byte](b []byte, v S, fold bool) []byte {
 	at := len(b)
-	b = appendNormalized(b, v)
+	b = appendNormalized(b, v, fold)
 	n := len(b) - at
 	var buf [21]byte
 	prefix := append(strconv.AppendInt(buf[:0], int64(n), 10), ':')
@@ -315,8 +365,9 @@ func appendNormalizedValue[S ~string | ~[]byte](b []byte, v S) []byte {
 	return b
 }
 
-// Entry finds a vocabulary's entry by its fields, matched after Normalize,
-// in its list order. fields must name exactly the vocabulary's Fields.
+// Entry finds a vocabulary's entry by its fields, matched after its
+// Case's normalization, in its list order. fields must name exactly the
+// vocabulary's Fields.
 func (f *File) Entry(fields map[string]string) (*Entry, bool) {
 	if f.Kind != KindVocabulary || len(fields) != len(f.Fields) {
 		return nil, false
@@ -327,7 +378,7 @@ func (f *File) Entry(fields map[string]string) (*Entry, bool) {
 		if !ok {
 			return nil, false
 		}
-		values[i] = Normalize(v)
+		values[i] = f.Case.Normalize(v)
 	}
 	es := f.listOrder()
 	i, ok := slices.BinarySearchFunc(es, values, func(se sortedEntry, values []string) int { return compareKeys(se.key, values) })
@@ -344,6 +395,15 @@ func (f *File) FieldsOf(e *Entry) map[string]string {
 		m[name] = e.Fields[i]
 	}
 	return m
+}
+
+// Vehicle is the catalog vehicle entry e of vehicle vocabulary f names:
+// its fields as written, its identity f's Case's, as a catalog whose
+// vehicles f's entries are keeps it (ADR 0026).
+func (f *File) Vehicle(e *Entry) Vehicle {
+	v := Vehicle{Entry: f.FieldsOf(e)}
+	v.key = string(appendVehicleKey(nil, &v, f.Case))
+	return v
 }
 
 // EntriesFor returns, in file order, a vocabulary's entries with a mapping

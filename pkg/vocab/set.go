@@ -37,8 +37,9 @@ type sortedEntry struct {
 	at int
 }
 
-// listOrder is a vocabulary's entries in list order, by their normalized
-// fields: made once per file, since it is the file's alone.
+// listOrder is a vocabulary's entries in list order, by their fields
+// normalized as its Case has them: made once per file, since it is the
+// file's alone.
 func (f *File) listOrder() []sortedEntry {
 	f.listOnce.Do(func() {
 		// Every entry's key in one allocation, the normalized fields that
@@ -50,7 +51,7 @@ func (f *File) listOrder() []sortedEntry {
 		for i := range f.Entries {
 			key := keys[i*n : (i+1)*n : (i+1)*n]
 			for j, v := range f.Entries[i].Fields {
-				key[j] = text.normalized(v)
+				key[j] = text.normalized(v, f.Case)
 			}
 			es[i] = sortedEntry{&f.Entries[i], key, i}
 		}
@@ -154,11 +155,11 @@ func (s *Set) Stock() []*File { return s.stock }
 // nothing loaded has that name.
 func (s *Set) File(name string) *File { return s.byName[name] }
 
-// normalized is values, each normalized.
-func normalized(values []string) []string {
+// normalized is values, each normalized as c has it.
+func normalized(values []string, c Case) []string {
 	out := make([]string, len(values))
 	for i, v := range values {
-		out[i] = Normalize(v)
+		out[i] = c.Normalize(v)
 	}
 	return out
 }

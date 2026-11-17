@@ -25,8 +25,10 @@ import (
 // Open reads the files at paths, a directory meaning every *.jsonl file
 // directly in it, in name order, and links them (Link). A file that begins
 // with a compiled catalog's magic opens as one (ADR 0021): read in place,
-// it stays open for the File's life. Each File's Path is absolute. The
-// error is Faults: every fault of every file, which refuses them all.
+// it stays open for the File's life. A JSON Lines catalog is read after
+// the other files, matching its vehicles and filed-under entries as their
+// vocabularies do (ADR 0026). Each File's Path is absolute. The error is
+// Faults: every fault of every file, which refuses them all.
 func Open(paths ...string) ([]*File, error) {
 	files, _, err := open(paths, false)
 	return files, err
@@ -43,58 +45,65 @@ func OpenCompile(paths ...string) (files []*File, catalog string, err error) {
 // open is Open, and OpenCompile when source: the catalog's path is
 // returned, not read.
 func open(paths []string, source bool) ([]*File, string, error) {
-	var files []*File
-	var faults Faults
+	// Each file read, in path order: a JSON Lines catalog is read last, in
+	// its vocabularies' case.
+	type slot struct {
+		f       *File
+		faults  Faults
+		catalog string
+	}
+	var slots []slot
 	var catalog string
 	read := func(path string) {
-		if source {
-			switch is, err := isCatalogSource(path); {
-			case err != nil:
-				faults = append(faults, fault(path, 0, "%v", err))
-				return
-			case is && catalog != "":
-				faults = append(faults, fault(path, 0, "%s is a catalog too: compile one at a time", catalog))
-				return
-			case is:
-				catalog = path
-				return
-			}
+		switch h, err := readHeader(path); {
+		case err != nil:
+			slots = append(slots, slot{faults: Faults{fault(path, 0, "%v", err)}})
+			return
+		case h == nil || h.Kind != KindCatalog:
+		case !source:
+			slots = append(slots, slot{catalog: path})
+			return
+		case catalog != "":
+			slots = append(slots, slot{faults: Faults{fault(path, 0, "%s is a catalog too: compile one at a time", catalog)}})
+			return
+		default:
+			catalog = path
+			return
 		}
-		f, err := openFile(path)
+		f, err := openFile(path, nil)
 		if fs, ok := err.(Faults); ok {
-			faults = append(faults, fs...)
+			slots = append(slots, slot{faults: fs})
 			return
 		}
 		if source && f.compiled != nil {
-			faults = append(faults, fault(path, 0, "it is compiled already: compile its JSON Lines source"))
+			slots = append(slots, slot{faults: Faults{fault(path, 0, "it is compiled already: compile its JSON Lines source")}})
 			return
 		}
-		files = append(files, f)
+		slots = append(slots, slot{f: f})
 	}
-	for _, p := range paths {
-		abs, err := filepath.Abs(p)
-		if err != nil {
-			faults = append(faults, fault(p, 0, "%v", err))
-			continue
-		}
-		fi, err := os.Stat(abs)
-		if err != nil {
-			faults = append(faults, fault(abs, 0, "%v", errorText(err)))
-			continue
-		}
-		if !fi.IsDir() {
-			read(abs)
-			continue
-		}
-		des, err := os.ReadDir(abs)
-		if err != nil {
-			faults = append(faults, fault(abs, 0, "%v", errorText(err)))
-			continue
-		}
-		for _, de := range des {
-			if !de.IsDir() && strings.HasSuffix(de.Name(), ".jsonl") {
-				read(filepath.Join(abs, de.Name()))
+	eachFile(paths, read, func(g Finding) { slots = append(slots, slot{faults: Faults{g}}) })
+	cases := func(name string) Case {
+		for _, s := range slots {
+			if s.f != nil && s.f.Kind == KindVocabulary && s.f.Name == name {
+				return s.f.Case
 			}
+		}
+		return CaseFolded
+	}
+	var files []*File
+	var faults Faults
+	for _, s := range slots {
+		if s.catalog != "" {
+			f, err := openFile(s.catalog, cases)
+			if fs, ok := err.(Faults); ok {
+				faults = append(faults, fs...)
+				continue
+			}
+			s.f = f
+		}
+		faults = append(faults, s.faults...)
+		if s.f != nil {
+			files = append(files, s.f)
 		}
 	}
 	if source && catalog == "" && len(faults) == 0 {
@@ -109,23 +118,66 @@ func open(paths []string, source bool) ([]*File, string, error) {
 	return files, catalog, nil
 }
 
-// isCatalogSource reports whether the file at path is a JSON Lines
-// catalog, by its header, reading no more of it.
-func isCatalogSource(path string) (bool, error) {
+// caseOf is the Case of the vocabulary named name among those read beside
+// a catalog, CaseFolded when none is.
+type caseOf func(name string) Case
+
+// eachFile calls read with the absolute path of each file paths name, in
+// order, a directory naming every *.jsonl file directly in it, in name
+// order; and unread with the fault of a path that cannot be read.
+func eachFile(paths []string, read func(path string), unread func(Finding)) {
+	for _, p := range paths {
+		abs, err := filepath.Abs(p)
+		if err != nil {
+			unread(fault(p, 0, "%v", err))
+			continue
+		}
+		fi, err := os.Stat(abs)
+		if err != nil {
+			unread(fault(abs, 0, "%v", errorText(err)))
+			continue
+		}
+		if !fi.IsDir() {
+			read(abs)
+			continue
+		}
+		des, err := os.ReadDir(abs)
+		if err != nil {
+			unread(fault(abs, 0, "%v", errorText(err)))
+			continue
+		}
+		for _, de := range des {
+			if !de.IsDir() && strings.HasSuffix(de.Name(), ".jsonl") {
+				read(filepath.Join(abs, de.Name()))
+			}
+		}
+	}
+}
+
+// readHeader reads the header of the JSON Lines file at path, reading no
+// more of it: nil when the file is a compiled catalog, or its first line
+// that is not blank is no header, which reading the file says.
+func readHeader(path string) (*File, error) {
 	osf, err := os.Open(path)
 	if err != nil {
-		return false, errors.New(errorText(err))
+		return nil, errors.New(errorText(err))
 	}
 	defer osf.Close()
 	br := bufio.NewReader(osf)
+	if prefix, _ := br.Peek(len(compiledMagic)); isCompiled(prefix) {
+		return nil, nil
+	}
 	for {
 		line, err := br.ReadBytes('\n')
 		if len(line) > 0 && !blank(bytes.TrimSuffix(line, []byte("\n"))) {
-			f := &File{}
-			return f.header(bytes.TrimSuffix(line, []byte("\n"))) == nil && f.Kind == KindCatalog, nil
+			f := &File{Path: path}
+			if f.header(bytes.TrimSuffix(line, []byte("\n"))) != nil {
+				return nil, nil
+			}
+			return f, nil
 		}
 		if err != nil {
-			return false, nil // no header: reading it says so
+			return nil, nil
 		}
 	}
 }
@@ -140,8 +192,8 @@ func errorText(err error) string {
 }
 
 // openFile reads the file at path: a compiled catalog, kept open, or JSON
-// Lines.
-func openFile(path string) (*File, error) {
+// Lines, a catalog matching as cases has its vocabularies (parse).
+func openFile(path string, cases caseOf) (*File, error) {
 	osf, err := os.Open(path)
 	var fi os.FileInfo
 	if err == nil {
@@ -166,13 +218,15 @@ func openFile(path string) (*File, error) {
 	if err != nil {
 		return nil, Faults{fault(path, 0, "%v", errorText(err))}
 	}
-	return parse(path, data)
+	return parse(path, data, cases)
 }
 
 // Read reads one file from r; name is its Path, the name findings carry.
 // It checks the file alone: Link checks it against the others loaded with
-// it. A compiled catalog is read into memory and read there. The error is
-// Faults: every fault in the file.
+// it. A compiled catalog is read into memory and read there. A JSON Lines
+// catalog is read folding case, as if its vocabularies did: Link refuses
+// it beside one that matches case exactly, which Open reads it beside
+// (ADR 0026). The error is Faults: every fault in the file.
 func Read(name string, r io.Reader) (*File, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
@@ -181,7 +235,7 @@ func Read(name string, r io.Reader) (*File, error) {
 	if isCompiled(data) {
 		return openCompiled(name, bytes.NewReader(data), int64(len(data)))
 	}
-	return parse(name, data)
+	return parse(name, data, nil)
 }
 
 // chunkSize is about how many bytes of lines one goroutine reads at a
@@ -191,8 +245,10 @@ const chunkSize = 256 << 10
 // parse reads one file's bytes: a header, then lines of its kind. Blank
 // lines (nothing but spaces, tabs and a \r) are skipped and counted. The
 // lines after the header are read in chunks, in parallel, each line into
-// its own slot of the file's lines, then indexed in file order (index).
-func parse(name string, data []byte) (*File, error) {
+// its own slot of the file's lines, then indexed in file order (index). A
+// catalog's vehicles and filed-under entries match as cases says their
+// vocabularies do; folding case when cases is nil.
+func parse(name string, data []byte, cases caseOf) (*File, error) {
 	f := &File{Path: name}
 	hashed := make(chan struct{})
 	go func() {
@@ -214,6 +270,14 @@ func parse(name string, data []byte) (*File, error) {
 			return nil, Faults{fault(name, n, "%v", err)}
 		}
 		break
+	}
+	if f.Kind == KindCatalog && cases != nil {
+		if f.Vehicles != Reserved {
+			f.VehiclesCase = cases(f.Vehicles)
+		}
+		if f.FiledUnder != "" {
+			f.FiledUnderCase = cases(f.FiledUnder)
+		}
 	}
 	var chunks []*chunk
 	for start <= len(data) {
@@ -396,18 +460,21 @@ func (f *File) index(chunks []*chunk, keys []string) Faults {
 		seen := make(map[string]int, len(f.Entries))
 		f.targets = map[Target][]int{}
 		f.Entries, faults = keep(f.Path, chunks, f.Entries, func(e *Entry) int { return e.Line },
-			func(e *Entry, i, slot int) error { return f.addEntry(seen, e, i, keys[slot]) })
+			func(e *Entry, i, slot int) error { return f.addEntry(seen, e, i, keys[slot]) },
+			func(e *Entry, g Finding) Finding { return ofEntry(g, f, e) })
 	case KindExtensionSet:
 		f.extensions = make(map[string]int, len(f.Extensions))
-		f.Extensions, faults = keep(f.Path, chunks, f.Extensions, func(x *Extension) int { return x.Line }, f.addExtension)
+		f.Extensions, faults = keep(f.Path, chunks, f.Extensions, func(x *Extension) int { return x.Line }, f.addExtension,
+			func(x *Extension, g Finding) Finding { return ofID(g, x.ID) })
 	case KindSpine:
 		f.spine = make(map[string]int, len(f.SpineEntries))
-		f.SpineEntries, faults = keep(f.Path, chunks, f.SpineEntries, func(e *SpineEntry) int { return e.Line }, f.addSpineEntry)
+		f.SpineEntries, faults = keep(f.Path, chunks, f.SpineEntries, func(e *SpineEntry) int { return e.Line }, f.addSpineEntry,
+			func(e *SpineEntry, g Finding) Finding { return ofID(g, e.ID) })
 	case KindCatalog:
 		faults = f.indexCatalog(chunks)
 	case KindStock:
 		f.stockIDs = make(map[string]int, len(f.Stock))
-		f.Stock, faults = keep(f.Path, chunks, f.Stock, func(r *StockRow) int { return r.Line }, f.addStockRow)
+		f.Stock, faults = keep(f.Path, chunks, f.Stock, func(r *StockRow) int { return r.Line }, f.addStockRow, nil)
 	}
 	return faults
 }
@@ -415,8 +482,9 @@ func (f *File) index(chunks []*chunk, keys []string) Faults {
 // keep compacts items, the slots of the chunks' lines, to those that read
 // (line is not 0) and that add accepts, given the index each takes; nil
 // when none do. It returns every fault in line order: the chunks', and
-// those of add, about the file at path.
-func keep[T any](path string, chunks []*chunk, items []T, line func(*T) int, add func(t *T, i, slot int) error) ([]T, Faults) {
+// those of add, about the file at path, each as about makes it of its
+// line, when about is not nil.
+func keep[T any](path string, chunks []*chunk, items []T, line func(*T) int, add func(t *T, i, slot int) error, about func(*T, Finding) Finding) ([]T, Faults) {
 	var faults Faults
 	i := 0
 	for _, c := range chunks {
@@ -431,7 +499,11 @@ func keep[T any](path string, chunks []*chunk, items []T, line func(*T) int, add
 				faults, fs = append(faults, fs[0]), fs[1:]
 			}
 			if err := add(t, i, slot); err != nil {
-				faults = append(faults, fault(path, n, "%v", err))
+				g := fault(path, n, "%v", err)
+				if about != nil {
+					g = about(t, g)
+				}
+				faults = append(faults, g)
 				continue
 			}
 			if i != slot {
@@ -597,14 +669,14 @@ func nameAt(raw []byte, ptr string) (string, error) {
 }
 
 // headerNames are a header's fields; headerFields picks each kind's.
-var headerNames = []string{"format", "kind", "name", "version", "data_month", "subject", "fields", "spine", "vehicles", "release", "source", "as_of", "catalog", "connector", "filed_under"}
+var headerNames = []string{"format", "kind", "name", "version", "data_month", "subject", "fields", "spine", "vehicles", "release", "source", "as_of", "catalog", "connector", "filed_under", "case"}
 
 // headerFields are the indexes in headerNames of each kind's header
 // fields.
 var headerFields = map[Kind][]int{
 	KindSpine:        {0, 1, 2, 3},
 	KindExtensionSet: {0, 1, 2, 3, 4},
-	KindVocabulary:   {0, 1, 2, 3, 4, 5, 6, 7},
+	KindVocabulary:   {0, 1, 2, 3, 4, 5, 6, 7, 15},
 	KindCatalog:      {0, 1, 2, 3, 4, 7, 8, 9, 14},
 	KindStock:        {0, 1, 2, 3, 9, 10, 11, 12, 13},
 }
@@ -615,7 +687,7 @@ func (f *File) header(line []byte) error {
 	if err != nil {
 		return err
 	}
-	var v, scratch [15][]byte
+	var v, scratch [16][]byte
 	if _, _, ok := members(raw, headerNames, v[:]); !ok {
 		return errAt("", "must be an object")
 	}
@@ -721,6 +793,15 @@ func (f *File) header(line []byte) error {
 			return err
 		}
 	}
+	if v[15] != nil {
+		c, err := stringAt(v[15], "/case")
+		if err != nil {
+			return err
+		}
+		if f.Case = Case(c); f.Case != CaseExact {
+			return errAt("/case", "unknown case %q: exact, or no case to fold it", c)
+		}
+	}
 	return nil
 }
 
@@ -779,7 +860,7 @@ func (r *reader) readEntry(n int, line []byte) (Entry, string, error) {
 			return Entry{}, "", err
 		}
 	}
-	r.key = appendKey(r.key[:0], e.Fields)
+	r.key = appendKey(r.key[:0], e.Fields, f.Case.folds())
 	return e, r.text.of(r.key), nil
 }
 

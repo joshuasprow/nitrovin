@@ -1,0 +1,3 @@
+{"format":1,"kind":"vocabulary","name":"codes","version":"2026.11","data_month":"2026_10","subject":"vehicle","fields":["code"],"case":"exact"}
+{"entry":{"code":"OLD3"},"mappings":[{"model":1938,"first":2009,"last":2012}],"note":"a truck: OLD3 and old3 are two codes"}
+{"entry":{"code":"old3"},"mappings":[{"model":13620,"first":2013,"last":2018}]}

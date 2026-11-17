@@ -40,7 +40,7 @@ func WriteIndex(w io.Writer, f *File) error {
 	}
 	e := indexWriter{at: map[string]int{}}
 	e.b = append(e.b, f.Hash[:]...)
-	for _, s := range []string{f.Path, string(f.Kind), f.Name, f.Version, f.DataMonth, string(f.Subject), f.Spine} {
+	for _, s := range []string{f.Path, string(f.Kind), f.Name, f.Version, f.DataMonth, string(f.Subject), f.Spine, string(f.Case)} {
 		e.str(s)
 	}
 	e.strs(f.Fields)
@@ -293,6 +293,7 @@ func (d *indexReader) file() (*File, error) {
 	f.DataMonth = d.str()
 	f.Subject = Subject(d.str())
 	f.Spine = d.str()
+	f.Case = Case(d.str())
 	f.Fields = d.strs(nil)
 	nf := len(f.Fields)
 	if n, ok := d.count(); ok {

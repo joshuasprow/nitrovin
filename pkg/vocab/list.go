@@ -21,8 +21,9 @@ const (
 // one loaded file.
 type ListQuery struct {
 	Of string
-	// Where filters by fields, matched after Normalize: a vocabulary's
-	// fields; or vPIC's "make", a make id, to list that make's models, or
+	// Where filters by fields, matched as the vocabulary's entries match
+	// (its Case): a vocabulary's fields; or vPIC's "make", a make id, to
+	// list that make's models, or
 	// "model" and "element", a model id and an element id together, to
 	// list the model's model values for the element.
 	Where map[string]string
@@ -213,7 +214,7 @@ func (s *Set) pager(q ListQuery, l *Listing) (pager, int, error) {
 		if idx[i] = slices.Index(f.Fields, k); idx[i] < 0 {
 			return nil, 0, refuse("/where/"+pointerToken(k), "vocabulary %q has no field %q: its fields are %s", f.Name, k, quoted(f.Fields))
 		}
-		values[i] = Normalize(q.Where[k])
+		values[i] = f.Case.Normalize(q.Where[k])
 	}
 	es := f.listOrder()
 	// The entries a where on leading fields selects are one run of the

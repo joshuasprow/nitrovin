@@ -168,7 +168,7 @@ func (f Fitter) Fit(ctx context.Context, req FitRequest) (Fit, error) {
 			cs, _ := f.candidates(t, v, side)
 			all = append(all, cs...)
 		}
-		all = mergeCandidates(all)
+		all = mergeCandidates(all, info.VehiclesCase)
 		out.Total, out.Next, out.Candidates = page(all, pg, out.Candidates)
 		concurrently(
 			func() { f.candidateStock(ctx, req, out.Candidates) },
@@ -314,12 +314,12 @@ func (f Fitter) byVehicle(t string, v *reached, by *vocab.Vehicle) []vocab.Candi
 	if by == nil {
 		return v.byType[t]
 	}
-	want := catalogVehicle(by)
+	want := vocab.VehicleKey(by)
 	var out []vocab.Candidate
 	for _, c := range v.byType[t] {
 		var apps []*vocab.Application
 		for _, a := range c.Applications {
-			if sameVehicle(catalogVehicle(a.Vehicle), want) {
+			if vocab.VehicleKey(a.Vehicle) == want {
 				apps = append(apps, a)
 			}
 		}
@@ -526,14 +526,15 @@ func keeps(want, s vocab.Side) bool {
 // covers; a redirect's are never narrowed by entry (ADR 0024). Reached is
 // direct when any candidate is.
 func (f Fitter) candidates(t partType, v *reached, side vocab.Side) ([]FitCandidate, FitReach) {
+	info := f.Catalog.Info()
 	every := f.matching(f.byVehicle(t.id, v, nil), t, v, side, nil)
 	direct := every
 	if t.filedUnder != nil {
-		direct = slices.DeleteFunc(slices.Clone(every), func(c FitCandidate) bool { return !isFiledUnder(c.Fitment, t.filedUnder) })
+		direct = slices.DeleteFunc(slices.Clone(every), func(c FitCandidate) bool { return !isFiledUnder(c.Fitment, t.filedUnder, info.FiledUnderCase) })
 	}
 	out := direct
 	for _, rd := range f.redirect(t.id, v) {
-		if covers(every, rd) {
+		if covers(every, rd, info.VehiclesCase) {
 			continue
 		}
 		if len(out) == len(direct) {
@@ -548,7 +549,7 @@ func (f Fitter) candidates(t partType, v *reached, side vocab.Side) ([]FitCandid
 	if len(out) == len(direct) {
 		return direct, ReachedDirect
 	}
-	out = mergeCandidates(out)
+	out = mergeCandidates(out, info.VehiclesCase)
 	if len(direct) > 0 {
 		return out, ReachedDirect
 	}
@@ -558,12 +559,12 @@ func (f Fitter) candidates(t partType, v *reached, side vocab.Side) ([]FitCandid
 // covers reports whether a direct candidate has an application to rd's
 // vehicle in years that overlap rd's: a redirect is for a vehicle and
 // years (ADR 0016), and is followed wherever the part type asked for has
-// no fitment of its own.
-func covers(direct []FitCandidate, rd *vocab.Redirect) bool {
+// no fitment of its own. Vehicles match as c has them.
+func covers(direct []FitCandidate, rd *vocab.Redirect, c vocab.Case) bool {
 	rv := catalogVehicle(rd.Vehicle)
-	for _, c := range direct {
-		for _, a := range c.Applications {
-			if sameVehicle(a.Vehicle, rv) && overlaps(intOf(a.First), intOf(a.Last), rd.First, rd.Last) {
+	for _, d := range direct {
+		for _, a := range d.Applications {
+			if sameVehicle(a.Vehicle, rv, c) && overlaps(intOf(a.First), intOf(a.Last), rd.First, rd.Last) {
 				return true
 			}
 		}
@@ -638,8 +639,9 @@ func (u Unconfirmed) union(w Unconfirmed) Unconfirmed {
 
 // mergeCandidates orders candidates by part type, side and number, and
 // makes one of each fitment reached more than once: its applications
-// once each, direct if any way was, and every redirect that reached it.
-func mergeCandidates(cs []FitCandidate) []FitCandidate {
+// once each, its vehicles matched as vc has them, direct if any way was,
+// and every redirect that reached it.
+func mergeCandidates(cs []FitCandidate, vc vocab.Case) []FitCandidate {
 	slices.SortStableFunc(cs, func(a, b FitCandidate) int { return compareFitments(a.Fitment, b.Fitment) })
 	out := cs[:0]
 	for _, c := range cs {
@@ -650,7 +652,7 @@ func mergeCandidates(cs []FitCandidate) []FitCandidate {
 		}
 		last := &out[n-1]
 		for _, a := range c.Applications {
-			if !slices.ContainsFunc(last.Applications, func(b FitApplication) bool { return sameApplication(a, b) }) {
+			if !slices.ContainsFunc(last.Applications, func(b FitApplication) bool { return sameApplication(a, b, vc) }) {
 				last.Applications = append(last.Applications, a)
 			}
 		}
@@ -665,26 +667,29 @@ func mergeCandidates(cs []FitCandidate) []FitCandidate {
 	return out
 }
 
-func sameApplication(a, b FitApplication) bool {
-	return a.Options == b.Options && a.First == b.First && a.Last == b.Last && sameVehicle(a.Vehicle, b.Vehicle)
+func sameApplication(a, b FitApplication, c vocab.Case) bool {
+	return a.Options == b.Options && a.First == b.First && a.Last == b.Last && sameVehicle(a.Vehicle, b.Vehicle, c)
 }
 
-func sameVehicle(a, b CatalogVehicle) bool {
+// sameVehicle reports whether a and b are one catalog vehicle, its entries
+// matched as c has them.
+func sameVehicle(a, b CatalogVehicle, c vocab.Case) bool {
 	if a.Entry == nil || b.Entry == nil {
 		return a.Entry == nil && b.Entry == nil && a.Make == b.Make && a.Model == b.Model && a.Ext == b.Ext
 	}
-	return sameEntry(a.Entry, b.Entry)
+	return sameEntry(a.Entry, b.Entry, c)
 }
 
-// sameEntry reports whether a and b are one vocabulary entry: the same
-// fields, their values equal after Normalize.
-func sameEntry(a, b map[string]string) bool {
+// sameEntry reports whether a and b are one entry of a vocabulary of case
+// c: the same fields, their values equal after c's normalization
+// (ADR 0026).
+func sameEntry(a, b map[string]string, c vocab.Case) bool {
 	if len(a) != len(b) {
 		return false
 	}
 	for k, v := range a {
 		w, ok := b[k]
-		if !ok || vocab.Normalize(v) != vocab.Normalize(w) {
+		if !ok || c.Normalize(v) != c.Normalize(w) {
 			return false
 		}
 	}
@@ -692,9 +697,9 @@ func sameEntry(a, b map[string]string) bool {
 }
 
 // isFiledUnder reports whether fm, as an answer has it, is filed under
-// entry.
-func isFiledUnder(fm Fitment, entry map[string]string) bool {
-	return slices.ContainsFunc(fm.FiledUnder, func(e map[string]string) bool { return sameEntry(e, entry) })
+// entry of a vocabulary of case c.
+func isFiledUnder(fm Fitment, entry map[string]string, c vocab.Case) bool {
+	return slices.ContainsFunc(fm.FiledUnder, func(e map[string]string) bool { return sameEntry(e, entry, c) })
 }
 
 // compareFitments orders fitments by part type, side and number: the order
@@ -712,9 +717,9 @@ func (r *reached) modelOf(v *vocab.Vehicle) int {
 	if i, ok := r.modelIdx[v]; ok {
 		return i
 	}
-	i, cv := -1, catalogVehicle(v)
+	i, k := -1, vocab.VehicleKey(v)
 	for j := range r.vehicles {
-		if sameVehicle(catalogVehicle(&r.vehicles[j]), cv) {
+		if vocab.VehicleKey(&r.vehicles[j]) == k {
 			i = j
 			break
 		}
@@ -1358,7 +1363,7 @@ func (f Fitter) shared(v *reached, keep func(*vocab.Candidate) bool) ([]*vocab.V
 		}
 		for j := range c.Fitment.Applications {
 			a := &c.Fitment.Applications[j]
-			k := vehicleKey(catalogVehicle(a.Vehicle))
+			k := vocab.VehicleKey(a.Vehicle)
 			id, ok := ids[k]
 			if !ok {
 				id = int32(len(vehicles))
@@ -1400,32 +1405,19 @@ func compareYear(a, b *int) int {
 	return cmp.Compare(*a, *b)
 }
 
-// vehicleKey identifies a catalog vehicle: its fields in name order, each
-// normalized, or its target.
-func vehicleKey(v CatalogVehicle) string {
-	if v.Entry == nil {
-		return fmt.Sprintf("\x00%d\x00%d\x00%s", v.Make, v.Model, v.Ext)
-	}
-	var b strings.Builder
-	for _, k := range slices.Sorted(maps.Keys(v.Entry)) {
-		val := vocab.Normalize(v.Entry[k])
-		fmt.Fprintf(&b, "%d:%s%d:%s", len(k), k, len(val), val)
-	}
-	return b.String()
-}
-
 // vehicleName is what related vehicles are ordered by after their count:
-// an entry's fields in its vocabulary's order, normalized, or a vPIC
-// make's, model's or extension's name.
+// an entry's fields in its vocabulary's order, normalized as it matches
+// them, or a vPIC make's, model's or extension's name.
 func (f Fitter) vehicleName(v *vocab.Vehicle) []string {
 	if v.Entry != nil {
 		var fields []string
+		var c vocab.Case
 		if g := f.Set.File(f.Catalog.Info().Vehicles); g != nil {
-			fields = g.Fields
+			fields, c = g.Fields, g.Case
 		}
 		out := make([]string, len(fields))
 		for i, k := range fields {
-			out[i] = vocab.Normalize(v.Entry[k])
+			out[i] = c.Normalize(v.Entry[k])
 		}
 		return out
 	}
