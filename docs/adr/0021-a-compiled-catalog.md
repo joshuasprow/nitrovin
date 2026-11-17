@@ -208,3 +208,26 @@ figure to watch: a catalog of more applications may pass 500 MB at the same
 rate, as ADR 0023's wide variants do (551 MB for 4.1 million, about 135 bytes
 each, in format 3). The compiler streams, so it no longer loads the catalog as JSON Lines
 first.
+
+## Measured: a real catalog (2026-11-16)
+
+The first user's catalog, measured by the first user with v0.3.9, compiled format 3,
+on one CPU ([#294](https://github.com/joshuasprow/nitrovin/issues/294)):
+
+| Measure | Value |
+| --- | ---: |
+| Catalog | about 792,000 fitments, 2,115,865 applications, 77,085 redirects |
+| JSON Lines file | 281.5 MB |
+| Compiled file | 315 MB (about 149 B per application) |
+| Compile | 3.1 s, 172 MB peak, 537 MB scratch |
+| Ready after start | 0.22 s |
+| Peak while opening | 141 MB |
+| Retained, catalog open | 82 MiB |
+| `vocab check` on the JSON Lines, peak | 945 MB |
+
+It is the fixture's scale, with a smaller file per application than the fixture's
+180 bytes in format 2; ready, peak and retained are taken from the start of a
+process rather than by `bench/vocab` on the reader alone, so they are larger than
+the fixture's rows above and still inside this ADR's budget. Format 4
+([ADR 0024](0024-the-codes-a-fitment-is-filed-under.md)), measured on the synthetic
+fixture, is in ADR 0024's Measured section.
