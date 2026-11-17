@@ -730,7 +730,7 @@ nitrovin vocab check testdata/vocab            # nothing printed, exit 0
 nitrovin vocab check testdata/vocab/drift      # seven drift lines, exit 1
 nitrovin vocab check testdata/vocab/fitment    # a catalog with its spine and vehicles: nothing, exit 0
 nitrovin vocab check testdata/vocab/fitment/catalog.jsonl   # alone: three faults and an unchecked line, exit 1
-nitrovin vocab check testdata/vocab/unchecked  # a fault, four files unchecked, and another file's drift, exit 1
+nitrovin vocab check testdata/vocab/unchecked  # one fault, four unchecked lines (the faulty file and three linked to it), another file's drift, exit 1
 ```
 
 ```json
