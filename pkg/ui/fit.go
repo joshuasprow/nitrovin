@@ -91,6 +91,11 @@ type fitControls struct {
 	// fields with the query's values.
 	From   *contract.CatalogEntry
 	Fields []fieldValue
+	// FiledUnder is the catalog's filed-under vocabulary, "" for none, and
+	// Filed its entry's fields with the query's values: a fitment's form
+	// takes them instead of the part type (ADR 0024).
+	FiledUnder string
+	Filed      []fieldValue
 	// The query's values.
 	VIN, Make, Model, Ext, ModelYear, Side  string
 	FitmentType, FitmentNumber, FitmentSide string
@@ -153,6 +158,15 @@ func (c *fitControls) Targets() targetSet {
 	return out
 }
 
+// FitmentTypeHint is what the part type's field takes: optional beside a
+// filed-under vocabulary's entry, which names the fitment instead.
+func (c *fitControls) FitmentTypeHint() string {
+	if len(c.Filed) > 0 {
+		return "(an entry of the catalog's part spine, or give " + c.FiledUnder + " instead)"
+	}
+	return "(an entry of the catalog's part spine)"
+}
+
 // fields are the names of the current form's fields.
 func (c *fitControls) fields() []string {
 	switch c.Tab {
@@ -161,7 +175,11 @@ func (c *fitControls) fields() []string {
 	case fitTabID:
 		return []string{"from.make", "from.model", "from.ext", "model_year", "side"}
 	case fitTabFitment:
-		return []string{"from.fitment.type", "from.fitment.number", "from.fitment.side", "model_year"}
+		out := []string{"from.fitment.type", "from.fitment.number", "from.fitment.side", "model_year"}
+		for _, f := range c.Filed {
+			out = append(out, "from.fitment.filed_under."+f.Name)
+		}
+		return out
 	}
 	out := []string{"from.vocabulary", "model_year", "side"}
 	for _, f := range c.Fields {
@@ -172,7 +190,8 @@ func (c *fitControls) fields() []string {
 
 // field is the current form's field holding the value a refusal's
 // pointer names, "" for none: the pointer's path, dotted, as the query
-// names its parameter. A VIN's pointer is /from.
+// names its parameter. A VIN's pointer is /from; a filed-under entry's,
+// as a whole, is its first field's.
 func (c *fitControls) field(pointer string) string {
 	if pointer == "" {
 		return ""
@@ -185,6 +204,9 @@ func (c *fitControls) field(pointer string) string {
 	name := strings.Join(path, ".")
 	if name == "from" && c.Tab == fitTabVIN {
 		name = "from.vin"
+	}
+	if name == "from.fitment.filed_under" && len(c.Filed) > 0 {
+		name += "." + c.Filed[0].Name
 	}
 	if slices.Contains(c.fields(), name) {
 		return name
@@ -207,9 +229,11 @@ type fitResult struct {
 	Vehicle string
 	Models  []fitModelView
 	// Fitment and Reached are a fitment key's: the fitment it reached and
-	// how, in words.
-	Fitment *fitmentView
-	Reached string
+	// how, in words. Fitments are those an ambiguous filed-under key
+	// reached, each linked to its vehicles.
+	Fitment  *fitmentView
+	Reached  string
+	Fitments []fitmentView
 
 	PartTypes      []partTypeRow
 	Candidates     []candidateView
@@ -354,7 +378,7 @@ func (h *Handler) fit(r *http.Request) (view, error) {
 		return view{}, err
 	}
 	stock := stockLoaded(info)
-	c := h.newFitControls(cat, raw, q, stock)
+	c := h.newFitControls(cat, info, raw, q, stock)
 	page.Controls = c
 	catalogName := catalogOf(info)
 	page.Demo = isDemoCatalog(info)
@@ -484,7 +508,7 @@ func fitNamed(q url.Values) []string {
 
 // newFitControls are the controls over the catalog cat for the page asked
 // with raw, its query as sent, and q, the fit it asks for.
-func (h *Handler) newFitControls(cat []contract.CatalogEntry, raw, q url.Values, stock []string) *fitControls {
+func (h *Handler) newFitControls(cat []contract.CatalogEntry, info contract.Info, raw, q url.Values, stock []string) *fitControls {
 	c := &fitControls{
 		VIN: raw.Get("from.vin"), Make: q.Get("from.make"), Model: q.Get("from.model"), Ext: q.Get("from.ext"),
 		ModelYear: q.Get("model_year"), Side: q.Get("side"),
@@ -521,12 +545,31 @@ func (h *Handler) newFitControls(cat []contract.CatalogEntry, raw, q url.Values,
 			c.Fields = append(c.Fields, fieldValue{f, q.Get("from.entry." + f)})
 		}
 	}
+	if c.Tab == fitTabFitment {
+		c.FiledUnder = filedUnderOf(info)
+		if i := slices.IndexFunc(cat, func(e contract.CatalogEntry) bool { return e.Name == c.FiledUnder }); c.FiledUnder != "" && i >= 0 {
+			for _, f := range cat[i].Fields {
+				c.Filed = append(c.Filed, fieldValue{f, q.Get("from.fitment.filed_under." + f)})
+			}
+		}
+	}
 	return c
+}
+
+// filedUnderOf is the filed-under vocabulary of the catalog info lists,
+// "" for none.
+func filedUnderOf(info contract.Info) string {
+	for _, f := range info.Vocabularies {
+		if f.Kind == string(vocab.KindCatalog) {
+			return f.FiledUnder
+		}
+	}
+	return ""
 }
 
 // fitTab is the tab whose form asks q's from, "" for a query without
 // one: a VIN's, a vocabulary's entry's, a vPIC make's, model's or an
-// extension's, or a fitment key's.
+// extension's, or a fitment key's, by type or filed-under entry.
 func fitTab(q url.Values) string {
 	switch {
 	case q.Has("from.vin"):
@@ -537,6 +580,11 @@ func fitTab(q url.Values) string {
 		return fitTabID
 	case q.Has("from.fitment.type"), q.Has("from.fitment.number"), q.Has("from.fitment.side"):
 		return fitTabFitment
+	}
+	for k := range q {
+		if strings.HasPrefix(k, "from.fitment.filed_under.") {
+			return fitTabFitment
+		}
 	}
 	return ""
 }
@@ -773,7 +821,7 @@ func (h *Handler) newFitResult(req contract.FitRequest, q url.Values, fit contra
 		res.ShelfByVehicle = newStockView("On the shelf with no number, for this vehicle", 3, fit.ShelfByVehicle, name, "")
 	case fitVehicles:
 		key := req.From.Fitment
-		res.Heading = "Vehicles of " + key.Type + " " + key.Number
+		res.Heading = "Vehicles of " + keyText(key)
 		if key.Side != "" {
 			res.Heading += ", " + key.Side
 		}
@@ -788,6 +836,9 @@ func (h *Handler) newFitResult(req contract.FitRequest, q url.Values, fit contra
 				}
 				res.Reached += "."
 			}
+		}
+		for _, f := range fit.Fitments {
+			res.Fitments = append(res.Fitments, newFitmentView(f, fitmentHref(f)))
 		}
 		for _, fv := range fit.Vehicles {
 			res.Vehicles = append(res.Vehicles, fitVehicleRow{
@@ -917,6 +968,19 @@ func subjectText(req contract.FitRequest, fit contract.Fit, cat []contract.Catal
 		s += ", " + strconv.Itoa(int(year.V))
 	}
 	return s
+}
+
+// keyText is a fitment key in words: "mirror MR-1001", or, naming an
+// entry it is filed under, "MR-1001 filed under MIR".
+func keyText(k *contract.FitmentKey) string {
+	if k.FiledUnder == nil {
+		return k.Type + " " + k.Number
+	}
+	vs := make([]string, 0, len(k.FiledUnder))
+	for _, f := range slices.Sorted(maps.Keys(k.FiledUnder)) {
+		vs = append(vs, k.FiledUnder[f])
+	}
+	return k.Number + " filed under " + strings.Join(vs, " ")
 }
 
 // partText is the part type asked for in words: "part-types mirror",
@@ -1137,12 +1201,14 @@ func statusText(kind string, fit contract.Fit, req contract.FitRequest, subject 
 		return noCatalogText
 	case contract.FitUnknown:
 		if kind == fitVehicles {
-			return catalog + " has no fitment and no retired number " + req.From.Fitment.Type + " " + req.From.Fitment.Number + "."
+			return catalog + " has no fitment and no retired number " + keyText(req.From.Fitment) + "."
 		}
 		if req.Part != nil {
 			return "Nothing loaded here knows the vehicle or the part type asked for: a VIN that decodes to no vPIC make or model, or an entry or spine entry its vocabulary or spine lacks."
 		}
 		return "Nothing loaded here knows the vehicle asked for: a VIN that decodes to no vPIC make or model, or an entry or spine entry its vocabulary or spine lacks."
+	case contract.FitAmbiguous:
+		return keyText(req.From.Fitment) + " is " + countText(len(fit.Fitments), "fitment", "fitments") + ": pick one, or ask again with a side."
 	case contract.FitNoVehicle:
 		return subject + " reaches none of " + catalog + "'s vehicles."
 	case contract.FitNoFitment:

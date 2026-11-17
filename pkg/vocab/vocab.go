@@ -109,12 +109,14 @@ type File struct {
 	Fields  []string
 	Spine   string
 
-	// Vehicles and Release are a catalog's: the vehicle vocabulary its
-	// applications and redirects name, or Reserved (vpic) for vPIC's makes
-	// and models and extensions, and its publisher's release, "" when it
-	// says none.
-	Vehicles string
-	Release  string
+	// Vehicles, Release and FiledUnder are a catalog's: the vehicle
+	// vocabulary its applications and redirects name, or Reserved (vpic)
+	// for vPIC's makes and models and extensions; its publisher's release,
+	// "" when it says none; and the part vocabulary whose entries its
+	// fitments are filed under (ADR 0024), "" when it names none.
+	Vehicles   string
+	Release    string
+	FiledUnder string
 
 	// Holds (its header's source), AsOf and StockCatalog are a stock
 	// file's: shelf or yard, the time its rows are as of, and a shelf's

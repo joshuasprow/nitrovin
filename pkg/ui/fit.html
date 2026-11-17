@@ -36,7 +36,9 @@ examples to try. */}}
 {{template "fit-field" (.Field "from.make" "fit-make" "vPIC make id" "" .Make)}}
 {{template "fit-field" (.Field "from.model" "fit-model" "vPIC model id" "" .Model)}}
 {{if .ShowExt}}{{template "fit-field" (.Field "from.ext" "fit-ext" "Extension" "(ext:<set>/<id>)" .Ext)}}{{end}}
-{{else}}{{template "fit-field" (.Field "from.fitment.type" "fit-fitment-type" "Part type" "(an entry of the catalog's part spine)" .FitmentType)}}
+{{else}}{{$c := .}}{{template "fit-field" (.Field "from.fitment.type" "fit-fitment-type" "Part type" .FitmentTypeHint .FitmentType)}}
+{{range .Filed}}{{template "fit-field" ($c.Field (print "from.fitment.filed_under." .Name) (print "fit-filed-" .Name) (print $c.FiledUnder ": " .Name) "(or this instead of the part type)" .Value)}}
+{{end}}
 {{template "fit-field" (.Field "from.fitment.number" "fit-fitment-number" "Number" "" .FitmentNumber)}}
 {{template "fit-side" (.SideField "from.fitment.side" "fit-fitment-side" "Its side" .FitmentSide)}}
 {{range .Stock}}<input type="hidden" name="stock" value="{{.}}">
@@ -147,10 +149,14 @@ and its stock; then the shelf's rows with no number for the vehicle. */}}
 {{- end}}
 
 {{/* fit-vehicles are a fitment's vehicles, each a link to its part types,
-and the fitment's stock, paged with them. */}}
+and the fitment's stock, paged with them; or the fitments an ambiguous
+filed-under key reached, each a link to its vehicles. */}}
 {{define "fit-vehicles" -}}
 {{with .Fitment}}<p><strong>{{.Type}} {{.Label}}</strong>{{with .Note}}: {{.}}{{end}}</p>{{end}}
 {{with .Reached}}<p>{{.}}</p>{{end}}
+{{if .Fitments}}<ul>
+{{range .Fitments}}<li><span class="hint">{{.Type}}</span> <a href="{{.Href}}">{{.Label}}</a>{{with .Note}}: {{.}}{{end}}</li>
+{{end}}</ul>{{end}}
 {{if .Vehicles}}<div class="wide" tabindex="0" role="group" aria-label="The fitment's applications"><table class="fit">
 <caption class="visually-hidden">The fitment's applications</caption>
 <thead><tr><th scope="col">Vehicle</th><th scope="col">Years</th><th scope="col">Options</th><th scope="col">Named</th></tr></thead>

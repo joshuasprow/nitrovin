@@ -38,6 +38,12 @@ func TestParseFitRequest(t *testing.T) {
 			FitRequest{From: FitFrom{Fitment: &FitmentKey{Type: "brake-rotor-front", Number: "BR-1999"}}, To: []string{"yard"}, Side: "both"}},
 		{`{"from":{"fitment":{"type":"mirror","number":"MR-1001","side":"right"}},"model_year":2010}`,
 			FitRequest{From: FitFrom{Fitment: &FitmentKey{Type: "mirror", Number: "MR-1001", Side: "right"}}, ModelYear: Value[int32](2010)}},
+		// A filed-under key: an entry instead of a type, any side unless
+		// one is given (ADR 0024).
+		{`{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-1001"}}}`,
+			FitRequest{From: FitFrom{Fitment: &FitmentKey{FiledUnder: map[string]string{"code": "MIR"}, Number: "MR-1001"}}}},
+		{`{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-1001","side":"left"}},"to":["yard"]}`,
+			FitRequest{From: FitFrom{Fitment: &FitmentKey{FiledUnder: map[string]string{"code": "MIR"}, Number: "MR-1001", Side: "left"}}, To: []string{"yard"}}},
 	}
 	fitRequest := schemaDef(t, "FitRequest")
 	for _, c := range accepted {
@@ -80,6 +86,13 @@ func TestParseFitRequest(t *testing.T) {
 		{`{"from":{"fitment":{"type":"mirror","number":"MR-1001"}},"related":true}`, InvalidRequest, "/related", false},
 		{`{"from":{"make":476},"side":"front"}`, InvalidRequest, "/side", false},
 		{`{"from":{"make":476},"side":""}`, InvalidRequest, "/side", false},
+		// A fitment key is a type or a filed-under entry, with a number.
+		{`{"from":{"fitment":{"type":"mirror","filed_under":{"code":"MIR"},"number":"MR-1001"}}}`, InvalidRequest, "/from/fitment/filed_under", false},
+		{`{"from":{"fitment":{"filed_under":{"code":"MIR"}}}}`, InvalidRequest, "/from/fitment/number", false},
+		{`{"from":{"fitment":{"filed_under":"MIR","number":"MR-1001"}}}`, InvalidRequest, "/from/fitment/filed_under", false},
+		{`{"from":{"fitment":{"filed_under":{},"number":"MR-1001"}}}`, InvalidRequest, "/from/fitment/filed_under", false},
+		{`{"from":{"fitment":{"filed_under":{"code":1},"number":"MR-1001"}}}`, InvalidRequest, "/from/fitment/filed_under/code", false},
+		{`{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-1001"}},"related":true}`, InvalidRequest, "/related", false},
 		// The request's shape.
 		{`{"from":{"make":476},"part":{}}`, InvalidRequest, "/part", false},
 		{`{"from":{"make":476},"part":{"spine":"part-types"}}`, InvalidRequest, "/part/id", false},
@@ -121,6 +134,9 @@ func TestFitRequestValidate(t *testing.T) {
 		{FitRequest{From: FitFrom{VIN: "x", Fitment: key}}, "/from"},
 		{FitRequest{From: FitFrom{SpineRef: SpineRef{Spine: "part-types", ID: "mirror"}}}, "/from"},
 		{FitRequest{From: FitFrom{Fitment: &FitmentKey{Type: "mirror"}}}, "/from/fitment/number"},
+		{FitRequest{From: FitFrom{Fitment: &FitmentKey{Type: "mirror", FiledUnder: map[string]string{"code": "MIR"}, Number: "MR-1001"}}}, "/from/fitment/filed_under"},
+		{FitRequest{From: FitFrom{Fitment: &FitmentKey{FiledUnder: map[string]string{}, Number: "MR-1001"}}}, "/from/fitment/filed_under"},
+		{FitRequest{From: FitFrom{Fitment: &FitmentKey{Number: "MR-1001"}}}, "/from/fitment/type"},
 		{FitRequest{From: FitFrom{Fitment: key}, Part: &FitPart{Spine: "part-types", ID: "mirror"}}, "/part"},
 		{FitRequest{From: FitFrom{Fitment: key}, Related: true}, "/related"},
 		{FitRequest{From: FitFrom{VIN: "x"}, Part: &FitPart{}}, "/part"},
@@ -134,6 +150,9 @@ func TestFitRequestValidate(t *testing.T) {
 		{FitRequest{From: FitFrom{Fitment: key}, Stock: []string{"shelf"}, Location: []string{""}}, "/location/0"},
 	} {
 		problemOf(t, c.r.Validate(), InvalidRequest, c.pointer)
+	}
+	if err := (FitRequest{From: FitFrom{Fitment: &FitmentKey{FiledUnder: map[string]string{"code": "MIR"}, Number: "MR-1001"}}}).Validate(); err != nil {
+		t.Errorf("a filed-under key: %v", err)
 	}
 	if err := (FitRequest{From: FitFrom{Fitment: key}, Side: "left"}).Validate(); err != nil {
 		t.Errorf("a fitment and a side: %v", err)
@@ -187,6 +206,10 @@ func TestParseFitQuery(t *testing.T) {
 			`{"from":{"fitment":{"type":"brake-rotor-front","number":"BR-1999"}},"to":["yard"]}`},
 		{"from.fitment.type=mirror&from.fitment.number=MR-1001&from.fitment.side=left",
 			`{"from":{"fitment":{"type":"mirror","number":"MR-1001","side":"left"}}}`},
+		{"from.fitment.filed_under.code=MIR&from.fitment.number=MR-1001",
+			`{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-1001"}}}`},
+		{"from.fitment.filed_under.code=MIR&from.fitment.number=MR-1001&from.fitment.side=right&to=yard",
+			`{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-1001","side":"right"}},"to":["yard"]}`},
 		// Refused alike.
 		{"", `{}`},
 		{"from.fitment.type=mirror", `{"from":{"fitment":{"type":"mirror"}}}`},
@@ -195,6 +218,9 @@ func TestParseFitQuery(t *testing.T) {
 		{"from.fitment.type=mirror&from.fitment.number=1&related=true", `{"from":{"fitment":{"type":"mirror","number":"1"}},"related":true}`},
 		{"from.fitment.type=mirror&from.fitment.number=1&from.make=476", `{"from":{"fitment":{"type":"mirror","number":"1"},"make":476}}`},
 		{"from.make=476&related=yes", `{"from":{"make":476},"related":"yes"}`},
+		{"from.fitment.filed_under.code=MIR&from.fitment.type=mirror&from.fitment.number=1",
+			`{"from":{"fitment":{"filed_under":{"code":"MIR"},"type":"mirror","number":"1"}}}`},
+		{"from.fitment.number=1", `{"from":{"fitment":{"number":"1"}}}`},
 		{"from.make=476&side=front", `{"from":{"make":476},"side":"front"}`},
 		{"from.make=476&limit=0", `{"from":{"make":476},"limit":0}`},
 		{"from.make=476&part.spine=part-types", `{"from":{"make":476},"part":{"spine":"part-types"}}`},
@@ -218,6 +244,7 @@ func TestParseFitQuery(t *testing.T) {
 		{"from.make=476&part.kind=x", "/part/kind"},
 		{"from.make=476&vin=1D7RV1GT5AS123456", "/vin"},
 		{"from.spine=part-types&from.id=mirror", "/from/id"},
+		{"from.fitment.filed_under.code=A&from.fitment.filed_under.code=B&from.fitment.number=1", "/from/fitment/filed_under/code"},
 	} {
 		q, err := url.ParseQuery(c.query)
 		if err != nil {
@@ -253,6 +280,13 @@ func TestFitJSON(t *testing.T) {
 				Vehicle: CatalogVehicle{Entry: map[string]string{"make": "Dodge"}}, Options: "4WD", Qualifiers: map[string][]QualifierValue{"15": {{Attribute: 2}}},
 			}}},
 			"FitmentLine", `{"fitment":{"type":"mirror","number":"MR-1001","side":"left"},"applications":[{"vehicle":{"make":"Dodge"},"options":"4WD","qualifiers":{"15":[2]}}]}`,
+		},
+		// A catalog that names a filed-under vocabulary lists a fitment's
+		// entries, none an empty list (ADR 0024).
+		{Fitment{Type: "engine", Number: "EN-57", FiledUnder: []map[string]string{}}, "Fitment", `{"type":"engine","number":"EN-57","filed_under":[]}`},
+		{
+			FitmentLine{Fitment: FitmentKey{Type: "engine", Number: "EN-57"}, FiledUnder: []map[string]string{{"code": "ENG"}}, Applications: []LineApplication{{Vehicle: CatalogVehicle{Model: 1938}}}},
+			"FitmentLine", `{"fitment":{"type":"engine","number":"EN-57"},"filed_under":[{"code":"ENG"}],"applications":[{"vehicle":{"model":1938},"options":""}]}`,
 		},
 	} {
 		b, err := json.Marshal(c.v)

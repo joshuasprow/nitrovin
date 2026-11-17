@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"cmp"
 	"hash/maphash"
+	"maps"
 	"math"
 	"slices"
 	"sort"
@@ -82,8 +83,47 @@ type Fitment struct {
 	Line int
 	Key  FitmentKey
 	// Note is passed through, never interpreted; "" when absent.
-	Note         string
+	Note string
+	// FiledUnder are the entries of the catalog's filed-under vocabulary
+	// the fitment is filed under (ADR 0024), each once, in byte order of
+	// their fields; nil when none. An attribute, never the key.
+	FiledUnder   []*Filed
 	Applications []Application
+}
+
+// Filed is an entry of a catalog's filed-under part vocabulary
+// (ADR 0024), by its fields, as a fitment's filed_under names it. Entries
+// equal after Normalize are one entry, shared by every fitment filed
+// under it.
+type Filed struct {
+	// Entry is the entry's fields by name, as the file first writes them.
+	Entry map[string]string
+
+	key   string // identity: entryKey's
+	order string // its fields as written, in name order: compareFiled's
+	id    int32  // index in the catalog's entries
+}
+
+// entryKey is the identity of the vocabulary entry with fields entry:
+// its fields in name order, each value normalized (appendVehicleKey's).
+func entryKey(entry map[string]string) string {
+	return string(appendVehicleKey(nil, &Vehicle{Entry: entry}))
+}
+
+// newFiled is the entry with fields entry, whose entryKey is key.
+func newFiled(entry map[string]string, key string) *Filed {
+	var b []byte
+	for _, name := range slices.Sorted(maps.Keys(entry)) {
+		b = append(append(append(append(b, name...), 0), entry[name]...), 0)
+	}
+	return &Filed{Entry: entry, key: key, order: string(b)}
+}
+
+// compareFiled orders entries by their fields as written, field by field
+// in name order, each value in byte order: the order a fitment's are kept
+// and answered in.
+func compareFiled(a, b *Filed) int {
+	return cmp.Or(strings.Compare(a.order, b.order), strings.Compare(a.key, b.key))
 }
 
 // Application is one vehicle and model-year range a fitment fits, with the
@@ -178,7 +218,7 @@ type Retired struct {
 }
 
 // catalogHeader reads a catalog header's own fields.
-func (f *File) catalogHeader(spine, vehicles, release []byte) error {
+func (f *File) catalogHeader(spine, vehicles, release, filed []byte) error {
 	var err error
 	if f.Spine, err = nameAt(spine, "/spine"); err != nil {
 		return err
@@ -193,15 +233,20 @@ func (f *File) catalogHeader(spine, vehicles, release []byte) error {
 			return err
 		}
 	}
+	if filed != nil {
+		if f.FiledUnder, err = nameAt(filed, "/filed_under"); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
 // catalogLineNames are a catalog line's fields: the three kinds first.
-var catalogLineNames = []string{"fitment", "redirect", "retired", "note", "applications", "to"}
+var catalogLineNames = []string{"fitment", "redirect", "retired", "note", "applications", "to", "filed_under"}
 
 // catalogLineFields are the indexes in catalogLineNames each kind of line
 // takes.
-var catalogLineFields = [3][]int{{0, 3, 4}, {1}, {2, 3, 5}}
+var catalogLineFields = [3][]int{{0, 3, 4, 6}, {1}, {2, 3, 5}}
 
 // The fields of a catalog line's objects.
 var (
@@ -214,15 +259,15 @@ var (
 // catalogReader is a reader's state for a catalog's lines. It interns what
 // lines repeat: vehicles, option text, qualifiers and years.
 type catalogReader struct {
-	line [6][]byte // catalogLineNames
+	line [7][]byte // catalogLineNames
 	key  [3][]byte // keyNames
 	app  [5][]byte // applicationNames
 	red  [6][]byte // redirectNames
 	vpic [3][]byte // vpicVehicleNames
 	apps [][]byte
 
-	pairs []pair // a vehicle's fields
-	buf   []byte // a vehicle's key
+	pairs []pair // a vehicle's or entry's fields
+	buf   []byte // a vehicle's or entry's key
 
 	// appKeys holds a fitment's applications' keys, each ending at its
 	// appEnds; seen finds a repeated one by hash.
@@ -236,6 +281,13 @@ type catalogReader struct {
 	qualifiers map[string][]Qualifier
 	yearOf     [yearSpan]*int
 	appS       slab[Application]
+
+	// filed interns the entries fitments are filed under; entries and
+	// order are a fitment's filed_under as read.
+	filed   map[string]*Filed
+	entries [][]byte
+	order   []int
+	filedS  slab[*Filed]
 }
 
 // pair is one member of a JSON object.
@@ -350,7 +402,59 @@ func (r *reader) fitment(n int, v [][]byte) (Fitment, error) {
 			return Fitment{}, err
 		}
 	}
+	if v[6] != nil {
+		if r.f.FiledUnder == "" {
+			return Fitment{}, errAt("/filed_under", "the catalog's header names no filed_under vocabulary")
+		}
+		if fit.FiledUnder, err = r.filedUnder(v[6]); err != nil {
+			return Fitment{}, under("/filed_under", err)
+		}
+	}
 	return fit, nil
+}
+
+// filedUnder reads a fitment's filed_under: its entries, each shared with
+// every earlier fitment of the reader's filed under it, each once, in byte
+// order of their fields. Its error's pointer is into the array.
+func (r *reader) filedUnder(raw []byte) ([]*Filed, error) {
+	cr := &r.catalog
+	var ok bool
+	if cr.entries, ok = items(raw, cr.entries[:0]); !ok {
+		return nil, errAt("", "must be an array")
+	}
+	if len(cr.entries) == 0 {
+		return nil, nil
+	}
+	out := cr.filedS.take(len(cr.entries))
+	for i, e := range cr.entries {
+		if err := cr.entryFields(e, "names no field: an entry of vocabulary "+strconv.Quote(r.f.FiledUnder)+", by its fields"); err != nil {
+			return nil, under("/"+strconv.Itoa(i), err)
+		}
+		fd, ok := cr.filed[string(cr.buf)]
+		if !ok {
+			fd = newFiled(cr.entryMap(), string(cr.buf))
+			if cr.filed == nil {
+				cr.filed = map[string]*Filed{}
+			}
+			cr.filed[fd.key] = fd
+		}
+		out[i] = fd
+	}
+	if len(out) == 1 {
+		return out, nil
+	}
+	cr.order = cr.order[:0]
+	for i := range out {
+		cr.order = append(cr.order, i)
+	}
+	slices.SortFunc(cr.order, func(a, b int) int { return cmp.Or(strings.Compare(out[a].key, out[b].key), cmp.Compare(a, b)) })
+	for k := 1; k < len(cr.order); k++ {
+		if first, i := cr.order[k-1], cr.order[k]; out[first] == out[i] {
+			return nil, errAt("/"+strconv.Itoa(i), "duplicate entry: /filed_under/%d is the same entry", first)
+		}
+	}
+	slices.SortFunc(out, compareFiled)
+	return out, nil
 }
 
 // fitmentKey reads a fitment key: type, number and an optional side.
@@ -531,65 +635,80 @@ func (r *reader) vehicle(raw []byte) (*Vehicle, error) {
 			return nil, err
 		}
 		cr.buf = appendTargetKey(cr.buf[:0], t)
-	} else {
-		cr.pairs = cr.pairs[:0]
-		if !eachMember(raw, func(key, value []byte) {
-			cr.pairs = append(cr.pairs, pair{key, value})
-		}) {
-			return nil, errAt("", "must be an object")
-		}
-		if len(cr.pairs) == 0 {
-			return nil, errAt("", "names no field: a vehicle is an entry of vocabulary %q, by its fields", r.f.Vehicles)
-		}
-		// Each name and value as its text, any escape resolved.
-		for i := range cr.pairs {
-			p := &cr.pairs[i]
-			if s, ok := plainString(p.name); ok {
-				p.name = s
-			} else {
-				s, _ := str(p.name)
-				p.name = []byte(s)
-			}
-			if s, ok := plainString(p.value); ok {
-				p.value = s
-				continue
-			}
-			s, ok := str(p.value)
-			if !ok {
-				return nil, errAt("/"+pointerToken(string(p.name)), "must be a string")
-			}
-			p.value = []byte(s)
-		}
-		// As encoding/json reads them into a map: the last of a repeated
-		// name.
-		slices.SortStableFunc(cr.pairs, func(a, b pair) int { return bytes.Compare(a.name, b.name) })
-		kept := cr.pairs[:0]
-		for i, p := range cr.pairs {
-			if i+1 == len(cr.pairs) || !bytes.Equal(cr.pairs[i+1].name, p.name) {
-				kept = append(kept, p)
-			}
-		}
-		cr.pairs = kept
-		cr.buf = cr.buf[:0]
-		for _, p := range cr.pairs {
-			cr.buf = appendField(cr.buf, p.name, p.value)
-		}
+	} else if err := cr.entryFields(raw, "names no field: a vehicle is an entry of vocabulary "+strconv.Quote(r.f.Vehicles)+", by its fields"); err != nil {
+		return nil, err
 	}
 	if v, ok := cr.vehicles[string(cr.buf)]; ok {
 		return v, nil
 	}
 	v := &Vehicle{Target: t, key: string(cr.buf)}
 	if r.f.Vehicles != Reserved {
-		v.Entry = make(map[string]string, len(cr.pairs))
-		for _, p := range cr.pairs {
-			v.Entry[string(p.name)] = string(p.value)
-		}
+		v.Entry = cr.entryMap()
 	}
 	if cr.vehicles == nil {
 		cr.vehicles = map[string]*Vehicle{}
 	}
 	cr.vehicles[v.key] = v
 	return v, nil
+}
+
+// entryFields reads a vocabulary entry by its fields, an object of
+// strings, into pairs, each name and value as its text, and its key,
+// appendVehicleKey's, into buf. none is what an object of no field is
+// told. Its error's pointer is into the object.
+func (cr *catalogReader) entryFields(raw []byte, none string) error {
+	cr.pairs = cr.pairs[:0]
+	if !eachMember(raw, func(key, value []byte) {
+		cr.pairs = append(cr.pairs, pair{key, value})
+	}) {
+		return errAt("", "must be an object")
+	}
+	if len(cr.pairs) == 0 {
+		return errAt("", "%s", none)
+	}
+	// Each name and value as its text, any escape resolved.
+	for i := range cr.pairs {
+		p := &cr.pairs[i]
+		if s, ok := plainString(p.name); ok {
+			p.name = s
+		} else {
+			s, _ := str(p.name)
+			p.name = []byte(s)
+		}
+		if s, ok := plainString(p.value); ok {
+			p.value = s
+			continue
+		}
+		s, ok := str(p.value)
+		if !ok {
+			return errAt("/"+pointerToken(string(p.name)), "must be a string")
+		}
+		p.value = []byte(s)
+	}
+	// As encoding/json reads them into a map: the last of a repeated
+	// name.
+	slices.SortStableFunc(cr.pairs, func(a, b pair) int { return bytes.Compare(a.name, b.name) })
+	kept := cr.pairs[:0]
+	for i, p := range cr.pairs {
+		if i+1 == len(cr.pairs) || !bytes.Equal(cr.pairs[i+1].name, p.name) {
+			kept = append(kept, p)
+		}
+	}
+	cr.pairs = kept
+	cr.buf = cr.buf[:0]
+	for _, p := range cr.pairs {
+		cr.buf = appendField(cr.buf, p.name, p.value)
+	}
+	return nil
+}
+
+// entryMap is the entry entryFields read, as a map.
+func (cr *catalogReader) entryMap() map[string]string {
+	m := make(map[string]string, len(cr.pairs))
+	for _, p := range cr.pairs {
+		m[string(p.name)] = string(p.value)
+	}
+	return m
 }
 
 // redirect reads a redirect line's redirect.
@@ -712,6 +831,14 @@ type catalogIndex struct {
 	// catalog names, in the order of their first line.
 	vehicles    map[string]int32
 	vehicleList []*Vehicle
+	// filed finds an entry fitments are filed under by its key; filedList
+	// is every such entry, in the order of their first line; filings
+	// counts (entry, fitment) pairs. byFiled finds per entry and number
+	// the ranks of the fitments filed under it, ascending.
+	filed     map[string]int32
+	filedList []*Filed
+	filings   int
+	byFiled   map[filedNumber][]int32
 	// order is Fitments' indexes ordered by their keys, a fitment's rank
 	// its place here.
 	order []int32
@@ -780,7 +907,7 @@ func (f *File) indexCatalog(chunks []*chunk) Faults {
 // numbered in the order of the first line naming each.
 func (f *File) indexLines(read bool) Faults {
 	var faults Faults
-	x := &catalogIndex{vehicles: map[string]int32{}}
+	x := &catalogIndex{vehicles: map[string]int32{}, filed: map[string]int32{}}
 	f.catalog = x
 
 	// One Vehicle per vehicle, across the readers that each interned
@@ -812,6 +939,21 @@ func (f *File) indexLines(read bool) Faults {
 			a.Vehicle = canon(a.Vehicle)
 		}
 		x.applications += len(fit.Applications)
+		// One Filed per entry, numbered in the order of the first line
+		// naming each, spelled as that line spells it: a fitment's are
+		// sorted again, as a spelling from another chunk sorts otherwise.
+		for j, e := range fit.FiledUnder {
+			id, ok := x.filed[e.key]
+			if !ok {
+				id = int32(len(x.filedList))
+				e.id = id
+				x.filed[e.key] = id
+				x.filedList = append(x.filedList, e)
+			}
+			fit.FiledUnder[j] = x.filedList[id]
+		}
+		slices.SortFunc(fit.FiledUnder, compareFiled)
+		x.filings += len(fit.FiledUnder)
 	}
 	for ; ri < len(f.Redirects); ri++ {
 		f.Redirects[ri].Vehicle = canon(f.Redirects[ri].Vehicle)
@@ -828,6 +970,14 @@ func (f *File) indexLines(read bool) Faults {
 		prev, fit := &f.Fitments[x.order[k-1]], &f.Fitments[x.order[k]]
 		if prev.Key == fit.Key {
 			faults = append(faults, duplicateKey(f.Path, fit.Line, prev.Line))
+		}
+	}
+	x.byFiled = map[filedNumber][]int32{}
+	for rank, i := range x.order {
+		fit := &f.Fitments[i]
+		for _, e := range fit.FiledUnder {
+			k := filedNumber{e.id, fit.Key.Number}
+			x.byFiled[k] = append(x.byFiled[k], int32(rank))
 		}
 	}
 
@@ -1029,7 +1179,7 @@ func (c *Catalog) Matching(partType string, vehicles []Vehicle, year *int, side 
 func matching(cs []Candidate) []Candidate {
 	for i := range cs {
 		cand := &cs[i]
-		fit := &Fitment{Line: cand.Fitment.Line, Key: cand.Fitment.Key, Note: cand.Fitment.Note, Applications: make([]Application, len(cand.Applications))}
+		fit := &Fitment{Line: cand.Fitment.Line, Key: cand.Fitment.Key, Note: cand.Fitment.Note, FiledUnder: cand.Fitment.FiledUnder, Applications: make([]Application, len(cand.Applications))}
 		for j, a := range cand.Applications {
 			fit.Applications[j] = *a
 			cand.Applications[j] = &fit.Applications[j]
@@ -1247,6 +1397,35 @@ func (c *Catalog) Fitments(partType string, after *FitmentKey, limit int) []*Fit
 	return out
 }
 
+// filedNumber is an entry's index in filedList and a number.
+type filedNumber struct {
+	entry  int32
+	number string
+}
+
+// ByFiled returns the fitments filed under the entry of the catalog's
+// filed-under vocabulary with fields entry, matched after Normalize, whose
+// number is number and whose side is *side (nil: any side), in key order
+// (ADR 0024). A number on two sides under one entry is two fitments. It
+// is none when the catalog names no filed-under vocabulary.
+func (c *Catalog) ByFiled(entry map[string]string, number string, side *Side) []*Fitment {
+	if cc := c.f.compiled; cc != nil {
+		return cc.byFiled(entry, number, side)
+	}
+	f, x := c.f, c.f.catalog
+	id, ok := x.filed[entryKey(entry)]
+	if !ok {
+		return nil
+	}
+	var out []*Fitment
+	for _, rank := range x.byFiled[filedNumber{id, number}] {
+		if fit := &f.Fitments[x.order[rank]]; side == nil || fit.Key.Side == *side {
+			out = append(out, fit)
+		}
+	}
+	return out
+}
+
 // CatalogInfo is what a catalog is: its header, and how many lines of
 // each kind and applications it holds.
 type CatalogInfo struct {
@@ -1254,12 +1433,16 @@ type CatalogInfo struct {
 	// Release and DataMonth are "" when the header gives none.
 	Release, DataMonth string
 	// Spine is the declared spine of its part types; Vehicles the vehicle
-	// vocabulary its vehicles are entries of, or vpic.
-	Spine, Vehicles string
+	// vocabulary its vehicles are entries of, or vpic; FiledUnder the part
+	// vocabulary whose entries its fitments are filed under, "" for none.
+	Spine, Vehicles, FiledUnder string
 	// Hash is the blake3 hash of the file's bytes: of a compiled catalog,
 	// of the JSON Lines file it was compiled from.
 	Hash                                       [32]byte
 	Fitments, Applications, Redirects, Retired int
+	// Filings counts (entry, fitment) pairs: each fitment's entries it is
+	// filed under (ADR 0024).
+	Filings int
 }
 
 // Info describes the catalog.
@@ -1270,8 +1453,9 @@ func (c *Catalog) Info() CatalogInfo {
 	f := c.f
 	return CatalogInfo{
 		Name: f.Name, Version: f.Version, Release: f.Release, DataMonth: f.DataMonth,
-		Spine: f.Spine, Vehicles: f.Vehicles, Hash: f.Hash,
+		Spine: f.Spine, Vehicles: f.Vehicles, FiledUnder: f.FiledUnder, Hash: f.Hash,
 		Fitments: len(f.Fitments), Applications: f.catalog.applications, Redirects: len(f.Redirects), Retired: len(f.Retired),
+		Filings: f.catalog.filings,
 	}
 }
 

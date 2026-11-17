@@ -50,8 +50,8 @@ func openCatalog(rec Record, r io.ReaderAt) *held {
 func catalogFile(h *held) contract.VocabularyFile {
 	f := h.file
 	ci := f.Catalog().Info()
-	v := contract.VocabularyFile{Name: h.name, Kind: string(vocab.KindCatalog), Version: f.Version, Release: ci.Release, Blake3: h.rec.Blake3, Path: f.Path,
-		CatalogCounts: &contract.CatalogCounts{Fitments: ci.Fitments, Applications: ci.Applications, Redirects: ci.Redirects, Retired: ci.Retired}}
+	v := contract.VocabularyFile{Name: h.name, Kind: string(vocab.KindCatalog), Version: f.Version, Release: ci.Release, FiledUnder: ci.FiledUnder, Blake3: h.rec.Blake3, Path: f.Path,
+		CatalogCounts: &contract.CatalogCounts{Fitments: ci.Fitments, Applications: ci.Applications, Redirects: ci.Redirects, Retired: ci.Retired, Filings: ci.Filings}}
 	if cc := f.Compiled(); cc != nil {
 		v.Compiled = &contract.CompiledCatalog{Format: cc.Format, SourceBlake3: hex.EncodeToString(cc.SourceHash[:]), Writer: cc.Writer, DriftMonth: cc.DriftMonth, SkippedDrift: []string{}}
 		for _, k := range cc.Skipped {

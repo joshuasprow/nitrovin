@@ -375,6 +375,8 @@
               "applications": { "type": "integer", "minimum": 0, "description": "A catalog's applications, over all its fitments; absent for every other kind." },
               "redirects": { "type": "integer", "minimum": 0, "description": "A catalog's redirects; absent for every other kind." },
               "retired": { "type": "integer", "minimum": 0, "description": "A catalog's retired numbers; absent for every other kind." },
+              "filed_under": { "type": "string", "minLength": 1, "description": "The part vocabulary a catalog names its fitments filed under (ADR 0024); absent when it names none, and for every other kind." },
+              "filings": { "type": "integer", "minimum": 0, "description": "A catalog's (entry, fitment) pairs: the entries each fitment is filed under, over all its fitments; 0 when it names no filed_under vocabulary. Absent for every other kind." },
               "compiled": {
                 "type": "object",
                 "description": "A compiled catalog's record of its compiling (ADR 0021); absent for a JSON Lines file. Its drift is the drift its compiling stored, but for its vehicle drift, measured at load against the vehicle vocabulary loaded.",
@@ -400,14 +402,14 @@
               "reason": { "type": "string", "minLength": 1, "description": "Why an unavailable connector is, naming no connection detail; absent otherwise." },
               "drift": {
                 "type": "array",
-                "description": "The file's drift against the data month and the files loaded with it, by kind, only the kinds it has, in the order make, model, qualifier, extension, model-years, vehicle, redirect, model-qualifier, orphan, personal-field; empty when it agrees. Drift is served, never refused. A catalog's drift is one finding per vehicle, vPIC id, qualifier value or model-year range, at the first line naming it, and one per redirect; a stock source's, one per orphan row and one per personal-looking field name, at the first row with it.",
+                "description": "The file's drift against the data month and the files loaded with it, by kind, only the kinds it has, in the order make, model, qualifier, extension, model-years, vehicle, redirect, model-qualifier, orphan, personal-field, filed-under, unfiled; empty when it agrees. Drift is served, never refused. A catalog's drift is one finding per vehicle, vPIC id, qualifier value or model-year range, at the first line naming it, one per redirect, one per filed-under entry at the first line naming it, and one finding at the first unfiled fitment; a stock source's, one per orphan row and one per personal-looking field name, at the first row with it.",
                 "items": {
                   "type": "object",
                   "required": ["kind", "count", "examples"],
                   "properties": {
                     "kind": {
-                      "enum": ["make", "model", "qualifier", "extension", "model-years", "vehicle", "redirect", "model-qualifier", "orphan", "personal-field"],
-                      "description": "make, model: a vPIC id the month lacks. qualifier: an element the month lacks, a value of the wrong type for it, or a value its decode never produces. extension: an extension named like a vPIC make, or a vPIC model under the same make. model-years: a mapping's, or a vpic catalog application's, first–last partly or wholly outside its vPIC model's model years. vehicle: a catalog's vehicle its vehicle vocabulary lacks, or lists without a mapping. redirect: a catalog's redirect whose target part type has no application for its vehicle and years. model-qualifier: a qualifier value, on a mapping to a vPIC model or a vpic catalog application, that the month decodes but the model never does (ADR 0015). orphan: a shelf row whose number its catalog lacks, current or retired. personal-field: a stock field name that looks personal (email, phone, name, address, license)."
+                      "enum": ["make", "model", "qualifier", "extension", "model-years", "vehicle", "redirect", "model-qualifier", "orphan", "personal-field", "filed-under", "unfiled"],
+                      "description": "make, model: a vPIC id the month lacks. qualifier: an element the month lacks, a value of the wrong type for it, or a value its decode never produces. extension: an extension named like a vPIC make, or a vPIC model under the same make. model-years: a mapping's, or a vpic catalog application's, first–last partly or wholly outside its vPIC model's model years. vehicle: a catalog's vehicle its vehicle vocabulary lacks, or lists without a mapping. redirect: a catalog's redirect whose target part type has no application for its vehicle and years. model-qualifier: a qualifier value, on a mapping to a vPIC model or a vpic catalog application, that the month decodes but the model never does (ADR 0015). orphan: a shelf row whose number its catalog lacks, current or retired. personal-field: a stock field name that looks personal (email, phone, name, address, license). filed-under: an entry a catalog's fitment is filed under that its filed_under vocabulary lacks, or lists without a mapping. unfiled: a fitment filed under no entry, in a catalog that names a filed_under vocabulary (ADR 0024)."
                     },
                     "count": { "type": "integer", "minimum": 1 },
                     "examples": {
@@ -434,9 +436,9 @@
             "allOf": [
               {
                 "if": { "properties": { "kind": { "const": "catalog" } } },
-                "then": { "required": ["fitments", "applications", "redirects", "retired"] },
+                "then": { "required": ["fitments", "applications", "redirects", "retired", "filings"] },
                 "else": {
-                  "not": { "anyOf": [{ "required": ["fitments"] }, { "required": ["applications"] }, { "required": ["redirects"] }, { "required": ["retired"] }, { "required": ["compiled"] }] }
+                  "not": { "anyOf": [{ "required": ["fitments"] }, { "required": ["applications"] }, { "required": ["redirects"] }, { "required": ["retired"] }, { "required": ["compiled"] }, { "required": ["filed_under"] }, { "required": ["filings"] }] }
                 }
               },
               {
@@ -845,7 +847,24 @@
             {
               "type": "object",
               "required": ["fitment"],
-              "properties": { "fitment": { "$ref": "#/$defs/FitmentKey" } },
+              "properties": {
+                "fitment": {
+                  "oneOf": [
+                    { "$ref": "#/$defs/FitmentKey" },
+                    {
+                      "type": "object",
+                      "description": "A fitment named by an entry of the catalog's filed_under vocabulary instead of its part type (ADR 0024): the entry, by exactly that vocabulary's fields, its number, and a side, absent for any side. Two fitments reached answer ambiguous; with no live fitment, the entry's part types and the number are looked up among retired numbers. Refused when the catalog names no filed_under vocabulary.",
+                      "required": ["filed_under", "number"],
+                      "properties": {
+                        "filed_under": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string" }, "description": "An entry of the catalog's filed_under vocabulary, by its fields." },
+                        "number": { "type": "string", "minLength": 1 },
+                        "side": { "enum": ["left", "right", "both"], "description": "Absent: any side." }
+                      },
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              },
               "additionalProperties": false
             }
           ]
@@ -869,7 +888,7 @@
             },
             { "$ref": "#/$defs/VocabularyEntryRef" }
           ],
-          "description": "The part type asked for: an entry of the catalog's part spine, or of a part vocabulary on that spine. Only beside a vehicle."
+          "description": "The part type asked for: an entry of the catalog's part spine, or of a part vocabulary on that spine. An entry of the catalog's filed_under vocabulary keeps the direct candidates filed under it; candidates reached through a redirect are not narrowed (ADR 0024). Only beside a vehicle."
         },
         "side": { "enum": ["left", "right", "both"], "description": "Keeps the fitments that can go on that side. Absent: every one." },
         "to": {
@@ -929,12 +948,12 @@
       "additionalProperties": false
     },
     "FitStatus": {
-      "enum": ["found", "unknown", "no-vehicle", "no-fitment", "no-catalog"],
-      "description": "What a fit found. found: the list has something. unknown: from or part names nothing loaded. no-vehicle: the vehicle reaches none of the catalog's vehicles. no-fitment: the catalog has the vehicle or the fitment, but nothing fits. no-catalog: no catalog is loaded. Nothing to fit is a status, never a refusal."
+      "enum": ["found", "ambiguous", "unknown", "no-vehicle", "no-fitment", "no-catalog"],
+      "description": "What a fit found. found: the list has something. ambiguous: a filed_under key reached two or more fitments, listed in fitments (ADR 0024). unknown: from or part names nothing loaded. no-vehicle: the vehicle reaches none of the catalog's vehicles. no-fitment: the catalog has the vehicle or the fitment, but nothing fits. no-catalog: no catalog is loaded. Nothing to fit is a status, never a refusal."
     },
     "Fit": {
       "type": "object",
-      "description": "The answer to a FitRequest (ADR 0018). Exactly one of part_types, candidates, vehicles and related is present, the one the request's inputs ask for, empty when nothing fits.",
+      "description": "The answer to a FitRequest (ADR 0018). Exactly one of part_types, candidates, vehicles and related is present, the one the request's inputs ask for, empty when nothing fits. With ambiguous, fitments lists what a fitment key reached, beside an empty vehicles.",
       "required": ["status", "total", "now", "data_month", "decoder_version"],
       "properties": {
         "status": { "$ref": "#/$defs/FitStatus" },
@@ -952,6 +971,7 @@
         "candidates": { "type": "array", "items": { "$ref": "#/$defs/FitCandidate" }, "description": "The fitments that may be the part for a vehicle." },
         "vehicles": { "type": "array", "items": { "$ref": "#/$defs/FitVehicle" }, "description": "A fitment's applications." },
         "related": { "type": "array", "items": { "$ref": "#/$defs/RelatedVehicle" }, "description": "The vehicles that share fitments with a vehicle." },
+        "fitments": { "type": "array", "items": { "$ref": "#/$defs/Fitment" }, "description": "With ambiguous, the fitments a filed_under key reached, in key order (ADR 0024): ask again with a side." },
         "shelf": { "$ref": "#/$defs/StockList", "description": "From a fitment key with stock shelf, the fitment's shelf rows, paged with vehicles: after and limit page every list of the answer together." },
         "yard": { "$ref": "#/$defs/StockList", "description": "From a fitment key with stock yard, the yard vehicles among its applications' vehicles and years, paged with vehicles." },
         "shelf_by_vehicle": { "$ref": "#/$defs/StockList", "description": "With part and stock shelf, the shelf rows with no number for the part type and the vehicle's exact vehicle and year (any year when none is known), paged with candidates: after and limit page both, and next stays while either has more." },
@@ -972,18 +992,20 @@
         { "required": ["vehicles"] },
         { "required": ["related"] }
       ],
+      "dependentRequired": { "fitments": ["vehicles"] },
       "additionalProperties": false
     },
     "FitCatalog": {
       "type": "object",
-      "description": "The catalog a fit answered from, and the files it names: its name is what list's of takes to page its fitment lines, spine the part spine a part names, vehicles its vehicle vocabulary.",
+      "description": "The catalog a fit answered from, and the files it names: its name is what list's of takes to page its fitment lines, spine the part spine a part names, vehicles its vehicle vocabulary, filed_under the part vocabulary its fitments are filed under.",
       "required": ["name", "version", "spine", "vehicles"],
       "properties": {
         "name": { "type": "string", "minLength": 1 },
         "version": { "type": "string", "minLength": 1 },
         "release": { "type": "string", "minLength": 1, "description": "The publisher's release; absent when the catalog gives none." },
         "spine": { "type": "string", "minLength": 1, "description": "The declared spine its part types come from: a part's spine." },
-        "vehicles": { "type": "string", "minLength": 1, "description": "The vehicle vocabulary its vehicles are entries of, or vpic." }
+        "vehicles": { "type": "string", "minLength": 1, "description": "The vehicle vocabulary its vehicles are entries of, or vpic." },
+        "filed_under": { "type": "string", "minLength": 1, "description": "The part vocabulary whose entries its fitments are filed under (ADR 0024); absent when it names none." }
       },
       "additionalProperties": false
     },
@@ -1029,15 +1051,21 @@
     },
     "Fitment": {
       "type": "object",
-      "description": "One part (ADR 0016): its key and the catalog's note.",
+      "description": "One part (ADR 0016): its key, the catalog's note, and the entries it is filed under.",
       "required": ["type", "number"],
       "properties": {
         "type": { "type": "string", "minLength": 1 },
         "number": { "type": "string", "minLength": 1 },
         "side": { "enum": ["left", "right", "both"] },
-        "note": { "type": "string" }
+        "note": { "type": "string" },
+        "filed_under": { "$ref": "#/$defs/FiledUnder" }
       },
       "additionalProperties": false
+    },
+    "FiledUnder": {
+      "type": "array",
+      "items": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string" } },
+      "description": "The entries of the catalog's filed_under vocabulary a fitment is filed under (ADR 0024), each by its fields as the file first writes it, sorted by their fields as written, field by field in name order, each value in byte order; empty when it is filed under none. Absent when the catalog names no filed_under vocabulary."
     },
     "FitReach": {
       "enum": ["direct", "redirect"],
@@ -1209,7 +1237,8 @@
       "properties": {
         "fitment": { "$ref": "#/$defs/FitmentKey" },
         "note": { "type": "string" },
-        "applications": { "type": "array", "items": { "$ref": "#/$defs/LineApplication" } }
+        "applications": { "type": "array", "items": { "$ref": "#/$defs/LineApplication" } },
+        "filed_under": { "$ref": "#/$defs/FiledUnder" }
       },
       "additionalProperties": false
     },

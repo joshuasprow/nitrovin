@@ -181,13 +181,14 @@ names the declared spine its part types come from and the vehicle
 vocabulary its vehicles are entries of, and both must be loaded beside
 it. A deployment loads at most one catalog.
 [`testdata/vocab/fitment/`](../testdata/vocab/fitment) holds one, with
-its spine (`part-types`) and its vehicle vocabulary (`catalog-models`).
+its spine (`part-types`), its vehicle vocabulary (`catalog-models`) and
+the part vocabulary its fitments are filed under (`part-codes`).
 `catalog.jsonl`:
 
 ```json
-{"format":1,"kind":"catalog","name":"parts-catalog","version":"2026.11","release":"7.02","data_month":"2026_10","spine":"part-types","vehicles":"catalog-models"}
-{"fitment":{"type":"mirror","number":"MR-1001","side":"left"},"note":"power, heated","applications":[{"vehicle":{"make":"Dodge","model":"Ram 1500"},"first":2009,"last":2012,"options":"w/o towing package"},{"vehicle":{"make":"Dodge","model":"Ram 1500"},"first":2009,"last":2012,"options":"4WD, w/ towing package","qualifiers":{"15":[2]}}]}
-{"fitment":{"type":"mirror","number":"MR-1001","side":"right"},"note":"power, heated","applications":[{"vehicle":{"make":"Dodge","model":"Ram 1500"},"first":2009,"last":2012,"options":"w/o towing package"}]}
+{"format":1,"kind":"catalog","name":"parts-catalog","version":"2026.11","release":"7.02","data_month":"2026_10","spine":"part-types","vehicles":"catalog-models","filed_under":"part-codes"}
+{"fitment":{"type":"mirror","number":"MR-1001","side":"left"},"note":"power, heated","filed_under":[{"code":"MIR"}],"applications":[{"vehicle":{"make":"Dodge","model":"Ram 1500"},"first":2009,"last":2012,"options":"w/o towing package"},{"vehicle":{"make":"Dodge","model":"Ram 1500"},"first":2009,"last":2012,"options":"4WD, w/ towing package","qualifiers":{"15":[2]}}]}
+{"fitment":{"type":"mirror","number":"MR-1001","side":"right"},"note":"power, heated","filed_under":[{"code":"MIR"}],"applications":[{"vehicle":{"make":"Dodge","model":"Ram 1500"},"first":2009,"last":2012,"options":"w/o towing package"}]}
 {"redirect":{"vehicle":{"make":"Chevrolet","model":"Silverado 1500"},"first":2007,"last":2013,"from":"brake-rotor-rear","to":"brake-rotor-front","options":"rear rotors are listed with the front"}}
 {"retired":{"type":"brake-rotor-front","number":"BR-1999"},"to":{"type":"brake-rotor-front","number":"BR-2001"},"note":"7.01 → 7.02"}
 ```
@@ -201,6 +202,20 @@ its spine (`part-types`) and its vehicle vocabulary (`catalog-models`).
   spine), the catalog's `number` and an optional `side` (`left`, `right`
   or `both`). One number on two sides is two fitments, as `MR-1001` is
   above. A `note` is passed through.
+- **Filed under**
+  ([ADR 0024](adr/0024-the-codes-a-fitment-is-filed-under.md)). The
+  header's optional `filed_under` names a part vocabulary on the catalog's
+  spine, loaded beside it: a system's own part codes. A fitment line's
+  `filed_under` lists the entries of it the fitment is filed under, each by
+  exactly the vocabulary's fields, as an application's `vehicle` is: the
+  union over its applications. They are an attribute, never part of the
+  key, so a part filed under three codes is still one fitment. The entries
+  are read in any order, matched after the same normalization as entries,
+  and kept sorted by their fields as written, field by field in name
+  order, each value in byte order (`"10"` before `"9"`, `"B"` before
+  `"a"`); each is spelled as the file first writes it, as vehicles are.
+  Redirects and retired numbers carry none. A catalog without
+  a header `filed_under` stays valid, and no line of it may have one.
 - **An application** is one vehicle and year range the fitment fits.
   `vehicle` is an entry of the vehicle vocabulary by exactly its fields,
   matched after the same normalization as entries, or for `vpic` one of
@@ -228,26 +243,36 @@ the vocabulary's, or an extension no loaded set defines; qualifiers on an
 application whose vehicle is an extension, which no decode lands on; a
 side other than `left`, `right` or `both`; a fitment key, an application
 within a fitment, or a retired number given twice; a retired number that
-is live or points at no fitment. Its drift, which is served: a vehicle the
+is live or points at no fitment. With `filed_under`, it is refused for: a
+header vocabulary that is not loaded, not a part vocabulary or on another
+spine; a line's `filed_under` when the header names none; an entry given
+twice on one fitment, or whose fields are not exactly the vocabulary's;
+an entry whose mapped part types do not include the fitment's part type.
+Its drift, which is served: a vehicle the
 vocabulary lacks or lists without a mapping (kind `vehicle`); a vPIC id
 the month lacks (`make`, `model`); for a `vpic` catalog, an application
 to a vPIC model in years outside the model's (`model-years`, ADR 0022); a
 qualifier the month's decode cannot satisfy (`qualifier`); a redirect
 whose `to` part type has no application for its vehicle in overlapping
-years (`redirect`). A catalog names each vehicle on many lines, so its
-drift is one finding per vehicle, vPIC id, qualifier value or model and
-year range, at the first application or redirect naming it, with
-`(and N more)` counting the other applications or redirects that do; and
-one per redirect.
+years (`redirect`); an entry a fitment is filed under that the
+`filed_under` vocabulary lacks or lists without a mapping
+(`filed-under`); a fitment filed under no entry, in a catalog that names
+a `filed_under` vocabulary (`unfiled`). A catalog names each vehicle on many lines, so its
+drift is one finding per vehicle, vPIC id, qualifier value, model and
+year range or filed-under entry, at the first application, redirect or
+fitment naming it, with
+`(and N more)` counting the others that do; one per redirect; and one at
+the first unfiled fitment, counting the rest.
 
-`/v1/info` lists a catalog with its `release` and its counts:
+`/v1/info` lists a catalog with its `release`, its `filed_under`
+vocabulary and its counts, `filings` its (entry, fitment) pairs:
 
 ```sh
 nitrovin --vocab testdata/vocab/fitment info | jq -c '.vocabularies[] | select(.kind == "catalog") | del(.path, .blake3)'
 ```
 
 ```json
-{"name":"parts-catalog","kind":"catalog","version":"2026.11","release":"7.02","drift":[],"fitments":5,"applications":7,"redirects":1,"retired":1}
+{"name":"parts-catalog","kind":"catalog","version":"2026.11","release":"7.02","filed_under":"part-codes","drift":[],"fitments":5,"applications":7,"redirects":1,"retired":1,"filings":6}
 ```
 
 Translate reads only vocabularies, extension sets and spines: a catalog
@@ -260,11 +285,18 @@ Nothing to fit is a status, `no-catalog` included. `list` with `of` the
 catalog's name pages its fitment lines, `where.type` keeping one part
 type. The synthetic catalog's `part-codes.jsonl` is a part vocabulary on
 its spine, whose `ROT` code files both rotors under one code, so a fit
-can name a part type in a parts system's words:
+can name a part type in a parts system's words. As the catalog's
+`filed_under` vocabulary, its entry as `part` also keeps only the direct
+candidates filed under it, and a fitment key may name the code in place
+of the part type, its absent `side` meaning any side; `MIR` with
+`MR-1001` reaches both mirrors, so it answers `ambiguous`, listing them
+in `fitments`, and the caller asks again with a side:
 
 ```sh
 nitrovin --vocab testdata/vocab --vocab testdata/vocab/fitment fit --part part-types:mirror --side left 1D7RV1GT5AS123456
 echo '{"from":{"model":1850},"model_year":2010,"part":{"vocabulary":"part-codes","entry":{"code":"ROT"}}}' |
+  nitrovin --vocab testdata/vocab --vocab testdata/vocab/fitment fit -
+echo '{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-1001"}}}' |
   nitrovin --vocab testdata/vocab --vocab testdata/vocab/fitment fit -
 ```
 
@@ -273,7 +305,8 @@ server's: while the server has none, a browser may compile one of its own
 (**In a browser**, below). In Go, a loaded
 catalog is a `fitment.Reader` ([`pkg/fitment`](../pkg/fitment)), the one
 interface every consumer reads it through (ADR 0017): `ByVehicle`,
-`ByNumber`, `Redirect`, `Fitments` (a page of fitments in key order) and
+`ByNumber`, `ByFiled` (by an entry, a number and a side, `nil` for any),
+`Redirect`, `Fitments` (a page of fitments in key order) and
 `Info`. Its vehicles are the catalog's own; `fitment.Vehicles` turns a
 translation to the catalog's vehicle vocabulary into them:
 
@@ -293,7 +326,8 @@ A catalog at a parts system's scale takes seconds and hundreds of MB to load
 as JSON Lines. `nitrovin vocab compile` checks it as `vocab check` does and
 writes it as a compiled catalog (ADR 0021): one indexed file that opens in
 milliseconds with a few MB, read in place, answering exactly as its source.
-It is compiled format 3 ([ADR 0023](adr/0023-fitment-in-the-browser.md)),
+It is compiled format 4 ([ADR 0024](adr/0024-the-codes-a-fitment-is-filed-under.md)),
+carrying each fitment's entries and an index on (entry, number), and
 clustered by vehicle: a vehicle's part types and candidates are two or
 three reads of the file, and its related vehicles one plus one for about
 each megabyte of the vehicles and years of the fitments of many
@@ -304,13 +338,13 @@ part types, not its lines (about 200 MB at the scale of a parts system). Compile
 that will serve it:
 
 ```sh
-nitrovin vocab compile -o catalog.compiled testdata/vocab/fitment   # the catalog, its spine and vehicles
+nitrovin vocab compile -o catalog.compiled testdata/vocab/fitment   # the catalog, its spine, vehicles and codes
 nitrovin --vocab testdata/vocab/fitment/part-types.jsonl --vocab testdata/vocab/fitment/catalog-models.jsonl \
-  --vocab catalog.compiled info | jq -c '.vocabularies[2].compiled'
+  --vocab testdata/vocab/fitment/part-codes.jsonl --vocab catalog.compiled info | jq -c '.vocabularies[3].compiled'
 ```
 
 ```json
-{"format":3,"source_blake3":"…","writer":"v…","drift_month":"2026_10","drift_month_differs":false,"links_differ":false,"skipped_drift":[]}
+{"format":4,"source_blake3":"…","writer":"v…","drift_month":"2026_10","drift_month_differs":false,"links_differ":false,"skipped_drift":[]}
 ```
 
 A fault refuses the compile, and nothing is written; drift is written to
@@ -320,9 +354,9 @@ compile`, `model-years` and `model-qualifier` from a compile in a browser,
 whose spine bundle carries no model years or model values. `--vocab`
 recognises the file by its magic (name it itself: a directory loads only
 its `*.jsonl`) and refuses a compiled format the release cannot read
-(format 1, from v0.3.5, is refused with a message to compile it again),
-and a spine or vehicle vocabulary that is not loaded or lacks a part type
-or vehicle it was compiled with.
+(format 1, from v0.3.5, and formats 2 and 3 are refused with a message to
+recompile), and a spine, vehicle vocabulary or `filed_under` vocabulary
+that is not loaded or lacks a part type, vehicle or entry it was compiled with.
 Loading it does not measure drift again in full: `/v1/info` shows the stored
 drift, the month it was measured against, and `drift_month_differs` when
 that is not the loaded month. Its `vehicle` drift alone is measured at load,
@@ -589,14 +623,15 @@ a JSON line on stdout and exits 1 on any, fault or drift, so CI can gate a
 vocabulary on the month it will run against. A drift line names its
 `kind`, so a tool that keeps findings can group them without reading
 `detail`: `make`, `model`, `qualifier`, `extension`, `model-years`,
-`vehicle`, `redirect`, `model-qualifier`, `orphan` or `personal-field`,
+`vehicle`, `redirect`, `model-qualifier`, `orphan`, `personal-field`,
+`filed-under` or `unfiled`,
 the kinds `/v1/info` counts. A fault has no `kind`.
 
 ```sh
 nitrovin vocab check testdata/vocab            # nothing printed, exit 0
 nitrovin vocab check testdata/vocab/drift      # seven drift lines, exit 1
 nitrovin vocab check testdata/vocab/fitment    # a catalog with its spine and vehicles: nothing, exit 0
-nitrovin vocab check testdata/vocab/fitment/catalog.jsonl   # alone: two faults, exit 1
+nitrovin vocab check testdata/vocab/fitment/catalog.jsonl   # alone: three faults, exit 1
 ```
 
 ```json

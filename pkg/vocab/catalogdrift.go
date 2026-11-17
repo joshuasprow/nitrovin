@@ -14,19 +14,22 @@ import (
 // redirect that has it, and counts the others as "(and N more)".
 
 // catalog measures d.f, a catalog whose vehicles are entries of vehicles,
-// nil when they are vpic: vehicles the vocabulary lacks or lists without
-// a mapping, vPIC ids the month lacks, applications to a vPIC model in
-// years outside the model's (ADR 0022), qualifiers its decode cannot
-// satisfy, and redirects whose target part type has no application for
-// the redirect's vehicle and years.
-func (d *drifts) catalog(vehicles *File) {
+// nil when they are vpic, and whose fitments are filed under entries of
+// filed, nil when it names none: vehicles the vocabulary lacks or lists
+// without a mapping, vPIC ids the month lacks, applications to a vPIC
+// model in years outside the model's (ADR 0022), qualifiers its decode
+// cannot satisfy, redirects whose target part type has no application for
+// the redirect's vehicle and years, entries filed lacks or lists without a
+// mapping, and fitments filed under none (ADR 0024).
+func (d *drifts) catalog(vehicles, filed *File) {
 	f, x := d.f, d.f.catalog
-	g := d.catalogDrift(vehicles)
+	g := d.catalogDrift(vehicles, filed)
 	for _, v := range x.vehicleList {
 		g.vehicle(v)
 	}
 	for i := range f.Fitments {
 		fit := &f.Fitments[i]
+		g.fitment(fit)
 		for j := range fit.Applications {
 			a := &fit.Applications[j]
 			var qs qualifierKey
@@ -53,7 +56,15 @@ func (d *drifts) catalog(vehicles *File) {
 type catalogDrift struct {
 	d        *drifts
 	vehicles *File // its vehicle vocabulary; nil when vpic
-	list     []*Vehicle
+	// filed is its filed-under vocabulary, nil when it names none or it
+	// is not loaded; entries are, by key, each entry fitments are filed
+	// under and its first naming, filedOrder their keys in the order first
+	// named; unfiled, the fitments filed under none.
+	filed      *File
+	entries    map[string]*filedUse
+	filedOrder []string
+	unfiled    use
+	list       []*Vehicle
 	// firsts are, by vehicle id, the first naming and how many name it;
 	// known, whether it is a vPIC model the month has.
 	firsts []use
@@ -102,8 +113,37 @@ type qualifierUse struct {
 	drifted
 }
 
-func (d *drifts) catalogDrift(vehicles *File) *catalogDrift {
-	return &catalogDrift{d: d, vehicles: vehicles, ranges: map[modelRange]*use{}, measured: map[qualifiersOf][]drifted{}, byDetail: map[string]*qualifierUse{}}
+type filedUse struct {
+	use
+	e *Filed
+}
+
+func (d *drifts) catalogDrift(vehicles, filed *File) *catalogDrift {
+	if !isFiledVocabulary(filed, d.f.Spine) {
+		filed = nil // a fault Link reports
+	}
+	return &catalogDrift{d: d, vehicles: vehicles, filed: filed, entries: map[string]*filedUse{},
+		ranges: map[modelRange]*use{}, measured: map[qualifiersOf][]drifted{}, byDetail: map[string]*qualifierUse{}}
+}
+
+// fitment sees fitment fit's line, before its applications: the entries
+// it is filed under, or that it is filed under none.
+func (g *catalogDrift) fitment(fit *Fitment) {
+	if g.d.f.FiledUnder == "" {
+		return
+	}
+	if len(fit.FiledUnder) == 0 {
+		g.unfiled.see(fit.Line, -1)
+	}
+	for _, e := range fit.FiledUnder {
+		u := g.entries[e.key]
+		if u == nil {
+			u = &filedUse{e: e}
+			g.entries[e.key] = u
+			g.filedOrder = append(g.filedOrder, e.key)
+		}
+		u.see(fit.Line, -1)
+	}
 }
 
 // vehicle sees vehicle v, numbered next, before any line naming it.
@@ -192,6 +232,15 @@ func (g *catalogDrift) report() {
 			d.add(u.line, DriftModel, "%s/vehicle/model: vPIC model %d is not in data month %s%s", u.ptr(), v.Model, d.month, u.more())
 		}
 	}
+	if g.filed != nil {
+		for _, k := range g.filedOrder {
+			u := g.entries[k]
+			d.filedEntry(u.e, &u.use, g.filed)
+		}
+	}
+	if g.unfiled.n > 0 {
+		d.addFile(g.unfiled.line, DriftUnfiled, "/filed_under: the fitment is filed under no entry of vocabulary %q%s", d.f.FiledUnder, g.unfiled.more())
+	}
 	for _, k := range g.order {
 		var first, last *int
 		if k.hasFirst {
@@ -236,27 +285,55 @@ func (d *drifts) vehicleEntry(v *Vehicle, u *use, vehicles *File) {
 	}
 }
 
+// filedEntry measures entry e, which u names first, against the catalog's
+// filed-under vocabulary filed: an entry it lacks, or lists without a
+// mapping. Like vehicleEntry, it depends on the vocabulary loaded, not the
+// month.
+func (d *drifts) filedEntry(e *Filed, u *use, filed *File) {
+	entry, ok := filed.Entry(e.Entry)
+	switch {
+	case !ok:
+		d.addFile(u.line, DriftFiledUnder, "/filed_under: vocabulary %q has no entry %s%s", filed.Name, entryText(e.Entry), u.more())
+	case len(entry.Mappings) == 0:
+		d.addFile(u.line, DriftFiledUnder, "/filed_under: vocabulary %q lists %s without a mapping, so it names no part type%s", filed.Name, entryText(e.Entry), u.more())
+	}
+}
+
 // compiled reports a compiled catalog's drift: the drift its compiling
 // stored, against its month, model-qualifier included (Drift keeps every
 // other kind, ModelDrift that one), but its vehicle drift measured again
 // against vehicles, the vehicle vocabulary loaded now (nil when its
-// vehicles are vpic). That takes one look per vehicle, not per application, and a
-// vocabulary loaded beside it may not be the one it was compiled with.
-// Findings come as Drift's for its source: in line order, a line's
-// vehicle drift first.
-func (d *drifts) compiled(c *compiled, vehicles *File) {
+// vehicles are vpic), and its entries' against filed, the filed-under
+// vocabulary loaded now (nil when it names none). That takes one look per
+// vehicle and entry, not per application or fitment, and a vocabulary
+// loaded beside it may not be the one it was compiled with. Findings come
+// as Drift's for its source: in line order, a line's vehicle drift first,
+// then its entries'.
+func (d *drifts) compiled(c *compiled, vehicles, filed *File) {
 	start := len(d.out)
 	if vehicles != nil {
 		for i, v := range c.vehicles {
 			d.vehicleEntry(v, &c.uses[i], vehicles)
 		}
 	}
+	if isFiledVocabulary(filed, c.info.Spine) {
+		for i, e := range c.filed {
+			d.filedEntry(e, &c.filedUses[i], filed)
+		}
+	}
 	for _, f := range c.meta.Drift {
-		if f.Drift != DriftVehicle && d.keeps(f.Drift) {
+		if f.Drift != DriftVehicle && f.Drift != DriftFiledUnder && d.keeps(f.Drift) {
 			d.out = append(d.out, f)
 		}
 	}
 	slices.SortStableFunc(d.out[start:], func(a, b Finding) int { return cmp.Compare(a.Line, b.Line) })
+}
+
+// isFiledVocabulary reports whether g can be a catalog's filed-under
+// vocabulary: a part vocabulary on the catalog's spine (ADR 0024). Link
+// refuses any other, saying which it is.
+func isFiledVocabulary(g *File, spine string) bool {
+	return g != nil && g.Kind == KindVocabulary && g.Subject == SubjectPart && g.Spine == spine
 }
 
 // use is where a catalog first names something, and how many times it

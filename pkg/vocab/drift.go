@@ -87,10 +87,10 @@ func (d *drifts) walk(files []*File) []Finding {
 			}
 		case KindCatalog:
 			if c := f.compiled; c != nil {
-				d.compiled(c, byName[f.Vehicles])
+				d.compiled(c, byName[f.Vehicles], byName[f.FiledUnder])
 				continue
 			}
-			d.catalog(byName[f.Vehicles])
+			d.catalog(byName[f.Vehicles], byName[f.FiledUnder])
 		case KindStock:
 			if d.mm != nil {
 				continue // ModelDrift: a stock file has no qualifiers

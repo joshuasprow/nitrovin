@@ -388,7 +388,7 @@ func TestLibraryCatalogRefusals(t *testing.T) {
 		t.Error("a refused compile stored something")
 	}
 
-	s = newDecoderServer(t, d, "part-types", "catalog-models")
+	s = newDecoderServer(t, d, "part-types", "part-codes", "catalog-models")
 	l = openWith(t, s, disk)
 	// Faults refuse it, naming the file and line.
 	bad := append(slices.Clone(catalog), []byte(`{"fitment":{"type":"no-such-type","number":"X-1"},"applications":[{"vehicle":{"make":"Dodge","model":"Ram 1500"},"options":""}]}`+"\n")...)
@@ -472,7 +472,7 @@ func TestCatalogPrivateWindow(t *testing.T) {
 // file it links to goes only with it.
 func TestLibraryCatalogStale(t *testing.T) {
 	d := embedded(t)
-	s, disk := newDecoderServer(t, d, "part-types"), newDisk()
+	s, disk := newDecoderServer(t, d, "part-types", "part-codes"), newDisk()
 	l := openWith(t, s, disk)
 	if _, err := l.Load([]Picked{{FileName: "catalog-models.jsonl", Data: fitmentFile(t, "catalog-models")}}, quiet); err != nil {
 		t.Fatal(err)
@@ -516,7 +516,7 @@ func TestLibraryCatalogStale(t *testing.T) {
 
 	// Its spine changes: the server's part-types, another version.
 	types := strings.Replace(string(fitmentFile(t, "part-types")), `"version":"2026.11"`, `"version":"2026.12"`, 1)
-	s2 := newDecoderServer(t, d)
+	s2 := newDecoderServer(t, d, "part-codes")
 	s2.serve(t, "part-types", []byte(types))
 	got := stored(openWith(t, s2, disk))
 	if len(got) != 2 || !strings.HasPrefix(got[1], `parts-catalog: its spine "part-types" changed since it was compiled (version 2026.11 then, 2026.12 now`) || !strings.HasSuffix(got[1], recompile) {
@@ -526,7 +526,7 @@ func TestLibraryCatalogStale(t *testing.T) {
 	// A file this release cannot open: another compiled format.
 	binary.LittleEndian.PutUint32(disk.catalogData[8:], 1)
 	l = openWith(t, s, disk)
-	if got := stored(l); len(got) != 2 || !strings.Contains(got[1], "compiled catalog format 1: this nitrovin reads format 3 only") || !strings.HasSuffix(got[1], recompile) {
+	if got := stored(l); len(got) != 2 || !strings.Contains(got[1], "compiled catalog format 1: this nitrovin reads format 4 only") || !strings.HasSuffix(got[1], recompile) {
 		t.Errorf("format 1: %q", got)
 	}
 	noCatalog(l)

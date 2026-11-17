@@ -23,7 +23,22 @@ const (
 var (
 	partSpine = file{"a.jsonl", lines(spineHeader, `{"id":"pads"}`, `{"id":"rotor"}`)}
 	yardFile  = file{"b.jsonl", lines(vehicleHeader, ram)}
+	// codesFile is a part vocabulary of a system's codes on the spine:
+	// PD for pads, RT for rotors, NM with no mapping.
+	codesFile = file{"d.jsonl", lines(`{"format":1,"kind":"vocabulary","name":"codes","version":"1","subject":"part","fields":["code"],"spine":"parts"}`,
+		`{"entry":{"code":"PD"},"mappings":[{"id":"pads"}]}`, `{"entry":{"code":"BP"},"mappings":[{"id":"pads"}]}`, `{"entry":{"code":"RT"},"mappings":[{"id":"rotor"}]}`, `{"entry":{"code":"NM"},"mappings":[]}`)}
 )
+
+// filedHeader is catalogHeader filed under codesFile's vocabulary.
+var filedHeader = strings.Replace(catalogHeader, `}`, `,"filed_under":"codes"}`, 1)
+
+// filedCatalog is a catalog filed under codes, c.jsonl: filedHeader, then l.
+func filedCatalog(l ...string) file { return file{"c.jsonl", append([]string{filedHeader}, l...)} }
+
+// filedPads is padsFitment filed under entries.
+func filedPads(entries string) string {
+	return strings.Replace(padsFitment, `"applications"`, `"filed_under":`+entries+`,"applications"`, 1)
+}
 
 // catalogFile is the catalog of a case, c.jsonl: catalogHeader, then l.
 func catalogFile(l ...string) file { return file{"c.jsonl", append([]string{catalogHeader}, l...)} }
@@ -119,6 +134,25 @@ func TestCatalogFaults(t *testing.T) {
 		{"retired number that is live", []file{partSpine, yardFile, catalogFile(padsFitment, retired("P1", "P1"))}, "c.jsonl", 3, `/retired: {"type":"pads","number":"P1"} is a live fitment, on line 2`},
 		{"retired number pointing nowhere", []file{partSpine, yardFile, catalogFile(padsFitment, retired("P0", "P9"))}, "c.jsonl", 3, `/to: no fitment {"type":"pads","number":"P9"} in the file`},
 		{"retired number twice", []file{partSpine, yardFile, catalogFile(padsFitment, retired("P0", "P1"), retired("P0", "P1"))}, "c.jsonl", 4, "/retired: duplicate retired number: line 3 retires it too"},
+
+		// Filed under (ADR 0024): the header's vocabulary, then the line's
+		// entries.
+		{"filed_under not a name", []file{partSpine, yardFile, codesFile, {"c.jsonl", lines(strings.Replace(filedHeader, `"codes"`, `"Codes"`, 1))}}, "c.jsonl", 1, `/filed_under: "Codes" is not a name`},
+		{"filed_under vocabulary not loaded", []file{partSpine, yardFile, filedCatalog(padsFitment)}, "c.jsonl", 1, `/filed_under: vocabulary "codes" is not loaded`},
+		{"filed_under a vehicle vocabulary", []file{partSpine, yardFile, {"c.jsonl", lines(strings.Replace(filedHeader, `"filed_under":"codes"`, `"filed_under":"yard"`, 1))}}, "c.jsonl", 1, `/filed_under: "yard" is a vehicle vocabulary, not a part vocabulary`},
+		{"filed_under a spine", []file{partSpine, yardFile, {"c.jsonl", lines(strings.Replace(filedHeader, `"filed_under":"codes"`, `"filed_under":"parts"`, 1))}}, "c.jsonl", 1, `/filed_under: "parts" is a spine, not a part vocabulary`},
+		{"filed_under on another spine", []file{partSpine, yardFile, {"e.jsonl", lines(strings.Replace(spineHeader, `"parts"`, `"other"`, 1), `{"id":"pads"}`, `{"id":"rotor"}`)},
+			{"d.jsonl", lines(strings.Replace(codesFile.lines[0], `"spine":"parts"`, `"spine":"other"`, 1), codesFile.lines[1])}, filedCatalog(padsFitment)}, "c.jsonl", 1,
+			`/filed_under: vocabulary "codes" maps onto spine "other", not the catalog's spine "parts"`},
+		{"filed_under without a header vocabulary", []file{partSpine, yardFile, catalogFile(filedPads(`[{"code":"PD"}]`))}, "c.jsonl", 2, "/filed_under: the catalog's header names no filed_under vocabulary"},
+		{"filed_under not an array", []file{partSpine, yardFile, codesFile, filedCatalog(filedPads(`{"code":"PD"}`))}, "c.jsonl", 2, "/filed_under: must be an array"},
+		{"filed entry not an object", []file{partSpine, yardFile, codesFile, filedCatalog(filedPads(`["PD"]`))}, "c.jsonl", 2, "/filed_under/0: must be an object"},
+		{"filed entry of no field", []file{partSpine, yardFile, codesFile, filedCatalog(filedPads(`[{}]`))}, "c.jsonl", 2, `/filed_under/0: names no field: an entry of vocabulary "codes", by its fields`},
+		{"filed entry's field not a string", []file{partSpine, yardFile, codesFile, filedCatalog(filedPads(`[{"code":1}]`))}, "c.jsonl", 2, "/filed_under/0/code: must be a string"},
+		{"filed entry twice", []file{partSpine, yardFile, codesFile, filedCatalog(filedPads(`[{"code":"PD"},{"code":" pd"}]`))}, "c.jsonl", 2, "/filed_under/1: duplicate entry: /filed_under/0 is the same entry"},
+		{"filed entry's fields", []file{partSpine, yardFile, codesFile, filedCatalog(filedPads(`[{"name":"PD"}]`))}, "c.jsonl", 2, `/filed_under: {"name":"PD"}: fields "name" are not vocabulary "codes"'s: "code"`},
+		{"filed under another part type's code", []file{partSpine, yardFile, codesFile, filedCatalog(filedPads(`[{"code":"PD"},{"code":"RT"}]`))}, "c.jsonl", 2,
+			`/filed_under: vocabulary "codes" maps {"code":"RT"} to part types "rotor", none of them the part type of {"type":"pads","number":"P1"}, "pads"`},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			dir, files, err := openFiles(t, tc.files)
@@ -133,7 +167,7 @@ func TestCatalogFaults(t *testing.T) {
 			if f.File != filepath.Join(dir, tc.file) || f.Line != tc.line || f.Severity != SeverityFault || !strings.Contains(f.Detail, tc.detail) {
 				t.Errorf("fault %+v; want %s:%d, a fault naming %q", f, tc.file, tc.line, tc.detail)
 			}
-			if tc.file != "c.jsonl" || len(tc.files) > 3 {
+			if tc.file != "c.jsonl" || tc.name == "second catalog" {
 				return // a fault about another file, or a second catalog
 			}
 			var others []string
@@ -173,6 +207,77 @@ func TestCatalogNotFaults(t *testing.T) {
 	}
 	if got := c.Info(); got.Fitments != 3 || got.Applications != 4 {
 		t.Errorf("Info %+v; want 3 fitments, 4 applications", got)
+	}
+}
+
+// TestCatalogFiledUnder reads what a fitment is filed under (ADR 0024):
+// its entries once each, in byte order of their fields as written, matched
+// after Normalize and spelled as the file first writes each, and a lookup
+// by entry and number that reaches every side unless one is asked for.
+func TestCatalogFiledUnder(t *testing.T) {
+	ramApp := `"applications":[{"vehicle":{"make":"Dodge","model":"Ram"},"options":""}]`
+	_, files, err := openFiles(t, []file{partSpine, yardFile, codesFile, filedCatalog(
+		`{"fitment":{"type":"pads","number":"P1","side":"right"},"filed_under":[{"code":"PD"}],`+ramApp+`}`,
+		`{"fitment":{"type":"pads","number":"P1","side":"left"},"filed_under":[{"code":"pd "}],`+ramApp+`}`,
+		`{"fitment":{"type":"pads","number":"P2"},"filed_under":[{"code":"PD"},{"code":"BP"}],`+ramApp+`}`,
+		`{"fitment":{"type":"rotor","number":"P1"},"filed_under":[{"code":"RT"}],`+ramApp+`}`,
+		`{"fitment":{"type":"rotor","number":"R2"},`+ramApp+`}`,
+	)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := files[3].Catalog()
+	if got := c.Info(); got.FiledUnder != "codes" || got.Filings != 5 {
+		t.Errorf("Info %+v; want filed under codes, 5 filings", got)
+	}
+	keys := func(fits []*Fitment) []string {
+		var out []string
+		for _, f := range fits {
+			var codes []string
+			for _, e := range f.FiledUnder {
+				codes = append(codes, e.Entry["code"])
+			}
+			out = append(out, f.Key.String()+" "+strings.Join(codes, ","))
+		}
+		return out
+	}
+	left := SideLeft
+	for _, tc := range []struct {
+		entry, number string
+		side          *Side
+		want          []string
+	}{
+		{"pd", "P1", nil, []string{`{"type":"pads","number":"P1","side":"left"} PD`, `{"type":"pads","number":"P1","side":"right"} PD`}},
+		{"PD", "P1", &left, []string{`{"type":"pads","number":"P1","side":"left"} PD`}},
+		{"PD", "P2", nil, []string{`{"type":"pads","number":"P2"} BP,PD`}},
+		{"RT", "P1", nil, []string{`{"type":"rotor","number":"P1"} RT`}},
+		{"RT", "P2", nil, nil},
+		{"ZZ", "P1", nil, nil},
+	} {
+		if got := keys(c.ByFiled(map[string]string{"code": tc.entry}, tc.number, tc.side)); !slices.Equal(got, tc.want) {
+			t.Errorf("ByFiled(%s, %s, %v) = %q; want %q", tc.entry, tc.number, tc.side, got, tc.want)
+		}
+	}
+	if got := keys(c.Fitments("rotor", nil, 0)); !slices.Equal(got, []string{`{"type":"rotor","number":"P1"} RT`, `{"type":"rotor","number":"R2"} `}) {
+		t.Errorf("Fitments(rotor) = %q", got)
+	}
+	// Byte order, not length or case first: "10" before "9", "B" before "a".
+	_, ordered, err := openFiles(t, []file{partSpine, yardFile,
+		{"d.jsonl", lines(codesFile.lines[0], `{"entry":{"code":"9"},"mappings":[{"id":"pads"}]}`, `{"entry":{"code":"10"},"mappings":[{"id":"pads"}]}`,
+			`{"entry":{"code":"a"},"mappings":[{"id":"pads"}]}`, `{"entry":{"code":"B"},"mappings":[{"id":"pads"}]}`)},
+		filedCatalog(`{"fitment":{"type":"pads","number":"P1"},"filed_under":[{"code":"a"},{"code":"9"},{"code":"B"},{"code":"10"}],` + ramApp + `}`)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := keys(ordered[3].Catalog().Fitments("", nil, 0)); !slices.Equal(got, []string{`{"type":"pads","number":"P1"} 10,9,B,a`}) {
+		t.Errorf("entries %q; want 10,9,B,a", got)
+	}
+	var matched []*Fitment
+	for _, cand := range c.Matching("pads", []Vehicle{*c.Vehicles()[0]}, nil, nil) {
+		matched = append(matched, cand.Fitment)
+	}
+	if got := keys(matched); !slices.Equal(got, []string{`{"type":"pads","number":"P2"} BP,PD`, `{"type":"pads","number":"P1","side":"left"} PD`, `{"type":"pads","number":"P1","side":"right"} PD`}) {
+		t.Errorf("Matching(pads) = %q", got)
 	}
 }
 
@@ -326,8 +431,8 @@ func testCatalogReader(t *testing.T, c *Catalog, hash [32]byte) {
 		}
 	}
 
-	want := CatalogInfo{Name: "parts-catalog", Version: "2026.11", Release: "7.02", DataMonth: "2026_10", Spine: "part-types", Vehicles: "catalog-models",
-		Hash: hash, Fitments: 5, Applications: 7, Redirects: 1, Retired: 1}
+	want := CatalogInfo{Name: "parts-catalog", Version: "2026.11", Release: "7.02", DataMonth: "2026_10", Spine: "part-types", Vehicles: "catalog-models", FiledUnder: "part-codes",
+		Hash: hash, Fitments: 5, Applications: 7, Redirects: 1, Retired: 1, Filings: 6}
 	if got := c.Info(); got != want {
 		t.Errorf("Info %+v; want %+v", got, want)
 	}
@@ -413,6 +518,18 @@ func TestCatalogDrift(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	ramApp := `"applications":[{"vehicle":{"make":"Dodge","model":"Ram"},"options":""}]`
+	filed := file{"c.jsonl", lines(filedHeader,
+		`{"fitment":{"type":"pads","number":"P1"},"filed_under":[{"code":"PD"},{"code":"XX"}],`+ramApp+`}`,
+		`{"fitment":{"type":"pads","number":"P2"},`+ramApp+`}`,
+		`{"fitment":{"type":"rotor","number":"R1"},"filed_under":[{"code":"nm"}],`+ramApp+`}`,
+		`{"fitment":{"type":"pads","number":"P3"},"filed_under":[],`+ramApp+`}`,
+		`{"fitment":{"type":"rotor","number":"R2"},"filed_under":[{"code":"xx"}],`+ramApp+`}`,
+	)}
+	_, filedFiles, err := openFiles(t, []file{partSpine, yardFile, codesFile, filed})
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, tc := range []struct {
 		name  string
 		files []*File
@@ -430,6 +547,11 @@ func TestCatalogDrift(t *testing.T) {
 			`2 model /applications/1/vehicle/model: vPIC model 88888 is not in data month 2026_10 (and 1 more)`,
 			`4 model-years /applications/0: model years 2009-2012 fall partly outside vPIC model 1938's years in data month 2026_10: 2002-2010 (and 1 more)`,
 			`4 model-years /applications/1: model years 2015-2016 fall wholly outside vPIC model 1938's years in data month 2026_10: 2002-2010`,
+		}},
+		{"a filed catalog", filedFiles, []string{
+			`2 filed-under /filed_under: vocabulary "codes" has no entry {"code":"XX"} (and 1 more)`,
+			`3 unfiled /filed_under: the fitment is filed under no entry of vocabulary "codes" (and 1 more)`,
+			`4 filed-under /filed_under: vocabulary "codes" lists {"code":"nm"} without a mapping, so it names no part type`,
 		}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

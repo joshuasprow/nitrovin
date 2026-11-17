@@ -54,10 +54,11 @@ func Compile(w io.Writer, m Month, files []*File, src io.Reader, name string, sc
 	}
 	c := &compiler{
 		name: name, m: m, files: files, byName: byName, scratch: scratch, opt: opt,
-		vehicleAt: map[string]int32{}, types: map[string]bool{}, qsetOf: map[string]uint32{},
+		vehicleAt: map[string]int32{}, types: map[string]bool{}, qsetOf: map[string]uint32{}, filedAt: map[string]int32{},
 		// The retired numbers' sorters hold a quarter of a run each: they
-		// are a release's changes, seldom more than a few MiB.
-		byKey: newSorter(scratch, 1), byVehicle: newSorter(scratch, 1), byRetired: newSorter(scratch, 4), bySuccessor: newSorter(scratch, 4),
+		// are a release's changes, seldom more than a few MiB. byFiled
+		// holds a quarter too: its records are a key and a few bytes.
+		byKey: newSorter(scratch, 1), byVehicle: newSorter(scratch, 1), byRetired: newSorter(scratch, 4), bySuccessor: newSorter(scratch, 4), byFiled: newSorter(scratch, 4),
 	}
 	c.mm, _ = m.(ModelMonth)
 	defer c.close()
@@ -74,6 +75,9 @@ func Compile(w io.Writer, m Month, files []*File, src io.Reader, name string, sc
 	if faults := c.link.faults; len(faults) > 0 {
 		slices.SortStableFunc(faults, func(a, b Finding) int { return cmp.Compare(a.Line, b.Line) })
 		return nil, faults
+	}
+	if err := c.mergeFiled(); err != nil {
+		return nil, err
 	}
 	if err := c.mergeVehicles(); err != nil {
 		return nil, err
@@ -118,18 +122,33 @@ type compiler struct {
 	qsetOf                                     map[string]uint32 // a set of qualifiers' encoding: its id
 	qsets                                      []byte            // every set's encoding, in id order
 	fitments, applications, redirects, retired int
+	// filed are the entries fitments are filed under, numbered in the
+	// order of the first line naming each (an entry's id is its index),
+	// filedAt finds one by key, and filedTypes are, by entry, the part
+	// types of the fitments filed under it, each with the first such
+	// fitment's key, which a load's check names (compiled.link); filings
+	// counts (entry, fitment) pairs.
+	filed      []*Filed
+	filedAt    map[string]int32
+	filedTypes [][]FitmentKey
+	filings    int
 
 	// byKey has every fitment by key; byVehicle, per vehicle, its
 	// redirects by part type from, then its fitments by key; byRetired
-	// every retired number by its key, and bySuccessor by its successor's.
-	byKey, byVehicle, byRetired, bySuccessor *sorter
+	// every retired number by its key, and bySuccessor by its successor's;
+	// byFiled every (entry, fitment) pair by entry, number, part type and
+	// side.
+	byKey, byVehicle, byRetired, bySuccessor, byFiled *sorter
 	// keyed is the keyed section as written, and pages its pages; wideSec
 	// the wide section, and wide where each wide fitment is in keyed and
-	// in wide, by line.
-	keyed   *spill
-	pages   []keyPage
-	wideSec *spill
-	wide    map[int]wideAt
+	// in wide, by line; filedSec the filed section, and filedPages its
+	// pages.
+	keyed      *spill
+	pages      []keyPage
+	wideSec    *spill
+	wide       map[int]wideAt
+	filedSec   *spill
+	filedPages []filedPage
 	// heads and bodies are the vehicles' blocks as written, apart;
 	// blocks their lengths, by vehicle.
 	heads, bodies *spill
@@ -138,16 +157,17 @@ type compiler struct {
 	buf, key, val, pay, years []byte // reused encodings
 	ids                       []int32
 	qs                        []uint32
+	entries                   []int32 // a fitment's entries' ids
 }
 
 // close releases the scratch files still open.
 func (c *compiler) close() {
-	for _, s := range []*spill{c.keyed, c.wideSec, c.heads, c.bodies} {
+	for _, s := range []*spill{c.keyed, c.wideSec, c.filedSec, c.heads, c.bodies} {
 		if s != nil {
 			s.f.Close()
 		}
 	}
-	for _, s := range []*sorter{c.byKey, c.byVehicle, c.byRetired, c.bySuccessor} {
+	for _, s := range []*sorter{c.byKey, c.byVehicle, c.byRetired, c.bySuccessor, c.byFiled} {
 		if s.out != nil {
 			s.out.f.Close()
 			s.out = nil
@@ -231,7 +251,7 @@ func (c *compiler) batch(lines []byte, line *int) error {
 		start = end + 1
 	}
 	*line += slots
-	f := &File{Path: c.name, Kind: KindCatalog, Vehicles: c.hdr.Vehicles, Fitments: make([]Fitment, slots)}
+	f := &File{Path: c.name, Kind: KindCatalog, Vehicles: c.hdr.Vehicles, FiledUnder: c.hdr.FiledUnder, Fitments: make([]Fitment, slots)}
 	inParallel(chunks, func() func(*chunk) {
 		r := newReader(f)
 		return func(ch *chunk) { r.read(ch, first-1, nil) }
@@ -276,13 +296,14 @@ func (c *compiler) header(text []byte, n int) error {
 	if f.Vehicles != Reserved {
 		vehicles = c.byName[f.Vehicles]
 	}
+	filed := c.byName[f.FiledUnder]
 	d := newDrifts(c.m, nil)
 	d.f = f
-	c.drift = append(c.drift, d.catalogDrift(vehicles))
+	c.drift = append(c.drift, d.catalogDrift(vehicles, filed))
 	if c.mm != nil {
 		dm := newDrifts(c.m, c.mm)
 		dm.f = f
-		c.drift = append(c.drift, dm.catalogDrift(vehicles))
+		c.drift = append(c.drift, dm.catalogDrift(vehicles, filed))
 	}
 	return nil
 }
@@ -334,23 +355,37 @@ func (c *compiler) qset(qs []Qualifier) uint32 {
 }
 
 // fitment sees a fitment line: checks it, measures its drift, and adds it
-// to both sorters, whole by key, and per vehicle it names, whole or, when
-// it is wide, as its applications to that vehicle.
+// to the sorters, whole by key, per vehicle it names, whole or, when it is
+// wide, as its applications to that vehicle, and per entry it is filed
+// under.
 func (c *compiler) fitment(fit *Fitment) {
 	for j := range fit.Applications {
 		a := &fit.Applications[j]
 		a.Vehicle = c.canon(a.Vehicle)
 	}
 	c.link.fitment(fit)
+	for _, g := range c.drift {
+		g.fitment(fit)
+	}
 	c.fitments++
 	c.applications += len(fit.Applications)
 	c.types[fit.Key.Type] = true
+	entries := c.entries[:0]
+	for _, e := range fit.FiledUnder {
+		entries = append(entries, c.entry(e, fit.Key))
+	}
+	// In the order of the catalog's one spelling of each, as its JSON
+	// Lines form keeps them.
+	slices.SortFunc(entries, func(a, b int32) int { return compareFiled(c.filed[a], c.filed[b]) })
+	c.entries = entries
+	c.filings += len(entries)
 
-	// The record: side, number, line, note, applications.
+	// The record: side, number, line, note, entries, applications.
 	b := append(c.val[:0], byte(fit.Key.Side))
 	b = appendStr(b, fit.Key.Number)
 	b = binary.AppendUvarint(b, uint64(fit.Line))
 	b = appendStr(b, fit.Note)
+	b = appendEntries(b, entries)
 	b = binary.AppendUvarint(b, uint64(len(fit.Applications)))
 	ids, qs := c.ids[:0], c.qs[:0]
 	for j := range fit.Applications {
@@ -374,6 +409,16 @@ func (c *compiler) fitment(fit *Fitment) {
 	p := appendStr(c.pay[:0], fit.Key.Type)
 	c.byKey.add(k, append(p, b...))
 
+	// Per entry: by entry, number, part type and side, its key.
+	for _, id := range entries {
+		fk := binary.BigEndian.AppendUint32(c.buf[:0], uint32(id))
+		fk = appendOrdered(fk, fit.Key.Number)
+		fk = appendOrdered(fk, fit.Key.Type)
+		fk = append(fk, byte(fit.Key.Side))
+		c.buf = fk
+		c.byFiled.add(fk, appendKeyFields(p[:0], fit.Key))
+	}
+
 	slices.Sort(ids)
 	ids = slices.Compact(ids)
 	c.ids = ids
@@ -393,6 +438,7 @@ func (c *compiler) fitment(fit *Fitment) {
 			p = appendStr(p, fit.Key.Number)
 			p = binary.AppendUvarint(p, uint64(fit.Line))
 			p = appendStr(p, fit.Note)
+			p = appendEntries(p, entries)
 			own := 0
 			for j := range fit.Applications {
 				if fit.Applications[j].Vehicle.id == id {
@@ -410,6 +456,31 @@ func (c *compiler) fitment(fit *Fitment) {
 		c.byVehicle.add(vk, p)
 	}
 	c.pay = p
+}
+
+// entry is the id of entry e, a fitment of key k's: the catalog's one Filed
+// for e, numbered on first sight, with k's part type noted against it.
+func (c *compiler) entry(e *Filed, k FitmentKey) int32 {
+	id, ok := c.filedAt[e.key]
+	if !ok {
+		id = int32(len(c.filed))
+		c.filedAt[e.key] = id
+		c.filed = append(c.filed, e)
+		c.filedTypes = append(c.filedTypes, nil)
+	}
+	if !slices.ContainsFunc(c.filedTypes[id], func(t FitmentKey) bool { return t.Type == k.Type }) {
+		c.filedTypes[id] = append(c.filedTypes[id], k)
+	}
+	return id
+}
+
+// appendEntries appends a fitment's entries' ids, at their count.
+func appendEntries(b []byte, ids []int32) []byte {
+	b = binary.AppendUvarint(b, uint64(len(ids)))
+	for _, id := range ids {
+		b = binary.AppendUvarint(b, uint64(id))
+	}
+	return b
 }
 
 // redirect sees a redirect line.
@@ -608,6 +679,7 @@ func (c *compiler) mergeKeys() error {
 		number := r.str()
 		line := int(r.uint())
 		r.str() // note
+		r.skipEntries()
 		napps := int(r.uint())
 		k := FitmentKey{Type: typ, Number: number, Side: side}
 		for byKey.ok && compareFitmentKeys(byKey.rt.Key, k) <= 0 {
@@ -699,6 +771,38 @@ func (c *compiler) mergeKeys() error {
 		return err
 	}
 	return c.keyed.done()
+}
+
+// mergeFiled writes filed from every (entry, fitment) pair, in order of
+// entry, number, part type and side: each its entry, number, part type
+// and side, in pages of pageFitments.
+func (c *compiler) mergeFiled() error {
+	var err error
+	if c.filedSec, err = newSpill(c.scratch); err != nil {
+		return err
+	}
+	n := 0
+	err = c.byFiled.each(func(key, payload []byte) error {
+		entry := binary.BigEndian.Uint32(key)
+		r := &bcursor{b: payload}
+		k := FitmentKey{Type: r.str()}
+		k.Side, k.Number = Side(r.byte()), r.str()
+		if n%pageFitments == 0 {
+			c.filedPages = append(c.filedPages, filedPage{entry: entry, number: k.Number, off: c.filedSec.size})
+		}
+		n++
+		b := binary.AppendUvarint(c.buf[:0], uint64(entry))
+		b = appendStr(b, k.Number)
+		b = binary.AppendUvarint(b, uint64(c.typeID[k.Type]))
+		b = append(b, byte(k.Side))
+		c.buf = b
+		_, err := c.filedSec.Write(b)
+		return err
+	})
+	if err != nil {
+		return err
+	}
+	return c.filedSec.done()
 }
 
 // mergeVehicles writes each vehicle's block, its head to heads and its
@@ -840,6 +944,7 @@ func answer(reds []pendingRedirect, typ uint32, rec []byte, id int32) {
 	r.bytes() // number
 	r.uint()  // line
 	r.bytes() // note
+	r.skipEntries()
 	for range r.uint() {
 		v := id
 		if kind == recNear {
@@ -863,12 +968,13 @@ func answer(reds []pendingRedirect, typ uint32, rec []byte, id int32) {
 }
 
 // write writes the compiled file to w, its blake3 found first: the
-// header, the directory, meta and dict, then keyed and each vehicle's
-// block, its head and body put together.
+// header, the directory, meta and dict, then keyed, wide, filed and each
+// vehicle's block, its head and body put together.
 func (c *compiler) write(w io.Writer, drift []Finding) error {
 	meta, dict := c.meta(drift), c.dict()
 	var offs, lens [numSections]int64
 	lens[secMeta], lens[secDict], lens[secKeyed], lens[secWide] = int64(len(meta)), int64(len(dict)), c.keyed.size, c.wideSec.size
+	lens[secFiled] = c.filedSec.size
 	lens[secBlocks] = c.heads.size + c.bodies.size
 	size := int64(headerSize + numSections*16)
 	for i := range offs {
@@ -906,6 +1012,10 @@ func (c *compiler) write(w io.Writer, drift []Finding) error {
 		if err := c.wideSec.copyTo(bw, 0, c.wideSec.size); err != nil {
 			return err
 		}
+		pad(secFiled)
+		if err := c.filedSec.copyTo(bw, 0, c.filedSec.size); err != nil {
+			return err
+		}
 		pad(secBlocks)
 		heads := bufio.NewReaderSize(io.NewSectionReader(c.heads.f, 0, c.heads.size), 256<<10)
 		bodies := bufio.NewReaderSize(io.NewSectionReader(c.bodies.f, 0, c.bodies.size), 1<<20)
@@ -932,12 +1042,12 @@ func (c *compiler) write(w io.Writer, drift []Finding) error {
 func (c *compiler) meta(drift []Finding) []byte {
 	f := c.hdr
 	e := &encoder{}
-	for _, s := range []string{f.Name, f.Version, f.Release, f.DataMonth, f.Spine, f.Vehicles} {
+	for _, s := range []string{f.Name, f.Version, f.Release, f.DataMonth, f.Spine, f.Vehicles, f.FiledUnder} {
 		e.str(s)
 	}
 	e.b = append(e.b, c.hash[:]...)
-	var links []*File // the spine first
-	for _, name := range []string{f.Spine, f.Vehicles} {
+	var links []*File // the spine first, then the vehicle and filed-under vocabularies
+	for _, name := range []string{f.Spine, f.Vehicles, f.FiledUnder} {
 		if g := c.byName[name]; g != nil {
 			links = append(links, g)
 		}
@@ -961,7 +1071,7 @@ func (c *compiler) meta(drift []Finding) []byte {
 	for _, k := range skipped {
 		e.str(string(k))
 	}
-	for _, n := range []int{c.fitments, c.applications, c.redirects, c.retired} {
+	for _, n := range []int{c.fitments, c.applications, c.redirects, c.retired, c.filings} {
 		e.uint(uint64(n))
 	}
 	return e.b
@@ -980,7 +1090,7 @@ func (c *compiler) skipped() []DriftKind {
 }
 
 // dict is the dict section: part types, vehicles with their blocks'
-// lengths, qualifier sets and pages.
+// lengths, qualifier sets, pages, entries and filed's pages.
 func (c *compiler) dict() []byte {
 	d := &encoder{}
 	d.uint(uint64(len(c.typeNames)))
@@ -1026,6 +1136,36 @@ func (c *compiler) dict() []byte {
 		}
 		d.uint(uint64(p.typ))
 		d.b = append(d.b, byte(p.side))
+		d.str(p.number)
+		d.uint(uint64(end - p.off))
+	}
+	// Entries: each one's first naming and count, its fields, and the
+	// part types of the fitments filed under it, each with the first such
+	// fitment's side and number.
+	d.uint(uint64(len(c.filed)))
+	for i, e := range c.filed {
+		u := c.drift[0].entries[e.key]
+		d.uint(uint64(u.line))
+		d.uint(uint64(u.n))
+		d.uint(uint64(len(e.Entry)))
+		for _, name := range slices.Sorted(maps.Keys(e.Entry)) {
+			d.str(name)
+			d.str(e.Entry[name])
+		}
+		d.uint(uint64(len(c.filedTypes[i])))
+		for _, k := range c.filedTypes[i] {
+			d.uint(uint64(c.typeID[k.Type]))
+			d.b = append(d.b, byte(k.Side))
+			d.str(k.Number)
+		}
+	}
+	d.uint(uint64(len(c.filedPages)))
+	for i, p := range c.filedPages {
+		end := c.filedSec.size
+		if i+1 < len(c.filedPages) {
+			end = c.filedPages[i+1].off
+		}
+		d.uint(uint64(p.entry))
 		d.str(p.number)
 		d.uint(uint64(end - p.off))
 	}
@@ -1108,6 +1248,13 @@ func (r *bcursor) bytes() []byte {
 }
 
 func (r *bcursor) str() string { return string(r.bytes()) }
+
+// skipEntries reads past a fitment record's entries.
+func (r *bcursor) skipEntries() {
+	for range r.uint() {
+		r.uint()
+	}
+}
 
 func (r *bcursor) years() (first, last *int) {
 	flags := r.byte()

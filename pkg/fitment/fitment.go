@@ -49,14 +49,23 @@ type Reader interface {
 	// (ADR 0023).
 	ByVehicle(partType string, vehicles []vocab.Vehicle, year *int, side *vocab.Side) []vocab.Candidate
 	// Matching is ByVehicle answering with only the applications that
-	// matched: each candidate's Fitment holds the fitment's key, line and
-	// note and only those applications, in file order, which Applications
+	// matched: each candidate's Fitment holds the fitment's key, line,
+	// note and entries it is filed under, and only those applications, in
+	// file order, which Applications
 	// points at. Part types and candidates need nothing more; related
 	// vehicles need every application's vehicle and years (Sharer). A
 	// compiled catalog answers
 	// Matching from the vehicle's block alone, never reading the rest of a
 	// fitment of many applications (ADR 0023).
 	Matching(partType string, vehicles []vocab.Vehicle, year *int, side *vocab.Side) []vocab.Candidate
+	// ByFiled returns the fitments filed under the entry of the catalog's
+	// filed-under vocabulary with fields entry (matched after Normalize),
+	// with that number and side *side, nil for any side, in key order
+	// (ADR 0024): one per side, or more when the entry stands for more
+	// than one part type. None when the catalog names no filed-under
+	// vocabulary. A retired number is not followed: that takes the
+	// entry's part types, which only the vocabulary knows.
+	ByFiled(entry map[string]string, number string, side *vocab.Side) []*vocab.Fitment
 	// ByNumber returns the fitment with that part type, number and side,
 	// directly, or through the retired number it replaced, which retired
 	// then is. fitment is nil when there is neither.

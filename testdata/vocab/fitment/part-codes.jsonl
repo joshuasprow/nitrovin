@@ -1,4 +1,7 @@
 {"format":1,"kind":"vocabulary","name":"part-codes","version":"2026.11","data_month":"2026_10","subject":"part","fields":["code"],"spine":"part-types"}
+{"entry":{"code":"ENG"},"mappings":[{"id":"engine"}]}
+{"entry":{"code":"FRT"},"mappings":[{"id":"brake-rotor-front"}],"note":"front rotors only"}
 {"entry":{"code":"MIR"},"mappings":[{"id":"mirror"}],"note":"door mirrors, either side"}
 {"entry":{"code":"ROT"},"mappings":[{"id":"brake-rotor-front"},{"id":"brake-rotor-rear"}],"note":"a parts system files every brake rotor under one code"}
+{"entry":{"code":"RRT"},"mappings":[{"id":"brake-rotor-rear"}],"note":"rear rotors only"}
 {"entry":{"code":"SEAT"},"mappings":[]}

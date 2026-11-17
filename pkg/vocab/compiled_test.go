@@ -150,7 +150,10 @@ func describe(f *Fitment) string {
 		return "<nil>"
 	}
 	var b strings.Builder
-	fmt.Fprintf(&b, "%d %s %q apps=%d nil=%v", f.Line, f.Key, f.Note, len(f.Applications), f.Applications == nil)
+	fmt.Fprintf(&b, "%d %s %q apps=%d nil=%v filed=", f.Line, f.Key, f.Note, len(f.Applications), f.Applications == nil)
+	for _, e := range f.FiledUnder {
+		b.WriteString(entryText(e.Entry) + e.key)
+	}
 	for i := range f.Applications {
 		b.WriteString("\n\t" + describeApp(&f.Applications[i]))
 	}
@@ -205,8 +208,10 @@ func describeRetired(rt *Retired) string {
 // side and each side, no note, zero to four applications or more than
 // wideApplications, open and
 // unbounded years and years far from today's, option text shared and
-// not, qualifiers of attributes and text, redirects and retired numbers;
-// and the files it links to. It returns them, opened.
+// not, qualifiers of attributes and text, redirects and retired numbers,
+// and entries of a vocabulary of codes it is filed under, none, one or
+// several, spelled two ways, some the vocabulary lacks or leaves
+// unmapped; and the files it links to. It returns them, opened.
 func generated(t testing.TB, vpic bool, n int) []*File {
 	t.Helper()
 	rng := rand.New(rand.NewPCG(1, uint64(n)+uint64(b2i(vpic))))
@@ -235,7 +240,41 @@ func generated(t testing.TB, vpic bool, n int) []*File {
 		}
 		return s
 	}
-	header := `{"format":1,"kind":"catalog","name":"gen","version":"1","release":"r1","data_month":"2026_09","spine":"parts","vehicles":"yard"}`
+	header := `{"format":1,"kind":"catalog","name":"gen","version":"1","release":"r1","data_month":"2026_09","spine":"parts","vehicles":"yard","filed_under":"codes"}`
+	// The codes: one per part type, two for pads, one for both door and
+	// hood, and NM, unmapped; drawn from their own source, so the rest of
+	// the catalog is as it was.
+	codesOf := map[string][]string{"pads": {"PA", "PB"}, "rotor": {"RO"}, "mirror": {"MI"}, "glass": {"GL"}, "door": {"DO", "DH"}, "hood": {"HO", "DH"}}
+	rf := rand.New(rand.NewPCG(7, uint64(n)+uint64(b2i(vpic))))
+	filed := func(typ string) string {
+		var codes []string
+		switch rf.IntN(8) {
+		case 0:
+			return ""
+		case 1:
+			return `,"filed_under":[]`
+		}
+		for _, code := range codesOf[typ] {
+			if rf.IntN(3) > 0 {
+				codes = append(codes, code)
+			}
+		}
+		switch rf.IntN(10) {
+		case 0:
+			codes = append(codes, fmt.Sprintf("ZZ%d", rf.IntN(3))) // the vocabulary lacks it
+		case 1:
+			codes = append(codes, "NM")
+		}
+		rf.Shuffle(len(codes), func(i, j int) { codes[i], codes[j] = codes[j], codes[i] })
+		var entries []string
+		for _, code := range codes {
+			if rf.IntN(4) == 0 {
+				code = " " + strings.ToLower(code)
+			}
+			entries = append(entries, fmt.Sprintf(`{"code":%q}`, code))
+		}
+		return `,"filed_under":[` + strings.Join(entries, ",") + "]"
+	}
 	if vpic {
 		header = strings.Replace(header, `"yard"`, `"vpic"`, 1)
 	}
@@ -282,7 +321,7 @@ func generated(t testing.TB, vpic bool, n int) []*File {
 		if rng.IntN(3) == 0 {
 			line += fmt.Sprintf(`,"note":"note %d"`, rng.IntN(4))
 		}
-		cat = append(cat, line+`,"applications":[`+strings.Join(apps, ",")+"]}")
+		cat = append(cat, line+filed(k.typ)+`,"applications":[`+strings.Join(apps, ",")+"]}")
 		if rng.IntN(8) == 0 {
 			r := fmt.Sprintf(`{"redirect":{"vehicle":%s%s,"from":%q,"to":%q`, vehicles[rng.IntN(len(vehicles))], years(), types[rng.IntN(len(types))], types[rng.IntN(len(types))])
 			if rng.IntN(2) == 0 {
@@ -300,7 +339,16 @@ func generated(t testing.TB, vpic bool, n int) []*File {
 	for _, typ := range types {
 		spine = append(spine, fmt.Sprintf(`{"id":%q}`, typ))
 	}
-	files := []file{{"a.jsonl", spine}, {"c.jsonl", cat}}
+	codes := []string{`{"format":1,"kind":"vocabulary","name":"codes","version":"1","subject":"part","fields":["code"],"spine":"parts"}`,
+		`{"entry":{"code":"NM"},"mappings":[]}`, `{"entry":{"code":"DH"},"mappings":[{"id":"door"},{"id":"hood"}]}`}
+	for _, typ := range types {
+		for _, code := range codesOf[typ] {
+			if code != "DH" {
+				codes = append(codes, fmt.Sprintf(`{"entry":{"code":%q},"mappings":[{"id":%q}]}`, code, typ))
+			}
+		}
+	}
+	files := []file{{"a.jsonl", spine}, {"c.jsonl", cat}, {"d.jsonl", codes}}
 	if vpic {
 		files = append(files, file{"b.jsonl", lines(setHeader, `{"id":"studebaker","make_name":"Studebaker"}`, `{"id":"lark","make":476,"name":"Lark"}`)})
 	} else {
@@ -423,6 +471,30 @@ func TestCompiledAnswersAsJSONLines(t *testing.T) {
 				if describe(gf) != describe(wf) || describeRetired(gr) != describeRetired(wr) {
 					t.Fatalf("ByNumber(%s): %s, %s; want %s, %s", k, describe(gf), describeRetired(gr), describe(wf), describeRetired(wr))
 				}
+			}
+			// ByFiled: every entry with every number it is filed under, a
+			// number it is not, and an entry nobody is filed under, each
+			// at every side.
+			filings, reached := 0, 0
+			for _, f := range jl.File().Fitments {
+				filings += len(f.FiledUnder)
+				for _, e := range f.FiledUnder {
+					for _, s := range sides {
+						for _, q := range []struct {
+							entry  map[string]string
+							number string
+						}{{e.Entry, f.Key.Number}, {map[string]string{"code": strings.ToUpper(strings.TrimSpace(e.Entry["code"]))}, f.Key.Number}, {e.Entry, f.Key.Number + "x"}, {map[string]string{"code": "QQ"}, f.Key.Number}} {
+							got, want := cc.ByFiled(q.entry, q.number, s), jl.ByFiled(q.entry, q.number, s)
+							if g, w := describeFitments(got), describeFitments(want); g != w {
+								t.Fatalf("ByFiled(%v, %s, %v):\n%s\nwant\n%s", q.entry, q.number, s, g, w)
+							}
+							reached += len(want)
+						}
+					}
+				}
+			}
+			if filings == 0 || reached == 0 {
+				t.Fatal("no fitment filed under an entry asked of")
 			}
 			// RetiredTo, the reverse of ByNumber's retired step: of every
 			// key, a retired number's successor among them.
@@ -590,7 +662,7 @@ func TestCompiledHeader(t *testing.T) {
 		byName[f.Name] = f
 	}
 	m := cc.Compiled()
-	want := []LinkedFile{{"part-types", "2026.11", byName["part-types"].Hash}, {"catalog-models", "2026.11", byName["catalog-models"].Hash}}
+	want := []LinkedFile{{"part-types", "2026.11", byName["part-types"].Hash}, {"catalog-models", "2026.11", byName["catalog-models"].Hash}, {"part-codes", "2026.11", byName["part-codes"].Hash}}
 	skipped := []DriftKind{DriftModelYears, DriftModelQualifier} // fixtureMonth knows no model's years or values
 	if m == nil || m.Format != CompiledFormat || m.SourceHash != byName["parts-catalog"].Hash || !slices.Equal(m.Links, want) || m.Writer != "v0.0.0-test" || m.DriftMonth != "2026_10" || m.Drift != nil || !slices.Equal(m.Skipped, skipped) {
 		t.Errorf("Compiled %+v", m)
@@ -647,16 +719,18 @@ func TestCompiledRefused(t *testing.T) {
 		}
 		return p
 	}
-	version, format1 := slices.Clone(good), slices.Clone(good)
+	version, format1, format3 := slices.Clone(good), slices.Clone(good), slices.Clone(good)
 	binary.LittleEndian.PutUint32(version[8:], CompiledFormat+1)
 	binary.LittleEndian.PutUint32(format1[8:], 1)
+	binary.LittleEndian.PutUint32(format3[8:], 3)
 	for _, tc := range []struct {
 		name   string
 		paths  []string
 		detail string
 	}{
-		{"a format it cannot read", []string{write(version)}, "compiled catalog format 4: this nitrovin reads format 3 only; compile the catalog again with this release"},
-		{"format 1", []string{write(format1)}, "compiled catalog format 1: this nitrovin reads format 3 only; compile the catalog again with this release"},
+		{"a format it cannot read", []string{write(version)}, "compiled catalog format 5: this nitrovin reads format 4 only; compile the catalog again with this release"},
+		{"format 1", []string{write(format1)}, "compiled catalog format 1: this nitrovin reads format 4 only; compile the catalog again with this release"},
+		{"format 3", []string{write(format3)}, "compiled catalog format 3: this nitrovin reads format 4 only; compile the catalog again with this release"},
 		{"cut short", []string{write(good[:len(good)-1])}, "it was cut short or added to"},
 		{"shorter than a header", []string{write(good[:20])}, "shorter than its header"},
 		{"no spine", []string{byName["catalog-models"].Path, path}, `/spine: spine "part-types" is not loaded`},
@@ -673,18 +747,20 @@ func TestCompiledRefused(t *testing.T) {
 
 	// Another spine, which lacks a part type it was compiled with.
 	spine := write([]byte(`{"format":1,"kind":"spine","name":"part-types","version":"other"}` + "\n" + `{"id":"mirror"}` + "\n"))
-	_, err = Open(spine, byName["catalog-models"].Path, path)
-	if fs, ok := err.(Faults); !ok || !strings.Contains(fs.Error(), `part type "brake-rotor-front": spine "part-types" has no id "brake-rotor-front"`) {
+	_, err = Open(spine, byName["catalog-models"].Path, byName["part-codes"].Path, path)
+	if fs, ok := err.(Faults); !ok || !slices.ContainsFunc(fs, func(f Finding) bool {
+		return strings.Contains(f.Detail, `part type "brake-rotor-front": spine "part-types" has no id "brake-rotor-front"`)
+	}) {
 		t.Errorf("Open beside another spine: %v", err)
 	}
 
 	damaged := slices.Clone(good)
 	damaged[len(damaged)-1] ^= 1 // a byte of the last vehicle's block
-	opened, err := Open(byName["part-types"].Path, byName["catalog-models"].Path, write(damaged))
+	opened, err := Open(byName["part-types"].Path, byName["catalog-models"].Path, byName["part-codes"].Path, write(damaged))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := opened[2].Expand(); err == nil || !strings.Contains(err.Error(), "the file is damaged") {
+	if _, err := opened[3].Expand(); err == nil || !strings.Contains(err.Error(), "the file is damaged") {
 		t.Errorf("Expand of a damaged file: %v", err)
 	}
 
@@ -1007,4 +1083,63 @@ func FuzzOpenCompiled(f *testing.F) {
 		c.Fitments("", &FitmentKey{Type: "m"}, 2)
 		file.Expand()
 	})
+}
+
+// describeFitments describes each of fs.
+func describeFitments(fs []*Fitment) string {
+	var b strings.Builder
+	for _, f := range fs {
+		b.WriteString(describe(f) + "\n")
+	}
+	return b.String()
+}
+
+// TestCompiledFiledUnderLinked: loading a compiled catalog checks the
+// entries its fitments are filed under against the filed-under vocabulary
+// loaded beside it, as compiling did: one that vocabulary now maps to
+// other part types refuses it, naming the entry, its part types and a
+// fitment filed under it; one it lacks is drift.
+func TestCompiledFiledUnderLinked(t *testing.T) {
+	files := generated(t, false, 300)
+	path := compile(t, month{}, files)
+	var paths []string
+	var codes *File
+	for _, f := range files {
+		switch {
+		case f.Name == "codes":
+			codes = f
+		case f.Kind != KindCatalog:
+			paths = append(paths, f.Path)
+		}
+	}
+	b, err := os.ReadFile(codes.Path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	remap := func(from, to string) string {
+		p := filepath.Join(t.TempDir(), "d.jsonl")
+		if err := os.WriteFile(p, []byte(strings.Replace(string(b), from, to, 1)), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		return p
+	}
+	_, err = Open(append(paths, remap(`{"code":"RO"},"mappings":[{"id":"rotor"}]`, `{"code":"RO"},"mappings":[{"id":"pads"}]`), path)...)
+	fs, ok := err.(Faults)
+	if !ok || fs[0].Line != 0 || !strings.Contains(fs[0].Detail, `/filed_under: vocabulary "codes" maps {"code":`) ||
+		!strings.Contains(fs[0].Detail, `to part types "pads", none of them the part type of {"type":"rotor","number":`) {
+		t.Errorf("Open beside a remapped code: %v; want a fault about the file naming the entry, its part types and a rotor", err)
+	}
+	opened, err := Open(append(paths, remap(`{"entry":{"code":"RO"},"mappings":[{"id":"rotor"}]}`, `{"entry":{"code":"R0"},"mappings":[{"id":"rotor"}]}`), path)...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var lacks []string
+	for _, d := range Drift(month{}, opened) {
+		if d.Drift == DriftFiledUnder && strings.Contains(d.Detail, `has no entry {"code":`) && strings.Contains(strings.ToUpper(d.Detail), `RO"}`) {
+			lacks = append(lacks, d.Detail)
+		}
+	}
+	if len(lacks) != 1 {
+		t.Errorf("drift about RO beside a vocabulary that lacks it: %q; want one", lacks)
+	}
 }

@@ -24,8 +24,10 @@ import (
 // and the first key of every page of fitments; each lookup then reads one
 // or two runs of bytes. Its answers are its JSON Lines source's.
 //
-// Format 3 is clustered by vehicle (format 2, with wide holding only
-// related vehicles' part of each fitment). A vehicle's block holds its part types
+// Format 4 is format 3 with the entries each fitment is filed under
+// (ADR 0024), and a section to find them by entry and number. Format 3 is
+// clustered by vehicle (format 2, with wide holding only related
+// vehicles' part of each fitment). A vehicle's block holds its part types
 // with their counts, its redirects, and a copy of every fitment with an
 // application to it, so a vehicle's candidates, part types and related
 // vehicles are one or two reads. Every fitment is also stored once in key
@@ -60,8 +62,13 @@ import (
 //	        vehicle's id is its index): each one's first naming and count,
 //	        its fields or target, and its block's head and body lengths;
 //	        the distinct sets of qualifiers (an application's set n is the
-//	        nth, 0 for none); and the pages of keyed, each its first
-//	        record's key and its length
+//	        nth, 0 for none); the pages of keyed, each its first record's
+//	        key and its length; the entries fitments are filed under, in
+//	        the order of the first line naming each (an entry's id is its
+//	        index): each one's first line and count, its fields, and the
+//	        part types of the fitments filed under it, each with the first
+//	        such fitment's side and number; and the pages of filed, each
+//	        its first record's entry and number and its length
 //	keyed   every fitment and retired number in key order (part type,
 //	        side, number), in pages of pageFitments fitments: a fitment
 //	        whole, with the retired numbers it replaced; a retired number
@@ -69,22 +76,27 @@ import (
 //	wide    every fitment of more than wideApplications applications, in
 //	        key order, as its vehicles and years: its line, then each
 //	        application's vehicle id and years
+//	filed   every (entry, fitment) pair, by entry id, number, part type
+//	        and side, in pages of pageFitments: each its entry id, number,
+//	        part type id and side
 //	blocks  per vehicle, in id order: its head, its part types (each its
 //	        id, count of fitments and bytes of them in the body) and its
 //	        redirects by part type from; then its body, a record per
 //	        fitment, by part type, side and number
 //
 // Meta, dict and records are uvarints, varints, bytes and length-prefixed
-// strings. A fitment record is its side, number, line, note and
-// applications; an application its vehicle id, years (a flags byte,
-// hasFirst and hasLast, then each as a varint), qualifier set and option
-// text. Every section starts on an 8-byte boundary, padded with zeros. The
-// bytes are a pure function of the source, the files it was linked
-// against, the data month and the writer: rebuilding gives the same bytes.
+// strings. A fitment record is its side, number, line, note, the ids of
+// the entries it is filed under (at their count, in the entries' byte
+// order) and applications; an application its vehicle id, years (a flags
+// byte, hasFirst and hasLast, then each as a varint), qualifier set and
+// option text. Every section starts on an 8-byte boundary, padded with
+// zeros. The bytes are a pure function of the source, the files it was
+// linked against, the data month and the writer: rebuilding gives the
+// same bytes.
 
 // CompiledFormat is the compiled catalog format this package writes, and
 // the only one it reads.
-const CompiledFormat = 3
+const CompiledFormat = 4
 
 // compiledMagic begins a compiled catalog. No JSON Lines file begins so.
 const compiledMagic = "nvcatalg"
@@ -95,6 +107,7 @@ const (
 	secDict
 	secKeyed
 	secWide
+	secFiled
 	secBlocks
 	numSections
 )
@@ -193,6 +206,16 @@ type compiled struct {
 	// pages are keyed's pages, each its first record's key and offset in
 	// keyed; a page ends where the next begins, the last at keyed's end.
 	pages []keyPage
+	// filed are the entries fitments are filed under (an entry's id is
+	// its index), filedAt finds one by key, filedUses are, by id, the
+	// line first naming each and how many do, and filedTypes, by id, the
+	// part types of the fitments filed under it, each with the first such
+	// fitment's key; filedPages are filed's pages, as pages are keyed's.
+	filed      []*Filed
+	filedAt    map[string]int32
+	filedUses  []use
+	filedTypes [][]FitmentKey
+	filedPages []filedPage
 	// years are the model years from yearBase that applications share.
 	years [yearSpan]int
 }
@@ -216,6 +239,18 @@ type keyPage struct {
 	side   Side
 	number string
 	off    int64
+}
+
+// filedPage is one page of filed: its first record's entry and number,
+// and where it begins in filed.
+type filedPage struct {
+	entry  uint32
+	number string
+	off    int64
+}
+
+func compareFiledPages(a, b filedPage) int {
+	return cmp.Or(cmp.Compare(a.entry, b.entry), strings.Compare(a.number, b.number))
 }
 
 // isCompiled reports whether a file's first bytes are a compiled
@@ -256,7 +291,7 @@ func openCompiled(path string, r io.ReaderAt, size int64) (*File, error) {
 	if n := binary.LittleEndian.Uint64(h[16:]); n != uint64(size) {
 		return nil, bad("its header says %d bytes, and it has %d: it was cut short or added to", n, size)
 	}
-	c := &compiled{r: r, path: path, typeAt: map[string]uint32{}, vehicleAt: map[string]int32{}}
+	c := &compiled{r: r, path: path, typeAt: map[string]uint32{}, vehicleAt: map[string]int32{}, filedAt: map[string]int32{}}
 	dir := make([]byte, numSections*16)
 	if _, err := r.ReadAt(dir, headerSize); err != nil {
 		return nil, bad("%v", err)
@@ -291,7 +326,7 @@ func openCompiled(path string, r io.ReaderAt, size int64) (*File, error) {
 // readMeta reads the meta section into f's header, c's meta and info.
 func (c *compiled) readMeta(f *File, b []byte) error {
 	d := &decoder{b: b}
-	f.Name, f.Version, f.Release, f.DataMonth, f.Spine, f.Vehicles = d.str(), d.str(), d.str(), d.str(), d.str(), d.str()
+	f.Name, f.Version, f.Release, f.DataMonth, f.Spine, f.Vehicles, f.FiledUnder = d.str(), d.str(), d.str(), d.str(), d.str(), d.str(), d.str()
 	m := &c.meta
 	m.Format = CompiledFormat
 	m.SourceHash = d.hash()
@@ -306,8 +341,8 @@ func (c *compiled) readMeta(f *File, b []byte) error {
 		m.Skipped = append(m.Skipped, DriftKind(d.str()))
 	}
 	c.info = CatalogInfo{
-		Name: f.Name, Version: f.Version, Release: f.Release, DataMonth: f.DataMonth, Spine: f.Spine, Vehicles: f.Vehicles, Hash: m.SourceHash,
-		Fitments: int(d.uint()), Applications: int(d.uint()), Redirects: int(d.uint()), Retired: int(d.uint()),
+		Name: f.Name, Version: f.Version, Release: f.Release, DataMonth: f.DataMonth, Spine: f.Spine, Vehicles: f.Vehicles, FiledUnder: f.FiledUnder, Hash: m.SourceHash,
+		Fitments: int(d.uint()), Applications: int(d.uint()), Redirects: int(d.uint()), Retired: int(d.uint()), Filings: int(d.uint()),
 	}
 	if d.err == nil && len(d.b) > 0 {
 		d.fail("%d bytes after the meta", len(d.b))
@@ -409,14 +444,69 @@ func (c *compiled) readDict(b []byte) error {
 		at += size
 		c.pages = append(c.pages, p)
 	}
-	switch {
-	case d.err != nil:
-	case at != c.sec[secKeyed].n:
+	if d.err == nil && at != c.sec[secKeyed].n {
 		d.fail("the pages are %d bytes of %d", at, c.sec[secKeyed].n)
-	case len(d.b) > 0:
+	}
+	c.readEntries(d)
+	if d.err == nil && len(d.b) > 0 {
 		d.fail("%d bytes after the dictionary", len(d.b))
 	}
 	return d.err
+}
+
+// readEntries reads the dict's entries and filed's pages.
+func (c *compiled) readEntries(d *decoder) {
+	n := d.count()
+	c.filed, c.filedUses, c.filedTypes = make([]*Filed, 0, n), make([]use, 0, n), make([][]FitmentKey, 0, n)
+	for i := range n {
+		c.filedUses = append(c.filedUses, use{line: int(d.uint()), app: -1, n: int(d.uint())})
+		entry := make(map[string]string)
+		for range d.count() {
+			name := d.str()
+			entry[name] = d.str()
+		}
+		e := newFiled(entry, entryKey(entry))
+		e.id = int32(i)
+		var types []FitmentKey
+		for range d.count() {
+			t := d.uint()
+			if t >= uint64(len(c.types)) {
+				d.fail("entry %d's part type is out of range", i)
+				return
+			}
+			k := FitmentKey{Type: c.types[t].name}
+			if len(d.b) > 0 {
+				k.Side, d.b = Side(d.b[0]), d.b[1:]
+			}
+			k.Number = d.str()
+			types = append(types, k)
+		}
+		c.filedAt[e.key] = e.id
+		c.filed, c.filedTypes = append(c.filed, e), append(c.filedTypes, types)
+	}
+	n = d.count()
+	c.filedPages = make([]filedPage, 0, n)
+	at := int64(0)
+	for i := range n {
+		p := filedPage{entry: uint32(d.uint()), number: d.str(), off: at}
+		size := int64(d.uint())
+		switch {
+		case int(p.entry) >= len(c.filed):
+			d.fail("filed page %d's entry is out of range", i)
+		case size == 0 || size > c.sec[secFiled].n-at:
+			d.fail("filed page %d is out of range", i)
+		case i > 0 && compareFiledPages(c.filedPages[i-1], p) > 0:
+			d.fail("filed pages out of order")
+		}
+		if d.err != nil {
+			return
+		}
+		at += size
+		c.filedPages = append(c.filedPages, p)
+	}
+	if d.err == nil && at != c.sec[secFiled].n {
+		d.fail("the filed pages are %d bytes of %d", at, c.sec[secFiled].n)
+	}
 }
 
 func comparePages(a, b keyPage) int {
@@ -518,7 +608,7 @@ func (r *cursor) str() string {
 	return s
 }
 
-// id reads a part type's or vehicle's id, below n.
+// id reads a part type's, vehicle's or entry's id, below n.
 func (r *cursor) id(n int, what string) uint32 {
 	v := r.uint()
 	if v >= uint64(n) {
@@ -575,11 +665,12 @@ func (r *cursor) side() Side {
 }
 
 // fitment reads a fitment record's body, after its part type: its side,
-// number, line, note and applications, taking the applications from apps,
-// or allocating them for nil.
+// number, line, note, entries and applications, taking the applications
+// from apps, or allocating them for nil.
 func (r *cursor) fitment(typ string, apps *slab[Application]) Fitment {
 	fit := Fitment{Key: FitmentKey{Type: typ}}
 	fit.Key.Side, fit.Key.Number, fit.Line, fit.Note = r.side(), r.str(), int(r.uint()), r.str()
+	fit.FiledUnder = r.entries()
 	switch n := r.count(); {
 	case n > 0 && apps == nil:
 		fit.Applications = make([]Application, n)
@@ -601,6 +692,7 @@ func (r *cursor) matching(vehicle uint32, year *int, into []int32) (Side, string
 	side, number := r.side(), r.str()
 	r.uint()
 	r.str()
+	r.skipEntries()
 	n := r.count()
 	for i := range n {
 		v := r.id(len(r.c.vehicles), "vehicle")
@@ -614,12 +706,12 @@ func (r *cursor) matching(vehicle uint32, year *int, into []int32) (Side, string
 }
 
 // partial reads a fitment record's body, after its part type, as matched
-// applications: its line and note, and the applications of keep,
+// applications: its line, note and entries, and the applications of keep,
 // ascending, each with its index.
-func (r *cursor) partial(keep []int32, into []indexedApp) (int, string, []indexedApp) {
+func (r *cursor) partial(keep []int32, into []indexedApp) (int, string, []*Filed, []indexedApp) {
 	r.side()
 	r.str()
-	line, note := int(r.uint()), r.str()
+	line, note, filed := int(r.uint()), r.str(), r.entries()
 	n := r.count()
 	for i := range n {
 		v := r.c.vehicles[r.id(len(r.c.vehicles), "vehicle")]
@@ -637,7 +729,33 @@ func (r *cursor) partial(keep []int32, into []indexedApp) (int, string, []indexe
 	if len(keep) > 0 {
 		r.c.damaged("application %d of a fitment of %d is out of range", keep[0], n)
 	}
-	return line, note, into
+	return line, note, filed, into
+}
+
+// entries reads a fitment record's entries, nil for none. One entry, as
+// most fitments have, is a slice of the dictionary's, not an allocation:
+// the fitment shares it, and never writes to it.
+func (r *cursor) entries() []*Filed {
+	n := r.count()
+	switch n {
+	case 0:
+		return nil
+	case 1:
+		id := r.id(len(r.c.filed), "entry")
+		return r.c.filed[id : id+1 : id+1]
+	}
+	out := make([]*Filed, n)
+	for i := range out {
+		out[i] = r.c.filed[r.id(len(r.c.filed), "entry")]
+	}
+	return out
+}
+
+// skipEntries reads past a fitment record's entries.
+func (r *cursor) skipEntries() {
+	for range r.count() {
+		r.uint()
+	}
 }
 
 // application reads an application's years, qualifiers and option text
@@ -676,13 +794,14 @@ type hit struct {
 	// or, for a far record's fitment read whole, in keyed.
 	rec  cursor
 	keep []int32 // ascending
-	// far: its block holds its line, note and its applications to the
-	// vehicle, those that matched in own; the whole fitment is n bytes at
-	// off in keyed, and its vehicles and years, after their line, sn
-	// bytes at soff in wide.
+	// far: its block holds its line, note, entries and its applications
+	// to the vehicle, those that matched in own; the whole fitment is n
+	// bytes at off in keyed, and its vehicles and years, after their
+	// line, sn bytes at soff in wide.
 	far      bool
 	line     int
 	note     string
+	filed    []*Filed
 	own      []indexedApp
 	off, n   int64
 	soff, sn int64
@@ -751,6 +870,7 @@ func (c *compiled) shared(cat *Catalog, vehicles []Vehicle, year *int, side *Sid
 			r.str()
 			r.uint()
 			r.str()
+			r.skipEntries()
 			s.near = append(s.near, nearShare{k: k, r: r})
 		}
 	})
@@ -922,6 +1042,8 @@ func (c *compiled) blockHit(body *cursor, typ, vehicle uint32, year *int, side *
 	case recFar:
 		h := &hit{typ: typ, far: true}
 		h.side, h.number, h.line, h.note = body.side(), body.str(), int(body.uint()), body.str()
+		filed := *body // its entries, read only for a hit
+		body.skipEntries()
 		for range body.count() {
 			i := body.uint()
 			if i > math.MaxInt32 {
@@ -940,6 +1062,7 @@ func (c *compiled) blockHit(body *cursor, typ, vehicle uint32, year *int, side *
 		if len(h.keep) == 0 || side != nil && h.side != *side {
 			return nil
 		}
+		h.filed = filed.entries()
 		return h
 	default:
 		c.damaged("a block record of kind %d", kind)
@@ -1030,12 +1153,12 @@ func (c *compiled) matchedFitment(run []*hit, matched []indexedApp) (Fitment, []
 	matched = matched[:0]
 	for _, h := range run {
 		if h.far {
-			fit.Line, fit.Note = h.line, h.note
+			fit.Line, fit.Note, fit.FiledUnder = h.line, h.note, h.filed
 			matched = append(matched, h.own...)
 			continue
 		}
 		r := h.rec
-		fit.Line, fit.Note, matched = r.partial(h.keep, matched)
+		fit.Line, fit.Note, fit.FiledUnder, matched = r.partial(h.keep, matched)
 	}
 	slices.SortStableFunc(matched, func(a, b indexedApp) int { return cmp.Compare(a.i, b.i) })
 	return fit, slices.CompactFunc(matched, func(a, b indexedApp) bool { return a.i == b.i })
@@ -1190,6 +1313,7 @@ func (c *compiled) skip(r *cursor, k keyedRecord) {
 		r.str()
 		return
 	}
+	r.skipEntries()
 	for range r.count() {
 		r.uint()
 		r.holds(nil)
@@ -1255,6 +1379,46 @@ func (c *compiled) retiredAt(r *cursor, rec keyedRecord) *Retired {
 	return rt
 }
 
+// byFiled is Catalog.ByFiled: the pages of filed that may hold the entry
+// and number, one read, then each fitment's record in keyed, one read
+// each.
+func (c *compiled) byFiled(entry map[string]string, number string, side *Side) []*Fitment {
+	id, ok := c.filedAt[entryKey(entry)]
+	if !ok || len(c.filedPages) == 0 {
+		return nil
+	}
+	k := filedPage{entry: uint32(id), number: number}
+	// From the last page that begins before the entry and number, as the
+	// pairs may run on from it, to the last that begins at them.
+	from := max(sort.Search(len(c.filedPages), func(i int) bool { return compareFiledPages(c.filedPages[i], k) >= 0 })-1, 0)
+	to := sort.Search(len(c.filedPages), func(i int) bool { return compareFiledPages(c.filedPages[i], k) > 0 })
+	if from >= to {
+		return nil
+	}
+	end := c.sec[secFiled].n
+	if to < len(c.filedPages) {
+		end = c.filedPages[to].off
+	}
+	r := cursor{c, c.read(secFiled, c.filedPages[from].off, end-c.filedPages[from].off), 0}
+	var keys []FitmentKey
+	for r.more() {
+		e, n := r.id(len(c.filed), "entry"), r.str()
+		fk := FitmentKey{Number: n, Type: c.typeName(r.id(len(c.types), "part type")), Side: r.side()}
+		if e == uint32(id) && n == number && (side == nil || fk.Side == *side) {
+			keys = append(keys, fk)
+		}
+	}
+	var out []*Fitment
+	for _, fk := range keys {
+		rec, r, ok := c.keyed(fk)
+		if !ok || rec.kind != recFitment {
+			c.damaged("filed names %s, which keyed has no fitment of", fk)
+		}
+		out = append(out, c.fitmentAt(&r, rec))
+	}
+	return out
+}
+
 func (c *compiled) byNumber(k FitmentKey) (*Fitment, *Retired) {
 	rec, r, ok := c.keyed(k)
 	switch {
@@ -1280,6 +1444,7 @@ func (c *compiled) retiredTo(k FitmentKey) []*Retired {
 	}
 	r.uint()
 	r.str()
+	r.skipEntries()
 	for range r.count() {
 		r.uint()
 		r.holds(nil)
@@ -1396,12 +1561,17 @@ func (f *File) Expand() (g *File, err error) {
 			g, err = nil, Faults{fault(f.Path, 0, "%v", e)}
 		}
 	}()
-	g = &File{Path: f.Path, Hash: f.Hash, Kind: f.Kind, Name: f.Name, Version: f.Version, DataMonth: f.DataMonth, Spine: f.Spine, Vehicles: f.Vehicles, Release: f.Release}
-	// Its own vehicles: indexLines numbers them.
+	g = &File{Path: f.Path, Hash: f.Hash, Kind: f.Kind, Name: f.Name, Version: f.Version, DataMonth: f.DataMonth, Spine: f.Spine, Vehicles: f.Vehicles, Release: f.Release, FiledUnder: f.FiledUnder}
+	// Its own vehicles and entries: indexLines numbers them.
 	own := make(map[*Vehicle]*Vehicle, len(c.vehicles))
 	for _, v := range c.vehicles {
 		w := *v
 		own[v] = &w
+	}
+	ownFiled := make(map[*Filed]*Filed, len(c.filed))
+	for _, e := range c.filed {
+		w := *e
+		ownFiled[e] = &w
 	}
 	r := cursor{c, c.read(secKeyed, 0, c.sec[secKeyed].n), 0}
 	var apps slab[Application]
@@ -1415,6 +1585,10 @@ func (f *File) Expand() (g *File, err error) {
 		fit := r.fitment(c.typeName(rec.typ), &apps)
 		for i := range fit.Applications {
 			fit.Applications[i].Vehicle = own[fit.Applications[i].Vehicle]
+		}
+		fit.FiledUnder = slices.Clone(fit.FiledUnder) // its own: entries shares the dictionary's
+		for i, e := range fit.FiledUnder {
+			fit.FiledUnder[i] = ownFiled[e]
 		}
 		g.Fitments = append(g.Fitments, fit)
 		for range r.count() {

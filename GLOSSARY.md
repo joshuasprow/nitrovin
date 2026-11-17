@@ -281,7 +281,9 @@ a qualifier value its decode cannot
 produce, or one the mapping's own model never decodes to, an extension named like a vPIC entry under the same make,
 a mapping's or a catalog application's years outside its model's model years,
 a catalog's vehicle its vehicle vocabulary lacks or lists unmapped, a redirect
-no application answers, an orphan shelf row, a personal-looking stock field.
+no application answers, an entry a fitment is filed under that its filed-under
+vocabulary lacks or lists unmapped, a fitment filed under none, an orphan
+shelf row, a personal-looking stock field.
 Reported,
 never refused: NHTSA's monthly changes are not the author's mistakes.
 _Avoid_: stale, invalid, broken mapping
@@ -290,7 +292,9 @@ _Avoid_: stale, invalid, broken mapping
 What refuses a vocabulary, extension set, declared spine, catalog or stock
 file whatever the data month: a malformed line, an unknown field, a duplicate
 entry, id or fitment key, a reference no loaded file defines, a second
-catalog, a retired number that is live or points at no fitment, a shelf whose
+catalog, a retired number that is live or points at no fitment, a fitment
+filed under an entry its filed-under vocabulary maps to none of the
+fitment's part types, a shelf whose
 catalog is not loaded, a stock row's part or vehicle the catalog's files lack. A fault stops nitrovin from
 starting; drift never does.
 _Avoid_: error (a decode's error codes are about the VIN), invalid
@@ -381,7 +385,9 @@ _Avoid_: alias (the word is kept away from mappings and entries), old number
 The request that reads a loaded catalog (ADR 0018), shaped by its inputs: a
 vehicle's part types, a vehicle and a part type's candidates, a fitment's
 vehicles, a vehicle's related vehicles. Nothing to fit is a status (`unknown`,
-`no-vehicle`, `no-fitment`, `no-catalog`), never a refusal.
+`no-vehicle`, `no-fitment`, `no-catalog`), never a refusal, and so is a
+key by what a fitment is filed under that reaches more than one
+(`ambiguous`, ADR 0024).
 _Avoid_: match, lookup, interchange
 
 **Part-type summary**:
