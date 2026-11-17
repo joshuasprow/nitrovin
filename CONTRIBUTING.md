@@ -95,7 +95,8 @@ CI runs what a change can affect. Every test workflow cancels its run on a
 branch when a newer push supersedes it (`release.yml` and the refresh never
 cancel), and none runs for Markdown, `GLOSSARY.md`, `NOTICE` or `docs/`
 alone, except the API documents the contract tests read, the deviation
-witnesses the oracle reads, and `README.md`, whose install, MCP and verify
+witnesses the oracle reads, `docs/vocabularies.md`, whose image recipe
+`release.yml` builds, and `README.md`, whose install, MCP and verify
 text `TestFormREADME` holds to the form's.
 
 - `contract.yml` (schemas, the no-data tests and the `js/wasm` build):
@@ -129,7 +130,8 @@ text `TestFormREADME` holds to the form's.
 - `oracle-smoke.yml` (the Postgres oracle end to end): `oracle.yml`,
   `scripts/oracle.sh`, `testdata/oracle/`, `docs/deviations/`.
 - `release.yml`'s snapshot, benchmarks and the tests of `scripts/release.sh`
-  when release files or `bench/vocab` change, and on dispatch without a tag
+  when release files, `bench/vocab`, `docs/vocabularies.md` (its image
+  recipe) or `testdata/vocab/fitment/` change, and on dispatch without a tag
   (`gh workflow run release.yml --ref <branch>`). Dispatched with a tag, it
   retries that tag's release ([When a release is red](#when-a-release-is-red)).
 - `deploy.yml` (nitrovin.app): `deploy/cloudflare/`, the workflow itself. On
@@ -902,15 +904,22 @@ A `v*` tag runs `.github/workflows/release.yml`, which runs goreleaser
 (`.goreleaser.yaml`) with `mise.toml`'s Go, zig, goreleaser and cosign, so
 a rebuild of a tag runs the same toolchain: the six binaries, the six C
 library archives, the six Linux packages (`.deb`, `.rpm`, `.apk` for amd64
-and arm64), `server.json`, `checksums.txt`, a cosign keyless bundle per
-asset, the `ghcr.io/joshuasprow/nitrovin` image signed by digest, the
+and arm64), `server.json`, the two schemas (`docs/api`'s
+`vocabulary.schema.json` and `decode.schema.json`), `checksums.txt`, a
+cosign keyless bundle per asset, the `ghcr.io/joshuasprow/nitrovin` image
+signed by digest, the
 Homebrew cask in
 `joshuasprow/homebrew-tap` and the Scoop manifest in
-`joshuasprow/scoop-bucket`. It verifies every signature, checksum and
+`joshuasprow/scoop-bucket`. The image is the binary alone, run as uid
+65532, with an empty `/tmp` that user owns (mode 0700), the scratch a
+build stage's `vocab compile` needs. The workflow verifies every signature, checksum and
 version stamp, then publishes `server.json` to the MCP Registry as
 `io.github.joshuasprow/nitrovin` (GitHub OIDC, no secret) in a step of its
-own. A pull request that touches the release builds a snapshot and installs
-its packages in Debian, Fedora and Alpine. The monthly refresh tags patch
+own. A pull request that touches the release builds a snapshot, installs
+its packages in Debian, Fedora and Alpine, and builds the image recipe of
+[docs/vocabularies.md](docs/vocabularies.md#at-image-build) from the
+snapshot's image: a stage that compiles the synthetic catalog in `RUN`,
+and one that serves it. The monthly refresh tags patch
 releases itself; a code change ships with the next tag. Until v1.0.0 every
 tag is a prerelease (ADR 0007), and the workflow refuses a tag whose
 prerelease setting disagrees. A rebuild of a tag writes the same bytes
@@ -924,7 +933,7 @@ seen it, it is that version for good. The publishers are not atomic, though:
 goreleaser pushes the image, then makes the GitHub release, then runs winget,
 the Homebrew cask and the Scoop manifest (these three carry on past each
 other's failure and are listed together at the end of its log), and the
-steps after it sign `server.json`, verify everything, sign the image and
+steps after it sign `server.json` and the schemas, verify everything, sign the image and
 publish to the MCP Registry. A red run is one of three cases.
 
 1. **Red before anything was published**: the tag has no GitHub release (a

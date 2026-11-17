@@ -334,8 +334,8 @@ each megabyte of the vehicles and years of the fitments of many
 applications (universal parts) it shares, so it answers as quickly read by byte range from a browser's store
 as from a disk. Compiling streams the catalog: it reads it once, sorts in a
 temporary directory, and its memory grows with the catalog's vehicles and
-part types, not its lines (about 200 MB at the scale of a parts system). Compile at image build, with the binary
-that will serve it:
+part types, not its lines (about 200 MB at the scale of a parts system). Compile with the binary
+that will serve it, at image build ([below](#at-image-build)):
 
 ```sh
 nitrovin vocab compile -o catalog.compiled testdata/vocab/fitment   # the catalog, its spine, vehicles and codes
@@ -366,6 +366,61 @@ in full and checks and measures it again, as its source. JSON Lines stays
 the published, diffable form; the compiled file is a deployment's, and the
 same source, data month and nitrovin version always compile to the same
 bytes.
+
+Compiling sorts in a temporary directory, `$TMPDIR` or else `/tmp`, which
+it removes when it ends, and writes the compiled file beside `-o` before
+renaming it into place. The scratch is about twice the compiled file: a
+parts system's catalog needed 537 MB of it for a 315 MB compiled file
+(November 2026). When `/tmp` is small or in memory, point `TMPDIR` at a
+disk with the room.
+
+#### At image build
+
+The release image (`ghcr.io/joshuasprow/nitrovin`) is the binary alone,
+with no shell, run as uid 65532. From v0.3.11 it has an empty `/tmp`
+owned by that user, mode 0700: the one directory the user can write. A
+build stage from the image compiles there, in `RUN`'s exec form, and the
+final stage, from the same image, serves the file. Saved as
+`catalog.Dockerfile`, this compiles a directory holding a catalog with its
+spine, vehicles and codes (the synthetic one's file names):
+
+```dockerfile
+ARG NITROVIN=ghcr.io/joshuasprow/nitrovin:latest
+
+FROM ${NITROVIN} AS compile
+COPY . /catalog/
+RUN ["/usr/bin/nitrovin", "vocab", "compile", "-o", "/tmp/catalog.compiled", "/catalog"]
+
+FROM ${NITROVIN}
+COPY part-types.jsonl catalog-models.jsonl part-codes.jsonl /vocab/
+COPY --from=compile /tmp/catalog.compiled /vocab/
+ENV NITROVIN_VOCAB=/vocab:/vocab/catalog.compiled
+```
+
+```sh
+docker build -f catalog.Dockerfile --build-arg NITROVIN=ghcr.io/joshuasprow/nitrovin:v0.3.11 -t parts testdata/vocab/fitment
+docker run --rm -p 8080:8080 parts   # serve, as the image does; /v1/info lists the compiled catalog
+```
+
+Pin `NITROVIN` to the release you deploy: both stages read it, so the
+binary that compiles is the one that serves. The compile stage's `/tmp`
+holds the scratch and the compiled file at once, so the builder needs
+room for about three times the compiled file; only the compiled file
+reaches the final image, and `/vocab` loads the catalog's other files (a
+directory loads only its `*.jsonl`). A pull request that touches the
+release or this guide builds the recipe, as written here, from the
+release's snapshot image against `testdata/vocab/fitment`, and asks the
+result's `/v1/info` for the compiled catalog.
+
+A writer that validates its lines in CI pins the schema by the same tag:
+every GitHub release from v0.3.11 attaches `vocabulary.schema.json` and
+`decode.schema.json`, each listed in the release's `checksums.txt` (which
+its cosign bundle signs) and with a bundle of its own.
+
+```sh
+gh release download v0.3.11 -R joshuasprow/nitrovin -p vocabulary.schema.json -p checksums.txt
+sha256sum --check --ignore-missing checksums.txt
+```
 
 ## Stock
 
