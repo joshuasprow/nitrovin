@@ -26,6 +26,12 @@ body { --bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint:
   --metal: url(brushed.svg) 0 0 / 600px 120px, linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc);
   --raised: inset 0 1px 0 #fff, 0 2px 0 var(--steel);
   --emboss: 0 1px 0 rgb(255 255 255 / .9), 0 -1px 1px rgb(0 0 0 / .45);
+  /* The tape, the same in both colour schemes: black label-maker vinyl,
+     faint ridges across it, a lit top edge, and letters raised white. */
+  --tape: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .13) 2px 3px), linear-gradient(#30363d, #171a1e);
+  --tape-edge: #050607; --tape-lit: #69727c; --on-tape: #f6f8fa;
+  --tape-emboss: -1px -1px 0 rgb(8 7 15 / .67), 1px 1px 0 rgb(255 255 255 / .33), 0 2px 2px rgb(8 7 15 / .53);
+  --tape-lift: 0 5px 7px rgb(8 7 15 / .4);
   font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 1rem 1rem 8rem; color: var(--fg); background: var(--bg); }
 @media (prefers-color-scheme: dark) {
   body { --bg: #16222d; --fg: #eef2f5; --muted: #a9b6c2; --line: #45566a; --faint: #3a4a5c; --card-bg: #1f2d3a; --link: #8ec5ff; --bad: #ff8a8a;
@@ -249,12 +255,16 @@ table.sum .skip { color: var(--muted); }
 
 /* "Also known as" has no box: the maker's, the vehicle's and the year's
    lines run on down through its stacks, one for each vocabulary. A name
-   is a small plate, its four columns fixed fractions of the width (130,
-   170, 465 and 255 of 1020, which the lines above are drawn to): the
-   vocabulary's stamp, then the make, the model and the years, each a word
-   struck over its group's mark, under its group's bracket. The line into
-   a plate is drawn by the plate (::after), in the gap above it, so the
-   lines run from plate to plate. A dashed line or bracket is a doubt.
+   is a strip of label-maker tape (--tape: the one thing here that is not
+   metal, as a parts bin's label is not), its four columns fixed fractions
+   of the width (130, 170, 465 and 255 of 1020, which the lines above are
+   drawn to): the vocabulary's stamp, then the make, the model and the
+   years, each a word raised over its group's mark, under its group's
+   bracket. The words keep their case: a vocabulary's entry is case-exact.
+   The line into a strip is drawn by the strip (::after), in the gap above
+   it, so the lines run from strip to strip. A dashed line or bracket is a
+   doubt.
+
 
    A vocabulary with several names is a stack: the first plate on top and
    the edges of up to three more under it (shadows), which the lines to
@@ -262,7 +272,8 @@ table.sum .skip { color: var(--muted); }
    checkbox's label). On, the stack is one plate: the names are rows of
    it with no gap, under the top row's brackets and beside the one stamp. */
 .aka { position: relative; display: flow-root; margin: 0 16px; }
-.aka h2 { position: absolute; top: 10px; left: 0; margin: 0; font: 900 9px/1.2 var(--label-font); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.aka h2 { position: absolute; top: 6px; left: 0; margin: 0; padding: .2rem .5rem; font: 900 9px/1.2 var(--cell-font); letter-spacing: .14em; text-transform: uppercase;
+  color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 2px solid var(--tape-edge); border-radius: 1px; box-shadow: 0 2px 3px rgb(8 7 15 / .35); }
 ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
 .stack { position: relative; --under: 0px; }
 /* A closed stack: the plates under the top one are away, but for their
@@ -272,29 +283,32 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
 .stack.d2:has(.fan:not(:checked)) { --under: 22px; }
 .stack.d3:has(.fan:not(:checked)) { --under: 32px; }
 .stack { padding-bottom: var(--under); }
-.stack.d1:has(.fan:not(:checked)) .tagplate { box-shadow: var(--raised), 0 10px 0 -5px #d3dae0, 0 11px 0 -4px var(--steel); }
-.stack.d2:has(.fan:not(:checked)) .tagplate { box-shadow: var(--raised), 0 10px 0 -5px #d3dae0, 0 11px 0 -4px var(--steel), 0 20px 0 -10px #c3cbd2, 0 21px 0 -9px var(--steel); }
-.stack.d3:has(.fan:not(:checked)) .tagplate { box-shadow: var(--raised), 0 10px 0 -5px #d3dae0, 0 11px 0 -4px var(--steel), 0 20px 0 -10px #c3cbd2, 0 21px 0 -9px var(--steel), 0 30px 0 -15px #b3bcc5, 0 31px 0 -14px var(--steel); }
+.stack.d1:has(.fan:not(:checked)) .tagplate { box-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), var(--tape-lift); }
+.stack.d2:has(.fan:not(:checked)) .tagplate { box-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), var(--tape-lift); }
+.stack.d3:has(.fan:not(:checked)) .tagplate { box-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), 0 30px 0 -15px #1e2226, 0 31px 0 -14px var(--tape-edge), var(--tape-lift); }
 /* The lines into the stack after a closed one start under its top plate. */
 .stack.d1:has(.fan:not(:checked)) + .stack .tagplate .seg::after { top: -43px; height: 31px; }
 .stack.d2:has(.fan:not(:checked)) + .stack .tagplate .seg::after { top: -53px; height: 41px; }
 .stack.d3:has(.fan:not(:checked)) + .stack .tagplate .seg::after { top: -63px; height: 51px; }
 .tagplate { position: relative; display: grid; grid-template-columns: 130fr 170fr 465fr 255fr; align-items: center; margin-top: 30px; min-height: 2.9rem;
-  color: var(--on-metal); background: var(--metal); border: 1px solid var(--steel); border-radius: 4px; box-shadow: var(--raised), 0 4px 8px rgb(0 0 0 / .2); }
-.tagplate .stamp { align-self: stretch; display: flex; align-items: center; gap: .35rem; padding: 0 .5rem 0 1.5rem; border-right: 1px solid var(--steel); min-width: 0;
-  font: 700 10px var(--cell-font); letter-spacing: .04em; text-transform: uppercase; text-shadow: 0 1px 0 rgb(255 255 255 / .8);
-  background: radial-gradient(circle at .7rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px); }
+  color: var(--on-tape); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--tape-lift); }
+/* On the tape a group's mark is its light colour, in either scheme. */
+.tagplate .g-wmi { --cm: #ff6b81; }
+.tagplate .g-vds { --cm: #7db4ff; }
+.tagplate .g-year { --cm: #ffb067; }
+.tagplate .stamp { align-self: stretch; display: flex; align-items: center; gap: .35rem; padding: 0 .5rem 0 .7rem; border-right: 1px solid rgb(255 255 255 / .18); min-width: 0;
+  font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss); }
 .stamp .voc { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 /* The switch: the vocabulary's name on a line of its own, and under it
    how many names its stack holds and which way it goes. */
 .stamp.switch { cursor: pointer; flex-wrap: wrap; align-content: center; row-gap: 2px; }
 .stamp.switch .voc { flex-basis: 100%; }
-.stamp .count { flex: none; padding: 0 .35rem; border: 1px solid var(--steel); border-radius: 999px; background: rgb(255 255 255 / .55); }
+.stamp .count { flex: none; padding: 0 .35rem; border: 1px solid rgb(255 255 255 / .5); border-radius: 999px; }
 .stamp.switch::after { content: "▾"; flex: none; font-size: 9px; }
 .fan:checked ~ ol .stamp.switch::after { content: "▴"; }
 .fan:focus-visible ~ ol .stamp.switch { outline: 3px solid var(--link); outline-offset: -3px; }
 .seg { position: relative; align-self: stretch; display: flex; align-items: center; justify-content: center; padding: .35rem .6rem; text-align: center; min-width: 0; }
-.seg .w { font: 700 1.05rem/1.2 var(--cell-font); text-shadow: var(--emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere; }
+.seg .w { font: 900 1.05rem/1.2 var(--cell-font); letter-spacing: .08em; text-shadow: var(--tape-emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere; }
 .seg::before { content: ""; position: absolute; left: 8px; right: 8px; top: -12px; height: 5px; border: 3px solid var(--c); border-bottom: 0; }
 .seg::after { content: ""; position: absolute; left: calc(50% - 1.5px); top: -31px; height: 19px; border-left: 3px solid var(--c); }
 .seg.unsure::before, .seg.unsure .w { border-style: dashed; }
@@ -306,14 +320,12 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
    brackets and no stamp, only a hairline between their names. */
 .tagplate.below { margin-top: 0; border-top: 0; border-radius: 0; box-shadow: none; }
 .tagplate.below .seg::before, .tagplate.below .seg::after { display: none; }
-.tagplate.below .seg, .tagplate.below .stamp { border-top: 1px solid rgb(111 123 134 / .45); }
-.tagplate.below .stamp { background: none; }
+.tagplate.below .seg, .tagplate.below .stamp { border-top: 1px solid rgb(255 255 255 / .14); }
 .stack:has(.fan:checked) .tagplate { box-shadow: none; border-bottom: 0; }
-.stack:has(.fan:checked) .tagplate:first-child { border-radius: 4px 4px 0 0; box-shadow: inset 0 1px 0 #fff; }
-.stack:has(.fan:checked) .tagplate:last-child { border-bottom: 1px solid var(--steel); }
-.stack:has(.fan:checked) .tagplate:last-child { border-radius: 0 0 4px 4px; box-shadow: 0 2px 0 var(--steel), 0 6px 10px rgb(0 0 0 / .2); }
+.stack:has(.fan:checked) .tagplate:first-child { border-radius: 2px 2px 0 0; }
+.stack:has(.fan:checked) .tagplate:last-child { border-bottom: 3px solid var(--tape-edge); border-radius: 0 0 2px 2px; box-shadow: var(--tape-lift); }
 .tagplate.blank { grid-template-columns: 130fr 890fr; color: var(--muted); background: none; border: 3px dashed var(--faint); box-shadow: none; }
-.tagplate.blank .stamp { border-right-color: var(--faint); background: none; padding-left: .6rem; text-shadow: none; }
+.tagplate.blank .stamp { border-right-color: var(--faint); text-shadow: none; }
 .tagplate.blank .none { grid-column: 2; padding: .5rem .75rem; }
 .tagplate.blank .none:first-child { grid-column: 1 / -1; }
 .tagplate .info { position: absolute; right: .45rem; top: 50%; transform: translateY(-50%); width: 1.35rem; height: 1.35rem; padding: 0; border-radius: 50%; font: italic 700 12px Georgia, serif; text-transform: none; letter-spacing: 0; }
@@ -373,9 +385,9 @@ button.linkish:active { transform: none; box-shadow: none; }
   .card { margin: 0; }
   .card dl { grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); }
   .aka { margin: 1.25rem 0 0; }
-  .aka h2 { position: static; width: auto; margin-bottom: -6px; }
+  .aka h2 { position: static; width: fit-content; margin-bottom: -6px; }
   .tagplate { grid-template-columns: 1fr 2fr 1.4fr; }
-  .tagplate .stamp { grid-column: 1 / -1; padding-block: .2rem; border-right: 0; border-bottom: 1px solid var(--steel); }
+  .tagplate .stamp { grid-column: 1 / -1; padding-block: .2rem; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18); }
   .tagplate.below .stamp { display: none; }
   .tagplate.blank { grid-template-columns: minmax(0, 1fr); }
   .tagplate.blank .none { grid-column: 1; }
