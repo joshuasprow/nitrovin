@@ -184,6 +184,10 @@ form.filter label { flex-basis: 100%; }
 .live .plate:focus-within { outline: 3px solid var(--link); outline-offset: 3px; }
 .live .plate:focus-within .cell.next { box-shadow: inset 0 -6px 0 var(--link); animation: caret 1s steps(2) infinite; }
 @keyframes caret { 50% { box-shadow: none; } }
+/* A picked cell is inked: dark, its character light, ringed in its
+   group's colour. */
+.live .cell.sel { background: #16202b; color: #fff; text-shadow: none; border-radius: 4px; box-shadow: inset 0 0 0 3px var(--c); }
+.live .cell.sel.bad { background: var(--bad); }
 
 /* The cards: six in a row, each a tag hung under its leader line by an
    eyelet, a hole a radial mask punches through it (mask-clip keeps the

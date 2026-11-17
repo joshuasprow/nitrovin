@@ -13,6 +13,10 @@
 //   entry, so Back steps through VINs and not keystrokes;
 // - a group whose characters were just completed is marked fresh, which
 //   the stylesheet draws in;
+// - a click picks a cell and a drag a run of them, as the input's own
+//   selection, so a key typed replaces what is picked and the pick moves
+//   on, Backspace takes it out and the pick moves back, and the arrows
+//   move it; past the last character there is the caret, and typing adds;
 // - whole VINs that decoded are kept in this browser (the last 8) and
 //   offered as chips in the examples' place.
 //
@@ -106,14 +110,80 @@
   // the first change to one, so Back returns to it.
   const how = (vin) => (vin.length === LENGTH || (history.state && history.state.whole) ? 'push' : 'replace');
 
+  // The pick: the cells from a to b, whichever is first, as the input's
+  // selection. Past the last character it is the caret, at the end.
+  const pick = (input, a, b) => {
+    const n = input.value.length;
+    const from = Math.min(a, b, n);
+    const to = Math.min(Math.max(a, b) + 1, n);
+    input.setSelectionRange(from, Math.max(from, to), b < a ? 'backward' : 'forward');
+    show();
+  };
+  // show draws the pick on the cells, and the caret when nothing is picked.
+  const show = () => {
+    const input = document.getElementById('from-vin');
+    const form = document.getElementById('vin-form');
+    if (!input || !form) return;
+    const on = document.activeElement === input;
+    const from = input.selectionStart;
+    const to = input.selectionEnd;
+    form.querySelectorAll('.cell').forEach((cell, i) => {
+      cell.classList.toggle('sel', on && i >= from && i < to);
+      cell.classList.toggle('next', from === to && i === input.value.length);
+    });
+  };
+  const cellAt = (x) => {
+    const box = document.querySelector('#vin-form .cells').getBoundingClientRect();
+    return Math.max(0, Math.min(LENGTH - 1, Math.floor((x - box.left) / box.width * LENGTH)));
+  };
+
+  // over is whether the edit under way began with cells picked: then the
+  // pick follows the edit. With the caret at the end, typing only adds.
+  let over = false;
+  document.addEventListener('beforeinput', (e) => {
+    const input = e.target;
+    if (input.id !== 'from-vin') return;
+    over = input.selectionStart !== input.selectionEnd;
+    // A character no VIN holds is not typed: it would take the pick out.
+    if (e.inputType === 'insertText' && e.data && !clean(e.data)) e.preventDefault();
+  });
+
   document.addEventListener('input', (e) => {
     const input = e.target;
     if (input.id !== 'from-vin') return;
     const vin = clean(input.value);
+    const at = clean(input.value.slice(0, input.selectionStart)).length;
     if (input.value !== vin) input.value = vin;
     paint(vin, true);
+    const n = vin.length;
+    // Backspace moves the pick back a cell; anything else leaves it on
+    // the cell after the edit, or on the last one of a whole VIN.
+    let i = n;
+    if (over && (e.inputType || '').startsWith('deleteContentBackward')) i = Math.max(at - 1, 0);
+    else if (over) i = Math.min(at, n === LENGTH ? LENGTH - 1 : n);
+    pick(input, i, i);
     clearTimeout(timer);
     timer = setTimeout(() => ask(vin, how(vin)).catch(console.error), vin.length === LENGTH ? 0 : WAIT);
+  });
+
+  // Pasted over a pick, the text overwrites from its first cell; a whole
+  // VIN replaces everything. insertText keeps the input's own undo.
+  document.addEventListener('paste', (e) => {
+    const input = e.target;
+    if (input.id !== 'from-vin' || !e.clipboardData) return;
+    e.preventDefault();
+    const text = clean(e.clipboardData.getData('text'));
+    if (!text) return;
+    const n = input.value.length;
+    const from = input.selectionStart;
+    const picked = from !== input.selectionEnd && text.length < LENGTH;
+    if (text.length === LENGTH) input.setSelectionRange(0, n);
+    else if (picked) input.setSelectionRange(from, Math.min(Math.max(from + text.length, input.selectionEnd), n));
+    if (!document.execCommand('insertText', false, text)) {
+      input.setRangeText(text, input.selectionStart, input.selectionEnd, 'end');
+      over = picked;
+      input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' }));
+    }
   });
 
   document.addEventListener('submit', (e) => {
@@ -123,14 +193,69 @@
     ask(vin, how(vin)).catch(console.error);
   });
 
-  // The caret is the next empty cell: the input's own is not shown.
-  const toEnd = (e) => {
+  // A click picks the cell under it, a drag the cells it crosses, Shift
+  // and a click from the pick to there, and a double click the whole VIN.
+  // The input's text is not where the cells are, so its own click is not
+  // used.
+  let anchor = -1;
+  document.addEventListener('mousedown', (e) => {
+    const input = e.target;
+    if (input.id !== 'from-vin' || e.button !== 0 || !input.closest('.live')) return;
+    e.preventDefault();
+    input.focus({ preventScroll: true });
+    if (e.detail > 1) {
+      input.select();
+      show();
+      return;
+    }
+    const i = cellAt(e.clientX);
+    anchor = i;
+    if (e.shiftKey && input.selectionStart !== input.selectionEnd) {
+      anchor = input.selectionDirection === 'backward' ? input.selectionEnd - 1 : input.selectionStart;
+    }
+    pick(input, anchor, i);
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (anchor < 0) return;
+    if (e.buttons !== 1) {
+      anchor = -1;
+      return;
+    }
+    pick(document.getElementById('from-vin'), anchor, cellAt(e.clientX));
+  });
+  document.addEventListener('mouseup', () => { anchor = -1; });
+
+  // The arrows move the pick a cell; Home is the first cell and End the
+  // caret. With Shift and the rest the keys are the input's own.
+  document.addEventListener('keydown', (e) => {
+    const input = e.target;
+    if (input.id !== 'from-vin' || e.shiftKey || e.metaKey || e.ctrlKey || e.altKey) return;
+    const n = input.value.length;
+    const from = input.selectionStart;
+    const to = input.selectionEnd;
+    let i;
+    if (e.key === 'ArrowLeft') i = Math.max(from - 1, 0);
+    else if (e.key === 'ArrowRight') i = from === to ? n : to;
+    else if (e.key === 'Home') i = 0;
+    else if (e.key === 'End') i = n;
+    else return;
+    e.preventDefault();
+    pick(input, i, i);
+  });
+
+  // Tabbed to, the plate has its caret at the end: the input's own is not
+  // shown.
+  document.addEventListener('focusin', (e) => {
     if (e.target.id !== 'from-vin') return;
     const n = e.target.value.length;
     if (e.target.selectionStart === e.target.selectionEnd) e.target.setSelectionRange(n, n);
-  };
-  document.addEventListener('click', toEnd);
-  document.addEventListener('focusin', toEnd);
+    show();
+  });
+  document.addEventListener('focusout', (e) => {
+    if (e.target.id === 'from-vin') setTimeout(show);
+  });
+  document.addEventListener('selectionchange', show);
+  document.addEventListener('select', show);
 
   window.addEventListener('popstate', () => {
     const vin = clean(new URLSearchParams(location.search).get('from.vin') || '');
