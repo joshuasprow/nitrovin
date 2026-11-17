@@ -173,6 +173,9 @@ form.filter label { flex-basis: 100%; }
 .leaders path, .joins path { fill: none; stroke: var(--faint); stroke-width: 3; stroke-dasharray: 1; }
 #answer[data-done~="wmi"] path.g-wmi, #answer[data-done~="vds"] path.g-vds, #answer[data-done~="check"] path.g-check,
 #answer[data-done~="year"] path.g-year, #answer[data-done~="plant"] path.g-plant, #answer[data-done~="serial"] path.g-serial { stroke: var(--c); }
+/* No line runs to a blank plate: with no name under them the lines to
+   "Also known as" are not drawn. */
+.joins:has(+ .aka .stack:first-child .tagplate.blank) path { display: none; }
 
 /* The input: below the plate until plate.js lays it over the cells. */
 .plate input { display: block; width: 100%; margin-top: 10px; font: 700 1.2rem var(--cell-font); letter-spacing: .1em; text-transform: uppercase; }
