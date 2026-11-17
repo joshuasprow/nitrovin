@@ -15,10 +15,11 @@ import (
 // BenchmarkFit times fit on the catalog-scale fixture (ADR 0017), loaded
 // once as JSON Lines and once compiled (ADR 0021): candidates for a vehicle, a year and a part type; a vehicle's
 // part-type summary and its related vehicles, in a year and with none
-// (every year's fitments, the expensive path); and reverse, one fitment
-// key to its vehicles. ADR 0018's budget, all p99 on the reference machine: at
+// (every year's fitments, the expensive path); reverse, one fitment
+// key to its vehicles; and filed, one code and number (ADR 0024) to the
+// fitment's vehicles. ADR 0018's budget, all p99 on the reference machine: at
 // most 5 ms for candidates, 10 ms for part types, 50 ms for related and
-// 1 ms per key for reverse. Like the load benchmark, it reports its numbers
+// 1 ms per key for reverse and filed. Like the load benchmark, it reports its numbers
 // for comparison and holds none of them: each request kind reports p50-ns
 // and p99-ns, timed per request, and items, the answers' average total;
 // on the compiled form, also its reads per request, reads-p50, reads-p99
@@ -44,7 +45,7 @@ func BenchmarkFit(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	var candidates, partTypes, related, reverse, partTypesAnyYear, relatedAnyYear []contract.FitRequest
+	var candidates, partTypes, related, reverse, filed, partTypesAnyYear, relatedAnyYear []contract.FitRequest
 	for _, i := range fitBenchFitments() {
 		from := contract.FitFrom{Vocabulary: "bench-models", Entry: names[catalogVehicleOf(i, 0)]}
 		year := contract.Value(int32(catalogFirstOf(i, 0)))
@@ -56,6 +57,8 @@ func BenchmarkFit(b *testing.B) {
 		relatedAnyYear = append(relatedAnyYear, contract.FitRequest{From: from, Related: true, Now: now})
 		key := &contract.FitmentKey{Type: catalogTypeOf(i), Number: catalogNumberOf(i), Side: catalogSideOf(i)}
 		reverse = append(reverse, contract.FitRequest{From: contract.FitFrom{Fitment: key}, Now: now})
+		code := &contract.FitmentKey{FiledUnder: map[string]string{"code": catalogFiledOf(i)[0]}, Number: catalogNumberOf(i), Side: catalogSideOf(i)}
+		filed = append(filed, contract.FitRequest{From: contract.FitFrom{Fitment: code}, Now: now})
 	}
 	for _, form := range forms {
 		b.Run(form.name, func(b *testing.B) {
@@ -77,6 +80,7 @@ func BenchmarkFit(b *testing.B) {
 				{"part-types-any-year", partTypesAnyYear},
 				{"related-any-year", relatedAnyYear},
 				{"reverse", reverse},
+				{"filed", filed},
 			}
 			if len(form.wideOf) > 0 {
 				var wide []contract.FitRequest

@@ -60,11 +60,15 @@ type FitFrom struct {
 }
 
 // FitmentKey names a fitment within its catalog (ADR 0016): its part type,
-// its number, and its side, "" for a fitment that has none.
+// its number, and its side, "" for a fitment that has none. As a fit's
+// from, it may name an entry of the catalog's filed-under vocabulary
+// instead of the part type (ADR 0024): FiledUnder, by its fields, with
+// Side "" for any side.
 type FitmentKey struct {
-	Type   string `json:"type"`
-	Number string `json:"number"`
-	Side   string `json:"side,omitempty"`
+	Type       string            `json:"type,omitempty"`
+	FiledUnder map[string]string `json:"filed_under,omitempty"`
+	Number     string            `json:"number"`
+	Side       string            `json:"side,omitempty"`
 }
 
 // FitPart is a part type: an entry of the catalog's part spine (Spine and
@@ -182,13 +186,18 @@ func (r FitRequest) validate(prefix string) *Problem {
 
 func validSide(s string) bool { return s == SideLeft || s == SideRight || s == SideBoth }
 
-// validate checks a fitment key at ptr: its type and number, and its side.
+// validate checks a fitment key at ptr: its type or filed-under entry,
+// its number, and its side.
 func (k *FitmentKey) validate(ptr string) *Problem {
 	switch {
-	case k.Type == "":
-		return NewProblem(InvalidRequest, ptr+"/type", "a fitment key has a type and a number: type is missing or empty")
+	case k.Type != "" && k.FiledUnder != nil:
+		return NewProblem(InvalidRequest, ptr+"/filed_under", "a fitment key has a type or filed_under, not both")
+	case k.FiledUnder != nil && len(k.FiledUnder) == 0:
+		return NewProblem(InvalidRequest, ptr+"/filed_under", "filed_under names no field: an entry of the catalog's filed-under vocabulary, by its fields")
+	case k.Type == "" && k.FiledUnder == nil:
+		return NewProblem(InvalidRequest, ptr+"/type", "a fitment key has a type or filed_under, and a number: type is missing or empty")
 	case k.Number == "":
-		return NewProblem(InvalidRequest, ptr+"/number", "a fitment key has a type and a number: number is missing or empty")
+		return NewProblem(InvalidRequest, ptr+"/number", "a fitment key has a type or filed_under, and a number: number is missing or empty")
 	case k.Side != "" && !validSide(k.Side):
 		return NewProblem(InvalidRequest, ptr+"/side", "side must be left, right or both")
 	}
@@ -222,7 +231,7 @@ var fitFields = []string{"from", "model_year", "part", "side", "to", "related", 
 var partFields = []string{"vocabulary", "entry", "spine", "id"}
 
 // fitmentKeyFields are the properties a fitment key may have.
-var fitmentKeyFields = []string{"type", "number", "side"}
+var fitmentKeyFields = []string{"type", "number", "side", "filed_under"}
 
 // ParseFitRequest parses one fit request object: a FitRequest of
 // decode.schema.json. Unknown fields are refused. The error is a *Problem.
@@ -259,7 +268,8 @@ func ParseFitBatch(data []byte) ([]FitRequest, error) {
 // ParseFitQuery parses GET /v1/fit: the request's paths as dotted
 // parameters. from is from.vin, a VIN; from.vocabulary with one
 // from.entry.<field> per entry field; from.make, from.model or from.ext;
-// or from.fitment.type, from.fitment.number and from.fitment.side. part is
+// or from.fitment.type, or one from.fitment.filed_under.<field> per entry
+// field, with from.fitment.number and from.fitment.side. part is
 // part.spine with part.id, or part.vocabulary with one part.entry.<field>
 // per field. to, stock and location are repeated, one value each; side,
 // model_year, related (true or false), limit, after and now are the
@@ -270,7 +280,7 @@ func ParseFitBatch(data []byte) ([]FitRequest, error) {
 // ("/part/entry/code"). The error is a *Problem.
 func ParseFitQuery(query url.Values) (FitRequest, error) {
 	req := map[string]json.RawMessage{}
-	objects := map[string]map[string]json.RawMessage{} // from, from.entry, from.fitment, part, part.entry
+	objects := map[string]map[string]json.RawMessage{} // from, from.entry, from.fitment, from.fitment.filed_under, part, part.entry
 	set := func(object, field string, v json.RawMessage) {
 		if objects[object] == nil {
 			objects[object] = map[string]json.RawMessage{}
@@ -281,8 +291,11 @@ func ParseFitQuery(query url.Values) (FitRequest, error) {
 	for _, name := range slices.Sorted(maps.Keys(query)) {
 		vs := query[name]
 		member := "from.entry."
-		if strings.HasPrefix(name, "part.") {
+		switch {
+		case strings.HasPrefix(name, "part."):
 			member = "part.entry."
+		case strings.HasPrefix(name, "from.fitment."):
+			member = "from.fitment.filed_under."
 		}
 		ptr := queryPointer(name, member)
 		if name == "to" || name == "stock" || name == "location" {
@@ -323,11 +336,18 @@ func ParseFitQuery(query url.Values) (FitRequest, error) {
 				set("part.entry", field, queryString(v))
 				continue
 			}
+			if field, ok := strings.CutPrefix(name, "from.fitment.filed_under."); ok {
+				set("from.fitment.filed_under", field, queryString(v))
+				continue
+			}
 			return FitRequest{}, NewProblem(InvalidRequest, ptr, "unknown query parameter "+strconv.Quote(name))
 		}
 	}
 	if e, ok := objects["from.entry"]; ok {
 		set("from", "entry", marshalRaw(e))
+	}
+	if e, ok := objects["from.fitment.filed_under"]; ok {
+		set("from.fitment", "filed_under", marshalRaw(e))
 	}
 	if k, ok := objects["from.fitment"]; ok {
 		set("from", "fitment", marshalRaw(k))
@@ -508,7 +528,8 @@ func parseFitFrom(raw json.RawMessage, ptr string) (FitFrom, *Problem) {
 	return FitFrom{VIN: f.VIN, Vocabulary: f.Vocabulary, Entry: f.Entry, SpineRef: f.SpineRef}, nil
 }
 
-// parseFitmentKey parses a fitment key at ptr.
+// parseFitmentKey parses a fitment key at ptr: a type or a filed-under
+// entry, with a number and a side.
 func parseFitmentKey(raw json.RawMessage, ptr string) (FitmentKey, *Problem) {
 	fields, p := objectFields(raw, ptr, "a fitment key", fitmentKeyFields)
 	if p != nil {
@@ -523,6 +544,14 @@ func parseFitmentKey(raw json.RawMessage, ptr string) (FitmentKey, *Problem) {
 		}
 		if !jsonString(raw, dst) {
 			return FitmentKey{}, NewProblem(InvalidRequest, ptr+"/"+name, name+" must be a string")
+		}
+	}
+	if raw, ok := fields["filed_under"]; ok {
+		if _, ok := fields["type"]; ok {
+			return FitmentKey{}, NewProblem(InvalidRequest, ptr+"/filed_under", "a fitment key has a type or filed_under, not both")
+		}
+		if k.FiledUnder, p = parseEntry(raw, ptr+"/filed_under", "filed_under"); p != nil {
+			return FitmentKey{}, p
 		}
 	}
 	if _, ok := fields["side"]; ok && !validSide(k.Side) {
@@ -556,7 +585,7 @@ const (
 	// FitUnknown: from or part names nothing the loaded files have: a VIN
 	// that decodes to no vPIC make or model, an entry or a spine entry its
 	// vocabulary or spine lacks, a fitment key that is neither a fitment
-	// nor a retired number.
+	// nor a retired number, a filed-under key that reaches neither.
 	FitUnknown FitStatus = "unknown"
 	// FitNoVehicle: the vehicle reaches none of the catalog's vehicles.
 	FitNoVehicle FitStatus = "no-vehicle"
@@ -566,6 +595,9 @@ const (
 	FitNoFitment FitStatus = "no-fitment"
 	// FitNoCatalog: no catalog is loaded.
 	FitNoCatalog FitStatus = "no-catalog"
+	// FitAmbiguous: a filed-under key reached more than one fitment, each
+	// in Fitments; the caller asks again with a side (ADR 0024).
+	FitAmbiguous FitStatus = "ambiguous"
 )
 
 // Fit is the answer to a FitRequest (ADR 0018). Exactly one of PartTypes,
@@ -585,6 +617,9 @@ type Fit struct {
 	Fitment *Fitment    `json:"fitment,omitempty"`
 	Reached FitReach    `json:"reached,omitempty"`
 	Retired *FitRetired `json:"retired,omitempty"`
+	// Fitments are, with FitAmbiguous, the fitments a filed-under key
+	// reached, in key order, Vehicles empty beside them.
+	Fitments []Fitment `json:"fitments,omitempty"`
 
 	PartTypes  []FitPartType    `json:"part_types,omitzero"`
 	Candidates []FitCandidate   `json:"candidates,omitzero"`
@@ -623,6 +658,9 @@ type FitCatalog struct {
 	// Vehicles the vehicle vocabulary its vehicles are entries of, or vpic.
 	Spine    string `json:"spine"`
 	Vehicles string `json:"vehicles"`
+	// FiledUnder is the part vocabulary its fitments are filed under
+	// (ADR 0024), absent when it names none.
+	FiledUnder string `json:"filed_under,omitempty"`
 }
 
 // CatalogVehicle is a catalog's vehicle as its file writes it: an entry
@@ -659,12 +697,15 @@ type FitModel struct {
 	Unconfirmed Unconfirmed `json:"unconfirmed,omitzero"`
 }
 
-// Fitment is one part (ADR 0016): its key and note.
+// Fitment is one part (ADR 0016): its key and note, and, when its catalog
+// names a filed-under vocabulary, the entries it is filed under
+// (ADR 0024), by their fields, none an empty list.
 type Fitment struct {
-	Type   string `json:"type"`
-	Number string `json:"number"`
-	Side   string `json:"side,omitempty"`
-	Note   string `json:"note,omitempty"`
+	Type       string              `json:"type"`
+	Number     string              `json:"number"`
+	Side       string              `json:"side,omitempty"`
+	Note       string              `json:"note,omitempty"`
+	FiledUnder []map[string]string `json:"filed_under,omitzero"`
 }
 
 // FitReach is how a fit reached a fitment.
@@ -781,11 +822,12 @@ type RelatedVehicle struct {
 }
 
 // FitmentLine is one fitment line of a catalog as its file has it, an
-// entry of list's page of a catalog.
+// entry of list's page of a catalog. FiledUnder is as Fitment's.
 type FitmentLine struct {
-	Fitment      FitmentKey        `json:"fitment"`
-	Note         string            `json:"note,omitempty"`
-	Applications []LineApplication `json:"applications"`
+	Fitment      FitmentKey          `json:"fitment"`
+	Note         string              `json:"note,omitempty"`
+	FiledUnder   []map[string]string `json:"filed_under,omitzero"`
+	Applications []LineApplication   `json:"applications"`
 }
 
 func (FitmentLine) listEntry() {}

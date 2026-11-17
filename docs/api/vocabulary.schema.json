@@ -199,7 +199,8 @@
           "anyOf": [{ "$ref": "#/$defs/Name" }, { "const": "vpic" }],
           "description": "The vehicle vocabulary whose entries the catalog's vehicles are, which must be loaded; or vpic, when its vehicles are vPIC makes and models and extensions."
         },
-        "release": { "type": "string", "minLength": 1, "description": "The catalog publisher's own release identifier, separate from version. A stock source numbered under a release compares its release with this one." }
+        "release": { "type": "string", "minLength": 1, "description": "The catalog publisher's own release identifier, separate from version. A stock source numbered under a release compares its release with this one." },
+        "filed_under": { "$ref": "#/$defs/Name", "description": "The part vocabulary whose entries the catalog's fitments are filed under (ADR 0024): a system's own part codes. It must be loaded, and be a part vocabulary on the catalog's spine. Absent: no fitment line may name filed_under." }
       }
     },
     "StockHeader": {
@@ -372,7 +373,12 @@
       "properties": {
         "fitment": { "$ref": "#/$defs/FitmentKey" },
         "note": { "type": "string", "description": "Passed through, never interpreted." },
-        "applications": { "type": "array", "items": { "$ref": "#/$defs/Application" } }
+        "applications": { "type": "array", "items": { "$ref": "#/$defs/Application" } },
+        "filed_under": {
+          "type": "array",
+          "items": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string" } },
+          "description": "The entries of the header's filed_under vocabulary the fitment is filed under (ADR 0024), each by exactly that vocabulary's fields, once; each entry's mapped part types include the fitment's part type. Never part of its identity."
+        }
       }
     },
     "RedirectLine": {

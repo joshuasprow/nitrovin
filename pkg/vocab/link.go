@@ -117,7 +117,7 @@ func resolveExt(byName map[string]*File, ref string) (*Extension, string) {
 func linkCatalog(f *File, byName map[string]*File, ext func(string) (*Extension, string)) Faults {
 	l := newCatalogLink(f, byName, ext)
 	if f.compiled != nil {
-		return append(l.faults, f.compiled.link(l.spine, l.vehicles, ext)...)
+		return append(l.faults, f.compiled.link(l)...)
 	}
 	for _, v := range f.catalog.vehicleList {
 		l.vehicle(v)
@@ -132,24 +132,37 @@ func linkCatalog(f *File, byName map[string]*File, ext func(string) (*Extension,
 	return l.faults
 }
 
-// catalogLink checks a catalog's lines against its spine and vehicle
-// vocabulary as loaded, a line at a time: a JSON Lines catalog's in
-// memory, a compile's as its source streams by. Its faults are in the
-// order of the lines checked, after its header's.
+// catalogLink checks a catalog's lines against its spine, vehicle
+// vocabulary and filed-under vocabulary as loaded, a line at a time: a
+// JSON Lines catalog's in memory, a compile's as its source streams by.
+// Its faults are in the order of the lines checked, after its header's.
 type catalogLink struct {
 	f               *File // the catalog: its header
 	spine, vehicles *File // nil when not loaded, or when its vehicles are vpic
+	filed           *File // its filed-under vocabulary; nil when it names none, or it is not loaded
 	ext             func(string) (*Extension, string)
 	// why is, per vehicle that does not resolve, why not: once each,
 	// however many lines name it.
-	why    map[*Vehicle]string
-	faults Faults
+	why map[*Vehicle]string
+	// entries is, per entry fitments are filed under, what the filed-under
+	// vocabulary says of it: once each, however many fitments name it.
+	entries map[*Filed]filedLink
+	faults  Faults
 }
 
-// newCatalogLink checks catalog f's header: its spine and vehicle
-// vocabulary loaded, among byName.
+// filedLink is what a catalog's filed-under vocabulary says of an entry:
+// why its fields are not the vocabulary's, or the part types the entry
+// maps to, none when the vocabulary lacks it or maps it nowhere, which is
+// drift, not a fault.
+type filedLink struct {
+	why   string
+	types []string
+}
+
+// newCatalogLink checks catalog f's header: its spine, vehicle vocabulary
+// and filed-under vocabulary loaded, among byName.
 func newCatalogLink(f *File, byName map[string]*File, ext func(string) (*Extension, string)) *catalogLink {
-	l := &catalogLink{f: f, ext: ext, why: map[*Vehicle]string{}}
+	l := &catalogLink{f: f, ext: ext, why: map[*Vehicle]string{}, entries: map[*Filed]filedLink{}}
 	header := 1 // the header's line
 	if f.compiled != nil {
 		header = 0
@@ -174,6 +187,21 @@ func newCatalogLink(f *File, byName map[string]*File, ext func(string) (*Extensi
 			l.vehicles = nil
 		}
 	}
+	if f.FiledUnder != "" {
+		switch l.filed = byName[f.FiledUnder]; {
+		case l.filed == nil:
+			l.faults = append(l.faults, fault(f.Path, header, "/filed_under: vocabulary %q is not loaded", f.FiledUnder))
+		case l.filed.Kind != KindVocabulary:
+			l.faults = append(l.faults, fault(f.Path, header, "/filed_under: %q is %s, not a part vocabulary", f.FiledUnder, l.filed.Kind.noun()))
+			l.filed = nil
+		case l.filed.Subject != SubjectPart:
+			l.faults = append(l.faults, fault(f.Path, header, "/filed_under: %q is a vehicle vocabulary, not a part vocabulary", f.FiledUnder))
+			l.filed = nil
+		case l.filed.Spine != f.Spine:
+			l.faults = append(l.faults, fault(f.Path, header, "/filed_under: vocabulary %q maps onto spine %q, not the catalog's spine %q", f.FiledUnder, l.filed.Spine, f.Spine))
+			l.filed = nil
+		}
+	}
 	return l
 }
 
@@ -194,10 +222,18 @@ func (l *catalogLink) typeOK(id string) bool {
 	return ok
 }
 
-// fitment checks a fitment's part type and its applications' vehicles.
+// fitment checks a fitment's part type, the entries it is filed under and
+// its applications' vehicles.
 func (l *catalogLink) fitment(fit *Fitment) {
 	if !l.typeOK(fit.Key.Type) {
 		l.faults = append(l.faults, fault(l.f.Path, fit.Line, "/fitment/type: spine %q has no id %q", l.f.Spine, fit.Key.Type))
+	}
+	if l.filed != nil {
+		for _, e := range fit.FiledUnder {
+			if w := l.filedWhy(e, fit.Key); w != "" {
+				l.faults = append(l.faults, fault(l.f.Path, fit.Line, "/filed_under: %s", w))
+			}
+		}
 	}
 	if len(l.why) == 0 {
 		return
@@ -207,6 +243,40 @@ func (l *catalogLink) fitment(fit *Fitment) {
 			l.faults = append(l.faults, fault(l.f.Path, fit.Line, "/applications/%d/vehicle%s", j, w))
 		}
 	}
+}
+
+// filedWhy is why a fitment of key k may not be filed under entry e of the
+// catalog's filed-under vocabulary, "" when it may: e's fields are not the
+// vocabulary's, or the vocabulary maps e to part types none of which is
+// k's. An entry the vocabulary lacks, or maps nowhere, is drift.
+func (l *catalogLink) filedWhy(e *Filed, k FitmentKey) string {
+	el, seen := l.entries[e]
+	if !seen {
+		el = linkFiled(e, l.filed)
+		l.entries[e] = el
+	}
+	if el.why != "" || len(el.types) == 0 || slices.Contains(el.types, k.Type) {
+		return el.why
+	}
+	return "vocabulary " + strconv.Quote(l.filed.Name) + " maps " + entryText(e.Entry) + " to part types " + quoted(el.types) +
+		", none of them the part type of " + k.String() + ", " + strconv.Quote(k.Type)
+}
+
+// linkFiled is what filed-under vocabulary filed says of entry e.
+func linkFiled(e *Filed, filed *File) filedLink {
+	names := slices.Sorted(maps.Keys(e.Entry))
+	if want := slices.Sorted(slices.Values(filed.Fields)); !slices.Equal(names, want) {
+		return filedLink{why: entryText(e.Entry) + ": fields " + quoted(names) + " are not vocabulary " + strconv.Quote(filed.Name) + "'s: " + quoted(filed.Fields)}
+	}
+	var el filedLink
+	if entry, ok := filed.Entry(e.Entry); ok {
+		for _, mp := range entry.Mappings {
+			if mp.ID != "" && !slices.Contains(el.types, mp.ID) {
+				el.types = append(el.types, mp.ID)
+			}
+		}
+	}
+	return el
 }
 
 // redirect checks a redirect's part types and vehicle.
@@ -240,12 +310,15 @@ func vehicleWhy(v *Vehicle, vehicles *File, ext func(string) (*Extension, string
 	return ""
 }
 
-// link checks a compiled catalog against its spine and vehicle vocabulary
-// as loaded (nil when not, or when its vehicles are vpic): each part type
-// a fitment or redirect names in the spine, and each vehicle resolving.
-// They did against the files it was compiled with; a fault here is a file
-// loaded beside it that is not one of those.
-func (c *compiled) link(spine, vehicles *File, ext func(string) (*Extension, string)) Faults {
+// link checks a compiled catalog against its spine, vehicle vocabulary and
+// filed-under vocabulary as l has them loaded (nil when not, or when its
+// vehicles are vpic): each part type a fitment or redirect names in the
+// spine, each vehicle resolving, and each entry its fitments are filed
+// under mapped to their part types. They did against the files it was
+// compiled with; a fault here is a file loaded beside it that is not one
+// of those.
+func (c *compiled) link(l *catalogLink) Faults {
+	spine, vehicles, ext := l.spine, l.vehicles, l.ext
 	var faults Faults
 	for _, t := range c.types {
 		if spine == nil || !t.named {
@@ -258,6 +331,17 @@ func (c *compiled) link(spine, vehicles *File, ext func(string) (*Extension, str
 	for _, v := range c.vehicles {
 		if w := vehicleWhy(v, vehicles, ext); w != "" {
 			faults = append(faults, fault(c.path, 0, "vehicle %s%s", vehicleText(v), w))
+		}
+	}
+	if l.filed != nil {
+		for i, e := range c.filed {
+			last := ""
+			for _, k := range c.filedTypes[i] {
+				if w := l.filedWhy(e, k); w != "" && w != last {
+					faults = append(faults, fault(c.path, 0, "/filed_under: %s", w))
+					last = w
+				}
+			}
 		}
 	}
 	return faults

@@ -172,9 +172,11 @@ func TestVocabCheckDriftKinds(t *testing.T) {
 	}
 	copyWith(filepath.Join(fitmentFixture, "part-types.jsonl"))
 	copyWith(filepath.Join(fitmentFixture, "catalog-models.jsonl"))
+	copyWith(filepath.Join(fitmentFixture, "part-codes.jsonl"))
 	copyWith(filepath.Join(fitmentFixture, "catalog.jsonl"),
 		`{"redirect":{"vehicle":{"make":"Dodge","model":"Ram 1500"},"from":"engine","to":"mirror","first":2015}}`,
-		`{"fitment":{"type":"mirror","number":"MR-9001","side":"left"},"applications":[{"vehicle":{"make":"Dodge","model":"Dakota"},"first":2009,"last":2012,"options":""}]}`)
+		`{"fitment":{"type":"mirror","number":"MR-9001","side":"left"},"filed_under":[{"code":"MIRX"}],"applications":[{"vehicle":{"make":"Dodge","model":"Dakota"},"first":2009,"last":2012,"options":""}]}`,
+		`{"fitment":{"type":"mirror","number":"MR-9002","side":"left"},"applications":[{"vehicle":{"make":"Dodge","model":"Ram 1500"},"first":2009,"last":2012,"options":""}]}`)
 	copyWith(filepath.Join(stockFixture, "drift", "shelf-orphans.jsonl"),
 		`{"id":"O-3","location":"south","type":"mirror","number":"MR-1001","side":"left","fields":{"seller_email":"x"}}`)
 
@@ -191,7 +193,7 @@ func TestVocabCheckDriftKinds(t *testing.T) {
 		}
 		kinds[kind] = true
 	}
-	want := []string{"extension", "make", "model", "model-qualifier", "model-years", "orphan", "personal-field", "qualifier", "redirect", "vehicle"}
+	want := []string{"extension", "filed-under", "make", "model", "model-qualifier", "model-years", "orphan", "personal-field", "qualifier", "redirect", "unfiled", "vehicle"}
 	if got := slices.Sorted(maps.Keys(kinds)); r.exit != 1 || !slices.Equal(got, want) {
 		t.Errorf("vocab check's drift kinds: exit %d, %q; want %q\nstdout:\n%s", r.exit, got, want, r.stdout)
 	}
@@ -338,7 +340,7 @@ func TestVocabCheckCatalog(t *testing.T) {
 	for _, f := range findings(t, r.stdout) {
 		got = append(got, string(f.Severity)+" "+strconv.Itoa(f.Line)+": "+f.Detail)
 	}
-	if want := []string{`fault 1: /spine: spine "part-types" is not loaded`, `fault 1: /vehicles: vocabulary "catalog-models" is not loaded`}; r.exit != 1 || !slices.Equal(got, want) {
+	if want := []string{`fault 1: /spine: spine "part-types" is not loaded`, `fault 1: /vehicles: vocabulary "catalog-models" is not loaded`, `fault 1: /filed_under: vocabulary "part-codes" is not loaded`}; r.exit != 1 || !slices.Equal(got, want) {
 		t.Errorf("vocab check on the catalog alone: exit %d, findings %v; want exit 1 and %v", r.exit, got, want)
 	}
 
@@ -351,7 +353,7 @@ func TestVocabCheckCatalog(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "catalog.jsonl"), data, 0o644); err != nil {
 		t.Fatal(err)
 	}
-	r = cli(t, nil, "", "vocab", "check", filepath.Join(fitmentFixture, "part-types.jsonl"), filepath.Join(fitmentFixture, "catalog-models.jsonl"), dir)
+	r = cli(t, nil, "", "vocab", "check", filepath.Join(fitmentFixture, "part-types.jsonl"), filepath.Join(fitmentFixture, "catalog-models.jsonl"), filepath.Join(fitmentFixture, "part-codes.jsonl"), dir)
 	fs := findings(t, r.stdout)
 	if r.exit != 1 || len(fs) != 1 || fs[0].Severity != vocab.SeverityDrift || fs[0].Line != 9 || fs[0].Detail != `/redirect/to: part type "mirror" has no application for this vehicle in 2015 on` {
 		t.Errorf("vocab check on a drifting catalog: exit %d, findings %+v", r.exit, fs)
@@ -363,7 +365,7 @@ func TestVocabCheckCatalog(t *testing.T) {
 		t.Fatalf("info with the catalog: exit %d, %v, %q", r.exit, err, r.stdout)
 	}
 	i := slices.IndexFunc(info.Vocabularies, func(v contract.VocabularyFile) bool { return v.Kind == "catalog" })
-	if i < 0 || info.Vocabularies[i].Release != "7.02" || info.Vocabularies[i].CatalogCounts == nil || info.Vocabularies[i].Fitments != 5 {
+	if i < 0 || info.Vocabularies[i].Release != "7.02" || info.Vocabularies[i].FiledUnder != "part-codes" || info.Vocabularies[i].CatalogCounts == nil || info.Vocabularies[i].Fitments != 5 || info.Vocabularies[i].Filings != 6 {
 		t.Errorf("info's catalog: %+v", info.Vocabularies)
 	}
 
@@ -409,14 +411,14 @@ func TestVocabCompile(t *testing.T) {
 	fixtureData(t)
 	out := filepath.Join(t.TempDir(), "catalog.compiled")
 	catalog := filepath.Join(fitmentFixture, "catalog.jsonl")
-	spine, models := filepath.Join(fitmentFixture, "part-types.jsonl"), filepath.Join(fitmentFixture, "catalog-models.jsonl")
+	spine, models, codes := filepath.Join(fitmentFixture, "part-types.jsonl"), filepath.Join(fitmentFixture, "catalog-models.jsonl"), filepath.Join(fitmentFixture, "part-codes.jsonl")
 
 	r := cli(t, nil, "", "vocab", "compile", "-o", out, catalog)
 	var got []string
 	for _, f := range findings(t, r.stdout) {
 		got = append(got, string(f.Severity)+" "+strconv.Itoa(f.Line)+": "+f.Detail)
 	}
-	if want := []string{`fault 1: /spine: spine "part-types" is not loaded`, `fault 1: /vehicles: vocabulary "catalog-models" is not loaded`}; r.exit != 1 || !slices.Equal(got, want) {
+	if want := []string{`fault 1: /spine: spine "part-types" is not loaded`, `fault 1: /vehicles: vocabulary "catalog-models" is not loaded`, `fault 1: /filed_under: vocabulary "part-codes" is not loaded`}; r.exit != 1 || !slices.Equal(got, want) {
 		t.Errorf("vocab compile of the catalog alone: exit %d, findings %v; want exit 1 and %v", r.exit, got, want)
 	}
 	if _, err := os.Stat(out); !os.IsNotExist(err) {
@@ -438,9 +440,9 @@ func TestVocabCompile(t *testing.T) {
 		t.Errorf("two compiles differ, or are not compiled catalogs: %d and %d bytes", len(compiled[0]), len(compiled[1]))
 	}
 
-	r = cli(t, nil, "", "--vocab", spine, "--vocab", models, "--vocab", out, "info")
+	r = cli(t, nil, "", "--vocab", spine, "--vocab", models, "--vocab", codes, "--vocab", out, "info")
 	var info contract.Info
-	if err := json.Unmarshal([]byte(r.stdout), &info); err != nil || r.exit != 0 || r.stderr != "" || len(info.Vocabularies) != 3 {
+	if err := json.Unmarshal([]byte(r.stdout), &info); err != nil || r.exit != 0 || r.stderr != "" || len(info.Vocabularies) != 4 {
 		t.Fatalf("info with the compiled catalog: exit %d, %v, stdout %q, stderr %q", r.exit, err, r.stdout, r.stderr)
 	}
 	source, err := os.ReadFile(catalog)
@@ -451,8 +453,8 @@ func TestVocabCompile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c := info.Vocabularies[2]
-	if c.Kind != "catalog" || c.Path != out || c.Fitments != 5 || c.Compiled == nil || c.Compiled.SourceBlake3 != fmt.Sprintf("%x", src.Hash) ||
+	c := info.Vocabularies[3]
+	if c.Kind != "catalog" || c.Path != out || c.Fitments != 5 || c.Filings != 6 || c.FiledUnder != "part-codes" || c.Compiled == nil || c.Compiled.SourceBlake3 != fmt.Sprintf("%x", src.Hash) ||
 		c.Compiled.Writer != nitrovin.Version() || c.Compiled.DriftMonth != embedded.Month || c.Compiled.DriftMonthDiffers || len(c.Drift) != 0 {
 		t.Errorf("info's compiled catalog: %+v, compiled %+v", c, c.Compiled)
 	}
@@ -465,16 +467,15 @@ func TestVocabCompile(t *testing.T) {
 	// fit answers from the compiled catalog as from its source.
 	fitArgs := []string{"fit", "--part", "part-types:mirror", "--now", now, "1D7RV1GT5AS123456"}
 	fromJSONL := cli(t, nil, "", append([]string{"--vocab", fitmentFixture}, fitArgs...)...)
-	fromCompiled := cli(t, nil, "", append([]string{"--vocab", spine, "--vocab", models, "--vocab", out}, fitArgs...)...)
+	fromCompiled := cli(t, nil, "", append([]string{"--vocab", spine, "--vocab", models, "--vocab", codes, "--vocab", out}, fitArgs...)...)
 	if fromCompiled.exit != 0 || fromJSONL.exit != 0 || fromCompiled.stdout != fromJSONL.stdout || !strings.Contains(fromCompiled.stdout, `"MR-1001"`) {
 		t.Errorf("fit with the compiled catalog: exit %d, stdout %q, stderr %q; want exit 0 and %q", fromCompiled.exit, fromCompiled.stdout, fromCompiled.stderr, fromJSONL.stdout)
 	}
-	if r := cli(t, nil, "", "vocab", "check", spine, models, out); r.exit != 0 || r.stdout != "" || r.stderr != "" {
+	if r := cli(t, nil, "", "vocab", "check", spine, models, codes, out); r.exit != 0 || r.stdout != "" || r.stderr != "" {
 		t.Errorf("vocab check on the compiled catalog: exit %d, stdout %q, stderr %q; want exit 0 and nothing", r.exit, r.stdout, r.stderr)
 	}
 	// Stock on the compiled catalog: check finds the orphan as on its
 	// source, and a fit answers the shelf row under a retired number alike.
-	codes := filepath.Join(fitmentFixture, "part-codes.jsonl")
 	orphans := filepath.Join(stockFixture, "drift")
 	fromJSONL = cli(t, nil, "", "vocab", "check", fitmentFixture, stockFixture, orphans)
 	r = cli(t, nil, "", "vocab", "check", spine, models, codes, out, stockFixture, orphans)
@@ -494,12 +495,12 @@ func TestVocabCompile(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "catalog.jsonl"), data, 0o644); err != nil {
 		t.Fatal(err)
 	}
-	r = cli(t, nil, "", "vocab", "compile", "-o", out, spine, models, dir)
+	r = cli(t, nil, "", "vocab", "compile", "-o", out, spine, models, codes, dir)
 	if fs := findings(t, r.stderr); r.exit != 0 || r.stdout != "" || len(fs) != 1 || fs[0].Line != 9 || fs[0].Severity != vocab.SeverityDrift {
 		t.Errorf("vocab compile of a drifting catalog: exit %d, stdout %q, stderr %q", r.exit, r.stdout, r.stderr)
 	}
-	jsonl := cli(t, nil, "", "vocab", "check", spine, models, dir)
-	r = cli(t, nil, "", "vocab", "check", spine, models, out)
+	jsonl := cli(t, nil, "", "vocab", "check", spine, models, codes, dir)
+	r = cli(t, nil, "", "vocab", "check", spine, models, codes, out)
 	if want := strings.ReplaceAll(jsonl.stdout, strconv.Quote(filepath.Join(dir, "catalog.jsonl")), strconv.Quote(out)); r.exit != 1 || jsonl.exit != 1 || r.stdout != want || len(findings(t, r.stdout)) != 1 {
 		t.Errorf("vocab check on the compiled drifting catalog: exit %d, stdout %q; want exit 1 and %q", r.exit, r.stdout, want)
 	}

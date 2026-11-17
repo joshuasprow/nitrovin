@@ -518,7 +518,12 @@ specifies.
   field name, nested ones and those inside arrays included, that holds
   `email`, `phone`, `name`, `address` or `license` in any case
   (`phonenumber`, `seller.email` and `part_name` alike), once at the first
-  row with it (`personal-field`). Each
+  row with it (`personal-field`). A catalog whose header names a
+  `filed_under` vocabulary
+  ([ADR 0024](../adr/0024-the-codes-a-fitment-is-filed-under.md)) adds an
+  entry a fitment is filed under that the vocabulary lacks or lists without
+  a mapping (`filed-under`), and one finding at the first fitment filed
+  under no entry, its detail ending `(and N more)` (`unfiled`). Each
   finding but `model-qualifier` is one line on stderr at load,
   `{"file", "line", "severity": "drift", "detail", "kind"}` as `vocab
   check` prints it, and the files are
@@ -536,11 +541,13 @@ specifies.
   records, of its bytes with the hash's own 32 bytes zero), `path`
   (absolute) and `drift`, a count per kind of drift the file has (`make`,
   `model`, `qualifier`, `extension`, `model-years`, `vehicle`, `redirect`,
-  `model-qualifier`, `orphan`, `personal-field`, in that order) with its first three findings as
+  `model-qualifier`, `orphan`, `personal-field`, `filed-under`, `unfiled`, in that order) with its first three findings as
   `{"line", "detail"}`; the first request measures `model-qualifier`, so it
   may take a fraction of a second longer. A catalog adds its `release`,
-  when its header gives one, and its counts of `fitments`, `applications`,
-  `redirects` and `retired` numbers; a stock file its `source`, a
+  when its header gives one, its `filed_under` vocabulary, when it names
+  one, and its counts of `fitments`, `applications`, `redirects`,
+  `retired` numbers and `filings`, its (entry, fitment) pairs (0 without a
+  `filed_under` vocabulary); a stock file its `source`, a
   shelf's `catalog` and `release`, its `as_of` and its `rows`; a stock
   connector ([ADR 0020](../adr/0020-request-time-stock-the-postgres-connector.md))
   its `source`, a shelf's `catalog`, `connector: "postgres"`, its
@@ -564,13 +571,15 @@ specifies.
   finding on stdout as a JSON line,
   `{"file", "line", "severity": "fault"|"drift", "detail"}`, and on a drift
   its `kind`: `make`, `model`, `qualifier`, `extension`, `model-years`,
-  `vehicle`, `redirect`, `model-qualifier`, `orphan` or `personal-field`,
+  `vehicle`, `redirect`, `model-qualifier`, `orphan`, `personal-field`,
+  `filed-under` or `unfiled`,
   the kinds `/v1/info` counts. A fault has no `kind`. The faults are
   printed when there are any, otherwise the drift. Exit 0 with no output
   when there is none, 1 when there is any. Line 0 is a file that cannot be
   read. A
-  catalog is checked like any file, so its spine and vehicle vocabulary
-  must be among the arguments, and a stock file's catalog with them. A
+  catalog is checked like any file, so its spine, vehicle vocabulary and
+  `filed_under` vocabulary must be among the arguments, and a stock file's
+  catalog with them. A
   compiled catalog is read in full, its
   bytes checked against its header's hash, then checked line by line and
   its drift measured again against the loaded month, as its source would
@@ -736,9 +745,9 @@ object. Its inputs shape the answer:
 
 | Field | Type | Default | Rule |
 | --- | --- | --- | --- |
-| `from` | string \| object | required | A vehicle: a VIN; a vehicle vocabulary's entry, `{"vocabulary", "entry": {…}}`; or `{"make"}`, `{"model"}`, `{"ext"}`. Or a fitment key, `{"fitment": {"type", "number", "side"?}}` |
+| `from` | string \| object | required | A vehicle: a VIN; a vehicle vocabulary's entry, `{"vocabulary", "entry": {…}}`; or `{"make"}`, `{"model"}`, `{"ext"}`. Or a fitment key, `{"fitment": {"type", "number", "side"?}}`, or `{"fitment": {"filed_under": {…}, "number", "side"?}}` (below) |
 | `model_year` | int \| null | none | The vehicle's year when no VIN decodes one, and a VIN's decode hint; with a fitment key, it keeps the applications whose years hold it |
-| `part` | object | none | A part type: `{"spine", "id"}`, an entry of the catalog's part spine, or `{"vocabulary", "entry"}`, an entry of a part vocabulary on that spine |
+| `part` | object | none | A part type: `{"spine", "id"}`, an entry of the catalog's part spine, or `{"vocabulary", "entry"}`, an entry of a part vocabulary on that spine; an entry of the catalog's `filed_under` vocabulary also narrows the candidates (below) |
 | `side` | `left` \| `right` \| `both` | none | The side filter, below |
 | `to` | string[] | none | Vehicle vocabularies the answer's vehicles are named in; none names them as spine entries |
 | `related` | bool | `false` | The vehicles that share fitments with `from` |
@@ -754,6 +763,7 @@ object. Its inputs shape the answer:
 | a vehicle | `part` | `candidates` |
 | a vehicle | `related` (and `part`, to keep its part types) | `related` vehicles |
 | a fitment key | — | `vehicles`: the fitment's applications |
+| a `filed_under` key reaching several fitments | — | `fitments`, with status `ambiguous` and `vehicles` empty |
 
 - **Reaching the catalog.** A vehicle reaches the catalog's own vehicles
   as a translation to its vehicle vocabulary would (through the spine, or
@@ -769,7 +779,8 @@ object. Its inputs shape the answer:
   unchecked. Without a year every year's applications come back, with
   `"model_year"` unconfirmed where they have years.
 - **Candidates** are ordered by part type, side and number. Each has
-  `fitment` (`type`, `number`, `side`, `note`), `applications` (each
+  `fitment` (`type`, `number`, `side`, `note`, and `filed_under` when the
+  catalog names a vocabulary), `applications` (each
   `vehicle`, `via`, `first`, `last`, `options` verbatim, `unconfirmed`)
   and `reached`: `direct`, or `redirect` with the `redirects` that led
   there (one hop, never more). A redirect is for a catalog vehicle and
@@ -780,6 +791,14 @@ object. Its inputs shape the answer:
   `direct`, and a part type in `part_types` is `direct` when any of its
   candidates is. The catalog's option
   text is the requirement a person settles; it is never interpreted.
+- **Filed under**
+  ([ADR 0024](../adr/0024-the-codes-a-fitment-is-filed-under.md)). A
+  catalog may name a part vocabulary whose entries, a system's own part
+  codes, its fitments are filed under. When a request's `part` is an
+  entry of that vocabulary, the direct candidates are only the fitments
+  filed under it; candidates reached through a redirect are not narrowed,
+  as they are filed under another part type's codes. A `part` from any
+  other part vocabulary expands to its part types as before.
 - **The side filter** drops only a fitment whose side excludes the one
   asked for: `left` keeps `left`, `both` and fitments with no side; `right`
   likewise; `both` keeps `both` and fitments with no side. A part for both
@@ -791,6 +810,20 @@ object. Its inputs shape the answer:
   each named into every `to` vocabulary (`to`, as a translation's) or,
   without `to`, as spine entries (`spine`), translated within the
   application's years.
+- **A `filed_under` key** names the fitment by an entry of the catalog's
+  `filed_under` vocabulary, by exactly its fields, in place of `type`:
+  `{"fitment": {"filed_under": {"code": "MIR"}, "number": "MR-1001"}}`;
+  over GET, `from.fitment.filed_under.<field>` beside `from.fitment.number`.
+  Exactly one of `type` and `filed_under` is given. Its `side`, when
+  absent, means any side, unlike the type key's, where absent means none.
+  One fitment filed under the entry with that number is answered as its
+  key would be. Two or more answer status `ambiguous`, listing them in
+  `fitments` in key order, each with its `filed_under`, and no vehicles:
+  ask again with a side. With no live fitment, the entry maps to its part
+  types through the vocabulary, and each (type, number, side), every side
+  when none is given, is looked up among retired numbers: one answers
+  `reached: retired` with the number asked for, two or more `ambiguous`.
+  Its budget is reverse's: 1 ms per key at p99 on the server.
 - **Related vehicles** are the catalog vehicles that share at least one
   fitment with `from` (the vehicle's own applications aside: in its year
   when one is known, else all of them). Each vehicle's years are cut where
@@ -805,19 +838,27 @@ object. Its inputs shape the answer:
   fitments: by part type, fitment and application. They are named as a
   fitment's vehicles are, within the row's years.
 - **The answer** (`Fit`): `status`; `catalog` (`name`, `version`,
-  `release`, `spine`, the part spine a `part` names, and `vehicles`, its
-  vehicle vocabulary or `vpic`: `list` with no `of` leaves the catalog
+  `release`, `spine`, the part spine a `part` names, `vehicles`, its
+  vehicle vocabulary or `vpic`, and `filed_under`, the vocabulary its
+  fitments are filed under, absent when it names none: `list` with no
+  `of` leaves the catalog
   out, so a fit answer is where a caller learns its name for `list`'s
   `of`); `vehicle` with a VIN, as a translation's; `models`; the list
-  the inputs ask for, always present, empty when nothing fits; `total`,
+  the inputs ask for, always present, empty when nothing fits; every
+  fitment, a candidate's or a key's, with `filed_under`, its entries
+  (sorted by their fields, `[]` for none), whenever the catalog names a
+  vocabulary, so it can be joined back to what a system files by code;
+  `total`,
   the count across every page; `next`, present when a page follows; `now`,
   `data_month`, `decoder_version`. Paging is `list`'s: `next` is an opaque
   cursor of this answer, and passing it as `after` continues, losing and
   repeating nothing.
 - **Nothing to fit is never a refusal.** It is a `status`: `found`;
+  `ambiguous` (a `filed_under` key reaching two or more fitments);
   `unknown` (a VIN that decodes to no make or model, an entry or spine
   entry the files lack, a part type the spine lacks, a fitment key that is
-  neither a fitment nor a retired number); `no-vehicle` (the vehicle
+  neither a fitment nor a retired number, a `filed_under` entry the
+  vocabulary lacks or one that reaches no fitment); `no-vehicle` (the vehicle
   reaches none of the catalog's vehicles); `no-fitment` (nothing fits); or
   `no-catalog` when none is loaded, which is nitrovin.app's case. Only a
   malformed request is `#invalid-request`, with a pointer: a part
@@ -826,8 +867,10 @@ object. Its inputs shape the answer:
   `part`, `related` or a fitment key, or `shelf` with `related`;
   `location` without `stock`; a side other than `left`, `right` or `both`; an
   unknown vocabulary (or a name of the wrong kind: a part vocabulary as
-  `from` or in `to`); entry fields other than the vocabulary's; a fitment
-  key without `type` and `number`. Besides those, as for every request:
+  `from` or in `to`); entry fields other than the vocabulary's, a
+  `filed_under` entry's included; a fitment key without `number`, or
+  without exactly one of `type` and `filed_under`; a `filed_under` key on
+  a catalog that names no `filed_under` vocabulary. Besides those, as for every request:
   a field of the wrong type or unknown, a `limit` out of range, or an
   `after` that is not a cursor of the answer.
 
@@ -859,7 +902,10 @@ The synthetic catalog's examples, tested on every surface, with
   `brake-rotor-front`.
 
 `{"op":"list","of":"parts-catalog","where":{"type":"mirror"}}` pages the
-two `MR-1001` lines as the file has them. Without the catalog every fit
+two `MR-1001` lines as the file has them, each with its `filed_under`.
+`{"op":"fit","from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-1001"}}}`
+answers `ambiguous` with both `MR-1001` fitments, `left` and `right`.
+Without the catalog every fit
 answers `{"status":"no-catalog", …}`.
 
 ### Stock

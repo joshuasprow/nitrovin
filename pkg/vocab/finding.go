@@ -51,6 +51,13 @@ const (
 	// DriftPersonal: a stock row's field name that looks personal: email,
 	// phone, name, address or license (ADR 0019).
 	DriftPersonal DriftKind = "personal-field"
+	// DriftFiledUnder: an entry a catalog's fitment is filed under that
+	// its filed-under vocabulary lacks, or lists without a mapping
+	// (ADR 0024).
+	DriftFiledUnder DriftKind = "filed-under"
+	// DriftUnfiled: a fitment filed under no entry, in a catalog whose
+	// header names a filed-under vocabulary (ADR 0024).
+	DriftUnfiled DriftKind = "unfiled"
 )
 
 // Finding is one fault or drift, about one line of one file: a line of

@@ -100,7 +100,7 @@ func newFitBackend(t *testing.T, dirs ...string) fitBackend {
 	info.Elements = fitElements
 	info.Vocabularies = nil
 	for _, file := range files {
-		v := contract.VocabularyFile{Name: file.Name, Kind: string(file.Kind), Version: file.Version}
+		v := contract.VocabularyFile{Name: file.Name, Kind: string(file.Kind), Version: file.Version, FiledUnder: file.FiledUnder}
 		if file.Kind == vocab.KindStock {
 			f.Stock = append(f.Stock, stock.NewFile(file, tr.StockDecode(time.Now())))
 			v.StockCounts = &contract.StockCounts{Source: string(file.Holds)}
@@ -242,10 +242,28 @@ func TestFitPageEmpty(t *testing.T) {
 		}
 	}
 	body = getFit(t, h, "/ui/fit?tab=fitment", 200)
-	for _, want := range []string{`name="from.fitment.type"`, `name="from.fitment.number"`, `<select id="fit-fitment-side" name="from.fitment.side"`, `<input type="hidden" name="stock" value="shelf">`, `<input type="hidden" name="stock" value="yard">`} {
+	for _, want := range []string{`name="from.fitment.type"`, `name="from.fitment.number"`, `<select id="fit-fitment-side" name="from.fitment.side"`, `<input type="hidden" name="stock" value="shelf">`, `<input type="hidden" name="stock" value="yard">`,
+		// The catalog's filed-under vocabulary's fields, instead of the
+		// part type (ADR 0024).
+		`<label for="fit-filed-code">part-codes: code`, `<input type="text" id="fit-filed-code" name="from.fitment.filed_under.code" value=""`} {
 		if !strings.Contains(body, want) {
 			t.Errorf("the fitment tab lacks %s\n%s", want, body)
 		}
+	}
+	// The form as a browser sends it, the part type left empty: the page
+	// moves to the filed-under key's query, which answers on the fitment
+	// tab, its entry in its field.
+	status, hdr, _ := response(t, h, "GET", "/ui/fit?tab=fitment&from.fitment.type=&from.fitment.filed_under.code=MIR&from.fitment.number=MR-1001&from.fitment.side=left&model_year=&stock=shelf&stock=yard", nil)
+	if loc := hdr.Get("Location"); status != http.StatusSeeOther || loc != "/ui/fit?from.fitment.filed_under.code=MIR&from.fitment.number=MR-1001&from.fitment.side=left&stock=shelf&stock=yard&tab=fitment" {
+		t.Errorf("the fitment form with an entry: %d to %q", status, loc)
+	}
+	body = getFit(t, h, "/ui/fit?from.fitment.filed_under.code=MIR&from.fitment.number=MR-1001&from.fitment.side=left&stock=shelf&stock=yard", 200)
+	if !strings.Contains(body, `<a id="fit-tab-fitment" href="/ui/fit?tab=fitment" aria-current="page">`) || !strings.Contains(body, `name="from.fitment.filed_under.code" value="MIR"`) || !strings.Contains(body, `data-status="found"`) {
+		t.Errorf("a filed-under key's page:\n%s", body)
+	}
+	// Without a filed-under vocabulary, the part type alone.
+	if body := getFit(t, New(backend{info: testInfo}, log.New(io.Discard, "", 0)), "/ui/fit?tab=fitment", 200); strings.Contains(body, "from.fitment.filed_under") {
+		t.Errorf("the fitment tab without a filed-under vocabulary offers its fields\n%s", body)
 	}
 
 	// No catalog: said before anything is asked, and no example.
@@ -346,6 +364,23 @@ func TestFitPageKinds(t *testing.T) {
 		t.Errorf("BR-1999:\n%s", p)
 	}
 
+	// A filed-under key (ADR 0024): its fitment's vehicles, or, on two
+	// sides, each fitment linked to its own.
+	body = getFit(t, h, "/ui/fit?from.fitment.filed_under.code=FRT&from.fitment.number=BR-2001", 200)
+	checkPage(t, "filed under", body, "Vehicles of BR-2001 filed under FRT")
+	if got := statusOf(t, body); got != "The fitment fits 2 applications." {
+		t.Errorf("BR-2001 filed under FRT: status %q", got)
+	}
+	body = getFit(t, h, "/ui/fit?from.fitment.filed_under.code=MIR&from.fitment.number=MR-1001", 200)
+	if got := statusOf(t, body); got != "MR-1001 filed under MIR is 2 fitments: pick one, or ask again with a side." {
+		t.Errorf("MR-1001 filed under MIR: status %q", got)
+	}
+	for _, href := range []string{"/ui/fit?from.fitment.number=MR-1001&amp;from.fitment.side=left&amp;from.fitment.type=mirror&amp;stock=shelf&amp;stock=yard", "/ui/fit?from.fitment.number=MR-1001&amp;from.fitment.side=right&amp;from.fitment.type=mirror&amp;stock=shelf&amp;stock=yard"} {
+		if !strings.Contains(body, `<a href="`+href+`">`) {
+			t.Errorf("MR-1001 filed under MIR does not link %s:\n%s", href, body)
+		}
+	}
+
 	// The Ram's related vehicles: the Silverado, sharing a front rotor.
 	body = getFit(t, h, "/ui/fit?from.vin="+ram2010+"&related=true", 200)
 	if got := statusOf(t, body); got != "1 vehicle shares fitments with this one." {
@@ -432,6 +467,7 @@ func TestFitPageStatuses(t *testing.T) {
 		"/ui/fit?from.model=99999&model_year=2010":                                           "Nothing loaded here knows the vehicle asked for: a VIN that decodes to no vPIC make or model, or an entry or spine entry its vocabulary or spine lacks.",
 		"/ui/fit?from.model=1938&model_year=2010&part.spine=part-types&part.id=no-such-type": "Nothing loaded here knows the vehicle or the part type asked for: a VIN that decodes to no vPIC make or model, or an entry or spine entry its vocabulary or spine lacks.",
 		"/ui/fit?from.fitment.type=mirror&from.fitment.number=MR-0000":                       "parts-catalog has no fitment and no retired number mirror MR-0000.",
+		"/ui/fit?from.fitment.filed_under.code=MIR&from.fitment.number=MR-0000":              "parts-catalog has no fitment and no retired number MR-0000 filed under MIR.",
 		"/ui/fit?from.model=13620&model_year=2010":                                           "vPIC model 13620, 2010 reaches none of parts-catalog's vehicles.",
 		"/ui/fit?from.model=1850&model_year=2010&part.spine=part-types&part.id=mirror":       "parts-catalog has this vehicle, but no fitment of mirror fits it.",
 		"/ui/fit?from.model=1850&model_year=2015&side=left":                                  "parts-catalog has this vehicle, but no fitment of any part type fits it, on the left side.",
@@ -468,6 +504,11 @@ func TestFitPageRefusals(t *testing.T) {
 	body = getFit(t, h, "/ui/fit?from.fitment.type=mirror&from.fitment.number=MR-1001&related=true", 400)
 	if p := plain(section(t, body, `<p class="error" role="alert">`, "</p>")); !strings.Contains(p, "related") {
 		t.Errorf("related with a fitment: %q", p)
+	}
+	// A part type and an entry: the refusal beside the entry's field.
+	body = getFit(t, h, "/ui/fit?from.fitment.type=mirror&from.fitment.filed_under.code=MIR&from.fitment.number=MR-1001", 400)
+	if !strings.Contains(body, `<input type="text" id="fit-filed-code" name="from.fitment.filed_under.code" value="MIR" autocomplete="off" spellcheck="false" aria-invalid="true" aria-describedby="fit-filed-code-error">`) {
+		t.Errorf("a part type and an entry: not beside the entry's field\n%s", body)
 	}
 	body = getFit(t, h, "/ui/fit?from.vocabulary=mine&from.entry.make=Dodge", 404)
 	if !strings.Contains(body, "Nothing named &#34;mine&#34; is loaded on this nitrovin. A file loaded into a browser stays in that browser: open this link in the browser that holds it.") {

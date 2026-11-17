@@ -44,11 +44,11 @@ func TestCatalogLoads(t *testing.T) {
 			t.Errorf("%s, a %s, carries a catalog's release or counts: %+v", v.Name, v.Kind, v)
 		}
 	}
-	want := contract.CatalogCounts{Fitments: 5, Applications: 7, Redirects: 1, Retired: 1}
-	if len(catalogs) != 1 || catalogs[0].Name != "parts-catalog" || catalogs[0].Release != "7.02" || catalogs[0].CatalogCounts == nil || *catalogs[0].CatalogCounts != want {
+	want := contract.CatalogCounts{Fitments: 5, Applications: 7, Redirects: 1, Retired: 1, Filings: 6}
+	if len(catalogs) != 1 || catalogs[0].Name != "parts-catalog" || catalogs[0].Release != "7.02" || catalogs[0].FiledUnder != "part-codes" || catalogs[0].CatalogCounts == nil || *catalogs[0].CatalogCounts != want {
 		t.Fatalf("info's catalog: %+v", catalogs)
 	}
-	if !strings.Contains(string(b), `"release":"7.02","blake3":`) || !strings.Contains(string(b), `"drift":[],"fitments":5,"applications":7,"redirects":1,"retired":1}`) {
+	if !strings.Contains(string(b), `"release":"7.02","filed_under":"part-codes","blake3":`) || !strings.Contains(string(b), `"drift":[],"fitments":5,"applications":7,"redirects":1,"retired":1,"filings":6}`) {
 		t.Errorf("info's JSON does not list the catalog's release and counts:\n%s", b)
 	}
 
@@ -99,7 +99,7 @@ func TestCatalogDrift(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "catalog.jsonl"), []byte(catalog), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	files, err := vocab.Open("../../testdata/vocab/fitment/catalog-models.jsonl", "../../testdata/vocab/fitment/part-types.jsonl", dir)
+	files, err := vocab.Open("../../testdata/vocab/fitment/catalog-models.jsonl", "../../testdata/vocab/fitment/part-types.jsonl", "../../testdata/vocab/fitment/part-codes.jsonl", dir)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,6 +113,7 @@ func TestCatalogDrift(t *testing.T) {
 	}
 	want := []string{
 		`vehicle 9: /applications/0/vehicle: vocabulary "catalog-models" has no entry {"make":"Dodge","model":"Dakota"}`,
+		`unfiled 9: /filed_under: the fitment is filed under no entry of vocabulary "part-codes"`,
 		driftDetail(`qualifier 9: /applications/1/qualifiers/15/0: data month %[1]s never decodes element 15 to attribute id 99`),
 		`redirect 10: /redirect/to: part type "mirror" has no application for this vehicle in 2013 on`,
 	}
@@ -129,7 +130,7 @@ func TestCatalogDrift(t *testing.T) {
 			}
 		}
 	}
-	if want := []string{"qualifier=1", "vehicle=1", "redirect=1"}; !slices.Equal(kinds, want) {
+	if want := []string{"qualifier=1", "vehicle=1", "redirect=1", "unfiled=1"}; !slices.Equal(kinds, want) {
 		t.Errorf("catalog drift counts %v; want %v", kinds, want)
 	}
 }
@@ -242,11 +243,11 @@ func TestCompiledCatalog(t *testing.T) {
 		t.Fatal(err)
 	}
 	// One drift of the vehicle vocabulary's, one of the month's.
-	catalog := string(fixture) + `{"fitment":{"type":"engine","number":"EN-99"},"applications":[{"vehicle":{"make":"Dodge","model":"Dakota"},"options":""},{"vehicle":{"make":"Dodge","model":"Ram 1500"},"options":"","qualifiers":{"15":[99]}}]}` + "\n"
+	catalog := string(fixture) + `{"fitment":{"type":"engine","number":"EN-99"},"filed_under":[{"code":"ENG"}],"applications":[{"vehicle":{"make":"Dodge","model":"Dakota"},"options":""},{"vehicle":{"make":"Dodge","model":"Ram 1500"},"options":"","qualifiers":{"15":[99]}}]}` + "\n"
 	if err := os.WriteFile(filepath.Join(dir, "catalog.jsonl"), []byte(catalog), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	links := []string{"../../testdata/vocab/fitment/part-types.jsonl", "../../testdata/vocab/fitment/catalog-models.jsonl"}
+	links := []string{"../../testdata/vocab/fitment/part-types.jsonl", "../../testdata/vocab/fitment/catalog-models.jsonl", "../../testdata/vocab/fitment/part-codes.jsonl"}
 	files, err := vocab.Open(append(links, dir)...)
 	if err != nil {
 		t.Fatal(err)
@@ -278,7 +279,7 @@ func TestCompiledCatalog(t *testing.T) {
 			}
 			info := tr.Info()
 			conforms(t, "Info", info)
-			got, want := info.Vocabularies[2], jsonl.Info().Vocabularies[2]
+			got, want := info.Vocabularies[3], jsonl.Info().Vocabularies[3]
 			source := want.Blake3
 			wantCompiled := contract.CompiledCatalog{Format: vocab.CompiledFormat, SourceBlake3: source, Writer: Version(), DriftMonth: tc.month, DriftMonthDiffers: tc.differs, LinksDiffer: false, SkippedDrift: []string{}}
 			if got.Compiled == nil || !reflect.DeepEqual(*got.Compiled, wantCompiled) || got.Blake3 == source || got.Path != path {
@@ -293,7 +294,7 @@ func TestCompiledCatalog(t *testing.T) {
 				}
 				return out
 			}
-			if g, w := kinds(got.Drift), kinds(want.Drift); !slices.Equal(g, w) || len(w) != 2 || *got.CatalogCounts != *want.CatalogCounts || got.Release != want.Release {
+			if g, w := kinds(got.Drift), kinds(want.Drift); !slices.Equal(g, w) || len(w) != 2 || *got.CatalogCounts != *want.CatalogCounts || got.Release != want.Release || got.FiledUnder != want.FiledUnder {
 				t.Errorf("compiled catalog's drift %v, counts %+v; want %v, %+v", g, got.CatalogCounts, w, want.CatalogCounts)
 			}
 			if q := got.Drift[0]; !strings.Contains(q.Examples[0].Detail, "data month "+tc.month+" never decodes") {
@@ -339,7 +340,7 @@ func TestCompiledCatalog(t *testing.T) {
 		}
 		load := func(catalog string) contract.VocabularyFile {
 			t.Helper()
-			fs, err := vocab.Open(links[0], other, catalog)
+			fs, err := vocab.Open(links[0], other, links[2], catalog)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -348,7 +349,7 @@ func TestCompiledCatalog(t *testing.T) {
 				t.Fatal(err)
 			}
 			conforms(t, "Info", tr.Info())
-			return tr.Info().Vocabularies[2]
+			return tr.Info().Vocabularies[3]
 		}
 		got, want := load(path), load(dir)
 		if got.Compiled == nil || !got.Compiled.LinksDiffer || got.Compiled.DriftMonthDiffers {

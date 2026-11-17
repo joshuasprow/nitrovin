@@ -165,3 +165,44 @@ a format 3 file with "recompile", as format 1 and 2 files are refused.
   type split over codes, and a number on two sides under one code.
 - A build ticket on [the map](https://github.com/joshuasprow/nitrovin/issues/221)
   carries the work.
+
+## Amendment (2026-11-16): as built
+
+Building it ([#291](https://github.com/joshuasprow/nitrovin/issues/291)) settled
+what this ADR left open:
+
+- **A fifth fault:** an entry named by fields other than the vocabulary's, as a
+  vehicle named by other fields than its vocabulary's is.
+- **An entry the vocabulary lists without a mapping** is drift, like one it
+  lacks: the vocabulary does not say where it goes, which is curation still to
+  come, not a contradiction.
+- **Order:** a fitment's entries are kept and answered sorted by their fields
+  as written, field by field in name order, each value in byte order, and each
+  is spelled as the file first writes it, as vehicles are. Two files that list
+  them in other orders answer the same.
+- **The lookup tries the catalog first.** A key whose entry the vocabulary
+  lacks still reaches the fitments the catalog files under it; it is a status
+  only when nothing is filed under it. A code new to the parts system reaches
+  the catalog before the vocabulary's next build, and only drifts meanwhile.
+- **A retired number by code** is looked up on each side of each of the entry's
+  part types: in a compiled catalog, a read of filed and up to five more, about
+  1.5 ms where a read costs 0.25 ms, within the browser's 3 ms for a key.
+
+## Measured (2026-11-16)
+
+`bench/vocab` on the catalog-scale fixture, now filed under 257 codes, 40 part
+types split over two or three of them, 856,069 (code, fitment) pairs; one core
+(`GOMAXPROCS=1`), Apple M5 Pro:
+
+| | Format 4 | Budget |
+| --- | ---: | ---: |
+| Compiled file | 360.9 MB | 500 MB |
+| Open | 5.4 ms | 1 s |
+| Retained heap | 3.8 MB | 256 MiB |
+| Peak RSS, loading | 20 MB | 512 MiB |
+| Compile | 4.3 s, 185.5 MB peak | |
+| A code and number, p99, compiled | 50 µs, 2 reads | 1 ms |
+| A code and number, p99, JSON Lines | 31 µs | 1 ms |
+
+The JSON Lines form of the same fixture loads in 3.2 s with 1,267 MB at peak,
+inside ADR 0017's 15 s and 1.5 GiB.

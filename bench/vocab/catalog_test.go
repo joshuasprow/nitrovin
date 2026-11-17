@@ -23,7 +23,10 @@ import (
 // The catalog-scale fixture (ADR 0017): about 790,000 fitments, 1.9 million
 // applications, half of them with qualifiers, and 100,000 redirects, over
 // 205 part types and 1,326 vehicle entries, 448 of them unmapped, as the
-// first user's catalog measured. Every number and name is synthetic.
+// first user's catalog measured; and, as its fitments are filed (ADR 0024),
+// 257 codes of a parts system, 40 part types split over two or three of
+// them, about 855,000 (code, fitment) pairs. Every number and name is
+// synthetic.
 const (
 	catalogFitments  = 790_000
 	catalogRedirects = 100_000
@@ -31,6 +34,7 @@ const (
 	catalogTypes     = 205
 	catalogModels    = 1_326
 	catalogUnmapped  = 448
+	catalogSplit     = 40
 )
 
 // applicationsPer cycles through each fitment's count of applications:
@@ -92,7 +96,7 @@ var catalogOnce struct {
 // catalogFixture is the catalog-scale fixture with wide wide fitments, written
 // and compiled once per run.
 type catalogFixture struct {
-	dir      string // its types.jsonl, models.jsonl and catalog.jsonl
+	dir      string // its types.jsonl, models.jsonl, codes.jsonl and catalog.jsonl
 	compiled string // its catalog, compiled
 	// wideOf is, by vehicle, a part type and year of a wide fitment
 	// applying to it, for a request of a wide type's candidates.
@@ -274,12 +278,12 @@ type catalogForm struct {
 }
 
 // catalogForms are the fixture's catalog as JSON Lines and compiled, each
-// beside its spine and vehicle vocabulary.
+// beside its spine, vehicle vocabulary and codes.
 func catalogForms(b *testing.B) []catalogForm {
 	f := fixtureOf(b, wideShape{})
 	return []catalogForm{
 		{"jsonl", []string{f.dir}, filepath.Join(f.dir, "catalog.jsonl"), f},
-		{"compiled", []string{filepath.Join(f.dir, "types.jsonl"), filepath.Join(f.dir, "models.jsonl"), f.compiled}, f.compiled, f},
+		{"compiled", compiledPaths(f), f.compiled, f},
 	}
 }
 
@@ -290,9 +294,14 @@ func wideForms(b *testing.B) []catalogForm {
 		f := fixtureOf(b, v.wideShape)
 		out = append(out,
 			catalogForm{"jsonl-" + v.name, []string{f.dir}, filepath.Join(f.dir, "catalog.jsonl"), f},
-			catalogForm{"compiled-" + v.name, []string{filepath.Join(f.dir, "types.jsonl"), filepath.Join(f.dir, "models.jsonl"), f.compiled}, f.compiled, f})
+			catalogForm{"compiled-" + v.name, compiledPaths(f), f.compiled, f})
 	}
 	return out
+}
+
+// compiledPaths are f's compiled catalog and the files it links to.
+func compiledPaths(f *catalogFixture) []string {
+	return []string{filepath.Join(f.dir, "types.jsonl"), filepath.Join(f.dir, "models.jsonl"), filepath.Join(f.dir, "codes.jsonl"), f.compiled}
 }
 
 // writeCatalog writes the catalog-scale fixture to dir: the month's first
@@ -356,15 +365,32 @@ func writeCatalog(dir string, m vocab.Month, wide wideShape) (map[int][2]int, er
 	}); err != nil {
 		return nil, err
 	}
+	if err := write("codes.jsonl", func(w *bufio.Writer) {
+		fmt.Fprintln(w, `{"format":1,"kind":"vocabulary","name":"bench-codes","version":"synthetic","subject":"part","fields":["code"],"spine":"bench-types"}`)
+		for t := range catalogTypes {
+			for c := range catalogCodesOf(t + 1) {
+				fmt.Fprintf(w, `{"entry":{"code":%q},"mappings":[{"id":"%03d"}]}`+"\n", catalogCode(t+1, c), t+1)
+			}
+		}
+	}); err != nil {
+		return nil, err
+	}
 	wideOf := map[int][2]int{}
 	return wideOf, write("catalog.jsonl", func(w *bufio.Writer) {
-		fmt.Fprintf(w, `{"format":1,"kind":"catalog","name":"bench-catalog","version":"synthetic","release":"1.0","data_month":%q,"spine":"bench-types","vehicles":"bench-models"}`+"\n", m.Name())
+		fmt.Fprintf(w, `{"format":1,"kind":"catalog","name":"bench-catalog","version":"synthetic","release":"1.0","data_month":%q,"spine":"bench-types","vehicles":"bench-models","filed_under":"bench-codes"}`+"\n", m.Name())
 		for i := range catalogFitments {
 			fmt.Fprintf(w, `{"fitment":{"type":"%s","number":"%s"%s}`, catalogTypeOf(i), catalogNumberOf(i), catalogSide(i))
 			if i%5 == 0 {
 				w.WriteString(`,"note":"remanufactured"`)
 			}
-			w.WriteString(`,"applications":[`)
+			w.WriteString(`,"filed_under":[`)
+			for c, code := range catalogFiledOf(i) {
+				if c > 0 {
+					w.WriteByte(',')
+				}
+				fmt.Fprintf(w, `{"code":%q}`, code)
+			}
+			w.WriteString(`],"applications":[`)
 			for j := range applicationsPer[i%len(applicationsPer)] {
 				if j > 0 {
 					w.WriteByte(',')
@@ -404,7 +430,7 @@ func writeCatalog(dir string, m vocab.Month, wide wideShape) (map[int][2]int, er
 		}
 		for k := range wide.fitments {
 			typ := wideTypeOf(k)
-			fmt.Fprintf(w, `{"fitment":{"type":"%s","number":"W%07d"},"applications":[`, typ, k)
+			fmt.Fprintf(w, `{"fitment":{"type":"%s","number":"W%07d"},"filed_under":[{"code":%q}],"applications":[`, typ, k, catalogCode(k%wideTypes*(catalogTypes/wideTypes)+1, 0))
 			for j := range wideMin + rng.IntN(wideMax-wideMin+1) {
 				if j > 0 {
 					w.WriteByte(',')
@@ -461,6 +487,7 @@ func BenchmarkLoadCatalog(b *testing.B) {
 			b.ReportMetric(float64(info.Fitments), "fitments")
 			b.ReportMetric(float64(info.Applications), "applications")
 			b.ReportMetric(float64(info.Redirects), "redirects")
+			b.ReportMetric(float64(info.Filings), "filings")
 			b.ReportMetric(float64(fi.Size())/1e6, "file-MB")
 			b.ReportMetric(heap/1e6, "heap-MB")
 			b.ReportMetric(peak/1e6, "peak-RSS-MB")
@@ -650,3 +677,32 @@ func catalogSide(i int) string {
 func catalogVehicleOf(i, j int) int { return (i*31 + j*977) % catalogModels }
 func catalogFirstOf(i, j int) int   { return 1981 + (i+j*7)%40 }
 func catalogLastOf(i, j int) int    { return catalogFirstOf(i, j) + (i+j)%6 }
+
+// catalogCodesOf is how many codes part type t (from 1) is filed under:
+// three for three in ten of the first catalogSplit, two for the rest of
+// them, one for every other, 257 in all.
+func catalogCodesOf(t int) int {
+	switch {
+	case t > catalogSplit:
+		return 1
+	case t%10 < 3:
+		return 3
+	}
+	return 2
+}
+
+// catalogCode is part type t's code c.
+func catalogCode(t, c int) string { return fmt.Sprintf("C%03d-%d", t, c) }
+
+// catalogFiledOf are the codes fitment i is filed under: its part type's
+// only code, or, of a split one's, one by i, and in three of seven the
+// next too.
+func catalogFiledOf(i int) []string {
+	t, _ := strconv.Atoi(catalogTypeOf(i))
+	k := catalogCodesOf(t)
+	codes := []string{catalogCode(t, i%k)}
+	if k > 1 && i%7 < 3 {
+		codes = append(codes, catalogCode(t, (i+1)%k))
+	}
+	return codes
+}

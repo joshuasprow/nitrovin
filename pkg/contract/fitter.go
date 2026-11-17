@@ -58,14 +58,17 @@ func (r FitRequest) kind() fitKind {
 
 // Fit answers one fit request (ADR 0018): from a vehicle, its part types
 // with counts, with Part its candidates, with Related the vehicles that
-// share its fitments; from a fitment key, its vehicles. A VIN is decoded
+// share its fitments; from a fitment key, its vehicles, or, from a
+// filed-under key that reaches more than one fitment, those fitments
+// (ADR 0024). A VIN is decoded
 // (Decode), and its decode checks qualifiers and gives the year. When
 // req.Now is zero it reads the wall clock once. Nothing to fit is never
 // an error, a missing catalog included: it is a status. The error is a
 // *Problem: an InvalidRequest for a request Validate refuses, or that
 // names a vocabulary or spine the loaded files lack or of the wrong kind
 // (a part vocabulary or spine off the catalog's spine, a to that is no
-// vehicle vocabulary), entry fields other than the vocabulary's, or an
+// vehicle vocabulary), entry fields other than the vocabulary's, a
+// filed-under key on a catalog that names no filed-under vocabulary, or an
 // after it never gave; Decode's error; or an Internal for a fault in
 // nitrovin. ctx bounds its stock lookups: a source that has not answered
 // when ctx ends is unavailable, with reason StockCancelled, and the rest
@@ -105,7 +108,7 @@ func (f Fitter) Fit(ctx context.Context, req FitRequest) (Fit, error) {
 		return Fit{}, p
 	}
 	info := f.Catalog.Info()
-	out.Catalog = &FitCatalog{Name: info.Name, Version: info.Version, Release: info.Release, Spine: info.Spine, Vehicles: info.Vehicles}
+	out.Catalog = &FitCatalog{Name: info.Name, Version: info.Version, Release: info.Release, Spine: info.Spine, Vehicles: info.Vehicles, FiledUnder: info.FiledUnder}
 	limit := req.Limit
 	if limit == 0 {
 		limit = DefaultListLimit
@@ -268,6 +271,9 @@ type reached struct {
 	decoded                   *vocab.Decoded
 	decode                    *Vehicle
 	dataMonth, decoderVersion string
+	// filed is whether the catalog names a filed-under vocabulary: each
+	// fitment answered lists the entries it is filed under.
+	filed bool
 	// modelIdx remembers modelOf's answers.
 	modelIdx map[*vocab.Vehicle]int
 	// byType and redirects are, when every is set, the vehicles'
@@ -349,7 +355,7 @@ func (f Fitter) reach(req FitRequest, info vocab.CatalogInfo) (*reached, error) 
 	if info.Vehicles != vocab.Reserved {
 		q.To = []string{info.Vehicles}
 	}
-	v := &reached{dataMonth: f.DataMonth, decoderVersion: f.DecoderVersion}
+	v := &reached{dataMonth: f.DataMonth, decoderVersion: f.DecoderVersion, filed: info.FiledUnder != ""}
 	if req.ModelYear.Valid {
 		q.ModelYear = new(int(req.ModelYear.V))
 	}
@@ -412,10 +418,13 @@ func models(info vocab.CatalogInfo, tr *vocab.Translation) []FitModel {
 }
 
 // partType is a part type of the catalog's spine a fit asks about, and
-// what its route left unchecked.
+// what its route left unchecked. filedUnder is, when the part named is an
+// entry of the catalog's filed-under vocabulary, that entry: the type's
+// direct fitments are those filed under it (ADR 0024).
 type partType struct {
 	id, name    string
 	unconfirmed vocab.Unconfirmed
+	filedUnder  map[string]string
 }
 
 // partTypes are the part types req.Part reaches, in id order, and whether
@@ -443,11 +452,24 @@ func (f Fitter) partTypes(req FitRequest, info vocab.CatalogInfo, v *reached) ([
 		}
 		q.From.Vocabulary, q.From.Entry = part.Vocabulary, part.Entry
 	}
+	types, known, err := f.typesOf(q, info, "/from", "/part")
+	if err == nil && part.Vocabulary != "" && part.Vocabulary == info.FiledUnder {
+		for i := range types {
+			types[i].filedUnder = part.Entry
+		}
+	}
+	return types, known, err
+}
+
+// typesOf are the part types of the catalog's spine a translation of q
+// reaches, in id order, and whether q names anything the loaded files
+// have. A problem whose pointer starts from is put at to instead.
+func (f Fitter) typesOf(q vocab.Query, info vocab.CatalogInfo, from, to string) ([]partType, bool, error) {
 	tr, err := f.Set.Translate(q)
 	if err != nil {
 		p := *vocabProblem(err)
-		if rest, ok := strings.CutPrefix(p.Pointer, "/from"); ok {
-			p.Pointer = "/part" + rest
+		if rest, ok := strings.CutPrefix(p.Pointer, from); ok {
+			p.Pointer = to + rest
 		}
 		return nil, false, &p
 	}
@@ -498,14 +520,20 @@ func keeps(want, s vocab.Side) bool {
 }
 
 // candidates are the candidates of part type t for the vehicle, side kept,
-// each with the applications that hold: directly, and through each
-// redirect listed for one of its vehicles and years that no direct
-// candidate covers. Reached is direct when any candidate is.
+// each with the applications that hold: directly, those filed under
+// t.filedUnder when it is set, and through each redirect listed for one
+// of its vehicles and years that no direct candidate, of any entry,
+// covers; a redirect's are never narrowed by entry (ADR 0024). Reached is
+// direct when any candidate is.
 func (f Fitter) candidates(t partType, v *reached, side vocab.Side) ([]FitCandidate, FitReach) {
-	direct := f.matching(f.byVehicle(t.id, v, nil), t, v, side, nil)
+	every := f.matching(f.byVehicle(t.id, v, nil), t, v, side, nil)
+	direct := every
+	if t.filedUnder != nil {
+		direct = slices.DeleteFunc(slices.Clone(every), func(c FitCandidate) bool { return !isFiledUnder(c.Fitment, t.filedUnder) })
+	}
 	out := direct
 	for _, rd := range f.redirect(t.id, v) {
-		if covers(direct, rd) {
+		if covers(every, rd) {
 			continue
 		}
 		if len(out) == len(direct) {
@@ -560,7 +588,7 @@ func (f Fitter) matching(cs []vocab.Candidate, t partType, v *reached, side voca
 		if !keeps(side, c.Fitment.Key.Side) {
 			continue
 		}
-		fc := FitCandidate{Fitment: fitmentOf(c.Fitment), Reached: ReachedDirect, Applications: make([]FitApplication, 0, len(c.Applications))}
+		fc := FitCandidate{Fitment: fitmentOf(c.Fitment, v.filed), Reached: ReachedDirect, Applications: make([]FitApplication, 0, len(c.Applications))}
 		for _, a := range c.Applications {
 			if rd != nil && v.year == nil && !overlaps(a.First, a.Last, rd.First, rd.Last) {
 				continue
@@ -645,16 +673,28 @@ func sameVehicle(a, b CatalogVehicle) bool {
 	if a.Entry == nil || b.Entry == nil {
 		return a.Entry == nil && b.Entry == nil && a.Make == b.Make && a.Model == b.Model && a.Ext == b.Ext
 	}
-	if len(a.Entry) != len(b.Entry) {
+	return sameEntry(a.Entry, b.Entry)
+}
+
+// sameEntry reports whether a and b are one vocabulary entry: the same
+// fields, their values equal after Normalize.
+func sameEntry(a, b map[string]string) bool {
+	if len(a) != len(b) {
 		return false
 	}
-	for k, v := range a.Entry {
-		w, ok := b.Entry[k]
+	for k, v := range a {
+		w, ok := b[k]
 		if !ok || vocab.Normalize(v) != vocab.Normalize(w) {
 			return false
 		}
 	}
 	return true
+}
+
+// isFiledUnder reports whether fm, as an answer has it, is filed under
+// entry.
+func isFiledUnder(fm Fitment, entry map[string]string) bool {
+	return slices.ContainsFunc(fm.FiledUnder, func(e map[string]string) bool { return sameEntry(e, entry) })
 }
 
 // compareFitments orders fitments by part type, side and number: the order
@@ -690,8 +730,24 @@ func catalogVehicle(v *vocab.Vehicle) CatalogVehicle {
 	return CatalogVehicle{Entry: v.Entry, Make: v.Make, Model: v.Model, Ext: v.Ext}
 }
 
-func fitmentOf(fit *vocab.Fitment) Fitment {
-	return Fitment{Type: fit.Key.Type, Number: fit.Key.Number, Side: fit.Key.Side.String(), Note: fit.Note}
+// fitmentOf is fit as an answer has it: with the entries it is filed
+// under when filed, its catalog naming a filed-under vocabulary.
+func fitmentOf(fit *vocab.Fitment, filed bool) Fitment {
+	fm := Fitment{Type: fit.Key.Type, Number: fit.Key.Number, Side: fit.Key.Side.String(), Note: fit.Note}
+	if filed {
+		fm.FiledUnder = filedEntries(fit)
+	}
+	return fm
+}
+
+// filedEntries are the entries fit is filed under, by their fields, an
+// empty list for none.
+func filedEntries(fit *vocab.Fitment) []map[string]string {
+	out := make([]map[string]string, len(fit.FiledUnder))
+	for i, e := range fit.FiledUnder {
+		out[i] = e.Entry
+	}
+	return out
 }
 
 func fitmentKey(k vocab.FitmentKey) FitmentKey {
@@ -1419,15 +1475,35 @@ func (f Fitter) names(info vocab.CatalogInfo, v *vocab.Vehicle, first, last, at 
 
 // vehicles answers a fit from a fitment key: the fitment, directly or
 // through the retired number asked for, and a page of its applications'
-// vehicles, named.
+// vehicles, named. A filed-under key that reaches more than one fitment
+// answers them, ambiguous, and no vehicle.
 func (f Fitter) vehicles(ctx context.Context, req FitRequest, info vocab.CatalogInfo, out *Fit, pg pager) error {
 	k := req.From.Fitment
-	fit, rt := f.Catalog.ByNumber(k.Type, k.Number, sideOf(k.Side))
+	var fit *vocab.Fitment
+	var rt *vocab.Retired
+	if k.FiledUnder == nil {
+		fit, rt = f.Catalog.ByNumber(k.Type, k.Number, sideOf(k.Side))
+	} else {
+		reached, err := f.filed(k, info)
+		if err != nil {
+			return err
+		}
+		if len(reached) > 1 {
+			out.Status, out.Fitments = FitAmbiguous, make([]Fitment, len(reached))
+			for i, r := range reached {
+				out.Fitments[i] = r.fitment
+			}
+			return nil
+		}
+		if len(reached) == 1 {
+			fit, rt = reached[0].fit, reached[0].retired
+		}
+	}
 	if fit == nil {
 		out.Status = FitUnknown
 		return nil
 	}
-	fm := fitmentOf(fit)
+	fm := fitmentOf(fit, info.FiledUnder != "")
 	out.Fitment, out.Reached = &fm, ReachedDirect
 	if rt != nil {
 		out.Reached = ReachedRetired
@@ -1461,6 +1537,59 @@ func (f Fitter) vehicles(ctx context.Context, req FitRequest, info vocab.Catalog
 		out.Status = FitNoFitment
 	}
 	return nil
+}
+
+// filedFitment is a fitment a filed-under key reached: as the catalog
+// has it and as an answer does, and the retired number it was reached
+// through, nil for none.
+type filedFitment struct {
+	fit     *vocab.Fitment
+	fitment Fitment
+	retired *vocab.Retired
+}
+
+// filed are the fitments filed-under key k reaches (ADR 0024), in key
+// order: those filed under its entry with its number, on its side, or
+// any side when it gives none; else, through the vocabulary, those that
+// replaced a retired number of one of the entry's part types, on its side
+// or any. It refuses a key on a catalog that names no filed-under
+// vocabulary, and an entry whose fields are not the vocabulary's.
+func (f Fitter) filed(k *FitmentKey, info vocab.CatalogInfo) ([]filedFitment, error) {
+	const ptr = "/from/fitment/filed_under"
+	if info.FiledUnder == "" {
+		return nil, NewProblem(InvalidRequest, ptr, fmt.Sprintf("catalog %q names no filed_under vocabulary: a fitment key names its type", info.Name))
+	}
+	types, _, err := f.typesOf(vocab.Query{From: vocab.From{Vocabulary: info.FiledUnder, Entry: k.FiledUnder}}, info, "/from/entry", ptr)
+	if err != nil {
+		return nil, err
+	}
+	var side *vocab.Side
+	sides := []vocab.Side{vocab.SideNone, vocab.SideLeft, vocab.SideRight, vocab.SideBoth}
+	if k.Side != "" {
+		s := sideOf(k.Side)
+		side, sides = &s, []vocab.Side{s}
+	}
+	var out []filedFitment
+	for _, fit := range f.Catalog.ByFiled(k.FiledUnder, k.Number, side) {
+		out = append(out, filedFitment{fit: fit, fitment: fitmentOf(fit, true)})
+	}
+	if len(out) > 0 {
+		return out, nil
+	}
+	for _, t := range types {
+		for _, s := range sides {
+			fit, rt := f.Catalog.ByNumber(t.id, k.Number, s)
+			if rt == nil {
+				continue
+			}
+			fm := fitmentOf(fit, true)
+			if !slices.ContainsFunc(out, func(r filedFitment) bool { return compareFitments(r.fitment, fm) == 0 }) {
+				out = append(out, filedFitment{fit: fit, fitment: fm, retired: rt})
+			}
+		}
+	}
+	slices.SortStableFunc(out, func(a, b filedFitment) int { return compareFitments(a.fitment, b.fitment) })
+	return out, nil
 }
 
 // pager is a fit's page: after the first after items, at most limit.
@@ -1554,14 +1683,18 @@ func (f Fitter) List(req ListRequest) (List, error) {
 		out.Next = encodeKeyCursor(fits[limit-1].Key)
 	}
 	for _, fit := range fits {
-		out.Entries = append(out.Entries, fitmentLine(fit))
+		out.Entries = append(out.Entries, fitmentLine(fit, info.FiledUnder != ""))
 	}
 	return out, nil
 }
 
-// fitmentLine is a fitment as its file has it.
-func fitmentLine(fit *vocab.Fitment) FitmentLine {
+// fitmentLine is a fitment as its file has it, with the entries it is
+// filed under when filed, its catalog naming a filed-under vocabulary.
+func fitmentLine(fit *vocab.Fitment, filed bool) FitmentLine {
 	l := FitmentLine{Fitment: fitmentKey(fit.Key), Note: fit.Note, Applications: make([]LineApplication, len(fit.Applications))}
+	if filed {
+		l.FiledUnder = filedEntries(fit)
+	}
 	for i := range fit.Applications {
 		a := &fit.Applications[i]
 		la := LineApplication{Vehicle: catalogVehicle(a.Vehicle), First: year(a.First), Last: year(a.Last), Options: a.Options}

@@ -193,7 +193,11 @@ paths:
         dots: `from` is `from.vin`; or `from.vocabulary` with one
         `from.entry.<field>` per field of the vocabulary; or one of
         `from.make`, `from.model`, `from.ext`; or `from.fitment.type` with
-        `from.fitment.number` and, for a sided fitment, `from.fitment.side`.
+        `from.fitment.number` and, for a sided fitment, `from.fitment.side`;
+        or, on a catalog that names a `filed_under` vocabulary, one
+        `from.fitment.filed_under.<field>` per field of that vocabulary in
+        place of `from.fitment.type`, beside `from.fitment.number` and an
+        optional `from.fitment.side`, absent for any side (ADR 0024).
         `part` is `part.spine` with `part.id`, or `part.vocabulary` with one
         `part.entry.<field>` per field. `to` is repeated, once per vehicle
         vocabulary, and `stock` and `location` once per value. Every other
@@ -202,6 +206,8 @@ paths:
         `pointer`, is the one the same request gets as a `POST /v1/fit`
         item. Nothing to fit is never an error: it answers with its
         `status`, `no-catalog` when no catalog is loaded, and an empty list.
+        A `filed_under` key that reaches two or more fitments answers
+        `ambiguous`, listing them in `fitments`: ask again with a side.
       parameters:
         - name: from.vin
           in: query
@@ -228,7 +234,7 @@ paths:
           schema: { $ref: 'decode.schema.json#/$defs/SpineRefFields/properties/ext' }
         - name: from.fitment.type
           in: query
-          description: A fitment's part type, beside `from.fitment.number`; asks for the fitment's vehicles.
+          description: A fitment's part type, beside `from.fitment.number`; asks for the fitment's vehicles. Not with `from.fitment.filed_under.<field>`.
           schema: { $ref: 'decode.schema.json#/$defs/FitmentKey/properties/type' }
         - name: from.fitment.number
           in: query
@@ -236,7 +242,7 @@ paths:
           schema: { $ref: 'decode.schema.json#/$defs/FitmentKey/properties/number' }
         - name: from.fitment.side
           in: query
-          description: A fitment's side; absent for a fitment that has none.
+          description: A fitment's side; absent for a fitment that has none, or, beside `from.fitment.filed_under.<field>`, for any side.
           schema: { $ref: 'decode.schema.json#/$defs/FitmentKey/properties/side' }
         - name: part.spine
           in: query

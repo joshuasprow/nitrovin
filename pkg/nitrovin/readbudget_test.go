@@ -20,7 +20,12 @@ import (
 
 // readBudgets are ADR 0023's reads per request on a compiled catalog: what
 // keeps a request inside ADR 0018's budget where a read costs about
-// 0.25 ms, as in a browser's store.
+// 0.25 ms, as in a browser's store. A filed-under key (ADR 0024) is a read
+// of filed and reverse's; one that finds no live fitment looks the number
+// up as retired on each of the four sides of its entry's part type (a
+// read each, retired numbers being keyed by part type and side), and its
+// successor, about 1.5 ms where a read costs 0.25 ms, within ADR 0023's
+// 3 ms for a key in a browser.
 var readBudgets = map[string]int64{
 	"candidates":          10,
 	"part-types":          20,
@@ -29,6 +34,8 @@ var readBudgets = map[string]int64{
 	"related-any-year":    100,
 	"reverse":             2,
 	"reverse-retired":     2,
+	"filed":               3,
+	"filed-retired":       6,
 	"page":                8,
 }
 
@@ -102,7 +109,7 @@ func TestReadBudget(t *testing.T) {
 			if w[1] > w[0]*farSpan {
 				t.Errorf("wide, %s: %d bytes in %d reads, more than %d a read", kind, w[1], w[0], farSpan)
 			}
-		case "reverse", "reverse-retired", "page":
+		case "reverse", "reverse-retired", "filed", "filed-retired", "page":
 			if bound := w[0] * pageBytes; w[1] > bound {
 				t.Errorf("wide, %s: %d bytes in %d reads, more than %d a page", kind, w[1], w[0], pageBytes)
 			}
@@ -384,6 +391,8 @@ func budgetReads(t *testing.T, d *Decoder, wide int) map[string][2]int64 {
 		ask("reverse", contract.FitRequest{From: contract.FitFrom{Fitment: &contract.FitmentKey{Type: budgetTypeOf(i), Number: budgetNumberOf(i)}}})
 		r := k % budgetRetired
 		ask("reverse-retired", contract.FitRequest{From: contract.FitFrom{Fitment: &contract.FitmentKey{Type: budgetTypeOf(r * 461 % budgetFitments), Number: fmt.Sprintf("R%07d", r)}}})
+		ask("filed", contract.FitRequest{From: contract.FitFrom{Fitment: &contract.FitmentKey{FiledUnder: map[string]string{"code": budgetCodeOf(i)}, Number: budgetNumberOf(i)}}})
+		ask("filed-retired", contract.FitRequest{From: contract.FitFrom{Fitment: &contract.FitmentKey{FiledUnder: map[string]string{"code": budgetCodeOf(r * 461 % budgetFitments)}, Number: fmt.Sprintf("R%07d", r)}}})
 
 		req := contract.ListRequest{Of: "budget-catalog", Limit: contract.MaxListLimit}
 		if k%2 == 1 {
@@ -449,9 +458,13 @@ func budgetRedirectFrom(i int) string { return fmt.Sprintf("%03d", (i+101)%budge
 
 func budgetAppsOf(i int) int { return budgetApplications[i%len(budgetApplications)] }
 
-// writeBudgetCatalog writes the read budget's spine, vehicle vocabulary
-// and catalog, with wide wide fitments, to dir, returning the vocabulary's
-// entries by index.
+// budgetCodeOf is the code fitment i is filed under: its part type's, as
+// a system's code vocabulary has one a type.
+func budgetCodeOf(i int) string { return "C" + budgetTypeOf(i) }
+
+// writeBudgetCatalog writes the read budget's spine, vehicle vocabulary,
+// codes and catalog, with wide wide fitments, to dir, returning the
+// vocabulary's entries by index.
 func writeBudgetCatalog(dir string, m vocab.Month, wide int) ([]map[string]string, error) {
 	var names [][2]string
 	var ids []int32
@@ -509,11 +522,19 @@ func writeBudgetCatalog(dir string, m vocab.Month, wide int) ([]map[string]strin
 	}); err != nil {
 		return nil, err
 	}
+	if err := write("codes.jsonl", func(w *bufio.Writer) {
+		fmt.Fprintln(w, `{"format":1,"kind":"vocabulary","name":"budget-codes","version":"synthetic","subject":"part","fields":["code"],"spine":"budget-types"}`)
+		for t := range budgetTypes {
+			fmt.Fprintf(w, `{"entry":{"code":"C%03d"},"mappings":[{"id":"%03d"}]}`+"\n", t+1, t+1)
+		}
+	}); err != nil {
+		return nil, err
+	}
 	qualifiers := []string{`{"13":["2.4"]}`, `{"9":["6"]}`, `{"15":[2]}`, `{"5":[13],"24":[4]}`}
 	return vehicles, write("catalog.jsonl", func(w *bufio.Writer) {
-		fmt.Fprintf(w, `{"format":1,"kind":"catalog","name":"budget-catalog","version":"synthetic","release":"1.0","data_month":%q,"spine":"budget-types","vehicles":"budget-models"}`+"\n", m.Name())
+		fmt.Fprintf(w, `{"format":1,"kind":"catalog","name":"budget-catalog","version":"synthetic","release":"1.0","data_month":%q,"spine":"budget-types","vehicles":"budget-models","filed_under":"budget-codes"}`+"\n", m.Name())
 		for i := range budgetFitments {
-			fmt.Fprintf(w, `{"fitment":{"type":"%s","number":"%s"},"applications":[`, budgetTypeOf(i), budgetNumberOf(i))
+			fmt.Fprintf(w, `{"fitment":{"type":"%s","number":"%s"},"filed_under":[{"code":%q}],"applications":[`, budgetTypeOf(i), budgetNumberOf(i), budgetCodeOf(i))
 			for j := range budgetAppsOf(i) {
 				if j > 0 {
 					w.WriteByte(',')
@@ -533,7 +554,7 @@ func writeBudgetCatalog(dir string, m vocab.Month, wide int) ([]map[string]strin
 		}
 		rng := rand.New(rand.NewPCG(uint64(wide), 262))
 		for k := range wide {
-			fmt.Fprintf(w, `{"fitment":{"type":"%s","number":"W%07d"},"applications":[`, budgetWideTypeOf(k), k)
+			fmt.Fprintf(w, `{"fitment":{"type":"%s","number":"W%07d"},"filed_under":[{"code":"C%s"}],"applications":[`, budgetWideTypeOf(k), k, budgetWideTypeOf(k))
 			for j := range budgetWideMin + rng.IntN(budgetWideMax-budgetWideMin+1) {
 				if j > 0 {
 					w.WriteByte(',')

@@ -1770,6 +1770,9 @@
                 "items": {
                   "$ref": "#/$defs/LineApplication"
                 }
+              },
+              "filed_under": {
+                "$ref": "#/$defs/FiledUnder"
               }
             },
             "additionalProperties": false
@@ -1814,6 +1817,17 @@
               }
             },
             "additionalProperties": false
+          },
+          "FiledUnder": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "description": "The entries of the catalog's filed_under vocabulary a fitment is filed under (ADR 0024), each by its fields as the file first writes it, sorted by their fields as written, field by field in name order, each value in byte order; empty when it is filed under none. Absent when the catalog names no filed_under vocabulary."
           }
         }
       },
@@ -1827,7 +1841,7 @@
     {
       "name": "fit",
       "title": "Fit parts and vehicles",
-      "description": "Fit a vehicle or a part number against the loaded parts catalog, offline: which parts fit a vehicle, and which vehicles a part fits. What it answers depends on the inputs:\n- a vehicle alone: its part types, each with a count of fitments.\n- a vehicle with part: the candidate fitments of that part type, with the applications that matched.\n- a fitment key ({\"fitment\": {\"type\", \"number\", \"side\"}}) as from: the fitment's vehicles. A retired number reaches the fitment that replaced it.\n- a vehicle with related: true: the vehicles that share its fitments, with how many per part type.\n\nWhat is loaded differs from server to server: call fit with the vehicle alone first. Its catalog gives the catalog's name (list's of, to page its fitment lines), its part spine (part's spine) and its vehicle vocabulary, and its part_types the part type ids; list with no arguments gives the vocabulary names and fields. Use only names these give.\n\n- from: a VIN string; {\"vocabulary\": name, \"entry\": {...}} with exactly that vocabulary's fields; {\"make\": id}, {\"model\": id} or {\"ext\": id}; or {\"fitment\": {\"type\": part type, \"number\": number}}, with \"side\" for a sided fitment.\n- part: {\"spine\": the catalog's part spine, \"id\": part type} or {\"vocabulary\": name, \"entry\": {...}}. Not with a fitment.\n- side: \"left\", \"right\" or \"both\", to keep the fitments that can go on that side.\n- to: vehicle vocabulary names to name vehicles in. None names them as spine entries.\n- model_year: only a year the user knows apart from the VIN; with a fitment, keeps the applications whose years hold it.\n- limit: list items a page, 1-1000 (default 100); after: the previous page's next, to continue. total counts every page; no next means the last page.\n- stock: [\"shelf\"], [\"yard\"] or both, with part or a fitment, for what is in stock (with related: [\"yard\"] only). Each candidate gets shelf (parts under its number, or a retired number it replaced) and yard (whole yard vehicles of any vehicle and year the fitment fits; qualifiers and option text are not checked against them), each its first 10 rows with total: a fit from that fitment key with the same stock pages them all, with limit and after. With part, shelf_by_vehicle holds parts with no number for the vehicle and year, paged with the candidates. status and total describe the candidates only: shelf_by_vehicle has its own total and can hold rows when status is no-fitment. Related vehicles get a yard count only; no fit lists those vehicles by themselves. location: locations to keep rows at.\n- now: omit.\n\nNothing to fit is not an error: status says why (unknown, no-vehicle, no-fitment, or no-catalog when no parts catalog is loaded) and the list is empty. When models lists several vehicles, ask the user which one. An application's options is the catalog's requirement text, verbatim: a person must settle it, so report it with the part, never decide it. A result with unconfirmed was not fully checked: report it as possible, not certain. A stock row's fields are the source's own, verbatim: report them, never interpret them. A source with status unavailable gave no rows, so its stock is unknown, not empty; a shelf with catalog_mismatch numbers its parts under another catalog release, so check the number.",
+      "description": "Fit a vehicle or a part number against the loaded parts catalog, offline: which parts fit a vehicle, and which vehicles a part fits. What it answers depends on the inputs:\n- a vehicle alone: its part types, each with a count of fitments.\n- a vehicle with part: the candidate fitments of that part type, with the applications that matched.\n- a fitment key ({\"fitment\": {\"type\", \"number\", \"side\"}}) as from: the fitment's vehicles. A retired number reaches the fitment that replaced it. When the catalog names a filed_under vocabulary (its catalog's filed_under), {\"fitment\": {\"filed_under\": {...}, \"number\", \"side\"}} names it by one of that system's part codes instead of the part type; without side it reaches any side, and two fitments reached answer status ambiguous with them in fitments: ask the user which side, then ask again with it.\n- a vehicle with related: true: the vehicles that share its fitments, with how many per part type.\n\nWhat is loaded differs from server to server: call fit with the vehicle alone first. Its catalog gives the catalog's name (list's of, to page its fitment lines), its part spine (part's spine) and its vehicle vocabulary, and its part_types the part type ids; list with no arguments gives the vocabulary names and fields. Use only names these give.\n\n- from: a VIN string; {\"vocabulary\": name, \"entry\": {...}} with exactly that vocabulary's fields; {\"make\": id}, {\"model\": id} or {\"ext\": id}; or {\"fitment\": {\"type\": part type, \"number\": number}}, with \"side\" for a sided fitment, or {\"fitment\": {\"filed_under\": {...}, \"number\": number}} with exactly the filed_under vocabulary's fields.\n- part: {\"spine\": the catalog's part spine, \"id\": part type} or {\"vocabulary\": name, \"entry\": {...}}. An entry of the catalog's filed_under vocabulary keeps the candidates filed under it (those reached through a redirect are kept). Not with a fitment.\n- side: \"left\", \"right\" or \"both\", to keep the fitments that can go on that side.\n- to: vehicle vocabulary names to name vehicles in. None names them as spine entries.\n- model_year: only a year the user knows apart from the VIN; with a fitment, keeps the applications whose years hold it.\n- limit: list items a page, 1-1000 (default 100); after: the previous page's next, to continue. total counts every page; no next means the last page.\n- stock: [\"shelf\"], [\"yard\"] or both, with part or a fitment, for what is in stock (with related: [\"yard\"] only). Each candidate gets shelf (parts under its number, or a retired number it replaced) and yard (whole yard vehicles of any vehicle and year the fitment fits; qualifiers and option text are not checked against them), each its first 10 rows with total: a fit from that fitment key with the same stock pages them all, with limit and after. With part, shelf_by_vehicle holds parts with no number for the vehicle and year, paged with the candidates. status and total describe the candidates only: shelf_by_vehicle has its own total and can hold rows when status is no-fitment. Related vehicles get a yard count only; no fit lists those vehicles by themselves. location: locations to keep rows at.\n- now: omit.\n\nNothing to fit is not an error: status says why (unknown, no-vehicle, no-fitment, or no-catalog when no parts catalog is loaded) and the list is empty. When models lists several vehicles, ask the user which one. An application's options is the catalog's requirement text, verbatim: a person must settle it, so report it with the part, never decide it. A result with unconfirmed was not fully checked: report it as possible, not certain. A stock row's fields are the source's own, verbatim: report them, never interpret them. A source with status unavailable gave no rows, so its stock is unknown, not empty; a shelf with catalog_mismatch numbers its parts under another catalog release, so check the number.",
       "inputSchema": {
         "type": "object",
         "$ref": "#/$defs/FitRequest",
@@ -1921,7 +1935,42 @@
                     ],
                     "properties": {
                       "fitment": {
-                        "$ref": "#/$defs/FitmentKey"
+                        "oneOf": [
+                          {
+                            "$ref": "#/$defs/FitmentKey"
+                          },
+                          {
+                            "type": "object",
+                            "description": "A fitment named by an entry of the catalog's filed_under vocabulary instead of its part type (ADR 0024): the entry, by exactly that vocabulary's fields, its number, and a side, absent for any side. Two fitments reached answer ambiguous; with no live fitment, the entry's part types and the number are looked up among retired numbers. Refused when the catalog names no filed_under vocabulary.",
+                            "required": [
+                              "filed_under",
+                              "number"
+                            ],
+                            "properties": {
+                              "filed_under": {
+                                "type": "object",
+                                "minProperties": 1,
+                                "additionalProperties": {
+                                  "type": "string"
+                                },
+                                "description": "An entry of the catalog's filed_under vocabulary, by its fields."
+                              },
+                              "number": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "side": {
+                                "enum": [
+                                  "left",
+                                  "right",
+                                  "both"
+                                ],
+                                "description": "Absent: any side."
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        ]
                       }
                     },
                     "additionalProperties": false
@@ -1963,7 +2012,7 @@
                     "$ref": "#/$defs/VocabularyEntryRef"
                   }
                 ],
-                "description": "The part type asked for: an entry of the catalog's part spine, or of a part vocabulary on that spine. Only beside a vehicle."
+                "description": "The part type asked for: an entry of the catalog's part spine, or of a part vocabulary on that spine. An entry of the catalog's filed_under vocabulary keeps the direct candidates filed under it; candidates reached through a redirect are not narrowed (ADR 0024). Only beside a vehicle."
               },
               "side": {
                 "enum": [
@@ -2486,16 +2535,17 @@
           "FitStatus": {
             "enum": [
               "found",
+              "ambiguous",
               "unknown",
               "no-vehicle",
               "no-fitment",
               "no-catalog"
             ],
-            "description": "What a fit found. found: the list has something. unknown: from or part names nothing loaded. no-vehicle: the vehicle reaches none of the catalog's vehicles. no-fitment: the catalog has the vehicle or the fitment, but nothing fits. no-catalog: no catalog is loaded. Nothing to fit is a status, never a refusal."
+            "description": "What a fit found. found: the list has something. ambiguous: a filed_under key reached two or more fitments, listed in fitments (ADR 0024). unknown: from or part names nothing loaded. no-vehicle: the vehicle reaches none of the catalog's vehicles. no-fitment: the catalog has the vehicle or the fitment, but nothing fits. no-catalog: no catalog is loaded. Nothing to fit is a status, never a refusal."
           },
           "Fit": {
             "type": "object",
-            "description": "The answer to a FitRequest (ADR 0018). Exactly one of part_types, candidates, vehicles and related is present, the one the request's inputs ask for, empty when nothing fits.",
+            "description": "The answer to a FitRequest (ADR 0018). Exactly one of part_types, candidates, vehicles and related is present, the one the request's inputs ask for, empty when nothing fits. With ambiguous, fitments lists what a fitment key reached, beside an empty vehicles.",
             "required": [
               "status",
               "total",
@@ -2564,6 +2614,13 @@
                 },
                 "description": "The vehicles that share fitments with a vehicle."
               },
+              "fitments": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/Fitment"
+                },
+                "description": "With ambiguous, the fitments a filed_under key reached, in key order (ADR 0024): ask again with a side."
+              },
               "shelf": {
                 "$ref": "#/$defs/StockList",
                 "description": "From a fitment key with stock shelf, the fitment's shelf rows, paged with vehicles: after and limit page every list of the answer together."
@@ -2623,11 +2680,16 @@
                 ]
               }
             ],
+            "dependentRequired": {
+              "fitments": [
+                "vehicles"
+              ]
+            },
             "additionalProperties": false
           },
           "FitCatalog": {
             "type": "object",
-            "description": "The catalog a fit answered from, and the files it names: its name is what list's of takes to page its fitment lines, spine the part spine a part names, vehicles its vehicle vocabulary.",
+            "description": "The catalog a fit answered from, and the files it names: its name is what list's of takes to page its fitment lines, spine the part spine a part names, vehicles its vehicle vocabulary, filed_under the part vocabulary its fitments are filed under.",
             "required": [
               "name",
               "version",
@@ -2657,6 +2719,11 @@
                 "type": "string",
                 "minLength": 1,
                 "description": "The vehicle vocabulary its vehicles are entries of, or vpic."
+              },
+              "filed_under": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The part vocabulary whose entries its fitments are filed under (ADR 0024); absent when it names none."
               }
             },
             "additionalProperties": false
@@ -2744,7 +2811,7 @@
           },
           "Fitment": {
             "type": "object",
-            "description": "One part (ADR 0016): its key and the catalog's note.",
+            "description": "One part (ADR 0016): its key, the catalog's note, and the entries it is filed under.",
             "required": [
               "type",
               "number"
@@ -2767,6 +2834,9 @@
               },
               "note": {
                 "type": "string"
+              },
+              "filed_under": {
+                "$ref": "#/$defs/FiledUnder"
               }
             },
             "additionalProperties": false
@@ -3257,6 +3327,17 @@
               }
             },
             "additionalProperties": false
+          },
+          "FiledUnder": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "description": "The entries of the catalog's filed_under vocabulary a fitment is filed under (ADR 0024), each by its fields as the file first writes it, sorted by their fields as written, field by field in name order, each value in byte order; empty when it is filed under none. Absent when the catalog names no filed_under vocabulary."
           }
         }
       },

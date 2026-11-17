@@ -250,7 +250,7 @@ func (f Fitter) stockRow(source string, r stock.Row, into *FitmentKey) StockRow 
 	if r.Fitment != nil {
 		k := fitmentKey(*r.Fitment)
 		out.Fitment, out.Reached = &k, ReachedDirect
-		if into != nil && k != *into {
+		if into != nil && (k.Type != into.Type || k.Number != into.Number || k.Side != into.Side) {
 			out.Reached = ReachedRetired
 		}
 	}

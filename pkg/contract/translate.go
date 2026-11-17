@@ -393,19 +393,8 @@ func parseFrom(raw json.RawMessage, ptr string) (TranslateFrom, *Problem) {
 		if !jsonString(fields["vocabulary"], &f.Vocabulary) || f.Vocabulary == "" {
 			return f, NewProblem(InvalidRequest, ptr+"/vocabulary", "vocabulary must be a non-empty string")
 		}
-		values, p := objectFields(fields["entry"], ptr+"/entry", "entry", nil)
-		if p != nil {
-			return f, p
-		}
-		f.Entry = make(map[string]string, len(values))
-		for _, k := range slices.Sorted(maps.Keys(values)) {
-			var v string
-			if !jsonString(values[k], &v) {
-				return f, NewProblem(InvalidRequest, pointerTo(ptr+"/entry", k), "an entry's field values are strings")
-			}
-			f.Entry[k] = v
-		}
-		return f, nil
+		f.Entry, p = parseEntry(fields["entry"], ptr+"/entry", "entry")
+		return f, p
 	}
 	for _, k := range []string{"make", "model"} {
 		if raw, ok := fields[k]; ok {
@@ -467,6 +456,24 @@ func unknownField(fields map[string]json.RawMessage, ptr string, allowed []strin
 		}
 	}
 	return nil
+}
+
+// parseEntry parses a vocabulary entry by its fields at ptr, an object
+// of strings; what names it in a problem.
+func parseEntry(raw json.RawMessage, ptr, what string) (map[string]string, *Problem) {
+	values, p := objectFields(raw, ptr, what, nil)
+	if p != nil {
+		return nil, p
+	}
+	entry := make(map[string]string, len(values))
+	for _, k := range slices.Sorted(maps.Keys(values)) {
+		var v string
+		if !jsonString(values[k], &v) {
+			return nil, NewProblem(InvalidRequest, pointerTo(ptr, k), "an entry's field values are strings")
+		}
+		entry[k] = v
+	}
+	return entry, nil
 }
 
 // Translation is the answer to a TranslateRequest (ADR 0012): the route

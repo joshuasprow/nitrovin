@@ -361,7 +361,7 @@ func TestDemoPanel(t *testing.T) {
 	// Another catalog in the browser refuses it, naming it.
 	other := newDisk()
 	lo := openWith(t, s, other)
-	if _, err := lo.Load([]Picked{{FileName: "catalog-models.jsonl", Data: fitmentFile(t, "catalog-models")}, {FileName: "part-types.jsonl", Data: fitmentFile(t, "part-types")}}, quiet); err != nil {
+	if _, err := lo.Load([]Picked{{FileName: "catalog-models.jsonl", Data: fitmentFile(t, "catalog-models")}, {FileName: "part-types.jsonl", Data: fitmentFile(t, "part-types")}, {FileName: "part-codes.jsonl", Data: fitmentFile(t, "part-codes")}}, quiet); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := compileFixture(t, lo, fitmentFile(t, "catalog")); err != nil {

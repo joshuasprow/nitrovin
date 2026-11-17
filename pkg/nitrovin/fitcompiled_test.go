@@ -182,11 +182,25 @@ func TestFitCompiled(t *testing.T) {
 					parts = append(parts, &contract.FitPart{Spine: spine, ID: f.Key.Type})
 				}
 			}
-			parts = append(parts, &contract.FitPart{Spine: spine, ID: "brake-rotor-rear"}, &contract.FitPart{Vocabulary: "part-codes", Entry: map[string]string{"code": "ROT"}})
+			parts = append(parts, &contract.FitPart{Spine: spine, ID: "brake-rotor-rear"}, &contract.FitPart{Vocabulary: "part-codes", Entry: map[string]string{"code": "ROT"}},
+				&contract.FitPart{Vocabulary: "part-codes", Entry: map[string]string{"code": "FRT"}}, &contract.FitPart{Vocabulary: "part-codes", Entry: map[string]string{"code": "RRT"}})
 			for _, rt := range s.tr.core.Set.Catalog().File().Retired {
 				keys = append(keys, contract.FitmentKey{Type: rt.Key.Type, Number: rt.Key.Number, Side: rt.Key.Side.String()})
 			}
 			keys = append(keys, contract.FitmentKey{Type: "mirror", Number: "none"})
+			// Filed-under keys (ADR 0024): each fitment's entries with its
+			// number, on any side and its own; a retired number through the
+			// vocabulary; an entry and a number nothing is filed under.
+			for _, f := range cat.Fitments("", nil, 0) {
+				for _, e := range f.FiledUnder {
+					keys = append(keys, contract.FitmentKey{FiledUnder: e.Entry, Number: f.Key.Number})
+					if f.Key.Side != vocab.SideNone {
+						keys = append(keys, contract.FitmentKey{FiledUnder: e.Entry, Number: f.Key.Number, Side: f.Key.Side.String()})
+					}
+				}
+			}
+			keys = append(keys, contract.FitmentKey{FiledUnder: map[string]string{"code": "ROT"}, Number: "BR-1999"},
+				contract.FitmentKey{FiledUnder: map[string]string{"code": "NOPE"}, Number: "BR-2001"}, contract.FitmentKey{FiledUnder: map[string]string{"code": "MIR"}, Number: "none"})
 			years := []contract.Null[int32]{{}, contract.Value[int32](2008), contract.Value[int32](2010), contract.Value[int32](2013)}
 			found := 0
 			for _, from := range s.from {

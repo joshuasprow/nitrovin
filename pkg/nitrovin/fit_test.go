@@ -95,7 +95,21 @@ func namesText(n contract.FitNames) string {
 	return " → " + strings.Join(out, " ")
 }
 
+// filedText writes the entries a fitment is filed under as " under
+// [FRT,ROT]", each entry's fields joined by "/"; "" when it carries none.
+func filedText(fm contract.Fitment) string {
+	if fm.FiledUnder == nil {
+		return ""
+	}
+	var out []string
+	for _, e := range fm.FiledUnder {
+		out = append(out, fields(e))
+	}
+	return " under [" + strings.Join(out, ",") + "]"
+}
+
 // fitSummary writes a fit as lines: its status; each model; then the
+// fitment a key reached, or those an ambiguous key did; then the
 // answer's list, an item a line (an application, a redirect, indented
 // under its candidate); then the total, and "next" when there is a page
 // after.
@@ -105,17 +119,20 @@ func fitSummary(f contract.Fit) []string {
 		out = append(out, "model "+vehicleText(m.Vehicle)+viasText(m.Via)+unconfirmedText(m.Unconfirmed))
 	}
 	if f.Fitment != nil {
-		s := fmt.Sprintf("fitment %s %s %s %s", f.Fitment.Type, f.Fitment.Number, f.Fitment.Side, f.Reached)
+		s := fmt.Sprintf("fitment %s %s %s %s%s", f.Fitment.Type, f.Fitment.Number, f.Fitment.Side, f.Reached, filedText(*f.Fitment))
 		if f.Retired != nil {
 			s += fmt.Sprintf(" from %s %q", f.Retired.Number, f.Retired.Note)
 		}
 		out = append(out, s)
 	}
+	for _, fm := range f.Fitments {
+		out = append(out, fmt.Sprintf("ambiguous %s %s %s%s", fm.Type, fm.Number, fm.Side, filedText(fm)))
+	}
 	for _, p := range f.PartTypes {
 		out = append(out, fmt.Sprintf("part-type %s %q %d %s", p.Type, p.Name, p.Count, p.Reached))
 	}
 	for _, c := range f.Candidates {
-		out = append(out, fmt.Sprintf("candidate %s %s %s %s", c.Fitment.Type, c.Fitment.Number, c.Fitment.Side, c.Reached))
+		out = append(out, fmt.Sprintf("candidate %s %s %s %s%s", c.Fitment.Type, c.Fitment.Number, c.Fitment.Side, c.Reached, filedText(c.Fitment)))
 		for _, a := range c.Applications {
 			out = append(out, fmt.Sprintf("  %s %s %q%s%s", vehicleText(a.Vehicle), yearsText(a.First, a.Last), a.Options, viasText(a.Via), unconfirmedText(a.Unconfirmed)))
 		}
@@ -184,7 +201,7 @@ func TestFit(t *testing.T) {
 		{"candidates from a VIN", `{"from":` + ramVIN + `,"part":{"spine":"part-types","id":"mirror"},"side":"left"}`, []string{
 			"status found",
 			"model Dodge/Ram 1500 via model:1938",
-			"candidate mirror MR-1001 left direct",
+			"candidate mirror MR-1001 left direct under [MIR]",
 			`  Dodge/Ram 1500 2009-2012 "w/o towing package" via model:1938`,
 			`  Dodge/Ram 1500 2009-2012 "4WD, w/ towing package" via model:1938`,
 			"total 1",
@@ -193,10 +210,10 @@ func TestFit(t *testing.T) {
 		{"candidates from a model", `{"from":{"model":1938},"model_year":2010,"part":{"spine":"part-types","id":"mirror"}}`, []string{
 			"status found",
 			"model Dodge/Ram 1500 via model:1938",
-			"candidate mirror MR-1001 left direct",
+			"candidate mirror MR-1001 left direct under [MIR]",
 			`  Dodge/Ram 1500 2009-2012 "w/o towing package" via model:1938`,
 			`  Dodge/Ram 1500 2009-2012 "4WD, w/ towing package" via model:1938 [15]`,
-			"candidate mirror MR-1001 right direct",
+			"candidate mirror MR-1001 right direct under [MIR]",
 			`  Dodge/Ram 1500 2009-2012 "w/o towing package" via model:1938`,
 			"total 2",
 		}},
@@ -204,16 +221,16 @@ func TestFit(t *testing.T) {
 		{"candidates in every year", `{"from":` + ram + `,"part":{"spine":"part-types","id":"brake-rotor-front"}}`, []string{
 			"status found",
 			"model Dodge/Ram 1500",
-			"candidate brake-rotor-front BR-2001  direct",
+			"candidate brake-rotor-front BR-2001  direct under [FRT,ROT]",
 			`  Dodge/Ram 1500 2009-2012 "" [model_year]`,
-			"candidate brake-rotor-front BR-2002  direct",
+			"candidate brake-rotor-front BR-2002  direct under [ROT]",
 			`  Dodge/Ram 1500 2013- "VIN T, 8th digit" [model_year]`,
 			"total 2",
 		}},
 		{"candidates through a redirect", `{"from":` + silverado + `,"model_year":2010,"part":{"spine":"part-types","id":"brake-rotor-rear"}}`, []string{
 			"status found",
 			"model Chevrolet/Silverado 1500",
-			"candidate brake-rotor-front BR-2001  redirect",
+			"candidate brake-rotor-front BR-2001  redirect under [FRT,ROT]",
 			`  Chevrolet/Silverado 1500 2007-2013 "w/ heavy duty brakes" [34]`,
 			`  redirect Chevrolet/Silverado 1500 2007-2013 brake-rotor-rear→brake-rotor-front "rear rotors are listed with the front"`,
 			"total 1",
@@ -223,8 +240,28 @@ func TestFit(t *testing.T) {
 		{"candidates of a part vocabulary's entry", `{"from":` + silverado + `,"model_year":2010,"part":{"vocabulary":"part-codes","entry":{"code":"ROT"}}}`, []string{
 			"status found",
 			"model Chevrolet/Silverado 1500",
-			"candidate brake-rotor-front BR-2001  direct",
+			"candidate brake-rotor-front BR-2001  direct under [FRT,ROT]",
 			`  Chevrolet/Silverado 1500 2007-2013 "w/ heavy duty brakes" [34]`,
+			"total 1",
+		}},
+		// The entry is the catalog's filed-under vocabulary's: the front
+		// rotors filed under FRT, not BR-2002, filed under ROT alone
+		// (ADR 0024).
+		{"candidates narrowed by a filed-under entry", `{"from":` + ram + `,"part":{"vocabulary":"part-codes","entry":{"code":"FRT"}}}`, []string{
+			"status found",
+			"model Dodge/Ram 1500",
+			"candidate brake-rotor-front BR-2001  direct under [FRT,ROT]",
+			`  Dodge/Ram 1500 2009-2012 "" [model_year]`,
+			"total 1",
+		}},
+		// A redirect's candidates are another part type's, never
+		// narrowed: BR-2001 is not filed under RRT.
+		{"a redirect's candidates, not narrowed", `{"from":` + silverado + `,"model_year":2010,"part":{"vocabulary":"part-codes","entry":{"code":"RRT"}}}`, []string{
+			"status found",
+			"model Chevrolet/Silverado 1500",
+			"candidate brake-rotor-front BR-2001  redirect under [FRT,ROT]",
+			`  Chevrolet/Silverado 1500 2007-2013 "w/ heavy duty brakes" [34]`,
+			`  redirect Chevrolet/Silverado 1500 2007-2013 brake-rotor-rear→brake-rotor-front "rear rotors are listed with the front"`,
 			"total 1",
 		}},
 		// The decode's Series rules BR-2001's application out.
@@ -235,16 +272,46 @@ func TestFit(t *testing.T) {
 		}},
 		{"vehicles of a retired number", `{"from":{"fitment":{"type":"brake-rotor-front","number":"BR-1999"}}}`, []string{
 			"status found",
-			`fitment brake-rotor-front BR-2001  retired from BR-1999 "7.01 → 7.02"`,
+			`fitment brake-rotor-front BR-2001  retired under [FRT,ROT] from BR-1999 "7.01 → 7.02"`,
 			`vehicle Dodge/Ram 1500 2009-2012 "" → model:1938 make:476`,
 			`vehicle Chevrolet/Silverado 1500 2007-2013 "w/ heavy duty brakes" → model:1850 make:467`,
 			"total 2",
 		}},
 		{"vehicles of a fitment, to a vocabulary", `{"from":{"fitment":{"type":"mirror","number":"MR-1001","side":"right"}},"to":["yard"]}`, []string{
 			"status found",
-			"fitment mirror MR-1001 right direct",
+			"fitment mirror MR-1001 right direct under [MIR]",
 			`vehicle Dodge/Ram 1500 2009-2012 "w/o towing package" → yard:Dodge/Other yard:Dodge/Ram 1500 [34] yard:Dodge/Ram 1500 4x4 [15 34]`,
 			"total 1",
+		}},
+		// A filed-under key: an entry and a number, any side (ADR 0024).
+		{"vehicles of a filed-under key", `{"from":{"fitment":{"filed_under":{"code":"FRT"},"number":"BR-2001"}}}`, []string{
+			"status found",
+			"fitment brake-rotor-front BR-2001  direct under [FRT,ROT]",
+			`vehicle Dodge/Ram 1500 2009-2012 "" → model:1938 make:476`,
+			`vehicle Chevrolet/Silverado 1500 2007-2013 "w/ heavy duty brakes" → model:1850 make:467`,
+			"total 2",
+		}},
+		{"a filed-under key on two sides", `{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-1001"}}}`, []string{
+			"status ambiguous",
+			"ambiguous mirror MR-1001 left under [MIR]",
+			"ambiguous mirror MR-1001 right under [MIR]",
+			"total 0",
+		}},
+		{"a filed-under key and a side", `{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-1001","side":"right"}}}`, []string{
+			"status found",
+			"fitment mirror MR-1001 right direct under [MIR]",
+			`vehicle Dodge/Ram 1500 2009-2012 "w/o towing package" → model:1938 make:476`,
+			"total 1",
+		}},
+		// No fitment is filed under ROT as BR-1999: through the
+		// vocabulary, ROT's part types, and BR-1999 is a retired front
+		// rotor's number.
+		{"a filed-under key's retired number", `{"from":{"fitment":{"filed_under":{"code":"ROT"},"number":"BR-1999"}}}`, []string{
+			"status found",
+			`fitment brake-rotor-front BR-2001  retired under [FRT,ROT] from BR-1999 "7.01 → 7.02"`,
+			`vehicle Dodge/Ram 1500 2009-2012 "" → model:1938 make:476`,
+			`vehicle Chevrolet/Silverado 1500 2007-2013 "w/ heavy duty brakes" → model:1850 make:467`,
+			"total 2",
 		}},
 		{"related vehicles", `{"from":` + ramVIN + `,"related":true}`, []string{
 			"status found",
@@ -266,7 +333,7 @@ func TestFit(t *testing.T) {
 			if got := fitSummary(f); !slices.Equal(got, c.want) {
 				t.Errorf("%s:\n%s\nwant\n%s", c.request, strings.Join(got, "\n"), strings.Join(c.want, "\n"))
 			}
-			if f.Catalog == nil || *f.Catalog != (contract.FitCatalog{Name: "parts-catalog", Version: "2026.11", Release: "7.02", Spine: "part-types", Vehicles: "catalog-models"}) {
+			if f.Catalog == nil || *f.Catalog != (contract.FitCatalog{Name: "parts-catalog", Version: "2026.11", Release: "7.02", Spine: "part-types", Vehicles: "catalog-models", FiledUnder: "part-codes"}) {
 				t.Errorf("catalog %+v", f.Catalog)
 			}
 		})
@@ -302,6 +369,18 @@ func TestFitStatus(t *testing.T) {
 		{tr, `{"from":` + ram + `,"part":{"vocabulary":"part-codes","entry":{"code":"SEAT"}}}`, contract.FitNoFitment}, // unmapped
 		{tr, `{"from":{"fitment":{"type":"engine","number":"EN-57"}},"model_year":2014}`, contract.FitNoFitment},
 		{tr, `{"from":{"fitment":{"type":"engine","number":"EN-57"}},"side":"left"}`, contract.FitFound}, // no side, never ruled out
+		// A filed-under key whose entry the vocabulary lacks, or that
+		// reaches no fitment, is a status; a number on two sides,
+		// ambiguous; an entry matched as Normalize has it (ADR 0024).
+		{tr, `{"from":{"fitment":{"filed_under":{"code":"NOPE"},"number":"BR-2001"}}}`, contract.FitUnknown},
+		{tr, `{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-9999"}}}`, contract.FitUnknown},
+		{tr, `{"from":{"fitment":{"filed_under":{"code":"FRT"},"number":"BR-2002"}}}`, contract.FitUnknown},  // filed under ROT alone
+		{tr, `{"from":{"fitment":{"filed_under":{"code":"SEAT"},"number":"BR-1999"}}}`, contract.FitUnknown}, // unmapped
+		{tr, `{"from":{"fitment":{"filed_under":{"code":"FRT"},"number":"BR-2001","side":"left"}}}`, contract.FitUnknown},
+		{tr, `{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-1001"}}}`, contract.FitAmbiguous},
+		{tr, `{"from":{"fitment":{"filed_under":{"code":"mir"},"number":"MR-1001","side":"left"}}}`, contract.FitFound},
+		{tr, `{"from":` + ram + `,"model_year":2010,"part":{"vocabulary":"part-codes","entry":{"code":"RRT"}}}`, contract.FitNoFitment},
+		{none, `{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-1001"}}}`, contract.FitNoCatalog},
 		{none, `{"from":"1D7RV1GT5AS123456"}`, contract.FitNoCatalog},
 		{none, `{"from":` + ram + `,"part":{"vocabulary":"nope","entry":{"code":"MIR"}}}`, contract.FitNoCatalog},
 		{none, `{"from":{"model":1938},"related":true,"to":["nope"]}`, contract.FitNoCatalog},
@@ -435,6 +514,7 @@ func TestFitRefusals(t *testing.T) {
 		{`{"from":{"vocabulary":"catalog-models","entry":{"make":"Dodge"}}}`, "/from/entry"},
 		{`{"from":{"vocabulary":"catalog-models","entry":{"make":"Dodge","model":"Ram 1500","trim":"SLT"}}}`, "/from/entry/trim"},
 		{`{"from":` + ram + `,"part":{"vocabulary":"part-codes","entry":{"kode":"MIR"}}}`, "/part/entry/kode"},
+		{`{"from":{"fitment":{"filed_under":{"kode":"MIR"},"number":"MR-1001"}}}`, "/from/fitment/filed_under/kode"},
 		// A cursor of another kind of answer.
 		{`{"from":` + ram + `,"after":"WyJjYW5kaWRhdGVzIiwxXQ"}`, "/after"},
 	} {
@@ -443,6 +523,27 @@ func TestFitRefusals(t *testing.T) {
 		if err == nil || p.Type != contract.InvalidRequest || p.Pointer != c.pointer {
 			t.Errorf("%s: %v; want #invalid-request at %s", c.request, err, c.pointer)
 		}
+	}
+	// A filed-under key on a catalog that names no filed-under vocabulary.
+	dir := t.TempDir()
+	write(t, dir, "catalog.jsonl",
+		`{"format":1,"kind":"catalog","name":"unfiled","version":"1","spine":"part-types","vehicles":"catalog-models"}`,
+		`{"fitment":{"type":"mirror","number":"M-1","side":"left"},"applications":[{"vehicle":{"make":"Dodge","model":"Ram 1500"},"options":""}]}`)
+	files, err := vocab.Open("../../testdata/vocab/fitment/catalog-models.jsonl", "../../testdata/vocab/fitment/part-types.jsonl", "../../testdata/vocab/fitment/part-codes.jsonl", dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	unfiled, err := NewTranslator(embeddedDecoder(t), files...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = fit(t, unfiled, `{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"M-1"}}}`)
+	if p := contract.AsProblem(err); err == nil || p.Type != contract.InvalidRequest || p.Pointer != "/from/fitment/filed_under" {
+		t.Errorf("a filed-under key on a catalog that names no vocabulary: %v; want #invalid-request at /from/fitment/filed_under", err)
+	}
+	f, err := fit(t, unfiled, `{"from":{"fitment":{"type":"mirror","number":"M-1","side":"left"}}}`)
+	if b := conforms(t, "Fit", f); err != nil || f.Catalog.FiledUnder != "" || f.Fitment == nil || f.Fitment.FiledUnder != nil {
+		t.Errorf("a catalog that names no vocabulary: %s, %v; want no filed_under", b, err)
 	}
 	// What a request refuses on its own (side, a part or related beside a
 	// fitment key, a fitment key without type and number) is refused
@@ -527,14 +628,14 @@ func TestListCatalog(t *testing.T) {
 		}
 		for _, e := range l.Entries {
 			line := e.(contract.FitmentLine)
-			got = append(got, fmt.Sprintf("%s %s %s %d", line.Fitment.Type, line.Fitment.Number, line.Fitment.Side, len(line.Applications)))
+			got = append(got, fmt.Sprintf("%s %s %s %d %v", line.Fitment.Type, line.Fitment.Number, line.Fitment.Side, len(line.Applications), line.FiledUnder))
 		}
 		if l.Next == "" {
 			break
 		}
 		req.After = l.Next
 	}
-	want := []string{"brake-rotor-front BR-2001  2", "brake-rotor-front BR-2002  1", "engine EN-57  1", "mirror MR-1001 left 2", "mirror MR-1001 right 1"}
+	want := []string{"brake-rotor-front BR-2001  2 [map[code:FRT] map[code:ROT]]", "brake-rotor-front BR-2002  1 [map[code:ROT]]", "engine EN-57  1 [map[code:ENG]]", "mirror MR-1001 left 2 [map[code:MIR]]", "mirror MR-1001 right 1 [map[code:MIR]]"}
 	if !slices.Equal(got, want) {
 		t.Errorf("paged %v; want %v", got, want)
 	}
@@ -543,7 +644,7 @@ func TestListCatalog(t *testing.T) {
 		t.Fatal(err)
 	}
 	b := conforms(t, "List", l)
-	if want := `{"of":"parts-catalog","entries":[{"fitment":{"type":"mirror","number":"MR-1001","side":"left"},"note":"power, heated","applications":[{"vehicle":{"make":"Dodge","model":"Ram 1500"},"first":2009,"last":2012,"options":"w/o towing package"},{"vehicle":{"make":"Dodge","model":"Ram 1500"},"first":2009,"last":2012,"options":"4WD, w/ towing package","qualifiers":{"15":[2]}}]},{"fitment":{"type":"mirror","number":"MR-1001","side":"right"},"note":"power, heated","applications":[{"vehicle":{"make":"Dodge","model":"Ram 1500"},"first":2009,"last":2012,"options":"w/o towing package"}]}],"vocabularies":[{"name":"parts-catalog","version":"2026.11"}],`; !strings.HasPrefix(string(b), want) {
+	if want := `{"of":"parts-catalog","entries":[{"fitment":{"type":"mirror","number":"MR-1001","side":"left"},"note":"power, heated","filed_under":[{"code":"MIR"}],"applications":[{"vehicle":{"make":"Dodge","model":"Ram 1500"},"first":2009,"last":2012,"options":"w/o towing package"},{"vehicle":{"make":"Dodge","model":"Ram 1500"},"first":2009,"last":2012,"options":"4WD, w/ towing package","qualifiers":{"15":[2]}}]},{"fitment":{"type":"mirror","number":"MR-1001","side":"right"},"note":"power, heated","filed_under":[{"code":"MIR"}],"applications":[{"vehicle":{"make":"Dodge","model":"Ram 1500"},"first":2009,"last":2012,"options":"w/o towing package"}]}],"vocabularies":[{"name":"parts-catalog","version":"2026.11"}],`; !strings.HasPrefix(string(b), want) {
 		t.Errorf("where.type mirror:\n%s\nwant it to start\n%s", b, want)
 	}
 	for _, c := range []struct {
