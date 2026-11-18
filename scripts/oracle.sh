@@ -75,7 +75,7 @@ set -euo pipefail
 
 CONTAINER="${ORACLE_CONTAINER:-nhtsa-oracle}"
 # Pinned by digest, as the workflows' service images are (scripts/tools.sh check).
-IMAGE="${ORACLE_IMAGE:-postgres:17@sha256:ff87138949ad9a46f32ff23bd6852b52ce024a13dffe9b4087be98292cdd3b4f}"
+IMAGE="${ORACLE_IMAGE:-postgres:17@sha256:0d938e975177bef9f1f61f3f9dbcf2e0aa0a139568f66d3415ed8892eb97f6ac}"
 DB=vpic # the stock oracle; `DB=<name> psql_ …` targets another database
 FRESH_DB=vpic_fresh
 BASE_URL=https://vpic.nhtsa.dot.gov/downloads

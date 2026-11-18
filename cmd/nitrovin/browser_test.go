@@ -35,12 +35,12 @@ import (
 // version, byte for byte, held to axeSHA256 (TestAxePin). scripts/tools.sh
 // outdated reports a newer release. To bump, replace the file from the
 // package, then this version and the hash.
-const axeVersion = "4.14.0"
+const axeVersion = "4.14.1"
 
 // axeSHA256 is testdata/axe.min.js's sha256; npm lists the tarball's
 // integrity as
-// sha512-9WTZxEjsZ7b13TH8JPmbV2z8CHbl80/2hm3XPEG4JgNdQLK81IBRXmSxHfMAOkSqQeRxT/0dwNDz2GOm3zzpcQ==.
-const axeSHA256 = "20c09fe157a8a34a30e241aaa1fcdade657734f08ab379ecfbeb7d45cc46e878"
+// sha512-FHfa+lmNjQZfJz1q8wKqIDwC6DExcHt/pkjNQb09a3NPjCKg2rhu5qb2S4r76ASyFNNtuFooJpZe37OgudVGtQ==.
+const axeSHA256 = "29348999450cdf2849a8e70b7912fc2da85a849da39c0d0d5394f51d4a9ed95c"
 
 //go:embed testdata/axe.min.js
 var axeJS string
