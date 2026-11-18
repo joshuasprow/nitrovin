@@ -1014,8 +1014,10 @@ ANALYZE nvtest.shelf`)
 // alone, through the system catalogs' indexes, never every column of the
 // database: on a database of tens of thousands of columns a check that
 // scans every one runs past the default statement timeout (#310). The
-// plan, at the planner's own costs, reads pg_class and pg_attribute by
-// index.
+// plan, at the planner's own costs, reads pg_class by index and
+// pg_attribute by its relation at every read of it: the view's own, and
+// the one beside it for each column's collation, whose index condition
+// alone would say nothing of the view's.
 func TestColumnCheckPostgres(t *testing.T) {
 	conn, _ := testDB(t)
 	exec(t, conn, nvtest)
@@ -1024,8 +1026,20 @@ func TestColumnCheckPostgres(t *testing.T) {
 	if strings.Contains(text, "Seq Scan on pg_attribute") || strings.Contains(text, "Seq Scan on pg_class") {
 		t.Errorf("the column check scans every column of the database:\n%s", text)
 	}
-	if !regexp.MustCompile(`Index Cond: \(+attrelid = `).MatchString(text) {
-		t.Errorf("the column check does not read pg_attribute by its relation:\n%s", text)
+	read, byRelation := regexp.MustCompile(`\bon pg_attribute\b`), regexp.MustCompile(`^\s*(Index|Recheck) Cond: \(+attrelid = `)
+	lines := strings.Split(text, "\n")
+	reads := 0
+	for i, l := range lines {
+		if !read.MatchString(l) {
+			continue
+		}
+		reads++
+		if i+1 == len(lines) || !byRelation.MatchString(lines[i+1]) {
+			t.Errorf("the column check reads pg_attribute other than by its relation, at %q:\n%s", strings.TrimSpace(l), text)
+		}
+	}
+	if reads < 2 {
+		t.Errorf("the column check's plan reads pg_attribute %d times; want the view's read and the collation's:\n%s", reads, text)
 	}
 }
 

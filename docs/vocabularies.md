@@ -652,8 +652,9 @@ which is Postgres's mark on a function that reveals nothing about its
 arguments other than by its return value; it holds any other back until
 the view has made its rows. A function of the request's values alone,
 such as the one that asks whether the request names any location, needs
-no mark. These are all the conditions a lookup puts on a column, and
-each passes:
+no mark. These are all the conditions a lookup puts on a column, and on
+a `text`, `character varying` or integer column each passes (a
+`character` column is below):
 
 - `=` on a text or an integer column: `type`, `number`, `part_type`,
   `decoded_model`, a vehicle column, `year`;
@@ -674,14 +675,18 @@ per key:
 - an expression is served when the index is on the same expression: a
   view that trims, `btrim(catalog_no) AS number`, needs its index on
   `btrim(catalog_no)`, which one on `catalog_no` is not;
-- a `character` column is served by an index on the column. Postgres
-  compares it with a key as text, through a cast that no index on the
-  column answers and no barrier passes, so a lookup first holds the
-  column to the key as `character`, which both do; the answers are the
-  text comparison's. Under a nondeterministic collation the two
-  comparisons can disagree, so the lookup makes the text one alone and
-  no index on the column serves it: cast such a column in the view,
-  `part_class::text AS type`, and index that expression;
+- a `character` equality key column (`type`, `number`, `part_type`, a
+  vehicle column) is served by an index on the column. Postgres compares
+  a `character` column with a key as text, through a cast that no index
+  on the column answers and no barrier passes, so a lookup first holds
+  an equality key column to the key as `character`, which both do; the
+  answers are the text comparison's. A `character` `side` or `location`
+  gets no second comparison, and its condition waits above a barrier:
+  that loses no probe, since the key columns make the probe and these
+  two only filter the rows it finds. Under a nondeterministic collation
+  the two comparisons can disagree, so the lookup makes the text one
+  alone and no index on the column serves it: cast such a key column in
+  the view, `part_class::text AS type`, and index that expression;
 - a view with `LIMIT` or `OFFSET` takes no condition at all, and so
   makes its every row for every key of every lookup; so does a view with
   a window function, unless the window partitions by the key's columns.

@@ -78,26 +78,31 @@ lookup reads the relation once per key, where a join read it once per lookup.
   text, and integer `>=` and `<=`. A new condition has to keep to leakproof
   functions of a column too, or it stays above the barrier and the lookup scans. The
   casts that build a result's columns are not conditions.
-- **A `character` column is held to the key as `character` first.** Postgres
-  compares one with a text key as text, through a cast that is not leakproof and
-  that no index on the column serves, so on a plain relation too the fenced lookup
-  scanned once per key. The lookup therefore adds the `character` comparison, which
-  is leakproof and indexed, beside the text one. It changes no answer: the text
-  comparison is true only of a key equal byte for byte to the value without its
-  padding, so of a key ending in no space, and of those the `character` comparison,
-  which ignores trailing spaces on both sides, is true too. That holds under a
-  deterministic collation only (under one where a no-break space equals a space, a
-  value ending in the first equals as text a key ending in the second, and not as
-  `character`), so the column check reads each column's collation and a
-  `character` column of a nondeterministic one keeps the text comparison alone.
+- **A `character` equality key column is held to the key as `character` first.**
+  Postgres compares a `character` column with a text key as text, through a cast
+  that is not leakproof and that no index on the column serves, so on a plain
+  relation too the fenced lookup scanned once per key. For the columns a lookup
+  holds to a key by equality (`type`, `number`, `part_type`, the vehicle columns)
+  it therefore adds the `character` comparison, which is leakproof and indexed,
+  beside the text one. A `character` `side` or `location` keeps the text comparison
+  alone, above a barrier: neither makes the probe. The added comparison changes no
+  answer: the text comparison is true only of a key equal byte for byte to the
+  value without its padding, so of a key ending in no space, and of those the
+  `character` comparison, which ignores trailing spaces on both sides, is true too.
+  That holds under a deterministic collation only (under one where a no-break space
+  equals a space, a value ending in the first equals as text a key ending in the
+  second, and not as `character`), so the column check reads each column's
+  collation and a `character` column of a nondeterministic one keeps the text
+  comparison alone.
 - **The price is a scan per key where no index serves it.** The planner cannot turn
   a fenced subquery into one hash join, so a relation with no index on a key column
   is read once per key: an unindexed table, a key column the view computes with no
-  matching expression index, a view with `LIMIT`, `OFFSET` or a window function not
-  partitioned by the key, a `character` column of a nondeterministic collation. On
-  a plain table of 150,000 rows with no index (Postgres 17, shelf by fitment, warm):
-  8.0 ms, 8.1 ms and 8.2 ms as a join for 1, 10 and 40 keys; 8.9 ms, 80 ms and
-  375 ms as built. The documentation says which relations these are.
+  matching expression index, a key column that is an aggregate's result, a view
+  with `LIMIT`, `OFFSET` or a window function not partitioned by the key, a
+  `character` key column of a nondeterministic collation. On a plain table of
+  150,000 rows with no index (Postgres 17, shelf by fitment, warm): 8.0 ms, 8.1 ms
+  and 8.2 ms as a join for 1, 10 and 40 keys; 8.9 ms, 80 ms and 375 ms as built. The
+  documentation says which relations these are.
 - **The plan is tested, not the time.** Fixture-sized tables never show the cost.
   `pkg/stock/pg` holds each of the four lookups to its index, with an index
   condition on the key's columns, through the worked view's barrier, the fitment
@@ -109,9 +114,9 @@ lookup reads the relation once per key, where a join read it once per lookup.
   0.06 ms as built, which is what the plain view takes either way. Behind a barrier
   view that works per row (two tables in a `UNION ALL`, two joins, an anti-join and
   an aggregate per row): 298 ms and 282 ms as a join, 0.29 ms and 0.14 ms as built.
-  With `character` key columns, indexed, and 40 keys (warm): 14 ms on the table and
-  16 ms behind a barrier as a join, which no index served either; 677 ms and 960 ms
-  fenced with the text comparison alone; 0.33 ms on both as built.
+  With `character` key columns, indexed, and 40 keys (warm): 14 ms through a plain
+  view and 16 ms behind a barrier as a join, which no index served either; 677 ms
+  and 960 ms fenced with the text comparison alone; 0.33 ms through both as built.
 
 **At first connection** nitrovin checks the relation's columns against
 `information_schema`. A missing or mistyped column makes the source `unavailable`,
