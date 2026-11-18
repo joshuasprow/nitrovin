@@ -58,10 +58,9 @@ type offPages struct {
 	serverRow, answer string
 }
 
-// throughServer is a VIN's page, and when it was asked: the server's to
-// answer while the browser holds no file, the same with JavaScript on and
-// off.
-const throughServer = "/?from.vin=" + vin + pinned
+// throughServer is a VIN's page: the server's to answer while the browser
+// holds no file, the same with JavaScript on and off.
+const throughServer = "/?from.vin=" + vin
 
 // vocabJSOff: the dialog without JavaScript, in a fresh profile, opens,
 // offers no file input or EPA load, and lists the server's catalog, its
@@ -184,8 +183,8 @@ func vocabJSOn(t *testing.T, path, base string, wire *wireLog, off offPages, epa
 	same := vocabServer(t, nil, filepath.Join(driftDir, "classics.jsonl"), filepath.Join(fixture, "listing.jsonl"), filepath.Join(fixture, "parts.jsonl"),
 		filepath.Join(driftDir, "yard.jsonl"), epaPath)
 	for _, target := range []string{
-		"/?from.vin=" + ram2015 + pinned,
-		"/?from.vin=1D7RV1GT5AS123456&model_year=2010" + pinned,
+		"/?from.vin=" + ram2015,
+		"/?from.vin=1D7RV1GT5AS123456",
 	} {
 		tb.do(chromedp.Navigate(base + target))
 		tb.wait("#aka")

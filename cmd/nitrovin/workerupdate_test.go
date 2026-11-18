@@ -128,7 +128,7 @@ func TestWorkerUpdate(t *testing.T) {
 	// The old release's worker draws the page over yard, a VIN's names in
 	// it; its page's header is the server's: nitrovin v0.3.2, linked to
 	// its release.
-	entry := "/?from.vin=1D7RV1GT5AS123456" + pinned
+	entry := "/?from.vin=1D7RV1GT5AS123456"
 	since := len(wire.all())
 	tb.do(chromedp.Navigate(srv.URL + entry))
 	tb.wait("#aka #fan-yard")

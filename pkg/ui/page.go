@@ -21,7 +21,9 @@ import (
 // The page (ADR 0013). GET / is nitrovin's one page for browsers: the VIN
 // decoder, drawn as the VIN's diagram (diagram.go). Its form, the plate,
 // asks the page itself with a VIN's from (from.vin) and nothing else, so
-// every answer is a shareable URL. Below the plate is the answer for
+// every answer is a shareable URL. The page reads no other parameter of a
+// decode: what it asks of a VIN is always the same, the plain decode.
+// Below the plate is the answer for
 // whatever is typed so far, a partial VIN included: a card for each of the
 // VIN's groups, and the vehicle's names in every vocabulary loaded, its
 // translation on vPIC's spine. A VIN the decoder refuses is the page
@@ -45,9 +47,10 @@ const (
 	homeTitle = "VIN decoder"
 )
 
-// decodeParams are the page's parameters a VIN's decode reads; shape and
-// full are the decode's alone, which the translation is not asked with.
-var decodeParams = []string{"model_year", "shape", "full", "now"}
+// retiredOptions are the decode's options the page read from its URL
+// once. It ignores them now, as it does any parameter it does not know,
+// and an old link moves without them (moved).
+var retiredOptions = []string{"model_year", "shape", "full", "now"}
 
 // homePage is what the page's template renders: the plate and everything
 // hanging off it (diagram.go), the chips to try, and what the Developers
@@ -89,7 +92,7 @@ type result struct {
 	// JSON are the answer's objects, each in the dialog: the translation,
 	// and the decode.
 	JSON []jsonDoc
-	// URL is this page's.
+	// URL is the page's for the VIN, with nothing else in its query.
 	URL string
 }
 
@@ -167,8 +170,8 @@ func oldForm(q url.Values) bool {
 }
 
 // moved answers a page that the one page holds now by sending the
-// visitor there, its query along: the decode form's VIN is the page's
-// from.
+// visitor there, its query along, less the decode's options the page no
+// longer reads: the decode form's VIN is the page's from.
 func (h *Handler) moved(r *http.Request) (view, error) {
 	q := r.URL.Query()
 	if r.URL.Path == decodePath || oldForm(q) {
@@ -176,6 +179,9 @@ func (h *Handler) moved(r *http.Request) (view, error) {
 			q["from.vin"] = vs
 			delete(q, "vin")
 		}
+	}
+	for _, k := range retiredOptions {
+		delete(q, k)
 	}
 	loc := homePath
 	if len(q) > 0 {
@@ -231,14 +237,8 @@ func (h *Handler) home(r *http.Request) (view, error) {
 	if err != nil {
 		return view{}, err
 	}
-	dq := url.Values{}
-	for _, k := range decodeParams {
-		if s := strings.TrimSpace(raw.Get(k)); s != "" {
-			dq.Set(k, s)
-		}
-	}
-	res := &result{URL: requestOrigin(r) + r.URL.RequestURI()}
-	dv, dec, vd, err := h.decoded(r, d.VIN, dq, false)
+	res := &result{URL: requestOrigin(r) + vinHref(d.VIN)}
+	dv, dec, vd, err := h.decoded(r, d.VIN)
 	if err != nil {
 		return refuse(err)
 	}
@@ -270,13 +270,7 @@ func (h *Handler) home(r *http.Request) (view, error) {
 	if d.Names.Waiting || d.Names.None {
 		return v, nil
 	}
-	tq := url.Values{"from.vin": {d.VIN}, "to": to}
-	for _, k := range []string{"model_year", "now"} {
-		if dq.Has(k) {
-			tq.Set(k, dq.Get(k))
-		}
-	}
-	req, err := contract.ParseTranslateQuery(tq)
+	req, err := contract.ParseTranslateQuery(url.Values{"from.vin": {d.VIN}, "to": to})
 	if err != nil {
 		return refuse(err)
 	}

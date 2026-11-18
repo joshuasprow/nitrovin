@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"regexp"
 	"slices"
@@ -180,16 +181,17 @@ func TestForm(t *testing.T) {
 				`href="https://vpic.nhtsa.dot.gov/decoder/VinDecoder?VIN=1HGCM82633A004352"`,
 			},
 			[]string{`class="problems"`, `class="error"`}},
-		// The decode's options are the request's: its JSON, its link to /v1
-		// and NHTSA's decoder follow them.
-		{"/?from.vin=5YJ3E1EA2JF000316&model_year=2018&shape=nitrovin&full=true", 200,
+		// The page reads the VIN and nothing else: a decode's options in
+		// its URL are ignored, as any parameter it does not know is. The
+		// decode, its link to /v1 and NHTSA's decoder are the plain ones.
+		{"/?from.vin=5YJ3E1EA2JF000316&model_year=2019&shape=nitrovin&full=true&now=2020-01-01&utm=x", 200,
 			[]string{
-				"<dt>Manufacturer</dt><dd>TESLA, INC.</dd>", "<dt>Model</dt><dd>Model 3</dd>",
-				`&#34;shape&#34;: &#34;nitrovin&#34;`, "Curb Weight (lbs): 3549-4072",
-				`href="/v1/decode/5YJ3E1EA2JF000316?full=true&amp;model_year=2018&amp;shape=nitrovin"`,
-				`href="https://vpic.nhtsa.dot.gov/decoder/VinDecoder?VIN=5YJ3E1EA2JF000316&amp;ModelYear=2018"`,
+				"<dt>Manufacturer</dt><dd>TESLA, INC.</dd>", "<dt>Model</dt><dd>Model 3</dd>", `<p class="big">2018</p>`,
+				`href="/v1/decode/5YJ3E1EA2JF000316"`,
+				`href="https://vpic.nhtsa.dot.gov/decoder/VinDecoder?VIN=5YJ3E1EA2JF000316"`,
+				`&#34;shape&#34;: &#34;vpic&#34;`,
 			},
-			nil},
+			[]string{`class="error"`, "model_year=", "ModelYear=", "shape=", "full=", "now=", "utm=", `&#34;items&#34;`, `&#34;now&#34;: &#34;2020-`}},
 		// A wrong check digit is error code 1, spelled out: a decode, not a
 		// refusal.
 		{"/?from.vin=1HGCM82633A004353", 200,
@@ -217,14 +219,20 @@ func TestForm(t *testing.T) {
 		{"/?from.vin=1GTW7NFH5PA077131", 200,
 			[]string{"<p>5 - VIN has errors in few positions</p>"},
 			[]string{`class="fix"`}},
-		{"/?from.vin=1HGCM82633A004352&model_year=2003.5", 400,
-			[]string{`<p class="error" role="alert">model_year must be a 32-bit integer</p>`, `value="1HGCM82633A004352"`},
-			[]string{`id="copy-url"`}},
-		// The caller's text is escaped where the page echoes it, and the
-		// plate keeps its letters and digits alone.
-		{"/?from.vin=%3Cb%3E%C3%89%22x%3C%2Fb%3E&now=%3Cb%3E", 400,
-			[]string{`value="BXB"`, `got &#34;&lt;b&gt;&#34;</p>`},
-			[]string{"<b>", "<B>"}},
+		// An option the API would refuse is ignored too: never validated.
+		{"/?from.vin=1HGCM82633A004352&model_year=2003.5", 200,
+			[]string{"<title>2003 HONDA Accord · nitrovin</title>", `value="1HGCM82633A004352"`, "<dt>Make</dt><dd>HONDA</dd>", `id="copy-url"`},
+			[]string{`class="error"`, "2003.5"}},
+		// The plate keeps the VIN's letters and digits alone, and a
+		// parameter the page does not read is not echoed.
+		{"/?from.vin=%3Cb%3E%C3%89%22x%3C%2Fb%3E&now=%3Cb%3E", 200,
+			[]string{`value="BXB"`},
+			[]string{"<b>", "<B>", "&lt;b&gt;", `class="error"`}},
+		// The caller's text is escaped where the page echoes it: a
+		// malformed query's refusal.
+		{"/?from.vin=1HGCM82633A004352&x=%<b>", 400,
+			[]string{`<p class="error" role="alert">the query string is malformed: invalid URL escape &#34;%&lt;b&#34;</p>`},
+			[]string{"<b>", `id="copy-url"`}},
 	} {
 		t.Run(c.target, func(t *testing.T) {
 			body := get(t, srv.URL+c.target, c.status)
@@ -263,8 +271,8 @@ func TestForm(t *testing.T) {
 	}
 
 	// An old link to the form, /?vin=… or /ui/decode?vin=…, moves to the
-	// page, its query along and the VIN the page's from, and lands on the
-	// same decode.
+	// page, the VIN the page's from and the decode's options left behind,
+	// and lands on the VIN's decode.
 	const old = "/?vin=1HGCM82633A004352&shape=nitrovin"
 	noFollow := &http.Client{Timeout: client.Timeout, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 	for _, link := range []string{old, "/ui/decode?vin=1HGCM82633A004352&shape=nitrovin"} {
@@ -273,11 +281,11 @@ func TestForm(t *testing.T) {
 			t.Fatal(err)
 		}
 		resp.Body.Close()
-		if resp.StatusCode != http.StatusMovedPermanently || resp.Header.Get("Location") != "/?from.vin=1HGCM82633A004352&shape=nitrovin" {
-			t.Errorf("GET %s: %d, Location %q; want 301 to / with the query", link, resp.StatusCode, resp.Header.Get("Location"))
+		if resp.StatusCode != http.StatusMovedPermanently || resp.Header.Get("Location") != "/?from.vin=1HGCM82633A004352" {
+			t.Errorf("GET %s: %d, Location %q; want 301 to /?from.vin=1HGCM82633A004352", link, resp.StatusCode, resp.Header.Get("Location"))
 		}
 	}
-	if body := get(t, srv.URL+old, 200); !strings.Contains(body, "<dt>Make</dt><dd>HONDA</dd>") || !strings.Contains(body, `href="/v1/decode/1HGCM82633A004352?shape=nitrovin"`) {
+	if body := get(t, srv.URL+old, 200); !strings.Contains(body, "<dt>Make</dt><dd>HONDA</dd>") || !strings.Contains(body, `href="/v1/decode/1HGCM82633A004352"`) {
 		t.Errorf("GET %s, redirected: not the decode\n%s", old, body)
 	}
 
@@ -285,27 +293,36 @@ func TestForm(t *testing.T) {
 }
 
 // TestFormCopies: the decode's copyable texts are the decode's JSON as
-// /v1 answers, indented, this page's URL, and a curl and a nitrovin
-// decode that make the same request.
+// /v1 answers, indented, the VIN's page's URL, and a curl and a nitrovin
+// decode that make the same request: the plain one, whatever else the
+// page's URL holds. The JSON says when it was answered, which no later
+// request repeats, so /v1 and the command line are asked as of then.
 func TestFormCopies(t *testing.T) {
 	srv, _ := formServer(t, "")
 	const (
-		target = "/?from.vin=1HGCM82633A004352&model_year=2003&shape=nitrovin&full=true&now=2026-11-09T12:00:00Z"
-		v1     = "/v1/decode/1HGCM82633A004352?full=true&model_year=2003&now=2026-11-09T12%3A00%3A00Z&shape=nitrovin"
-		cmd    = "nitrovin decode --model-year 2003 --shape nitrovin --full --now 2026-11-09T12:00:00Z 1HGCM82633A004352"
+		vin    = "1HGCM82633A004352"
+		target = "/?from.vin=" + vin + "&model_year=2010&shape=nitrovin&full=true&now=2020-01-01"
+		v1     = "/v1/decode/" + vin
+		cmd    = "nitrovin decode " + vin
 	)
 	body := get(t, srv.URL+target, 200)
-	resp, err := client.Get(srv.URL + v1)
+	var compact bytes.Buffer
+	if err := json.Compact(&compact, []byte(textOf(t, body, "decode-json"))); err != nil {
+		t.Fatal(err)
+	}
+	var shown struct {
+		Now string `json:"now"`
+	}
+	if err := json.Unmarshal(compact.Bytes(), &shown); err != nil || shown.Now == "" || strings.HasPrefix(shown.Now, "2020-") {
+		t.Fatalf("the decode's JSON: now %q, %v; want the clock's", shown.Now, err)
+	}
+	resp, err := client.Get(srv.URL + v1 + "?now=" + url.QueryEscape(shown.Now))
 	if err != nil {
 		t.Fatal(err)
 	}
 	api, err := io.ReadAll(resp.Body)
 	resp.Body.Close()
 	if err != nil {
-		t.Fatal(err)
-	}
-	var compact bytes.Buffer
-	if err := json.Compact(&compact, []byte(textOf(t, body, "decode-json"))); err != nil {
 		t.Fatal(err)
 	}
 	for id, got := range map[string]string{
@@ -316,8 +333,8 @@ func TestFormCopies(t *testing.T) {
 	} {
 		want := map[string]string{
 			"decode-json": strings.TrimSuffix(string(api), "\n"),
-			"copy-url":    srv.URL + target,
-			"copy-curl":   "curl '" + srv.URL + v1 + "'",
+			"copy-url":    srv.URL + "/?from.vin=" + vin,
+			"copy-curl":   "curl " + srv.URL + v1,
 			"copy-cli":    cmd,
 		}[id]
 		if got != want {
@@ -325,8 +342,8 @@ func TestFormCopies(t *testing.T) {
 		}
 	}
 	// The command line gives the same decode.
-	if r := cli(t, nil, "", strings.Fields(cmd)[1:]...); r.exit != 0 || r.stdout != string(api) {
-		t.Errorf("%s: exit %d\n%s%s\nwant\n%s", cmd, r.exit, r.stdout, r.stderr, api)
+	if r := cli(t, nil, "", "decode", "--now", shown.Now, vin); r.exit != 0 || r.stdout != string(api) {
+		t.Errorf("%s, as of %s: exit %d\n%s%s\nwant\n%s", cmd, shown.Now, r.exit, r.stdout, r.stderr, api)
 	}
 }
 

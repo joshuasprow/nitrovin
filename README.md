@@ -170,10 +170,13 @@ dashed. A refusal is said below the plate. The page is rendered on the
 server and every answer is a
 shareable URL (`/?from.vin=1HGCM82633A004352`; older `/?vin=`,
 `/ui/decode`, `/ui/translate`, `/vocab` and `/ui/vocabularies` links
-redirect to it). Three buttons in the header open the rest: VINs offers
+redirect to it). The page takes a VIN and nothing else: `model_year`,
+`shape`, `full` and `now` are the API's and the command line's, and the
+page ignores them. Three buttons in the header open the rest: VINs offers
 examples, the VINs you decoded lately and Surprise me;
 Vocabularies lists what is loaded; and Developers holds the page's URL,
-`curl` and `nitrovin decode` equivalents to copy, the answer's JSON, a
+`curl` and `nitrovin decode` equivalents to copy, each the plain request
+for the VIN, the answer's JSON, a
 link to the same VIN on NHTSA's decoder, how to install,
 configure MCP and verify this version, and links to the API docs, its
 release and data month. Everything works without

@@ -502,8 +502,9 @@ func formJSOff(t *testing.T, path, base string, log *requestLog) {
 	}
 	tb.log.take() // the browser may or may not ask again: its cache's choice
 
-	// A refusal is the page with the refusal below the plate.
-	const refused = "/?from.vin=" + vin + "&model_year=2003.5"
+	// A refusal is the page with the refusal below the plate: a query
+	// the server cannot read.
+	const refused = "/?from.vin=" + vin + "&%zz"
 	tb.do(chromedp.Navigate(base + refused))
 	tb.wait("#answer .error")
 	tb.requests("refusal", false, refused)

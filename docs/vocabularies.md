@@ -941,7 +941,9 @@ its six groups, and shows the vehicle's names in every vocabulary loaded
 on vPIC's spine, with JavaScript or without. Its form is a plate that
 takes a VIN and nothing else, so the page's URL is `/?from.vin=…` and
 names no vocabulary: there are no targets to pick, and what is loaded is
-what is shown. A refusal is said below the plate. Older links
+what is shown. The page reads no other parameter: a model year or a
+clock in its URL is ignored, and the translation is the VIN's as of now.
+A refusal is said below the plate. Older links
 (`/?vin=…`, `/ui/decode`, `/ui/translate`, `/vocab`,
 `/ui/vocabularies`) redirect to it (`301`). Below the plate the answer
 is a card for each group and, under them, "Also known as": a stack for

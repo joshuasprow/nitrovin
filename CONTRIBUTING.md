@@ -558,9 +558,11 @@ references, and its section 9 what the page took of them. Its form is the
 plate: 17 cells under six brackets, the standard groups of a VIN (maker,
 vehicle, check digit, model year, plant, serial), and one field. The form
 asks the page itself with a VIN's from (`from.vin`) and nothing else, so
-every answer is a shareable URL; the decode's own parameters
-(`model_year`, `shape`, `full`, `now`) are read from the URL when a link
-carries them, and no control sets them. Below the plate is the answer
+every answer is a shareable URL. The page reads the VIN and nothing else:
+a decode's options (`model_year`, `shape`, `full`, `now`) are the API's
+and the command line's, and in the page's URL they are ignored, as any
+parameter it does not know is. What the page asks of a VIN is always the
+plain decode. Below the plate is the answer
 (`#answer`) for whatever is typed so far, cleaned (letters and digits,
 upper case, 17 at most), a partial VIN included: a card for each group on
 its leader line, filled once its characters are typed (three characters
@@ -576,7 +578,9 @@ what is loaded is what is shown. A stack of several names shows its
 first, and all of them at a click on its stamp, a checkbox's label. A
 refusal is the page still, with its status, said below the plate. The
 Developers dialog holds the answer's own request when there is
-one (its URL, `curl` and `nitrovin decode`) with its JSON, the decode's
+one, the plain one for the VIN whatever else the page's URL holds (the
+VIN's page's URL, `curl` to `/v1/decode/{vin}` and `nitrovin decode`,
+with no option) with its JSON, the decode's
 and the translation's, behind a button, then install, MCP, verify
 and links, the API docs among them (`docs/api/README.md` at the
 release's tag, else on `main`). The VINs menu holds five examples, each a
@@ -713,9 +717,10 @@ over the files loaded.
 
 `TestForm` (`form_test.go`) drives the page through `serve` against the
 embedded data: the empty plate, a VIN's decode on its cards, with the
-decode's parameters, the check digit's verdict, the decoder's error
-texts and the VIN it suggests, refusals below the plate, the caller's
-text escaped, the headers on every page, and old links moved to the
+decode's options ignored in its URL, the check digit's verdict, the
+decoder's error texts and the VIN it suggests, a refusal below the plate,
+the caller's text escaped, the headers on every page, and old links moved
+to the
 page; `TestFormCopies` and `TestFormREADME` hold what the Developers
 dialog offers to copy to `/v1`, the command line and the README. It then
 runs the page in headless Chrome or Chromium

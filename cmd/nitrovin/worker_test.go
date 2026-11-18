@@ -15,6 +15,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"sort"
 	"strings"
@@ -154,7 +155,8 @@ func vocabServer(t *testing.T, w *ui.Worker, paths ...string) http.Handler {
 }
 
 // mainOf is the outer HTML of a page's main, from a server asked as the
-// browser at base asks: the page's own URL is in it.
+// browser at base asks: the page's own URL is in it. Its clock is left
+// out (timeless).
 func mainOf(t *testing.T, h http.Handler, base, target string, htmx bool) string {
 	t.Helper()
 	r := httptest.NewRequest("GET", base+target, nil)
@@ -168,13 +170,13 @@ func mainOf(t *testing.T, h http.Handler, base, target string, htmx bool) string
 	}
 	body := w.Body.String()
 	if htmx {
-		return body
+		return timeless(body)
 	}
 	start, end := strings.Index(body, `<main id="ui-main" hx-history-elt hx-history="false">`), strings.Index(body, "</main>")
 	if start < 0 || end < 0 {
 		t.Fatalf("%s: no main in %s", target, body)
 	}
-	return body[start : end+len("</main>")]
+	return timeless(body[start : end+len("</main>")])
 }
 
 // drawnMain is a function of a document, giving the outer HTML of its
@@ -186,17 +188,18 @@ const drawnMain = `(doc => {
 	return main.outerHTML;
 })`
 
-// mainHTML is the page's main as the server drew it (drawnMain).
+// mainHTML is the page's main as the server drew it (drawnMain), its
+// clock left out (timeless).
 func mainHTML(tb *tab) string {
 	tb.t.Helper()
-	return eval[string](tb, drawnMain+`(document)`)
+	return timeless(eval[string](tb, drawnMain+`(document)`))
 }
 
 // mainAs is the main in html, a page or its main alone, as this browser
 // parses it, as the page's own is (mainHTML).
 func mainAs(tb *tab, html string) string {
 	tb.t.Helper()
-	return eval[string](tb, drawnMain+`(new DOMParser().parseFromString(`+jsString(html)+`, "text/html"))`)
+	return timeless(eval[string](tb, drawnMain+`(new DOMParser().parseFromString(`+jsString(html)+`, "text/html"))`))
 }
 
 // vocabularies opens the page's Vocabularies dialog, where the browser's
@@ -218,9 +221,20 @@ func (tb *tab) closeVocabularies() {
 	tb.wait("#vocabularies:not(:popover-open)")
 }
 
-// pinned ends a page's query with a clock: its answer's JSON says when it
-// was asked, so two answers to compare are asked at one time.
+// pinned ends a /v1 query with a clock: its answer says when it was
+// asked, so two answers to compare are asked at one time.
 const pinned = "&now=2026-11-01T00:00:00Z"
+
+// nowValue is the value of a JSON object's now in a page, as the server
+// writes it and as a browser serializes it.
+var nowValue = regexp.MustCompile(`((?:&#34;|")now(?:&#34;|"): (?:&#34;|"))[0-9A-Z:.+-]+`)
+
+// timeless is a page's HTML without the instants its JSON was answered
+// at. The page takes no clock, so two answers to compare, the worker's
+// and a server's, are asked at different times and differ there alone.
+func timeless(html string) string {
+	return nowValue.ReplaceAllString(html, "${1}…")
+}
 
 // TestWorker runs the worker in a fresh profile against a server that has
 // loaded classics alone: the browser loads yard (which maps into the
@@ -247,7 +261,7 @@ func TestWorker(t *testing.T) {
 	writeSynthetic(t, big, entries)
 	// The fixture's 2010 Ram, which the synthetic file and yard have names
 	// for.
-	probe := "/?from.vin=1D7RV1GT5AS123456" + pinned
+	probe := "/?from.vin=1D7RV1GT5AS123456"
 
 	wire := &wireLog{h: vocabServer(t, &module, filepath.Join(fixture, "classics.jsonl"))}
 	srv := httptest.NewServer(wire)
@@ -284,7 +298,7 @@ func TestWorker(t *testing.T) {
 	queries := []string{
 		"from.vin=1D7RV1GT5AS123456",
 		"from.vin=1GCVKREC6EZ123456",
-		"from.vin=" + ram2015 + "&model_year=2015",
+		"from.vin=" + ram2015,
 		"from.vin=JH2PC40066M200001",
 	}
 	same1 := func(step, target string) {
@@ -302,14 +316,14 @@ func TestWorker(t *testing.T) {
 		if got[0] != "200" || got[1] != ui.CSP || got[2] != "HX-Request" {
 			t.Errorf("%s %s fragment: status %s, CSP %q, Vary %q", step, target, got[0], got[1], got[2])
 		}
-		if want := mainOf(t, same, srv.URL, target, true); got[3] != want {
+		if want := mainOf(t, same, srv.URL, target, true); timeless(got[3]) != want {
 			t.Errorf("%s %s: the worker's fragment differs from the server's\nworker: %s\nserver: %s", step, target, got[3], want)
 		}
 	}
 	// The page, and each VIN's, with its decode, which is the server's.
 	same1("the page", "/")
 	for _, q := range queries {
-		same1("lookup", "/?"+q+pinned)
+		same1("lookup", "/?"+q)
 	}
 	same1("list", "/ui/vocabularies/yard")
 	same1("list", "/ui/vocabularies/listing?limit=1")
@@ -317,7 +331,7 @@ func TestWorker(t *testing.T) {
 	// The page is the worker's once the browser holds a file, with a VIN
 	// on the plate or without: the server never draws it.
 	since := len(wire.all())
-	for _, target := range []string{"/", "/?" + queries[1] + pinned} {
+	for _, target := range []string{"/", "/?" + queries[1]} {
 		tb.do(chromedp.Navigate(srv.URL + target))
 		tb.wait("#vin-form.live")
 		if slices.ContainsFunc(wire.all()[since:], func(r wireRequest) bool { return r.target == target }) {
@@ -327,7 +341,7 @@ func TestWorker(t *testing.T) {
 
 	// A stopped worker starts again on the next request and answers the same.
 	tb.stopWorkers()
-	same1("after a stop", "/?"+queries[0]+pinned)
+	same1("after a stop", "/?"+queries[0])
 
 	// A hard reload bypasses the worker: the page is paused.
 	tb.do(chromedp.Navigate(srv.URL + "/"))
@@ -403,7 +417,7 @@ func TestWorker(t *testing.T) {
 	if eval[bool](tb, `navigator.serviceWorker.getRegistration().then(r => r.waiting === null || r.active === null)`) {
 		t.Error("an update: no worker waiting beside the active one")
 	}
-	same1("with an update waiting", "/?"+queries[0]+pinned)
+	same1("with an update waiting", "/?"+queries[0])
 
 	// The files never reached the server: every request it got was a GET
 	// or HEAD with no body, and none but for a release's asset named a

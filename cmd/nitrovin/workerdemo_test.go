@@ -70,9 +70,9 @@ func TestWorkerDemo(t *testing.T) {
 	// The yard's Ram, of make Ram, has its name in the demo's vehicle
 	// vocabulary, as the server draws it on the same files.
 	same := vocabServer(t, nil, demoDir, epaPath)
-	target := "/?from.vin=1C6RR7LT6FS512345" + pinned
+	target := "/?from.vin=1C6RR7LT6FS512345"
 	got := eval[[]string](tb, `fetch(`+jsString(target)+`, {headers: {"HX-Request": "true"}}).then(async r => [String(r.status), await r.text()])`)
-	if want := mainOf(t, same, srv.URL, target, true); got[0] != "200" || got[1] != want {
+	if want := mainOf(t, same, srv.URL, target, true); got[0] != "200" || timeless(got[1]) != want {
 		t.Errorf("%s: the worker's page differs from the server's\nworker: %s %s\nserver: %s", target, got[0], got[1], want)
 	}
 	if !strings.Contains(strings.Join(strings.Fields(text(got[1])), " "), "Dodge Ram 1500") {

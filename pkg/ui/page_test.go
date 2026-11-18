@@ -84,15 +84,16 @@ func TestPage(t *testing.T) {
 		t.Errorf("a query without a VIN, as a fragment: %d\n%s", status, body)
 	}
 
-	// Old links move to the page, their query along: the decode form's
-	// VIN is the page's from.
+	// Old links move to the page, their query along, less the decode's
+	// options the page no longer reads: the decode form's VIN is the
+	// page's from.
 	for _, method := range []string{"GET", "HEAD"} {
 		for old, want := range map[string]string{
-			"/?vin=1HGCM82633A004352":                                "/?from.vin=1HGCM82633A004352",
-			"/?vin=1HGCM82633A004352&model_year=2003&shape=nitrovin": "/?from.vin=1HGCM82633A004352&model_year=2003&shape=nitrovin",
-			"/ui/decode?vin=1HGCM82633A004352&model_year=2003":       "/?from.vin=1HGCM82633A004352&model_year=2003",
+			"/?vin=1HGCM82633A004352":                                                   "/?from.vin=1HGCM82633A004352",
+			"/?vin=1HGCM82633A004352&model_year=2003&shape=nitrovin":                    "/?from.vin=1HGCM82633A004352",
+			"/ui/decode?vin=1HGCM82633A004352&model_year=2003&full=true&now=2026-11-01": "/?from.vin=1HGCM82633A004352",
 			"/ui/decode": "/",
-			"/ui/translate?from.model=1861&model_year=2003&to=yard":    "/?from.model=1861&model_year=2003&to=yard",
+			"/ui/translate?from.model=1861&model_year=2003&to=yard":    "/?from.model=1861&to=yard",
 			"/ui/translate?from.vocabulary=yard&vin=1HGCM82633A004352": "/?from.vocabulary=yard&vin=1HGCM82633A004352",
 			"/vocab":           "/",
 			"/ui/vocabularies": "/",
@@ -137,22 +138,27 @@ func TestPage(t *testing.T) {
 	_, _, body = response(t, h, "GET", "/?from.vin=1HGCM82633A004352", nil)
 	checkPage(t, "a VIN's page", body, "2003 HONDA Accord")
 
-	// A refusal is the page with the refusal below the plate, for the
-	// page's main, not the error slot.
-	for _, c := range []struct {
-		target, want string
-	}{
-		{"/?from.vin=1HGCM82633A004352&model_year=2003.5", `<p class="error" role="alert">model_year must be a 32-bit integer</p>`},
-		{"/?%zz", `<p class="error" role="alert">the query string is malformed: `},
-	} {
-		status, hdr, body := response(t, h, "GET", c.target, htmx)
-		if status != 400 || hdr.Get("HX-Retarget") != "#ui-main" || hdr.Get("HX-Reswap") != "innerHTML" || !strings.Contains(body, c.want) ||
-			!strings.HasSuffix(body, `hx-swap-oob="true"></div>`) || strings.Contains(body, `id="result-json"`) {
-			t.Errorf("refusal fragment %s: %d, HX-Retarget %q, HX-Reswap %q\n%s", c.target, status, hdr.Get("HX-Retarget"), hdr.Get("HX-Reswap"), body)
+	// A decode's options are not the page's: one the API would refuse is
+	// ignored as any unknown parameter is, and the answer is the VIN's.
+	for _, fragment := range []http.Header{htmx, nil} {
+		status, _, body := response(t, h, "GET", "/?from.vin=1HGCM82633A004352&model_year=2003.5&shape=flat&full=1&now=yesterday", fragment)
+		if status != 200 || !strings.Contains(body, `data-vin="1HGCM82633A004352" data-label="2003 HONDA Accord"`) ||
+			!strings.Contains(body, `id="copy-url" data-copy="this page's URL">http://example.com/?from.vin=1HGCM82633A004352</pre>`) ||
+			!strings.Contains(body, `<a class="hint" href="/v1/decode/1HGCM82633A004352" hx-boost="false">/v1</a>`) ||
+			strings.Contains(body, `class="error"`) || strings.Contains(body, "2003.5") || strings.Contains(body, "yesterday") {
+			t.Errorf("a VIN with a decode's options (fragment %t): %d\n%s", fragment != nil, status, body)
 		}
 	}
-	status, _, body = response(t, h, "GET", "/?from.vin=1HGCM82633A004352&model_year=2003.5", nil)
-	if status != 400 || !strings.Contains(body, `<p class="error" role="alert">model_year must be a 32-bit integer</p>`) || !strings.Contains(body, `name="from.vin" value="1HGCM82633A004352"`) {
+
+	// A refusal is the page with the refusal below the plate, for the
+	// page's main, not the error slot.
+	status, hdr, body = response(t, h, "GET", "/?%zz", htmx)
+	if status != 400 || hdr.Get("HX-Retarget") != "#ui-main" || hdr.Get("HX-Reswap") != "innerHTML" || !strings.Contains(body, `<p class="error" role="alert">the query string is malformed: `) ||
+		!strings.HasSuffix(body, `hx-swap-oob="true"></div>`) || strings.Contains(body, `id="result-json"`) {
+		t.Errorf("refusal fragment: %d, HX-Retarget %q, HX-Reswap %q\n%s", status, hdr.Get("HX-Retarget"), hdr.Get("HX-Reswap"), body)
+	}
+	status, _, body = response(t, h, "GET", "/?%zz", nil)
+	if status != 400 || !strings.Contains(body, `<p class="error" role="alert">the query string is malformed: `) || !strings.Contains(body, `name="from.vin"`) {
 		t.Errorf("refusal page: %d\n%s", status, body)
 	}
 
@@ -312,11 +318,12 @@ func TestBrowserDecode(t *testing.T) {
 		t.Errorf("alpha, which has no name, is listed before yard, which has\n%s", body)
 	}
 
-	// A refusal is the decode's own, below the plate, before the server
-	// is asked.
+	// A decode's options in the page's URL are ignored: the answer is the
+	// same, and nothing of them reaches the server.
 	s.gets = nil
-	status, _, body = response(t, h, "GET", "/?from.vin="+vin+"&model_year=x", nil)
-	if status != 400 || !strings.Contains(body, `<p class="error" role="alert">model_year must be a 32-bit integer</p>`) || len(s.gets) != 0 {
-		t.Errorf("a refusal in the browser's page: %d, asked %q\n%s", status, s.gets, body)
+	status, _, body = response(t, h, "GET", "/?from.vin="+vin+"&model_year=x&now=2020-01-01", nil)
+	if status != 200 || !strings.Contains(body, "<title>2010 DODGE Ram · nitrovin</title>") || strings.Contains(body, `class="error"`) ||
+		slices.ContainsFunc(s.gets, func(g string) bool { return g != "/v1/decode/"+vin+"?full=true" }) {
+		t.Errorf("a decode's options in the browser's page: %d, asked %q\n%s", status, s.gets, body)
 	}
 }
