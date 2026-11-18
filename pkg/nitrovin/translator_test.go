@@ -71,7 +71,7 @@ func TestFixtureLoadsClean(t *testing.T) {
 			t.Errorf("vocabulary %d: %+v", i, v)
 		}
 	}
-	want := []string{"classics extension-set 2026.11", "listing vocabulary 2026.11", "parts spine 2026.11", "yard vocabulary 2026.11"}
+	want := []string{"classics extension-set 2026.11", "fleet vocabulary 2026.11", "listing vocabulary 2026.11", "parts spine 2026.11"}
 	if !slices.Equal(got, want) {
 		t.Errorf("info vocabularies %v; want %v", got, want)
 	}
@@ -98,14 +98,14 @@ func TestFixtureDrift(t *testing.T) {
 	}
 	want := []string{
 		driftDetail(`extension classics.jsonl:2: extension "silverado" is named like vPIC model 1850 (Silverado) under make 467 (Chevrolet) in data month %[1]s`),
-		driftDetail(`qualifier yard.jsonl:2: /mappings/0/qualifiers/34/1: data month %[1]s never decodes element 34 to "1500 Megacab"`),
-		driftDetail(`qualifier yard.jsonl:3: /mappings/0/qualifiers/15/1: data month %[1]s never decodes element 15 to attribute id 99`),
-		driftDetail(`make yard.jsonl:4: /mappings/0/make: vPIC make 99999 is not in data month %[1]s`),
-		driftDetail(`model yard.jsonl:5: /mappings/0/model: vPIC model 99999 is not in data month %[1]s`),
-		driftDetail(`model-years yard.jsonl:7: /mappings/0: model years 2005-2010 fall wholly outside vPIC model 13620's years in data month %[1]s: 2013-`),
+		driftDetail(`qualifier fleet.jsonl:2: /mappings/0/qualifiers/34/1: data month %[1]s never decodes element 34 to "1500 Megacab"`),
+		driftDetail(`qualifier fleet.jsonl:3: /mappings/0/qualifiers/15/1: data month %[1]s never decodes element 15 to attribute id 99`),
+		driftDetail(`make fleet.jsonl:4: /mappings/0/make: vPIC make 99999 is not in data month %[1]s`),
+		driftDetail(`model fleet.jsonl:5: /mappings/0/model: vPIC model 99999 is not in data month %[1]s`),
+		driftDetail(`model-years fleet.jsonl:7: /mappings/0: model years 2005-2010 fall wholly outside vPIC model 13620's years in data month %[1]s: 2013-`),
 		// Only vans decode this Series; the same string on line 9's make
 		// target is tested month-wide and holds.
-		driftDetail(`model-qualifier yard.jsonl:8: /mappings/0/qualifiers/34/0: vPIC model 1850 never decodes element 34 to "2500 Cargo" in data month %[1]s`),
+		driftDetail(`model-qualifier fleet.jsonl:8: /mappings/0/qualifiers/34/0: vPIC model 1850 never decodes element 34 to "2500 Cargo" in data month %[1]s`),
 	}
 	if !slices.Equal(got, want) {
 		t.Errorf("drift:\n%s\nwant:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
@@ -118,11 +118,11 @@ func TestFixtureDrift(t *testing.T) {
 		t.Errorf("classics drift counts: %+v", c)
 	}
 	var kinds []string
-	for _, c := range counts["yard"] {
+	for _, c := range counts["fleet"] {
 		kinds = append(kinds, c.Kind+"="+strconv.Itoa(c.Count))
 	}
 	if want := []string{"make=1", "model=1", "qualifier=2", "model-years=1", "model-qualifier=1"}; !slices.Equal(kinds, want) {
-		t.Errorf("yard drift counts %v; want %v", kinds, want)
+		t.Errorf("fleet drift counts %v; want %v", kinds, want)
 	}
 }
 

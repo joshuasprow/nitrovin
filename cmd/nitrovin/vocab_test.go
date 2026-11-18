@@ -99,7 +99,7 @@ func epaSample(t *testing.T) (string, []byte) {
 func faultyFile(t *testing.T) string {
 	t.Helper()
 	p := filepath.Join(t.TempDir(), "faulty.jsonl")
-	data := `{"format":1,"kind":"vocabulary","name":"yard","version":"1","subject":"vehicle","fields":["make","model"]}` + "\n" +
+	data := `{"format":1,"kind":"vocabulary","name":"fleet","version":"1","subject":"vehicle","fields":["make","model"]}` + "\n" +
 		`{"entry":{"make":"Dodge","model":"Ram"},"mappings":[{"model":1938,"first":2014,"last":2012}]}` + "\n"
 	if err := os.WriteFile(p, []byte(data), 0o644); err != nil {
 		t.Fatal(err)
@@ -144,7 +144,7 @@ func TestVocabCheck(t *testing.T) {
 	for _, f := range findings(t, r.stdout) {
 		got = append(got, string(f.Severity)+" "+filepath.Base(f.File)+":"+strconv.Itoa(f.Line))
 	}
-	if want := []string{"drift classics.jsonl:2", "drift yard.jsonl:2", "drift yard.jsonl:3", "drift yard.jsonl:4", "drift yard.jsonl:5", "drift yard.jsonl:7", "drift yard.jsonl:8"}; r.exit != 1 || r.stderr != "" || !slices.Equal(got, want) {
+	if want := []string{"drift classics.jsonl:2", "drift fleet.jsonl:2", "drift fleet.jsonl:3", "drift fleet.jsonl:4", "drift fleet.jsonl:5", "drift fleet.jsonl:7", "drift fleet.jsonl:8"}; r.exit != 1 || r.stderr != "" || !slices.Equal(got, want) {
 		t.Errorf("vocab check on the drift fixture: exit %d, findings %v, stderr %q; want exit 1 and %v", r.exit, got, r.stderr, want)
 	}
 
@@ -172,7 +172,7 @@ func TestVocabFindingsNameTheirEntry(t *testing.T) {
 		}
 		return out
 	}
-	ext, ram := `classics.jsonl:2 {"entry":null,"id":"silverado"}`, `yard.jsonl:2 {"entry":{"make":"Dodge","model":"Ram 1500"},"id":""}`
+	ext, ram := `classics.jsonl:2 {"entry":null,"id":"silverado"}`, `fleet.jsonl:2 {"entry":{"make":"Dodge","model":"Ram 1500"},"id":""}`
 
 	r := cli(t, nil, "", "vocab", "check", driftFixture)
 	if got := about(findings(t, r.stdout)); r.exit != 1 || len(got) < 2 || got[0] != ext || got[1] != ram {
@@ -237,12 +237,12 @@ func TestVocabCheckBesideAFault(t *testing.T) {
 		got = append(got, string(f.Severity)+" "+filepath.Base(f.File)+":"+strconv.Itoa(f.Line)+": "+f.Detail)
 	}
 	want := []string{
-		"unchecked catalog.jsonl:0: its drift was not measured: it links through " + at("yard.jsonl") + " to " + at("classics.jsonl") + ", which has faults",
+		"unchecked catalog.jsonl:0: its drift was not measured: it links through " + at("fleet.jsonl") + " to " + at("classics.jsonl") + ", which has faults",
 		"fault classics.jsonl:3: malformed JSON: unexpected end of JSON input",
 		"unchecked classics.jsonl:0: its drift was not measured: it has faults",
+		"unchecked fleet.jsonl:0: its drift was not measured: it links to " + at("classics.jsonl") + ", which has faults",
 		"unchecked shelf.jsonl:0: its drift was not measured: it links through " + at("catalog.jsonl") + " to " + at("classics.jsonl") + ", which has faults",
 		"drift trucks.jsonl:3: " + fmt.Sprintf("/mappings/0/make: vPIC make 99999 is not in data month %s", embedded.Month),
-		"unchecked yard.jsonl:0: its drift was not measured: it links to " + at("classics.jsonl") + ", which has faults",
 	}
 	if r.exit != 1 || r.stderr != "" || !slices.Equal(got, want) {
 		t.Errorf("vocab check: exit %d, stderr %q, findings\n%s\nwant exit 1 and\n%s", r.exit, r.stderr, strings.Join(got, "\n"), strings.Join(want, "\n"))
@@ -418,7 +418,7 @@ func TestVocabLoad(t *testing.T) {
 		names []string
 	}{
 		{nil, []string{"info"}, []string{}},
-		{nil, []string{"--vocab", fixture, "info"}, []string{"classics", "listing", "parts", "yard"}},
+		{nil, []string{"--vocab", fixture, "info"}, []string{"classics", "fleet", "listing", "parts"}},
 		{nil, []string{"--vocab", parts, "info", "--vocab", listing}, []string{"parts", "listing"}},
 		{[]string{"NITROVIN_VOCAB=" + parts + string(filepath.ListSeparator) + listing}, []string{"info"}, []string{"parts", "listing"}},
 		{[]string{"NITROVIN_VOCAB=" + missing}, []string{"info", "--vocab", parts}, []string{"parts"}},
@@ -435,7 +435,7 @@ func TestVocabLoad(t *testing.T) {
 
 	// Drift: on stderr, one finding per line, and in info.
 	// Load leaves model-qualifier drift out of stderr (ADR 0015's cost);
-	// info counts it, all five of yard's kinds.
+	// info counts it, all five of fleet's kinds.
 	r := cli(t, []string{"NITROVIN_VOCAB=" + driftFixture}, "", "info")
 	if fs := findings(t, r.stderr); r.exit != 0 || len(fs) != 6 || fs[0].Severity != vocab.SeverityDrift {
 		t.Errorf("info with the drift fixture: exit %d, stderr %q; want exit 0 and six drift lines", r.exit, r.stderr)

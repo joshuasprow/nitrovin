@@ -84,7 +84,7 @@ func TestTranslate(t *testing.T) {
 	clock, _ := contract.ParseNow(now)
 	vocabArgs := []string{"--vocab", fixture, "translate", "--now", now}
 
-	yard := contract.TranslateRequest{To: []string{"yard"}, Now: clock}
+	fleet := contract.TranslateRequest{To: []string{"fleet"}, Now: clock}
 	from := func(base contract.TranslateRequest, f contract.TranslateFrom) contract.TranslateRequest {
 		base.From = f
 		return base
@@ -93,16 +93,16 @@ func TestTranslate(t *testing.T) {
 		args []string
 		reqs []contract.TranslateRequest
 	}{
-		{[]string{"--to", "yard", ram2010, ram2015}, []contract.TranslateRequest{
-			from(yard, contract.TranslateFrom{VIN: ram2010}),
-			from(yard, contract.TranslateFrom{VIN: ram2015}),
+		{[]string{"--to", "fleet", ram2010, ram2015}, []contract.TranslateRequest{
+			from(fleet, contract.TranslateFrom{VIN: ram2010}),
+			from(fleet, contract.TranslateFrom{VIN: ram2015}),
 		}},
 		// One VIN off a terminal: one compact line.
 		{[]string{ram2010, "--model-year", "2009"}, []contract.TranslateRequest{
 			{From: contract.TranslateFrom{VIN: ram2010}, ModelYear: contract.Value[int32](2009), Now: clock},
 		}},
-		{[]string{"--to", "yard", "--to", "yard", ram2015}, []contract.TranslateRequest{
-			{From: contract.TranslateFrom{VIN: ram2015}, To: []string{"yard", "yard"}, Now: clock},
+		{[]string{"--to", "fleet", "--to", "fleet", ram2015}, []contract.TranslateRequest{
+			{From: contract.TranslateFrom{VIN: ram2015}, To: []string{"fleet", "fleet"}, Now: clock},
 		}},
 	} {
 		r := cli(t, nil, "", slices.Concat(vocabArgs, tc.args)...)
@@ -116,18 +116,18 @@ func TestTranslate(t *testing.T) {
 	// is dropped, blank lines are skipped.
 	stdin := `{"from":"` + ram2010 + `"}` + "\r\n" +
 		"\n   \n" +
-		`{"from":{"vocabulary":"yard","entry":{"make":"dodge","model":"RAM 1500"}},"vin":"` + ram2015 + `","model_year":null}` + "\n" +
-		`{"from":{"ext":"ext:classics/corvair"},"to":["yard"],"model_year":1965,"now":"2026-01-02"}` + "\n" +
+		`{"from":{"vocabulary":"fleet","entry":{"make":"dodge","model":"RAM 1500"}},"vin":"` + ram2015 + `","model_year":null}` + "\n" +
+		`{"from":{"ext":"ext:classics/corvair"},"to":["fleet"],"model_year":1965,"now":"2026-01-02"}` + "\n" +
 		`{"from":{"spine":"parts","id":"brake-pads"},"to":["listing"]}`
 	jan2, _ := contract.ParseNow("2026-01-02")
-	flagged := contract.TranslateRequest{To: []string{"yard"}, ModelYear: contract.Value[int32](2011), Now: clock}
+	flagged := contract.TranslateRequest{To: []string{"fleet"}, ModelYear: contract.Value[int32](2011), Now: clock}
 	reqs := []contract.TranslateRequest{
 		from(flagged, contract.TranslateFrom{VIN: ram2010}),
-		{From: contract.TranslateFrom{Vocabulary: "yard", Entry: map[string]string{"make": "dodge", "model": "RAM 1500"}}, VIN: ram2015, To: flagged.To, ModelYear: flagged.ModelYear, Now: clock},
-		{From: contract.TranslateFrom{SpineRef: contract.SpineRef{Ext: "ext:classics/corvair"}}, To: []string{"yard"}, ModelYear: contract.Value[int32](1965), Now: jan2},
+		{From: contract.TranslateFrom{Vocabulary: "fleet", Entry: map[string]string{"make": "dodge", "model": "RAM 1500"}}, VIN: ram2015, To: flagged.To, ModelYear: flagged.ModelYear, Now: clock},
+		{From: contract.TranslateFrom{SpineRef: contract.SpineRef{Ext: "ext:classics/corvair"}}, To: []string{"fleet"}, ModelYear: contract.Value[int32](1965), Now: jan2},
 		{From: contract.TranslateFrom{SpineRef: contract.SpineRef{Spine: "parts", ID: "brake-pads"}}, To: []string{"listing"}, ModelYear: flagged.ModelYear, Now: clock},
 	}
-	r := cli(t, nil, stdin, slices.Concat(vocabArgs, []string{"--to", "yard", "--model-year", "2011", "-"})...)
+	r := cli(t, nil, stdin, slices.Concat(vocabArgs, []string{"--to", "fleet", "--model-year", "2011", "-"})...)
 	if w := jsonLines(t, translations(t, tr, reqs...)...); r.exit != 0 || r.stderr != "" || r.stdout != w {
 		t.Errorf("translate -: exit %d, stderr %q, stdout %q; want %q", r.exit, r.stderr, r.stdout, w)
 	}
@@ -144,10 +144,10 @@ func TestTranslateRefused(t *testing.T) {
 		detail, pointer string
 	}{
 		{[]string{"translate", ram2010, "1D7RV1GT5AS1234567"}, "argument 2: ", "/from"},
-		{[]string{"translate", "--to", "yard", "  "}, "argument 1: ", "/from"},
-		{[]string{"--vocab", fixture, "translate", "--to", "yard,listing", ram2010}, "argument 1: ", "/to/1"},
+		{[]string{"translate", "--to", "fleet", "  "}, "argument 1: ", "/from"},
+		{[]string{"--vocab", fixture, "translate", "--to", "fleet,listing", ram2010}, "argument 1: ", "/to/1"},
 		{[]string{"--vocab", fixture, "translate", "--to", "nope", ram2010, ram2015}, "argument 1: ", "/to/0"},
-		{[]string{"translate", "--to", "yard", ram2010}, "argument 1: ", "/to/0"}, // nothing loaded
+		{[]string{"translate", "--to", "fleet", ram2010}, "argument 1: ", "/to/0"}, // nothing loaded
 	} {
 		r := cli(t, nil, "", tc.args...)
 		p := problem(t, r)
@@ -158,7 +158,7 @@ func TestTranslateRefused(t *testing.T) {
 
 	tr := translator(t)
 	clock, _ := contract.ParseNow(now)
-	first := contract.TranslateRequest{From: contract.TranslateFrom{VIN: ram2010}, To: []string{"yard"}, Now: clock}
+	first := contract.TranslateRequest{From: contract.TranslateFrom{VIN: ram2010}, To: []string{"fleet"}, Now: clock}
 	for _, tc := range []struct {
 		stdin   string
 		printed []contract.TranslateRequest
@@ -168,11 +168,11 @@ func TestTranslateRefused(t *testing.T) {
 	}{
 		{`{"from":"` + ram2010 + `"}` + "\n\n" + `{"from":` + "\n" + `{"from":"` + ram2015 + `"}`, []contract.TranslateRequest{first}, contract.MalformedJSON, "line 3: ", ""},
 		{`{"from":"` + ram2010 + `"}` + "\n" + `{"from":"` + ram2015 + `","to":["listing"]}` + "\n", []contract.TranslateRequest{first}, contract.InvalidRequest, "line 2: ", "/to/0"},
-		{`{"from":{"vocabulary":"yard","entry":{"make":"Dodge"}}}`, nil, contract.InvalidRequest, "line 1: ", "/from/entry"},
+		{`{"from":{"vocabulary":"fleet","entry":{"make":"Dodge"}}}`, nil, contract.InvalidRequest, "line 1: ", "/from/entry"},
 		{`{"from":"` + ram2010 + `","colour":"red"}`, nil, contract.InvalidRequest, "line 1: ", "/colour"},
 		{"\n" + `"` + ram2010 + `"`, nil, contract.InvalidRequest, "line 2: ", ""},
 	} {
-		r := cli(t, nil, tc.stdin, "--vocab", fixture, "translate", "--now", now, "--to", "yard", "-")
+		r := cli(t, nil, tc.stdin, "--vocab", fixture, "translate", "--now", now, "--to", "fleet", "-")
 		p := problem(t, r)
 		if w := jsonLines(t, translations(t, tr, tc.printed...)...); r.exit != 1 || r.stdout != w || p.Type != tc.typ || p.Pointer != tc.pointer || !strings.HasPrefix(p.Detail, tc.detail) {
 			t.Errorf("translate - <<< %q: exit %d, stdout %q, problem %+v; want exit 1, stdout %q, a %s at %q naming %q", tc.stdin, r.exit, r.stdout, p, w, tc.typ, tc.pointer, tc.detail)
@@ -182,7 +182,7 @@ func TestTranslateRefused(t *testing.T) {
 	for _, args := range [][]string{
 		{"translate"},
 		{"translate", ram2010, "-"},
-		{"translate", "--to", "yard,,classics", ram2010},
+		{"translate", "--to", "fleet,,classics", ram2010},
 		{"translate", "--to", "", ram2010},
 		{"translate", "--model-year", "2010.5", ram2010},
 		{"translate", "--now", "yesterday", ram2010},
@@ -204,18 +204,18 @@ func TestList(t *testing.T) {
 		}
 		return l
 	}
-	first := page(contract.ListRequest{Of: "yard", Limit: 2})
+	first := page(contract.ListRequest{Of: "fleet", Limit: 2})
 	if first.Next == "" {
-		t.Fatal("yard fits one page of 2: the fixture no longer pages")
+		t.Fatal("fleet fits one page of 2: the fixture no longer pages")
 	}
 	for _, tc := range []struct {
 		args []string
 		req  contract.ListRequest
 	}{
 		{nil, contract.ListRequest{}},
-		{[]string{"yard", "--limit", "2"}, contract.ListRequest{Of: "yard", Limit: 2}},
-		{[]string{"--after", first.Next, "yard", "--limit", "2"}, contract.ListRequest{Of: "yard", Limit: 2, After: first.Next}},
-		{[]string{"yard", "--where", "make=  DODGE "}, contract.ListRequest{Of: "yard", Where: map[string]string{"make": "  DODGE "}}},
+		{[]string{"fleet", "--limit", "2"}, contract.ListRequest{Of: "fleet", Limit: 2}},
+		{[]string{"--after", first.Next, "fleet", "--limit", "2"}, contract.ListRequest{Of: "fleet", Limit: 2, After: first.Next}},
+		{[]string{"fleet", "--where", "make=  DODGE "}, contract.ListRequest{Of: "fleet", Where: map[string]string{"make": "  DODGE "}}},
 		{[]string{"vpic", "--where", "make=476", "--limit", "3"}, contract.ListRequest{Of: "vpic", Where: map[string]string{"make": "476"}, Limit: 3}},
 		{[]string{"vpic"}, contract.ListRequest{Of: "vpic"}},
 		{[]string{"vpic", "--where", "model=1850", "--where", "element=15"}, contract.ListRequest{Of: "vpic", Where: map[string]string{"model": "1850", "element": "15"}}},
@@ -238,12 +238,12 @@ func TestListRefused(t *testing.T) {
 		pointer string
 	}{
 		{[]string{"nope"}, "/of"},
-		{[]string{"yard", "--where", "colour=red"}, "/where/colour"},
+		{[]string{"fleet", "--where", "colour=red"}, "/where/colour"},
 		{[]string{"parts", "--where", "id=brake-pads"}, "/where/id"},
 		{[]string{"vpic", "--where", "make=dodge"}, "/where/make"},
 		{[]string{"vpic", "--where", "element=34"}, "/where/element"},
 		{[]string{"--limit", "5"}, "/limit"},
-		{[]string{"yard", "--after", "bogus"}, "/after"},
+		{[]string{"fleet", "--after", "bogus"}, "/after"},
 	} {
 		r := cli(t, nil, "", slices.Concat([]string{"--vocab", fixture, "list"}, tc.args)...)
 		p := problem(t, r)
@@ -253,15 +253,15 @@ func TestListRefused(t *testing.T) {
 	}
 
 	for _, args := range [][]string{
-		{"list", "yard", "parts"},
+		{"list", "fleet", "parts"},
 		{"list", ""},
-		{"list", "yard", "--where", "make"},
-		{"list", "yard", "--where", "=dodge"},
-		{"list", "yard", "--where", "make=a", "--where", "make=b"},
-		{"list", "yard", "--limit", "0"},
-		{"list", "yard", "--limit", "1001"},
-		{"list", "yard", "--limit", "ten"},
-		{"list", "yard", "--after", ""},
+		{"list", "fleet", "--where", "make"},
+		{"list", "fleet", "--where", "=dodge"},
+		{"list", "fleet", "--where", "make=a", "--where", "make=b"},
+		{"list", "fleet", "--limit", "0"},
+		{"list", "fleet", "--limit", "1001"},
+		{"list", "fleet", "--limit", "ten"},
+		{"list", "fleet", "--after", ""},
 	} {
 		usageMistake(t, args...)
 	}

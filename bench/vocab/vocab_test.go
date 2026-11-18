@@ -115,7 +115,7 @@ type set struct {
 }
 
 var sets = []*set{
-	{name: "fixture", paths: fixture, to: "yard", vin: "1D7RV1GT5AS123456"},
+	{name: "fixture", paths: fixture, to: "fleet", vin: "1D7RV1GT5AS123456"},
 	{name: "epa", paths: epa, to: "epa-vehicles", vin: decodeVIN},
 	{name: "mvl-1M", paths: mvl, to: "mvl", vin: decodeVIN},
 }

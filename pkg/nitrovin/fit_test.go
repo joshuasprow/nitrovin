@@ -277,10 +277,10 @@ func TestFit(t *testing.T) {
 			`vehicle Chevrolet/Silverado 1500 2007-2013 "w/ heavy duty brakes" → model:1850 make:467`,
 			"total 2",
 		}},
-		{"vehicles of a fitment, to a vocabulary", `{"from":{"fitment":{"type":"mirror","number":"MR-1001","side":"right"}},"to":["yard"]}`, []string{
+		{"vehicles of a fitment, to a vocabulary", `{"from":{"fitment":{"type":"mirror","number":"MR-1001","side":"right"}},"to":["fleet"]}`, []string{
 			"status found",
 			"fitment mirror MR-1001 right direct under [MIR]",
-			`vehicle Dodge/Ram 1500 2009-2012 "w/o towing package" → yard:Dodge/Other yard:Dodge/Ram 1500 [34] yard:Dodge/Ram 1500 4x4 [15 34]`,
+			`vehicle Dodge/Ram 1500 2009-2012 "w/o towing package" → fleet:Dodge/Other fleet:Dodge/Ram 1500 [34] fleet:Dodge/Ram 1500 4x4 [15 34]`,
 			"total 1",
 		}},
 		// A filed-under key: an entry and a number, any side (ADR 0024).
@@ -358,12 +358,12 @@ func TestFitStatus(t *testing.T) {
 		request string
 		want    contract.FitStatus
 	}{
-		{tr, `{"from":{"vocabulary":"yard","entry":{"make":"Tucker","model":"48"}}}`, contract.FitUnknown},
+		{tr, `{"from":{"vocabulary":"fleet","entry":{"make":"Tucker","model":"48"}}}`, contract.FitUnknown},
 		{tr, `{"from":{"model":99999999},"part":{"spine":"part-types","id":"mirror"}}`, contract.FitUnknown},
 		{tr, `{"from":` + ram + `,"part":{"spine":"part-types","id":"wheel"}}`, contract.FitUnknown},
 		{tr, `{"from":{"fitment":{"type":"mirror","number":"MR-1001"}}}`, contract.FitUnknown}, // MR-1001 has sides
 		{tr, `{"from":{"make":476}}`, contract.FitNoVehicle},                                   // the catalog names models, not makes
-		{tr, `{"from":{"vocabulary":"yard","entry":{"make":"Studebaker","model":"Lark"}},"related":true}`, contract.FitNoVehicle},
+		{tr, `{"from":{"vocabulary":"fleet","entry":{"make":"Studebaker","model":"Lark"}},"related":true}`, contract.FitNoVehicle},
 		{tr, `{"from":` + ram + `,"model_year":2005}`, contract.FitNoFitment},
 		{tr, `{"from":` + ram + `,"model_year":2010,"part":{"spine":"part-types","id":"brake-rotor-rear"}}`, contract.FitNoFitment},
 		{tr, `{"from":` + ram + `,"part":{"vocabulary":"part-codes","entry":{"code":"SEAT"}}}`, contract.FitNoFitment}, // unmapped
@@ -506,7 +506,7 @@ func TestFitRefusals(t *testing.T) {
 		{`{"from":{"vocabulary":"nope","entry":{"make":"Dodge"}}}`, "/from/vocabulary"},
 		{`{"from":` + ram + `,"part":{"vocabulary":"nope","entry":{"code":"MIR"}}}`, "/part/vocabulary"},
 		{`{"from":` + ram + `,"part":{"spine":"nope","id":"mirror"}}`, "/part/spine"},
-		{`{"from":` + ram + `,"related":true,"to":["yard","nope"]}`, "/to/1"},
+		{`{"from":` + ram + `,"related":true,"to":["fleet","nope"]}`, "/to/1"},
 		{`{"from":{"fitment":{"type":"engine","number":"EN-57"}},"to":["part-codes"]}`, "/to/0"},
 		{`{"from":{"fitment":{"type":"engine","number":"EN-57"}},"to":["vpic"]}`, "/to/0"},
 		{`{"from":{"vocabulary":"part-codes","entry":{"code":"MIR"}}}`, "/from/vocabulary"},

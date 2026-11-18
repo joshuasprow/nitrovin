@@ -87,14 +87,14 @@ func TestSpineBundleTranslates(t *testing.T) {
 	core.Set = set
 	now := time.Date(2026, 11, 10, 0, 0, 0, 0, time.UTC)
 	for _, req := range []contract.TranslateRequest{
-		{From: contract.TranslateFrom{VIN: ram2010}, To: []string{"yard"}},
-		{From: contract.TranslateFrom{VIN: ram2010x2}, To: []string{"yard"}},
-		{From: contract.TranslateFrom{VIN: ram2015}, To: []string{"yard"}},
-		{From: contract.TranslateFrom{VIN: motorcycle}, To: []string{"listing", "yard"}},
-		{From: contract.TranslateFrom{Vocabulary: "yard", Entry: map[string]string{"make": "Dodge", "model": "Ram 1500"}}, To: []string{"yard"}, ModelYear: contract.Value[int32](2012)},
-		{From: contract.TranslateFrom{Vocabulary: "yard", Entry: map[string]string{"make": "Packard", "model": "Clipper"}}, To: []string{"yard"}},
-		{From: contract.TranslateFrom{SpineRef: contract.SpineRef{Make: 476}}, To: []string{"yard"}},
-		{From: contract.TranslateFrom{SpineRef: contract.SpineRef{Model: 1938}}, To: []string{"yard"}, VIN: ram2010},
+		{From: contract.TranslateFrom{VIN: ram2010}, To: []string{"fleet"}},
+		{From: contract.TranslateFrom{VIN: ram2010x2}, To: []string{"fleet"}},
+		{From: contract.TranslateFrom{VIN: ram2015}, To: []string{"fleet"}},
+		{From: contract.TranslateFrom{VIN: motorcycle}, To: []string{"listing", "fleet"}},
+		{From: contract.TranslateFrom{Vocabulary: "fleet", Entry: map[string]string{"make": "Dodge", "model": "Ram 1500"}}, To: []string{"fleet"}, ModelYear: contract.Value[int32](2012)},
+		{From: contract.TranslateFrom{Vocabulary: "fleet", Entry: map[string]string{"make": "Packard", "model": "Clipper"}}, To: []string{"fleet"}},
+		{From: contract.TranslateFrom{SpineRef: contract.SpineRef{Make: 476}}, To: []string{"fleet"}},
+		{From: contract.TranslateFrom{SpineRef: contract.SpineRef{Model: 1938}}, To: []string{"fleet"}, VIN: ram2010},
 		{From: contract.TranslateFrom{SpineRef: contract.SpineRef{Spine: "parts", ID: "brake-pads"}}, To: []string{"listing"}, VIN: motorcycle},
 	} {
 		req.Now = now
@@ -109,7 +109,7 @@ func TestSpineBundleTranslates(t *testing.T) {
 		{Of: "vpic", Limit: contract.MaxListLimit},
 		{Of: "vpic", Where: map[string]string{"make": "476"}},
 		{Of: "vpic", Where: map[string]string{"make": "dodge"}},
-		{Of: "yard"},
+		{Of: "fleet"},
 	} {
 		got, gotErr := core.List(req)
 		want, wantErr := tr.List(req)

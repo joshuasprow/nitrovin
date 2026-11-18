@@ -152,7 +152,7 @@ func TestParseStdio(t *testing.T) {
 		{`{"id":{"n":[1]},"vin":"a"}`, `{"n":[1]}`, StdioRequest{Op: OpDecode, Decode: Request{VIN: "a"}}},
 		{`{"vin":"a"}`, "", StdioRequest{Op: OpDecode, Decode: Request{VIN: "a"}}},
 		{`{"op":"decode","vin":"a","full":true}`, "", StdioRequest{Op: OpDecode, Decode: Request{VIN: "a", Full: true}}},
-		{`{"id":2,"op":"translate","from":{"make":476},"to":["yard"]}`, "2", StdioRequest{Op: OpTranslate, Translate: TranslateRequest{From: TranslateFrom{SpineRef: SpineRef{Make: 476}}, To: []string{"yard"}}}},
+		{`{"id":2,"op":"translate","from":{"make":476},"to":["fleet"]}`, "2", StdioRequest{Op: OpTranslate, Translate: TranslateRequest{From: TranslateFrom{SpineRef: SpineRef{Make: 476}}, To: []string{"fleet"}}}},
 		{`{"op":"translate","from":"1HGCM82633A004352","model_year":2003}`, "", StdioRequest{Op: OpTranslate, Translate: TranslateRequest{From: TranslateFrom{VIN: "1HGCM82633A004352"}, ModelYear: Value[int32](2003)}}},
 		{`{"op":"list"}`, "", StdioRequest{Op: OpList}},
 		{`{"id":"p","op":"list","of":"vpic","where":{"make":476},"limit":5}`, `"p"`, StdioRequest{Op: OpList, List: ListRequest{Of: "vpic", Where: map[string]string{"make": "476"}, Limit: 5}}},

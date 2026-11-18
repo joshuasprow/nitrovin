@@ -105,7 +105,7 @@ func unconfirmedLine(u Unconfirmed) string {
 // partial VIN), keeps it and leaves it unconfirmed.
 func TestTranslateDecoded(t *testing.T) {
 	s := fixtureSet(t)
-	ram := From{Vocabulary: "yard", Entry: map[string]string{"make": "Dodge", "model": "Ram 1500 4x4"}}
+	ram := From{Vocabulary: "fleet", Entry: map[string]string{"make": "Dodge", "model": "Ram 1500 4x4"}}
 	series := func(v string) Value { return Value{IsText: true, Text: v} }
 	for _, tc := range []struct {
 		name string
@@ -155,11 +155,11 @@ func TestTranslateDecoded(t *testing.T) {
 
 	// From a VIN's decode: its model and make, and a target entry reached
 	// both ways is one entry with two vias, confirmed when one is.
-	tr, err := s.Translate(Query{From: From{VIN: true}, To: []string{"yard"}, Decoded: &Decoded{Make: 476, Model: 1938, ModelYear: new(2010), Values: map[int32][]Value{}}})
+	tr, err := s.Translate(Query{From: From{VIN: true}, To: []string{"fleet"}, Decoded: &Decoded{Make: 476, Model: 1938, ModelYear: new(2010), Values: map[int32][]Value{}}})
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"mapped", "spine model:1938", "spine make:476", "yard: Dodge/Other", "yard: Dodge/Ram 1500 [34] false", "yard: Dodge/Ram 1500 4x4 [15 34] false"}
+	want := []string{"mapped", "spine model:1938", "spine make:476", "fleet: Dodge/Other", "fleet: Dodge/Ram 1500 [34] false", "fleet: Dodge/Ram 1500 4x4 [15 34] false"}
 	if got := routeLines(tr); !slices.Equal(got, want) {
 		t.Errorf("from a decode: got %q; want %q", got, want)
 	}
@@ -215,11 +215,11 @@ func TestTranslateRefusals(t *testing.T) {
 		{Query{From: From{Vocabulary: "ebay", Entry: map[string]string{}}}, "/from/vocabulary"},
 		{Query{From: From{Vocabulary: "vpic", Entry: map[string]string{}}}, "/from/vocabulary"},
 		{Query{From: From{Vocabulary: "parts", Entry: map[string]string{}}}, "/from/vocabulary"},
-		{Query{From: From{Vocabulary: "yard", Entry: map[string]string{"make": "Dodge", "model": "Ram", "a/b": ""}}}, "/from/entry/a~1b"},
-		{Query{From: From{Vocabulary: "yard", Entry: map[string]string{"model": "Ram"}}}, "/from/entry"},
+		{Query{From: From{Vocabulary: "fleet", Entry: map[string]string{"make": "Dodge", "model": "Ram", "a/b": ""}}}, "/from/entry/a~1b"},
+		{Query{From: From{Vocabulary: "fleet", Entry: map[string]string{"model": "Ram"}}}, "/from/entry"},
 		{Query{From: From{Ref: Ref{Spine: "vpic", Target: Target{ID: "1"}}}}, "/from/spine"},
-		{Query{From: From{Ref: Ref{Spine: "yard", Target: Target{ID: "1"}}}}, "/from/spine"},
-		{Query{From: From{Ref: Ref{Target: Target{Ext: "ext:yard/1"}}}}, "/from/ext"},
+		{Query{From: From{Ref: Ref{Spine: "fleet", Target: Target{ID: "1"}}}}, "/from/spine"},
+		{Query{From: From{Ref: Ref{Target: Target{Ext: "ext:fleet/1"}}}}, "/from/ext"},
 		{Query{From: From{Ref: Ref{Target: Target{Make: 476}}}, To: []string{"listing"}}, "/to/0"},
 		{Query{From: From{}}, "/from"},
 	} {
@@ -230,11 +230,11 @@ func TestTranslateRefusals(t *testing.T) {
 	}
 }
 
-// TestListPagingEveryLimit pages the yard by every limit: the pages joined
+// TestListPagingEveryLimit pages the fleet by every limit: the pages joined
 // are the one-page order, nothing lost or repeated.
 func TestListPagingEveryLimit(t *testing.T) {
 	s := fixtureSet(t)
-	all, err := s.List(ListQuery{Of: "yard", Limit: MaxLimit})
+	all, err := s.List(ListQuery{Of: "fleet", Limit: MaxLimit})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -243,7 +243,7 @@ func TestListPagingEveryLimit(t *testing.T) {
 	}
 	for limit := 1; limit <= len(all.Entries); limit++ {
 		var got []*Entry
-		q := ListQuery{Of: "yard", Limit: limit}
+		q := ListQuery{Of: "fleet", Limit: limit}
 		for {
 			l, err := s.List(q)
 			if err != nil {
@@ -274,7 +274,7 @@ func TestListPagingEveryLimit(t *testing.T) {
 // mappings that overlap them, confirmed only when they hold every one.
 func TestTranslateYears(t *testing.T) {
 	s := fixtureSet(t)
-	ram := From{Vocabulary: "yard", Entry: map[string]string{"make": "Dodge", "model": "Ram 1500"}}
+	ram := From{Vocabulary: "fleet", Entry: map[string]string{"make": "Dodge", "model": "Ram 1500"}}
 	models := func(q Query) []string {
 		t.Helper()
 		tr, err := s.Translate(q)

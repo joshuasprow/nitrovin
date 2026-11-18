@@ -189,7 +189,7 @@ not in the OpenAPI document and may change.
 `POST /v1/decode` takes up to 1,000 requests and returns an array of
 decodes in order; `POST /v1/translate` does the same for translate
 requests, and `GET /v1/translate` takes one as dotted query parameters
-(`from.vocabulary=yard&from.entry.make=Dodge&from.entry.model=Ram%201500`).
+(`from.vocabulary=fleet&from.entry.make=Dodge&from.entry.model=Ram%201500`).
 `GET /v1/vocabularies` lists what is loaded and
 `GET /v1/vocabularies/{name}/entries` pages through one;
 `GET` and `POST /v1/fit` read a loaded catalog: a vehicle's part types,
@@ -474,8 +474,8 @@ synthetic vocabularies in [`testdata/vocab`](testdata/vocab):
 ```sh
 nitrovin vocab check testdata/vocab
 nitrovin --vocab testdata/vocab list                                  # what is loaded
-nitrovin --vocab testdata/vocab list yard --where make=dodge          # a vocabulary's entries, paged
-nitrovin --vocab testdata/vocab translate --to yard 1C6RR7LT5FS123456  # a VIN to your names
+nitrovin --vocab testdata/vocab list fleet --where make=dodge         # a vocabulary's entries, paged
+nitrovin --vocab testdata/vocab translate --to fleet 1C6RR7LT5FS123456 # a VIN to your names
 nitrovin --vocab testdata/vocab serve                                 # /v1/translate, /v1/vocabularies
 ```
 

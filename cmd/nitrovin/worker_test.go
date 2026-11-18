@@ -237,7 +237,7 @@ func timeless(html string) string {
 }
 
 // TestWorker runs the worker in a fresh profile against a server that has
-// loaded classics alone: the browser loads yard (which maps into the
+// loaded classics alone: the browser loads fleet (which maps into the
 // server's classics), the parts spine and the part vocabulary listing in
 // one batch, listing first, and a synthetic vocabulary of 150,000 entries.
 // What it answers is held to what a server that loaded the same files
@@ -259,7 +259,7 @@ func TestWorker(t *testing.T) {
 	big := filepath.Join(t.TempDir(), "synthetic.jsonl")
 	const entries = 150_000
 	writeSynthetic(t, big, entries)
-	// The fixture's 2010 Ram, which the synthetic file and yard have names
+	// The fixture's 2010 Ram, which the synthetic file and fleet have names
 	// for.
 	probe := "/?from.vin=1D7RV1GT5AS123456"
 
@@ -284,15 +284,15 @@ func TestWorker(t *testing.T) {
 	}
 
 	// One batch, in an order that only links as a whole: listing maps onto
-	// the parts spine, and yard into the server's classics.
+	// the parts spine, and fleet into the server's classics.
 	start := time.Now()
 	tb.do(chromedp.SetUploadFiles(chromedp.CSS("#vocab-files"), []string{
-		filepath.Join(fixture, "listing.jsonl"), filepath.Join(fixture, "yard.jsonl"), filepath.Join(fixture, "parts.jsonl"),
+		filepath.Join(fixture, "listing.jsonl"), filepath.Join(fixture, "fleet.jsonl"), filepath.Join(fixture, "parts.jsonl"),
 	}))
 	tb.waitPrefix("#load-status", "Loaded ")
 	t.Logf("loaded the fixture batch in %v", time.Since(start).Round(time.Millisecond))
-	if got := eval[[]string](tb, `[...document.querySelectorAll("table.catalog tr[data-where=browser] th")].map(th => th.firstChild.textContent)`); !slices.Equal(got, []string{"listing", "parts", "yard"}) {
-		t.Errorf("stored files %q; want listing, parts, yard", got)
+	if got := eval[[]string](tb, `[...document.querySelectorAll("table.catalog tr[data-where=browser] th")].map(th => th.firstChild.textContent)`); !slices.Equal(got, []string{"fleet", "listing", "parts"}) {
+		t.Errorf("stored files %q; want fleet, listing, parts", got)
 	}
 
 	queries := []string{
@@ -325,7 +325,7 @@ func TestWorker(t *testing.T) {
 	for _, q := range queries {
 		same1("lookup", "/?"+q)
 	}
-	same1("list", "/ui/vocabularies/yard")
+	same1("list", "/ui/vocabularies/fleet")
 	same1("list", "/ui/vocabularies/listing?limit=1")
 
 	// The page is the worker's once the browser holds a file, with a VIN
@@ -364,8 +364,8 @@ func TestWorker(t *testing.T) {
 	time.Sleep(300 * time.Millisecond)
 	tb.stopWorkers()
 	tb.waitPrefix("#load-status", "Nothing was loaded: The load stalled")
-	if got := eval[[]string](tb, `[...document.querySelectorAll("table.catalog tr[data-where=browser] th")].map(th => th.firstChild.textContent)`); !slices.Equal(got, []string{"listing", "parts", "yard"}) {
-		t.Errorf("after a stalled load: stored files %q; want listing, parts, yard", got)
+	if got := eval[[]string](tb, `[...document.querySelectorAll("table.catalog tr[data-where=browser] th")].map(th => th.firstChild.textContent)`); !slices.Equal(got, []string{"fleet", "listing", "parts"}) {
+		t.Errorf("after a stalled load: stored files %q; want fleet, listing, parts", got)
 	}
 
 	// 150,000 entries, then cold starts: the worker stopped, a VIN the
@@ -429,7 +429,7 @@ func TestWorker(t *testing.T) {
 			t.Errorf("the server got %s %s with %d bytes of body", r.method, r.target, r.body)
 		}
 		if u, err := url.Parse(r.target); err == nil && !strings.HasPrefix(u.Path, "/ui/r/") {
-			for _, name := range []string{"listing", "parts", "yard", "synthetic"} {
+			for _, name := range []string{"listing", "parts", "fleet", "synthetic"} {
 				if strings.Contains(r.target, name) {
 					t.Errorf("the server got %s, which names %s, a file the browser holds", r.target, name)
 				}

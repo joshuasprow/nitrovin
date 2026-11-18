@@ -181,11 +181,11 @@ func TestTranslate(t *testing.T) {
 		want []string // summary lines; nil with ptr
 		ptr  string   // the #invalid-request pointer
 	}{
-		// A yard entry split by year across two vPIC models: Dodge Ram up to
+		// A fleet entry split by year across two vPIC models: Dodge Ram up to
 		// 2012, Ram 1500 from 2013; each model reaches its make.
 		{
 			name: "split by year, no year",
-			req:  `{"from":{"vocabulary":"yard","entry":{"make":" dodge","model":"RAM  1500"}}}`,
+			req:  `{"from":{"vocabulary":"fleet","entry":{"make":" dodge","model":"RAM  1500"}}}`,
 			want: []string{
 				"from mapped",
 				"spine model:1938 Ram [34 model_year]",
@@ -196,34 +196,34 @@ func TestTranslate(t *testing.T) {
 		},
 		{
 			name: "split by year, 2015",
-			req:  `{"from":{"vocabulary":"yard","entry":{"make":"Dodge","model":"Ram 1500"}},"model_year":2015}`,
+			req:  `{"from":{"vocabulary":"fleet","entry":{"make":"Dodge","model":"Ram 1500"}},"model_year":2015}`,
 			want: []string{"from mapped", "spine model:13620 1500", "spine make:496 Ram"},
 		},
 		{
-			name: "split by year, 2010, to yard",
-			req:  `{"from":{"vocabulary":"yard","entry":{"make":"Dodge","model":"Ram 1500"}},"model_year":2010,"to":["yard"]}`,
+			name: "split by year, 2010, to fleet",
+			req:  `{"from":{"vocabulary":"fleet","entry":{"make":"Dodge","model":"Ram 1500"}},"model_year":2010,"to":["fleet"]}`,
 			want: []string{
 				"from mapped",
 				"spine model:1938 Ram [34]",
 				"spine make:476 Dodge [34]",
-				"yard: Dodge/Other via make:476 [34]",
-				"yard: Dodge/Ram 1500 via model:1938 [34]",
-				"yard: Dodge/Ram 1500 4x4 via model:1938 [15 34]",
+				"fleet: Dodge/Other via make:476 [34]",
+				"fleet: Dodge/Ram 1500 via model:1938 [34]",
+				"fleet: Dodge/Ram 1500 4x4 via model:1938 [15 34]",
 			},
 		},
 		{
 			name: "deduplicated, a via per mapping",
-			req:  `{"from":{"vocabulary":"yard","entry":{"make":"Dodge","model":"Ram 1500"}},"to":["yard","yard"]}`,
+			req:  `{"from":{"vocabulary":"fleet","entry":{"make":"Dodge","model":"Ram 1500"}},"to":["fleet","fleet"]}`,
 			want: []string{
 				"from mapped",
 				"spine model:1938 Ram [34 model_year]",
 				"spine make:476 Dodge [34 model_year]",
 				"spine model:13620 1500 [model_year]",
 				"spine make:496 Ram [model_year]",
-				"yard: Dodge/Other via make:476 [34 model_year]",
-				"yard: Dodge/Ram 1500 via model:1938,model:13620 [34 model_year]",
-				"yard: Dodge/Ram 1500 4x4 via model:1938,model:13620 [15 34 model_year]",
-				"yard: Ram/Other via make:496 [model_year]",
+				"fleet: Dodge/Other via make:476 [34 model_year]",
+				"fleet: Dodge/Ram 1500 via model:1938,model:13620 [34 model_year]",
+				"fleet: Dodge/Ram 1500 4x4 via model:1938,model:13620 [15 34 model_year]",
+				"fleet: Ram/Other via make:496 [model_year]",
 			},
 		},
 
@@ -231,80 +231,80 @@ func TestTranslate(t *testing.T) {
 		// unconfirmed without one.
 		{
 			name: "Series confirmed by a context decode",
-			req:  `{"from":{"vocabulary":"yard","entry":{"make":"Dodge","model":"Ram 1500"}},"vin":"` + ram2010 + `"}`,
+			req:  `{"from":{"vocabulary":"fleet","entry":{"make":"Dodge","model":"Ram 1500"}},"vin":"` + ram2010 + `"}`,
 			want: []string{"from mapped", "spine model:1938 Ram", "spine make:476 Dodge"},
 		},
 		{
 			name: "Series refuted by a context decode",
-			req:  `{"from":{"vocabulary":"yard","entry":{"make":"Dodge","model":"Ram 1500"}},"vin":"` + ram2005 + `","to":["yard"]}`,
-			want: []string{"from mapped", "yard: none"},
+			req:  `{"from":{"vocabulary":"fleet","entry":{"make":"Dodge","model":"Ram 1500"}},"vin":"` + ram2005 + `","to":["fleet"]}`,
+			want: []string{"from mapped", "fleet: none"},
 		},
 		{
 			name: "Series unconfirmed without a decode",
-			req:  `{"from":{"vocabulary":"yard","entry":{"make":"Dodge","model":"Ram 1500"}},"model_year":2010}`,
+			req:  `{"from":{"vocabulary":"fleet","entry":{"make":"Dodge","model":"Ram 1500"}},"model_year":2010}`,
 			want: []string{"from mapped", "spine model:1938 Ram [34]", "spine make:476 Dodge [34]"},
 		},
 		{
-			name: "a VIN to yard: Series confirmed, Drive Type 4WD confirmed",
-			req:  `{"from":"` + ram2010 + `","to":["yard"]}`,
+			name: "a VIN to fleet: Series confirmed, Drive Type 4WD confirmed",
+			req:  `{"from":"` + ram2010 + `","to":["fleet"]}`,
 			want: []string{
 				"from mapped",
 				"spine model:1938 Ram",
 				"spine make:476 Dodge",
-				"yard: Dodge/Other via make:476",
-				"yard: Dodge/Ram 1500 via model:1938",
-				"yard: Dodge/Ram 1500 4x4 via model:1938",
+				"fleet: Dodge/Other via make:476",
+				"fleet: Dodge/Ram 1500 via model:1938",
+				"fleet: Dodge/Ram 1500 4x4 via model:1938",
 			},
 		},
 		{
-			name: "a VIN to yard: Drive Type 4x2 refutes the 4x4",
-			req:  `{"from":"` + ram2010x2 + `","to":["yard"]}`,
+			name: "a VIN to fleet: Drive Type 4x2 refutes the 4x4",
+			req:  `{"from":"` + ram2010x2 + `","to":["fleet"]}`,
 			want: []string{
 				"from mapped",
 				"spine model:1938 Ram",
 				"spine make:476 Dodge",
-				"yard: Dodge/Other via make:476",
-				"yard: Dodge/Ram 1500 via model:1938",
+				"fleet: Dodge/Other via make:476",
+				"fleet: Dodge/Ram 1500 via model:1938",
 			},
 		},
 		{
 			name: "a VIN's decoded year wins over model_year",
-			req:  `{"from":"` + ram2015 + `","model_year":2010,"to":["yard"]}`,
+			req:  `{"from":"` + ram2015 + `","model_year":2010,"to":["fleet"]}`,
 			want: []string{
 				"from mapped",
 				"spine model:13620 1500",
 				"spine make:496 Ram",
-				"yard: Dodge/Ram 1500 via model:13620",
-				"yard: Dodge/Ram 1500 4x4 via model:13620",
-				"yard: Ram/Other via make:496",
+				"fleet: Dodge/Ram 1500 via model:13620",
+				"fleet: Dodge/Ram 1500 4x4 via model:13620",
+				"fleet: Ram/Other via make:496",
 			},
 		},
 
 		// An extension mapping.
 		{
 			name: "an extension model, under a vPIC make",
-			req:  `{"from":{"vocabulary":"yard","entry":{"make":"Chevrolet","model":"Corvair"}},"to":["yard"]}`,
+			req:  `{"from":{"vocabulary":"fleet","entry":{"make":"Chevrolet","model":"Corvair"}},"to":["fleet"]}`,
 			want: []string{
 				"from mapped",
 				"spine ext:classics/corvair Corvair",
 				"spine make:467 Chevrolet",
-				"yard: Chevrolet/Corvair via ext:classics/corvair",
+				"fleet: Chevrolet/Corvair via ext:classics/corvair",
 			},
 		},
 		{
 			name: "an extension model, under an extension make, year scoped",
-			req:  `{"from":{"ext":"ext:classics/packard-clipper"},"to":["yard"]}`,
+			req:  `{"from":{"ext":"ext:classics/packard-clipper"},"to":["fleet"]}`,
 			want: []string{
 				"from mapped",
 				"spine ext:classics/packard-clipper Clipper",
 				"spine ext:classics/packard Packard",
-				"yard: Packard/Clipper via ext:classics/packard-clipper [model_year]",
+				"fleet: Packard/Clipper via ext:classics/packard-clipper [model_year]",
 			},
 		},
 		{
 			name: "an extension mapping outside its years",
-			req:  `{"from":{"ext":"ext:classics/packard-clipper"},"model_year":1960,"to":["yard"]}`,
-			want: []string{"from mapped", "spine ext:classics/packard-clipper Clipper", "spine ext:classics/packard Packard", "yard: none"},
+			req:  `{"from":{"ext":"ext:classics/packard-clipper"},"model_year":1960,"to":["fleet"]}`,
+			want: []string{"from mapped", "spine ext:classics/packard-clipper Clipper", "spine ext:classics/packard Packard", "fleet: none"},
 		},
 
 		// A part vocabulary routed through its spine with a Vehicle Type
@@ -349,13 +349,13 @@ func TestTranslate(t *testing.T) {
 		// Unknown and unmapped entries.
 		{
 			name: "unmapped",
-			req:  `{"from":{"vocabulary":"yard","entry":{"make":"Studebaker","model":"Lark"}},"to":["yard"]}`,
-			want: []string{"from unmapped", "yard: none"},
+			req:  `{"from":{"vocabulary":"fleet","entry":{"make":"Studebaker","model":"Lark"}},"to":["fleet"]}`,
+			want: []string{"from unmapped", "fleet: none"},
 		},
 		{
 			name: "unknown entry",
-			req:  `{"from":{"vocabulary":"yard","entry":{"make":"Dodge","model":"Caravan"}},"to":["yard"]}`,
-			want: []string{"from unknown", "yard: none"},
+			req:  `{"from":{"vocabulary":"fleet","entry":{"make":"Dodge","model":"Caravan"}},"to":["fleet"]}`,
+			want: []string{"from unknown", "fleet: none"},
 		},
 		{
 			name: "unknown vPIC id",
@@ -374,28 +374,28 @@ func TestTranslate(t *testing.T) {
 		},
 		{
 			name: "a VIN that decodes to nothing",
-			req:  `{"from":"ZZZZZZZZZZZZZZZZZ","to":["yard"]}`,
-			want: []string{"from unknown", "yard: none"},
+			req:  `{"from":"ZZZZZZZZZZZZZZZZZ","to":["fleet"]}`,
+			want: []string{"from unknown", "fleet: none"},
 		},
 		{
 			name: "a vPIC model, to its make's entries too",
-			req:  `{"from":{"model":1850},"to":["yard"]}`,
-			want: []string{"from mapped", "spine model:1850 Silverado", "spine make:467 Chevrolet", "yard: Chevy/Silverado via model:1850"},
+			req:  `{"from":{"model":1850},"to":["fleet"]}`,
+			want: []string{"from mapped", "spine model:1850 Silverado", "spine make:467 Chevrolet", "fleet: Chevy/Silverado via model:1850"},
 		},
 
 		// Refusals: an unknown vocabulary, entry fields other than the
 		// vocabulary's, vin given both as from and as context, and routes
 		// that cross a second spine.
 		{name: "unknown vocabulary", req: `{"from":{"vocabulary":"ebay","entry":{"make":"Dodge"}}}`, ptr: "/from/vocabulary"},
-		{name: "unknown target", req: `{"from":{"vocabulary":"yard","entry":{"make":"Dodge","model":"Ram 1500"}},"to":["yard","ebay"]}`, ptr: "/to/1"},
+		{name: "unknown target", req: `{"from":{"vocabulary":"fleet","entry":{"make":"Dodge","model":"Ram 1500"}},"to":["fleet","ebay"]}`, ptr: "/to/1"},
 		{name: "a spine is no target", req: `{"from":{"spine":"parts","id":"300"},"to":["parts"]}`, ptr: "/to/0"},
 		{name: "vpic is no target", req: `{"from":{"make":476},"to":["vpic"]}`, ptr: "/to/0"},
 		{name: "an extension set is no vocabulary", req: `{"from":{"vocabulary":"classics","entry":{"id":"corvair"}}}`, ptr: "/from/vocabulary"},
-		{name: "an unknown entry field", req: `{"from":{"vocabulary":"yard","entry":{"make":"Dodge","model":"Ram","trim":"SLT"}}}`, ptr: "/from/entry/trim"},
-		{name: "a missing entry field", req: `{"from":{"vocabulary":"yard","entry":{"make":"Dodge"}}}`, ptr: "/from/entry"},
+		{name: "an unknown entry field", req: `{"from":{"vocabulary":"fleet","entry":{"make":"Dodge","model":"Ram","trim":"SLT"}}}`, ptr: "/from/entry/trim"},
+		{name: "a missing entry field", req: `{"from":{"vocabulary":"fleet","entry":{"make":"Dodge"}}}`, ptr: "/from/entry"},
 		{name: "vin both as from and as context", req: `{"from":"` + ram2010 + `","vin":"` + ram2015 + `"}`, ptr: "/vin"},
 		{name: "a VIN to a part vocabulary", req: `{"from":"` + ram2010 + `","to":["listing"]}`, ptr: "/to/0"},
-		{name: "a part entry to a vehicle vocabulary", req: `{"from":{"vocabulary":"listing","entry":{"category":"Fenders"}},"to":["yard"]}`, ptr: "/to/0"},
+		{name: "a part entry to a vehicle vocabulary", req: `{"from":{"vocabulary":"listing","entry":{"category":"Fenders"}},"to":["fleet"]}`, ptr: "/to/0"},
 		{name: "unknown spine", req: `{"from":{"spine":"catalog","id":"300"}}`, ptr: "/from/spine"},
 		{name: "unknown extension set", req: `{"from":{"ext":"ext:snyder/42"}}`, ptr: "/from/ext"},
 	} {
@@ -479,7 +479,7 @@ func TestTranslateAnswer(t *testing.T) {
 	}
 
 	// A via carries its mapping's years, origin and note.
-	ans, err = tr.Translate(contract.TranslateRequest{From: contract.TranslateFrom{VIN: ram2015}, To: []string{"yard"}, Now: now})
+	ans, err = tr.Translate(contract.TranslateRequest{From: contract.TranslateFrom{VIN: ram2015}, To: []string{"fleet"}, Now: now})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -497,12 +497,12 @@ func TestTranslateAnswer(t *testing.T) {
 // drift and no name, and translates on.
 func TestTranslateDrift(t *testing.T) {
 	tr := fixtureTranslator(t, "../../testdata/vocab/drift")
-	ans, err := tr.Translate(contract.TranslateRequest{From: contract.TranslateFrom{Vocabulary: "yard", Entry: map[string]string{"make": "Imperial", "model": "Other"}}, To: []string{"yard"}})
+	ans, err := tr.Translate(contract.TranslateRequest{From: contract.TranslateFrom{Vocabulary: "fleet", Entry: map[string]string{"make": "Imperial", "model": "Other"}}, To: []string{"fleet"}})
 	if err != nil {
 		t.Fatal(err)
 	}
 	conforms(t, "Translation", ans)
-	if got, want := summary(ans), []string{"from mapped", "spine make:99999 drift", "yard: Imperial/Other via make:99999"}; !slices.Equal(got, want) {
+	if got, want := summary(ans), []string{"from mapped", "spine make:99999 drift", "fleet: Imperial/Other via make:99999"}; !slices.Equal(got, want) {
 		t.Errorf("got %v; want %v", got, want)
 	}
 	if s := ans.Spine[0]; s.Name != "" || !s.Drift || s.Under != nil {
@@ -529,7 +529,7 @@ func TestTranslateWithoutFiles(t *testing.T) {
 	if len(ans.To) != 0 || len(ans.Vocabularies) != 0 || ans.Now.IsZero() {
 		t.Errorf("to %v, vocabularies %v, now %v", ans.To, ans.Vocabularies, ans.Now)
 	}
-	_, err = tr.Translate(contract.TranslateRequest{From: contract.TranslateFrom{VIN: ram2010}, To: []string{"yard"}})
+	_, err = tr.Translate(contract.TranslateRequest{From: contract.TranslateFrom{VIN: ram2010}, To: []string{"fleet"}})
 	if p, ok := err.(*contract.Problem); !ok || p.Pointer != "/to/0" {
 		t.Errorf("a target with nothing loaded: %v", err)
 	}
@@ -549,7 +549,7 @@ func TestTranslateBatch(t *testing.T) {
 	tr := fixtureTranslator(t, "../../testdata/vocab")
 	frozen := time.Date(2026, 11, 8, 0, 0, 0, 0, time.UTC)
 	reqs := []contract.TranslateRequest{
-		{From: contract.TranslateFrom{VIN: ram2010}, To: []string{"yard"}},
+		{From: contract.TranslateFrom{VIN: ram2010}, To: []string{"fleet"}},
 		{From: contract.TranslateFrom{SpineRef: contract.SpineRef{Spine: "parts", ID: "brake-pads"}}, To: []string{"listing"}, Now: frozen},
 		{From: contract.TranslateFrom{SpineRef: contract.SpineRef{Make: 476}}},
 	}
@@ -593,14 +593,14 @@ func TestList(t *testing.T) {
 			want: []string{
 				`{"name":"vpic","kind":"spine","version":"` + embedded.Month + `","subject":"vehicle"}`,
 				`{"name":"classics","kind":"extension-set","version":"2026.11","subject":"vehicle","spine":"vpic"}`,
+				`{"name":"fleet","kind":"vocabulary","version":"2026.11","subject":"vehicle","fields":["make","model"],"spine":"vpic"}`,
 				`{"name":"listing","kind":"vocabulary","version":"2026.11","subject":"part","fields":["category"],"spine":"parts"}`,
 				`{"name":"parts","kind":"spine","version":"2026.11","subject":"part"}`,
-				`{"name":"yard","kind":"vocabulary","version":"2026.11","subject":"vehicle","fields":["make","model"],"spine":"vpic"}`,
 			},
 		},
 		{
 			name: "a vocabulary's entries with their mappings, by normalized fields",
-			req:  `{"of":"yard","where":{"make":"DODGE"}}`,
+			req:  `{"of":"fleet","where":{"make":"DODGE"}}`,
 			want: []string{
 				`{"entry":{"make":"Dodge","model":"Other"},"mappings":[{"make":476}],"note":"any Dodge"}`,
 				`{"entry":{"make":"Dodge","model":"Ram 1500"},"mappings":[{"model":1938,"last":2012,"qualifiers":{"34":["1500","DS (1500)"]},"origin":"curated"},{"model":13620,"first":2013,"origin":"curated","note":"Ram is its own make from 2013"}]}`,
@@ -609,7 +609,7 @@ func TestList(t *testing.T) {
 		},
 		{
 			name: "an unmapped entry, by every field",
-			req:  `{"of":"yard","where":{"make":"studebaker","model":" Lark "}}`,
+			req:  `{"of":"fleet","where":{"make":"studebaker","model":" Lark "}}`,
 			want: []string{`{"entry":{"make":"Studebaker","model":"Lark"},"mappings":[],"note":"listed, not yet placed"}`},
 		},
 		{
@@ -634,7 +634,7 @@ func TestList(t *testing.T) {
 		},
 
 		{name: "of nothing loaded", req: `{"of":"ebay"}`, ptr: "/of"},
-		{name: "a field the vocabulary lacks", req: `{"of":"yard","where":{"trim":"SLT"}}`, ptr: "/where/trim"},
+		{name: "a field the vocabulary lacks", req: `{"of":"fleet","where":{"trim":"SLT"}}`, ptr: "/where/trim"},
 		{name: "vpic takes only make", req: `{"of":"vpic","where":{"name":"Dodge"}}`, ptr: "/where/name"},
 		{name: "vpic's year needs make", req: `{"of":"vpic","where":{"year":2004}}`, ptr: "/where/year"},
 		{name: "vpic's year is a year", req: `{"of":"vpic","where":{"make":496,"year":"new"}}`, ptr: "/where/year"},
@@ -644,9 +644,9 @@ func TestList(t *testing.T) {
 		{name: "the catalog is not paged", req: `{"limit":10}`, ptr: "/limit"},
 		{name: "limit over 1,000", req: `{"of":"vpic","limit":1001}`, ptr: "/limit"},
 		{name: "limit under 1", req: `{"of":"vpic","limit":0}`, ptr: "/limit"},
-		{name: "an after no list gave", req: `{"of":"yard","after":"not a cursor"}`, ptr: "/after"},
-		{name: "another list's after", req: `{"of":"yard","after":"WyJicmFrZSBwYWRzIl0"}`, ptr: "/after"},
-		{name: "an unknown field", req: `{"of":"yard","page":2}`, ptr: "/page"},
+		{name: "an after no list gave", req: `{"of":"fleet","after":"not a cursor"}`, ptr: "/after"},
+		{name: "another list's after", req: `{"of":"fleet","after":"WyJicmFrZSBwYWRzIl0"}`, ptr: "/after"},
+		{name: "an unknown field", req: `{"of":"fleet","page":2}`, ptr: "/page"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			req, err := contract.ParseListRequest([]byte(tc.req))
@@ -716,8 +716,8 @@ func TestListPaging(t *testing.T) {
 		req   contract.ListRequest
 		limit int
 	}{
-		{"yard", contract.ListRequest{Of: "yard"}, 3},
-		{"yard's Dodges", contract.ListRequest{Of: "yard", Where: map[string]string{"make": "dodge"}}, 1},
+		{"fleet", contract.ListRequest{Of: "fleet"}, 3},
+		{"fleet's Dodges", contract.ListRequest{Of: "fleet", Where: map[string]string{"make": "dodge"}}, 1},
 		{"parts", contract.ListRequest{Of: "parts"}, 4},
 		{"vPIC's makes", contract.ListRequest{Of: "vpic"}, 1000},
 		{"Dodge's models", contract.ListRequest{Of: "vpic", Where: map[string]string{"make": "476"}}, 7},

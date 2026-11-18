@@ -112,7 +112,7 @@ func TestInfoVocabularies(t *testing.T) {
 		Elements:       loadElements(t),
 		Vocabularies: []VocabularyFile{
 			{Name: "parts", Kind: "spine", Version: "2026.11", Blake3: "8f91f3ee24e7fc60ee1bb813ea5302bbb323175ce323146683801b5718e17afa", Path: "/vocab/parts.jsonl", Drift: []DriftCount{}},
-			{Name: "yard", Kind: "vocabulary", Version: "2026.11", Blake3: "579d688449a9bc496d26049222802c68af4ea6968257f0d97e54bcbad707d8e2", Path: "/vocab/yard.jsonl", Drift: []DriftCount{
+			{Name: "fleet", Kind: "vocabulary", Version: "2026.11", Blake3: "579d688449a9bc496d26049222802c68af4ea6968257f0d97e54bcbad707d8e2", Path: "/vocab/fleet.jsonl", Drift: []DriftCount{
 				{Kind: "model", Count: 4, Examples: []DriftExample{{Line: 5, Detail: "/mappings/0/model: vPIC model 99999 is not in data month 2026_10"}}},
 			}},
 		},
