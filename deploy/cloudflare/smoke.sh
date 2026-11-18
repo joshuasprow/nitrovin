@@ -19,7 +19,7 @@
 # that its first GET may be a HIT whenever the second must be: its URL is
 # the release's, not new. TOOLS is the release's docs/api/mcp-tools.json
 # (default this tree's), whose tools /mcp must list. The pages are never
-# cached: the page without JavaScript, its fragment for htmx, and /sw.js,
+# cached: the page without JavaScript, its fragment for the plate, and /sw.js,
 # which keeps its own no-cache. Over https it also checks HSTS,
 # always-HTTPS, the www redirect and the TLS floor.
 set -euo pipefail
@@ -192,15 +192,16 @@ grep -qF 'Own files need JavaScript' "$tmp/page.b" ||
 grep -qF 'data-where="vpic"' "$tmp/page.b" || fail "GET /: no catalog"
 pass "GET /: 200, a whole page, no-store; says your own files need JavaScript, lists the catalog"
 
-# A VIN as htmx asks it: the answer, a fragment, no page around it.
+# A VIN as the plate asks it while it is typed (plate.js, HX-Request): the
+# answer and its decode, a fragment, no page around it.
 status=$(req frag -H 'HX-Request: true' "$base/?from.vin=$vin")
-[[ $status == 200 && $(header frag content-type) == "text/html; charset=utf-8" ]] || fail "GET /?from.vin=$vin (htmx): $status"
+[[ $status == 200 && $(header frag content-type) == "text/html; charset=utf-8" ]] || fail "GET /?from.vin=$vin (fragment): $status"
 [[ $(header frag vary) == HX-Request && $(header frag cache-control) == no-store ]] ||
-	fail "GET /?from.vin=$vin (htmx): vary $(header frag vary), cache-control $(header frag cache-control)"
-grep -qi '<!doctype\|<html' "$tmp/frag.b" && fail "GET /?from.vin=$vin (htmx): a whole page, not a fragment"
-grep -qF '<section id="result"' "$tmp/frag.b" && grep -qF "value=\"$vin\"" "$tmp/frag.b" ||
-	fail "GET /?from.vin=$vin (htmx): no answer for $vin"
-pass "GET /?from.vin=$vin (htmx): 200, the answer as a fragment, no-store"
+	fail "GET /?from.vin=$vin (fragment): vary $(header frag vary), cache-control $(header frag cache-control)"
+grep -qi '<!doctype\|<html' "$tmp/frag.b" && fail "GET /?from.vin=$vin (fragment): a whole page, not a fragment"
+grep -qF "data-vin=\"$vin\"" "$tmp/frag.b" && grep -qF 'id="decode-json"' "$tmp/frag.b" ||
+	fail "GET /?from.vin=$vin (fragment): no answer for $vin"
+pass "GET /?from.vin=$vin (fragment): 200, the answer as a fragment, no-store"
 
 # The Service Worker: no-cache, never from the cache, the release's own,
 # alone allowed WebAssembly.

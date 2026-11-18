@@ -1,8 +1,6 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -15,18 +13,16 @@ import (
 	"github.com/chromedp/chromedp"
 )
 
-// TestVocabTranslate runs the page's form in headless Chrome or Chromium,
-// each run in a fresh profile
-// (https://github.com/joshuasprow/nitrovin/issues/194). Every example is a
-// link to the page with the form filled in, and fills it: without
-// JavaScript as a page, on a server that loaded the fixture and the EPA
-// sample (cmd/nitrovin-epa/testdata); with JavaScript by htmx, the worker
-// drawing the form over the files the browser holds. With JavaScript the
-// targets ticked are the visitor's selection, kept in IndexedDB beside the
-// files, by spine: a file loaded is ticked, and the selection survives a
-// second load, a removal (the removed file drops out), a reload and a
-// cold start of the worker, while a translation's or a link's own to=
-// replaces it. A translation is drawn as its map (translationMap). axe
+// TestVocabTranslate runs the page's "Also known as" in headless Chrome or
+// Chromium, each run in a fresh profile
+// (https://github.com/joshuasprow/nitrovin/issues/194): a VIN's names in
+// every vocabulary loaded on vPIC's spine, a stack to a vocabulary, one
+// with a name before one without. Without JavaScript, on a server that
+// loaded the fixture and the EPA sample (cmd/nitrovin-epa/testdata), a
+// stack of several names shows its first, and all of them at a click on
+// its stamp, which needs no script. With JavaScript, the worker draws the
+// page over the files the browser holds: a file loaded is on the page at
+// once, a file removed is off it, and the server hears of neither. axe
 // audits every state.
 func TestVocabTranslate(t *testing.T) {
 	path := chromePath()
@@ -44,166 +40,131 @@ func TestVocabTranslate(t *testing.T) {
 
 	off := httptest.NewServer(vocabServer(t, nil, fixture, epaPath))
 	t.Cleanup(off.Close)
-	examplesJSOff(t, path, off.URL)
-	translationMap(t, path, off.URL)
+	namesJSOff(t, path, off.URL)
 
 	module := buildWorker(t)
 	module.EPA = epa
 	wire := &wireLog{h: vocabServer(t, &module, filepath.Join(fixture, "classics.jsonl"), filepath.Join(fixture, "parts.jsonl"), filepath.Join(fixture, "listing.jsonl"))}
 	on := httptest.NewServer(wire)
 	t.Cleanup(on.Close)
-	selectionJSOn(t, path, on.URL, wire)
+	namesJSOn(t, path, on.URL, wire)
 }
 
-// The examples: three VINs, which need no file.
-const (
-	vinExample   = "/?from.vin=" + vin
-	teslaExample = movedLink
-	ramExample   = "/?from.vin=" + ram2015
-)
+// ramNamed is the fixture's 2010 Ram, which yard has three names for and
+// the EPA sample none, and yardNames those names.
+const ramNamed = "/?from.vin=1D7RV1GT5AS123456"
 
-// open loads the page at target, bare or a lookup, and waits for its
-// controls.
-func (tb *tab) open(target string) {
+var yardNames = []string{"Dodge Other", "Dodge Ram 1500", "Dodge Ram 1500 4x4"}
+
+// stack is one vocabulary's stack of "Also known as": the names on its
+// plates, and how many of them the page displays now.
+type stack struct {
+	Vocabulary string   `json:"vocabulary"`
+	Names      []string `json:"names"`
+	Shown      int      `json:"shown"`
+}
+
+// stacks are the stacks of "Also known as" in page order, each name its
+// make and the rest of its entry; none before a vocabulary is loaded or
+// the model is known. Without JavaScript the page's scripts never ran:
+// scripts are let run for the reading alone.
+func stacks(tb *tab) []stack {
 	tb.t.Helper()
-	tb.do(chromedp.Navigate(tb.base + target))
-	tb.wait("#controls")
+	if !tb.js {
+		tb.scripts(true)
+		defer tb.scripts(false)
+	}
+	return eval[[]stack](tb, `[...document.querySelectorAll("#aka li.stack")].filter(s => s.querySelector(".stamp")).map(s => {
+		const plates = [...s.querySelectorAll("li.tagplate:not(.blank)")];
+		return {
+			vocabulary: (s.querySelector(".voc") || s.querySelector(".stamp")).textContent,
+			names: plates.map(p => [...p.querySelectorAll(".seg.g-wmi, .seg.g-vds")].map(seg => seg.textContent).join(" ")).sort(),
+			shown: plates.filter(p => p.getClientRects().length > 0).length,
+		};
+	})`)
 }
 
-// examplesJSOff: without JavaScript the page has its examples, the VINs,
-// and every example is a page with the form filled in. On a page asked
-// with targets the examples go to them.
-func examplesJSOff(t *testing.T, path, base string) {
+// checkStacks checks the stacks of "Also known as": their vocabularies in
+// order, yard's with its three names, shown of them displayed, and every
+// other without a name.
+func checkStacks(tb *tab, step string, shown int, vocabularies ...string) {
+	tb.t.Helper()
+	got := stacks(tb)
+	var names []string
+	for _, s := range got {
+		names = append(names, s.Vocabulary)
+		switch {
+		case s.Vocabulary == "yard" && (!slices.Equal(s.Names, yardNames) || s.Shown != shown):
+			tb.t.Errorf("%s: yard's names %q, %d displayed; want %q, %d displayed", step, s.Names, s.Shown, yardNames, shown)
+		case s.Vocabulary != "yard" && len(s.Names) != 0:
+			tb.t.Errorf("%s: %s names %q; want none", step, s.Vocabulary, s.Names)
+		}
+	}
+	if !slices.Equal(names, vocabularies) {
+		tb.t.Errorf("%s: stacks %q; want %q", step, names, vocabularies)
+	}
+}
+
+// fanOut clicks yard's stamp, its stack's switch, which needs no script.
+func (tb *tab) fanOut() {
+	tb.t.Helper()
+	tb.do(chromedp.Click(chromedp.CSS(`label[for="fan-yard"]`)))
+	tb.wait("#fan-yard:checked")
+}
+
+// namesJSOff: without JavaScript a VIN's page has a stack for each of the
+// server's vocabularies on vPIC's spine, listing, on the parts spine, not
+// among them: yard's first, with its first name, and all three at a click
+// on its stamp.
+func namesJSOff(t *testing.T, path, base string) {
 	tb := newTab(t, path, base, &requestLog{}, false)
-	want := []string{vinExample, teslaExample, ramExample}
-	tb.open("/")
-	if got := exampleHrefs(tb, "#controls"); !slices.Equal(got, want) {
-		t.Errorf("JS off: examples\n%q\nwant\n%q", got, want)
-	}
-	tb.audit("/, JS off")
-	for i, href := range want {
-		tb.open("/")
-		tb.do(chromedp.Click(chromedp.CSS(fmt.Sprintf("#controls ul.examples li:nth-child(%d) a", i+1))))
-		tb.wait("#result")
-		if got := tb.at(); got != href {
-			t.Errorf("JS off, example %d: at %s; want %s", i+1, got, href)
-		}
-		checkFilled(tb, "JS off, example "+href, href)
-		if i == 0 {
-			tb.audit("an example, JS off")
-		}
-	}
-
-	const both = "&to=epa-vehicles&to=yard"
-	tb.open(vinExample + both)
-	tb.wait("#result")
-	checkFilled(tb, "JS off, a translation", vinExample+both)
-	if got, want := exampleHrefs(tb, "#controls"), []string{vinExample + both, teslaExample + both, ramExample + both}; !slices.Equal(got, want) {
-		t.Errorf("JS off: the page's examples do not keep its targets: %q; want %q", got, want)
-	}
+	tb.do(chromedp.Navigate(base + ramNamed))
+	tb.wait("#aka")
+	checkStacks(tb, "JS off", 1, "yard", "epa-vehicles")
+	tb.audit("a VIN's names, JS off")
+	tb.fanOut()
+	checkStacks(tb, "JS off, yard fanned out", 3, "yard", "epa-vehicles")
+	tb.audit("a vocabulary's every name, JS off")
 }
 
-// selectionJSOn: with JavaScript, in a fresh profile, against a server
-// that loaded classics, parts and listing, a vocabulary on the parts
-// spine, which a VIN's form never offers, and offers the EPA sample.
-func selectionJSOn(t *testing.T, path, base string, wire *wireLog) {
+// namesJSOn: with JavaScript, in a fresh profile, against a server that
+// loaded classics, parts and listing, none of them a vocabulary on vPIC's
+// spine, and offers the EPA sample.
+func namesJSOn(t *testing.T, path, base string, wire *wireLog) {
 	tb := newTab(t, path, base, &requestLog{}, true)
-	// stay opens the page at target and marks it: a page that reloads
-	// loses the mark.
-	stay := func(target string) {
-		tb.t.Helper()
-		tb.open(target)
-		tb.ticked()
-		eval[bool](tb, `window.stayed = true`)
-	}
-	tb.open("/")
-	tb.ticked()
-	if got := exampleHrefs(tb, "#controls"); !slices.Equal(got, []string{vinExample, teslaExample, ramExample}) {
-		t.Errorf("no file in the browser: examples %q", got)
-	}
-	checkTicked(tb, "no file in the browser", nil)
+	tb.do(chromedp.Navigate(base + ramNamed))
+	tb.wait("#vin-form.live")
+	checkStacks(tb, "no file in the browser", 0)
+	// A page that reloads loses this.
+	eval[bool](tb, `window.stayed = true`)
 
-	// A file loaded is ticked, and a second load keeps the first. The
-	// page's form follows the files: yard is among its targets at once.
+	// A file loaded is on the page at once, and a second beside it: the
+	// vocabulary with a name first.
 	tb.vocabularies()
 	tb.do(chromedp.SetUploadFiles(chromedp.CSS("#vocab-files"), []string{filepath.Join(fixture, "yard.jsonl")}))
 	tb.waitPrefix("#load-status", "Loaded yard (")
-	tb.until("yard among the form's targets", `document.querySelector('#controls input[name=to][value="yard"]') !== null`)
-	checkTicked(tb, "a load", selection{"vpic": {"yard"}})
-	tb.vocabularies()
+	tb.until("yard's names on the page", `document.querySelectorAll("#aka li.stack:has(.stamp)").length === 1`)
+	checkStacks(tb, "a load", 1, "yard")
 	tb.do(chromedp.Click(chromedp.CSS("#load-epa")))
 	tb.waitPrefix("#load-status", "Loaded epa-vehicles (")
+	tb.until("EPA's stack on the page", `document.querySelectorAll("#aka li.stack:has(.stamp)").length === 2`)
+	checkStacks(tb, "a second load", 1, "yard", "epa-vehicles")
 	tb.audit("the dialog, two files loaded")
-	checkTicked(tb, "a second load", selection{"vpic": {"epa-vehicles", "yard"}})
+	tb.closeVocabularies()
+	tb.audit("a VIN's names in the browser")
+	tb.fanOut()
+	checkStacks(tb, "yard fanned out", 3, "yard", "epa-vehicles")
+	tb.audit("a vocabulary's every name in the browser")
 
-	// Each example fills the form by htmx, to the targets ticked.
-	const both = "&to=epa-vehicles&to=yard"
-	want := []string{vinExample + both, teslaExample + both, ramExample + both}
-	stay("/")
-	if got := exampleHrefs(tb, "#controls"); !slices.Equal(got, want) {
-		t.Errorf("JS on: examples\n%q\nwant\n%q", got, want)
-	}
-	for i, href := range want {
-		if i > 0 {
-			stay("/")
-		}
-		tb.do(chromedp.Click(chromedp.CSS(fmt.Sprintf("#controls ul.examples li:nth-child(%d) a", i+1))))
-		tb.wait("#result")
-		if got := tb.at(); got != href {
-			t.Errorf("JS on, example %d: at %s; want %s", i+1, got, href)
-		}
-		checkFilled(tb, "JS on, example "+href, href)
-		if !eval[bool](tb, `window.stayed === true`) {
-			t.Errorf("JS on, example %d went as a page", i+1)
-		}
-		if i == 0 {
-			tb.audit("an example in the browser")
-		}
-	}
-	all := selection{"vpic": {"epa-vehicles", "yard"}}
-	waitSelection(tb, "every example", all)
-
-	// A target cleared is dropped at once, and an example clicked then
-	// goes to what is ticked.
-	stay("/")
-	tb.waitState("ready")
-	tb.ticked()
-	tb.do(chromedp.Click(chromedp.CSS(`#controls input[name=to][value="yard"]`)))
-	cleared := selection{"vpic": {"epa-vehicles"}}
-	waitSelection(tb, "clearing yard", cleared)
-	tb.do(chromedp.Click(chromedp.CSS("#controls ul.examples li:nth-child(1) a")))
-	tb.wait("#result")
-	if got, want := tb.at(), vinExample+"&to=epa-vehicles"; got != want {
-		t.Errorf("an example after clearing yard: at %s; want %s", got, want)
-	}
-	checkTicked(tb, "a translation", cleared)
-	tb.waitState("ready")
-	tb.do(chromedp.Click(chromedp.CSS(`#controls input[name=to][value="yard"]`)))
-	waitSelection(tb, "ticking yard", all)
-
-	// A removed file drops out; the rest stay ticked.
+	// A removed file is off the page; the rest stay.
 	tb.vocabularies()
 	tb.do(chromedp.Click(chromedp.CSS(`form.inline:has(input[value="yard"]) button`)))
-	tb.until("removing yard", `!document.querySelector('a[href="/ui/vocabularies/yard"]') && !document.querySelector('#controls input[name=to][value="yard"]')`)
+	tb.until("removing yard", `!document.querySelector('a[href="/ui/vocabularies/yard"]') && document.querySelectorAll("#aka li.stack:has(.stamp)").length === 1`)
+	checkStacks(tb, "a removal", 0, "epa-vehicles")
 	tb.audit("the dialog after a removal")
-	checkTicked(tb, "a removal", cleared)
-
-	// A cold start of the worker keeps the selection.
-	tb.stopWorkers()
-	checkTicked(tb, "a cold start", cleared)
-
-	// A link's own to= replaces the selection.
-	tb.vocabularies()
-	tb.do(chromedp.SetUploadFiles(chromedp.CSS("#vocab-files"), []string{filepath.Join(fixture, "yard.jsonl")}))
-	tb.waitPrefix("#load-status", "Loaded yard (")
-	checkTicked(tb, "yard loaded again", all)
-	const link = vinExample + "&to=yard"
-	tb.open(link)
-	tb.wait("#result")
-	checkFilled(tb, "a link with to=", link)
-	linked := selection{"vpic": {"yard"}}
-	waitSelection(tb, "a link with to=", linked)
-	checkTicked(tb, "after a link with to=", linked)
+	if !eval[bool](tb, `window.stayed === true`) {
+		t.Error("loads and a removal reloaded the page")
+	}
 
 	// No file reached the server, nothing threw and CSP refused nothing.
 	for _, r := range wire.all() {
@@ -215,7 +176,7 @@ func selectionJSOn(t *testing.T, path, base string, wire *wireLog) {
 			continue
 		}
 		for _, name := range []string{"yard", "epa-vehicles"} {
-			if u.Path == "/ui/vocabularies/"+name || slices.Contains(u.Query()["to"], name) {
+			if strings.Contains(r.target, name) {
 				t.Errorf("the server got %s, which names %s, a file the browser holds", r.target, name)
 			}
 		}
@@ -228,155 +189,4 @@ func selectionJSOn(t *testing.T, path, base string, wire *wireLog) {
 	if refused := eval[[]string](tb, `window.refused || []`); len(refused) > 0 {
 		t.Errorf("CSP refused %q", refused)
 	}
-}
-
-// attributes are the attributes of each element sel matches, as the page
-// has them, none when it matches nothing: no script needed.
-func attributes(tb *tab, sel string) []map[string]string {
-	tb.t.Helper()
-	if tb.count(sel) == 0 {
-		return nil
-	}
-	var out []map[string]string
-	tb.call(func(ctx context.Context) (err error) {
-		out, err = chromedp.Run(ctx, chromedp.AttributesAll(chromedp.CSSAll(sel)))
-		return err
-	})
-	return out
-}
-
-// exampleHrefs are the hrefs of the examples under the element sel
-// matches, as the page has them: no script needed.
-func exampleHrefs(tb *tab, sel string) []string {
-	tb.t.Helper()
-	var out []string
-	for _, a := range attributes(tb, sel+" a.example") {
-		out = append(out, a["href"])
-	}
-	return out
-}
-
-// checkFilled checks that the form of the page asked with target holds
-// target's VIN as the page has it and ticks its targets alone: no script
-// needed.
-func checkFilled(tb *tab, step, target string) {
-	tb.t.Helper()
-	u, err := url.Parse(target)
-	if err != nil {
-		tb.t.Fatal(err)
-	}
-	q := u.Query()
-	const inForm = "#controls form "
-	var want []string
-	for k, vs := range q {
-		switch k {
-		case "from.vin":
-			want = append(want, inForm+"#from-vin[value="+cssString(vs[0])+"]")
-		case "to":
-			for _, name := range vs {
-				want = append(want, inForm+"input[name=to][value="+cssString(name)+"][checked]")
-			}
-		default:
-			tb.t.Fatalf("%s: no field for %s", step, k)
-		}
-	}
-	for _, sel := range want {
-		if n := tb.count(sel); n != 1 {
-			tb.t.Errorf("%s: %d of %s", step, n, sel)
-		}
-	}
-	// Without to= the page ticks its default targets, the selection.
-	if n := tb.count(inForm + "input[name=to][checked]"); q.Has("to") && n != len(q["to"]) {
-		tb.t.Errorf("%s: %d targets ticked; want %d", step, n, len(q["to"]))
-	}
-}
-
-// cssString is s as a CSS string.
-func cssString(s string) string {
-	return `"` + strings.NewReplacer(`\`, `\\`, `"`, `\"`).Replace(s) + `"`
-}
-
-// selection is a selection as IndexedDB keeps it: names by spine, each
-// list sorted, no empty one.
-type selection map[string][]string
-
-// checkTicked loads the page and checks that its form ticks want's
-// targets on its spine alone, and that IndexedDB keeps want.
-func checkTicked(tb *tab, step string, want selection) {
-	tb.t.Helper()
-	tb.open("/")
-	tb.ticked()
-	for _, f := range targetsOffered(tb, "#controls") {
-		if !slices.Equal(f.Ticked, want[f.Spine]) {
-			tb.t.Errorf("%s: the form ticks %q; want %q", step, f.Ticked, want[f.Spine])
-		}
-	}
-	if got := storedSelection(tb); fmt.Sprint(got) != fmt.Sprint(want) {
-		tb.t.Errorf("%s: IndexedDB keeps the selection %v; want %v", step, got, want)
-	}
-}
-
-// ticked waits for the page's first tick of the visitor's selection to
-// be done (#browser's data-ticked), whatever came of it: the form is
-// ticked once the worker answers, so a box read or clicked before then
-// is the page's as drawn, and the tick lands on it afterwards.
-func (tb *tab) ticked() {
-	tb.t.Helper()
-	tb.wait("#browser[data-ticked]")
-}
-
-// offered is the targets a form offers, by name: the spine they are on,
-// all of them and those ticked.
-type offered struct {
-	Spine           string
-	Targets, Ticked []string
-}
-
-// targetsOffered are the targets each form under the element root
-// matches offers, in page order, as they are ticked now.
-func targetsOffered(tb *tab, root string) []offered {
-	tb.t.Helper()
-	return eval[[]offered](tb, `[...document.querySelectorAll(`+jsString(root+" fieldset[data-spine]")+`)].map(f => {
-		const boxes = [...f.querySelectorAll("input[name=to]")];
-		return {
-			spine: f.dataset.spine,
-			targets: boxes.map(b => b.value).sort(),
-			ticked: boxes.filter(b => b.checked).map(b => b.value).sort(),
-		};
-	})`)
-}
-
-// waitSelection waits, up to 10 s, for IndexedDB to keep want.
-func waitSelection(tb *tab, step string, want selection) {
-	tb.t.Helper()
-	got := storedSelection(tb)
-	for i := 0; i < 100 && fmt.Sprint(got) != fmt.Sprint(want); i++ {
-		eval[bool](tb, `new Promise(resolve => setTimeout(() => resolve(true), 100))`)
-		got = storedSelection(tb)
-	}
-	if fmt.Sprint(got) != fmt.Sprint(want) {
-		tb.t.Errorf("%s: IndexedDB keeps the selection %v; want %v", step, got, want)
-	}
-}
-
-// storedSelection is the selection IndexedDB keeps: none before the
-// worker made its database, which this never opens first (opened, it
-// would be made without the worker's store).
-func storedSelection(tb *tab) selection {
-	tb.t.Helper()
-	return eval[selection](tb, `indexedDB.databases().then(dbs => dbs.some(d => d.name === "nitrovin-state") ? new Promise((resolve, reject) => {
-		const r = indexedDB.open("nitrovin-state");
-		r.onerror = () => reject(r.error);
-		r.onsuccess = () => {
-			const db = r.result;
-			const q = db.transaction("state").objectStore("state").get("selection");
-			q.onsuccess = () => {
-				db.close();
-				const out = {};
-				for (const [spine, names] of Object.entries(q.result || {})) if (names && names.length) out[spine] = [...names].sort();
-				resolve(out);
-			};
-			q.onerror = () => reject(q.error);
-		};
-	}) : {})`)
 }

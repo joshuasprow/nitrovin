@@ -15,8 +15,8 @@ import (
 // TestWorkerDemo runs the demo set (#278) in a fresh profile against a
 // server that loaded nothing, as nitrovin.app. "Load demo" loads it in one
 // click, its catalog compiled in the browser, and the panel lists every
-// file of it. One of its VINs then translates into its vehicle vocabulary
-// and EPA's, loaded beside it, as on a server that loaded the same files
+// file of it. One of its VINs then has its name in its vehicle vocabulary,
+// EPA's loaded beside it, as on a server that loaded the same files
 // (`serve --vocab pkg/ui/demo`), and its catalog, downloaded, fits on a
 // server as the demo's own file does. A demo file of another version
 // makes the offer a refresh. It survives a reload, Remove demo removes
@@ -62,20 +62,20 @@ func TestWorkerDemo(t *testing.T) {
 	if n := tb.count("#remove-demo"); n != 1 {
 		t.Error("the panel offers no Remove demo once it is loaded")
 	}
-	// EPA's vocabulary beside it, for the translation into its names.
+	// EPA's vocabulary beside it, a second stack of names.
 	tb.do(chromedp.Click(chromedp.CSS("#load-epa")))
 	tb.waitPrefix("#load-status", "Loaded ")
 	tb.audit("the dialog, the demo and EPA's vocabulary held")
 
-	// The yard's Ram, of make Ram, translates into the demo's vehicle
+	// The yard's Ram, of make Ram, has its name in the demo's vehicle
 	// vocabulary, as the server draws it on the same files.
 	same := vocabServer(t, nil, demoDir, epaPath)
-	target := "/?from.vin=1C6RR7LT6FS512345&to=demo-vehicles&to=epa-vehicles" + pinned
+	target := "/?from.vin=1C6RR7LT6FS512345" + pinned
 	got := eval[[]string](tb, `fetch(`+jsString(target)+`, {headers: {"HX-Request": "true"}}).then(async r => [String(r.status), await r.text()])`)
 	if want := mainOf(t, same, srv.URL, target, true); got[0] != "200" || got[1] != want {
 		t.Errorf("%s: the worker's page differs from the server's\nworker: %s %s\nserver: %s", target, got[0], got[1], want)
 	}
-	if !strings.Contains(text(got[1]), "Dodge Ram 1500") {
+	if !strings.Contains(strings.Join(strings.Fields(text(got[1])), " "), "Dodge Ram 1500") {
 		t.Errorf("%s: the page lacks the demo's Dodge Ram 1500: %s", target, got[1])
 	}
 

@@ -125,12 +125,13 @@ func TestWorkerUpdate(t *testing.T) {
 	tb.waitPrefix("#load-status", "Loaded ")
 	tb.closeVocabularies()
 
-	// The old release's worker answers for yard; its page's header is the
-	// server's: nitrovin v0.3.2, linked to its release.
-	entry := "/?from.vin=1D7RV1GT5AS123456&to=yard" + pinned
+	// The old release's worker draws the page over yard, a VIN's names in
+	// it; its page's header is the server's: nitrovin v0.3.2, linked to
+	// its release.
+	entry := "/?from.vin=1D7RV1GT5AS123456" + pinned
 	since := len(wire.all())
 	tb.do(chromedp.Navigate(srv.URL + entry))
-	tb.wait("#result")
+	tb.wait("#aka #fan-yard")
 	if served(since, entry) {
 		t.Fatalf("%s: the server answered it; want the worker, yard is the browser's", entry)
 	}
@@ -154,7 +155,7 @@ func TestWorkerUpdate(t *testing.T) {
 	if got := attributes(tb, "#browser"); len(got) != 1 || got[0]["data-release"] != ui.Release(nextInfo) {
 		t.Errorf("/ after the deploy: #browser %v; want the page of %s", got, ui.Release(nextInfo))
 	}
-	if got, want := mainHTML(tb), eval[string](tb, `new DOMParser().parseFromString(`+jsString(mainOf(t, next, srv.URL, "/", false))+`, "text/html").getElementById("ui-main").outerHTML`); got != want {
+	if got, want := mainHTML(tb), mainAs(tb, mainOf(t, next, srv.URL, "/", false)); got != want {
 		t.Errorf("/ after the deploy: the page differs from the next release's\npage: %s\nserver: %s", got, want)
 	}
 	if got := header(tb, next); !strings.Contains(got, `<a href="https://github.com/joshuasprow/nitrovin/releases/tag/v0.3.3">v0.3.3</a>`) ||
@@ -210,12 +211,12 @@ func TestWorkerUpdate(t *testing.T) {
 	}
 	since = len(wire.all())
 	tb.do(chromedp.Navigate(srv.URL + entry))
-	tb.wait("#result")
+	tb.wait("#aka #fan-yard")
 	if served(since, entry) {
 		t.Errorf("%s after Update now: the server answered it; want the next release's worker", entry)
 	}
 	same, _ := releaseServer(t, module, "v0.3.3", classics, filepath.Join(fixture, "yard.jsonl"))
-	if got, want := mainHTML(tb), eval[string](tb, `new DOMParser().parseFromString(`+jsString(mainOf(t, same, srv.URL, entry, false))+`, "text/html").getElementById("ui-main").outerHTML`); got != want {
+	if got, want := mainHTML(tb), mainAs(tb, mainOf(t, same, srv.URL, entry, false)); got != want {
 		t.Errorf("%s after Update now: the worker's page differs from the server's\nworker: %s\nserver: %s", entry, got, want)
 	}
 	if got, want := eval[string](tb, `document.querySelector("header").outerHTML`), header(tb, next); got != want {

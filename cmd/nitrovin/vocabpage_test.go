@@ -53,13 +53,14 @@ func TestVocabPage(t *testing.T) {
 }
 
 // offPages are what the JavaScript-off run saw, for the JavaScript-on
-// run to compare: the server's catalog row, and a VIN's answer.
+// run to compare: the server's catalog row, and a VIN's page.
 type offPages struct {
-	serverRow, translation string
+	serverRow, answer string
 }
 
-// throughServer is a VIN naming no file, and when it was asked: the
-// server's to answer, the same with JavaScript on and off.
+// throughServer is a VIN's page, and when it was asked: the server's to
+// answer while the browser holds no file, the same with JavaScript on and
+// off.
 const throughServer = "/?from.vin=" + vin + pinned
 
 // vocabJSOff: the dialog without JavaScript, in a fresh profile, opens,
@@ -86,8 +87,8 @@ func vocabJSOff(t *testing.T, path, base string) offPages {
 	tb.audit("the dialog, JS off")
 
 	tb.do(chromedp.Navigate(base + throughServer))
-	tb.wait("#result")
-	p.translation = tb.html("#ui-main")
+	tb.wait("#copy-url")
+	p.answer = tb.html("#ui-main")
 	tb.audit("a VIN's answer, JS off")
 
 	tb.do(chromedp.Navigate(base + "/ui/vocabularies/classics"))
@@ -112,7 +113,8 @@ func vocabJSOn(t *testing.T, path, base string, wire *wireLog, off offPages, epa
 
 	// Finding 6: the catalog does not flip. The worker's panel lists the
 	// server's rows as the server does, and the browser's beside them; a
-	// VIN naming no file answers as it does without JavaScript.
+	// VIN's page, the browser holding no file, is as it is without
+	// JavaScript.
 	if got := catalogRows(tb); !slices.Equal(got, []string{"vpic vpic", "server classics"}) {
 		t.Errorf("ready: catalog %q", got)
 	}
@@ -121,9 +123,9 @@ func vocabJSOn(t *testing.T, path, base string, wire *wireLog, off offPages, epa
 	}
 	tb.audit("the dialog ready, no file kept")
 	tb.do(chromedp.Navigate(base + throughServer))
-	tb.wait("#result")
-	if got := mainHTML(tb); got != off.translation {
-		t.Errorf("%s with JS on differs from JS off\nJS on:  %s\nJS off: %s", throughServer, got, off.translation)
+	tb.wait("#copy-url")
+	if got, want := mainHTML(tb), mainAs(tb, off.answer); got != want {
+		t.Errorf("%s with JS on differs from JS off\nJS on:  %s\nJS off: %s", throughServer, got, want)
 	}
 
 	// Finding 8: real status codes, the one error page and the fragment.
@@ -177,22 +179,21 @@ func vocabJSOn(t *testing.T, path, base string, wire *wireLog, off offPages, epa
 	if got := catalogRows(tb); !slices.Equal(got, []string{"vpic vpic", "server classics", "browser epa-vehicles", "browser listing", "browser parts", "browser yard"}) {
 		t.Errorf("EPA loaded: catalog %q", got)
 	}
-	// A VIN translates in the browser as on a server that loaded the same
+	// A VIN's names are the browser's as on a server that loaded the same
 	// files.
 	same := vocabServer(t, nil, filepath.Join(driftDir, "classics.jsonl"), filepath.Join(fixture, "listing.jsonl"), filepath.Join(fixture, "parts.jsonl"),
 		filepath.Join(driftDir, "yard.jsonl"), epaPath)
 	for _, target := range []string{
-		"/?from.vin=" + ram2015 + "&to=epa-vehicles&to=yard" + pinned,
-		"/?from.vin=1D7RV1GT5AS123456&model_year=2010&to=yard" + pinned,
+		"/?from.vin=" + ram2015 + pinned,
+		"/?from.vin=1D7RV1GT5AS123456&model_year=2010" + pinned,
 	} {
 		tb.do(chromedp.Navigate(base + target))
-		tb.wait("#result")
-		want := eval[string](tb, `new DOMParser().parseFromString(`+jsString(mainOf(t, same, base, target, false))+`, "text/html").getElementById("ui-main").outerHTML`)
-		if got := mainHTML(tb); got != want {
+		tb.wait("#aka")
+		if got, want := mainHTML(tb), mainAs(tb, mainOf(t, same, base, target, false)); got != want {
 			t.Errorf("%s: the worker's page differs from the server's\nworker: %s\nserver: %s", target, got, want)
 		}
 	}
-	tb.audit("a translation in the browser")
+	tb.audit("a VIN's names in the browser")
 
 	tb.do(chromedp.Navigate(base + "/"))
 	tb.vocabularies()
@@ -302,17 +303,17 @@ func vocabJSOn(t *testing.T, path, base string, wire *wireLog, off offPages, epa
 		t.Errorf("a stored file that faults, removed: IndexedDB holds %q", got)
 	}
 
-	// Finding 8: a VIN with the server out of reach fails in words, in the
-	// page's controls. The worker answers it for naming a browser file,
-	// epa-vehicles, among its targets: a VIN naming none is the server's.
+	// Finding 8: a VIN with the server out of reach fails in words, below
+	// the plate. The worker draws the page, the browser holding a file,
+	// and asks the server for the VIN's decode alone.
 	wire.mu.Lock()
 	wire.cutDecodes = true
 	wire.mu.Unlock()
-	tb.closeVocabularies()
-	eval[bool](tb, `(document.querySelector('#controls input[name=to][value="epa-vehicles"]').checked = true)`)
-	tb.do(chromedp.SetValue(chromedp.CSS("#from-vin"), vin), chromedp.Click(chromedp.CSS(`#controls form button[type=submit]`)))
-	tb.until("an unreachable server", `document.querySelector("#controls .error") !== null`)
-	if s := tb.html("#controls .error"); !strings.Contains(s, "could not be reached") || strings.Contains(s, "Failed to fetch") || strings.Contains(s, "TypeError") {
+	tb.do(chromedp.Navigate(base + "/"))
+	tb.wait("#vin-form.live")
+	tb.send(vin)
+	tb.until("an unreachable server", `document.querySelector("#answer .error") !== null`)
+	if s := tb.html("#answer .error"); !strings.Contains(s, "could not be reached") || strings.Contains(s, "Failed to fetch") || strings.Contains(s, "TypeError") {
 		t.Errorf("an unreachable server: %s", s)
 	}
 	tb.audit("an unreachable server")
@@ -375,9 +376,8 @@ func vocabJSOn(t *testing.T, path, base string, wire *wireLog, off offPages, epa
 		if err != nil || strings.HasPrefix(u.Path, "/ui/r/") {
 			continue
 		}
-		q := u.Query()
 		for _, name := range held {
-			if u.Path == "/ui/vocabularies/"+name || q.Get("from.vocabulary") == name || slices.Contains(q["to"], name) {
+			if u.Path == "/ui/vocabularies/"+name {
 				t.Errorf("the server got %s, which names %s, a file the browser holds", r.target, name)
 			}
 		}

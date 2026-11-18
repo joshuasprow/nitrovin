@@ -92,7 +92,7 @@ func TestDemoHints(t *testing.T) {
 	module := ui.Worker{Module: []byte("\x00asm"), Exec: []byte("// wasm_exec.js")}
 	const (
 		load   = "open Vocabularies and Load demo"
-		byName = "/?from.vin=1FTEW1EG7FFA12345&to=demo-vehicles"
+		byName = "/ui/vocabularies/demo-vehicles"
 	)
 	for _, c := range []struct {
 		name  string

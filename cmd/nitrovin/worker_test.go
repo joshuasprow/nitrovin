@@ -177,15 +177,26 @@ func mainOf(t *testing.T, h http.Handler, base, target string, htmx bool) string
 	return body[start : end+len("</main>")]
 }
 
-// mainHTML is the outer HTML of the page's main as the server drew it:
-// without the copy buttons copy.js adds.
+// drawnMain is a function of a document, giving the outer HTML of its
+// main as the server drew it: without the copy buttons copy.js adds, and
+// without the plate's form and the VINs menu, which plate.js redraws.
+const drawnMain = `(doc => {
+	const main = doc.getElementById("ui-main").cloneNode(true);
+	main.querySelectorAll("button.copy, #vin-form, #vins").forEach(e => e.remove());
+	return main.outerHTML;
+})`
+
+// mainHTML is the page's main as the server drew it (drawnMain).
 func mainHTML(tb *tab) string {
 	tb.t.Helper()
-	return eval[string](tb, `(() => {
-		const main = document.getElementById("ui-main").cloneNode(true);
-		main.querySelectorAll("button.copy").forEach(b => b.remove());
-		return main.outerHTML;
-	})()`)
+	return eval[string](tb, drawnMain+`(document)`)
+}
+
+// mainAs is the main in html, a page or its main alone, as this browser
+// parses it, as the page's own is (mainHTML).
+func mainAs(tb *tab, html string) string {
+	tb.t.Helper()
+	return eval[string](tb, drawnMain+`(new DOMParser().parseFromString(`+jsString(html)+`, "text/html"))`)
 }
 
 // vocabularies opens the page's Vocabularies dialog, where the browser's
@@ -234,8 +245,9 @@ func TestWorker(t *testing.T) {
 	big := filepath.Join(t.TempDir(), "synthetic.jsonl")
 	const entries = 150_000
 	writeSynthetic(t, big, entries)
-	// The fixture's 2010 Ram, into the synthetic file and yard.
-	probe := "/?from.vin=1D7RV1GT5AS123456&to=synthetic&to=yard" + pinned
+	// The fixture's 2010 Ram, which the synthetic file and yard have names
+	// for.
+	probe := "/?from.vin=1D7RV1GT5AS123456" + pinned
 
 	wire := &wireLog{h: vocabServer(t, &module, filepath.Join(fixture, "classics.jsonl"))}
 	srv := httptest.NewServer(wire)
@@ -270,10 +282,10 @@ func TestWorker(t *testing.T) {
 	}
 
 	queries := []string{
-		"from.vin=1D7RV1GT5AS123456&to=yard",
-		"from.vin=1GCVKREC6EZ123456&to=yard",
-		"from.vin=" + ram2015 + "&model_year=2015&to=yard",
-		"from.vin=JH2PC40066M200001&to=yard",
+		"from.vin=1D7RV1GT5AS123456",
+		"from.vin=1GCVKREC6EZ123456",
+		"from.vin=" + ram2015 + "&model_year=2015",
+		"from.vin=JH2PC40066M200001",
 	}
 	same1 := func(step, target string) {
 		t.Helper()
@@ -281,7 +293,7 @@ func TestWorker(t *testing.T) {
 		tb.do(chromedp.Navigate(srv.URL + target))
 		tb.wait("#ui-main")
 		// The server's main as this browser parses it, as the worker's is.
-		want := eval[string](tb, `new DOMParser().parseFromString(`+jsString(mainOf(t, same, srv.URL, target, false))+`, "text/html").getElementById("ui-main").outerHTML`)
+		want := mainAs(tb, mainOf(t, same, srv.URL, target, false))
 		if got := mainHTML(tb); got != want {
 			t.Errorf("%s %s: the worker's page differs from the server's\nworker: %s\nserver: %s", step, target, got, want)
 		}
@@ -294,53 +306,23 @@ func TestWorker(t *testing.T) {
 			t.Errorf("%s %s: the worker's fragment differs from the server's\nworker: %s\nserver: %s", step, target, got[3], want)
 		}
 	}
-	// The page, its targets named (unnamed, the browser ticks the
-	// visitor's selection, which the server has none of), and each
-	// lookup: a VIN's with its decode, which is the server's.
-	same1("the page", "/?to=yard")
+	// The page, and each VIN's, with its decode, which is the server's.
+	same1("the page", "/")
 	for _, q := range queries {
 		same1("lookup", "/?"+q+pinned)
 	}
 	same1("list", "/ui/vocabularies/yard")
 	same1("list", "/ui/vocabularies/listing?limit=1")
 
-	// One URL, one meaning: a lookup naming no target is the server's,
-	// files stored or not, and its targets are the server's default, as
-	// with JavaScript off; one naming a file the browser holds is the
-	// worker's. The form ticks the visitor's selection before anything
-	// names a browser file.
+	// The page is the worker's once the browser holds a file, with a VIN
+	// on the plate or without: the server never draws it.
 	since := len(wire.all())
-	served := func(target string) bool {
-		return slices.ContainsFunc(wire.all()[since:], func(r wireRequest) bool { return r.target == target })
-	}
-	tb.do(chromedp.Navigate(srv.URL + "/"))
-	tb.until("the selection ticked", `document.querySelector('#controls input[name=to][value="yard"]').checked`)
-	if served("/") {
-		t.Error("the page without a lookup, files stored: the server answered it")
-	}
-	bare := "/?from.vin=1D7RV1GT5AS123456" + pinned
-	tb.do(chromedp.Navigate(srv.URL + bare))
-	tb.wait("#result")
-	if !served(bare) {
-		t.Errorf("%s, files stored: the worker answered it; want the server", bare)
-	}
-	// The answer is the server's: the form above it ticks the selection.
-	want := eval[string](tb, `new DOMParser().parseFromString(`+jsString(mainOf(t, wire.h, srv.URL, bare, false))+`, "text/html").getElementById("result").outerHTML`)
-	if got := eval[string](tb, `(() => {
-		const result = document.getElementById("result").cloneNode(true);
-		result.querySelectorAll("button.copy").forEach(b => b.remove());
-		return result.outerHTML;
-	})()`); got != want {
-		t.Errorf("%s: the answer differs from the server's\npage: %s\nserver: %s", bare, got, want)
-	}
-	if got := attributes(tb, `#result`); len(got) != 1 || got[0]["data-from"] != "vin" || got[0]["data-spine"] != "vpic" {
-		t.Errorf("%s: the answer's from %v; want vin on vpic", bare, got)
-	}
-	named := "/?" + queries[1] + pinned
-	tb.do(chromedp.Navigate(srv.URL + named))
-	tb.wait("#result")
-	if served(named) {
-		t.Errorf("%s: the server answered it; want the worker, yard is the browser's", named)
+	for _, target := range []string{"/", "/?" + queries[1] + pinned} {
+		tb.do(chromedp.Navigate(srv.URL + target))
+		tb.wait("#vin-form.live")
+		if slices.ContainsFunc(wire.all()[since:], func(r wireRequest) bool { return r.target == target }) {
+			t.Errorf("%s, files stored: the server answered it; want the worker", target)
+		}
 	}
 
 	// A stopped worker starts again on the next request and answers the same.
@@ -372,8 +354,8 @@ func TestWorker(t *testing.T) {
 		t.Errorf("after a stalled load: stored files %q; want listing, parts, yard", got)
 	}
 
-	// 150,000 entries, then cold starts: the worker stopped, a translation
-	// naming the file. The worker reads every file's stored index.
+	// 150,000 entries, then cold starts: the worker stopped, a VIN the
+	// file has names for. The worker reads every file's stored index.
 	start = time.Now()
 	tb.do(chromedp.SetUploadFiles(chromedp.CSS("#vocab-files"), []string{big}))
 	tb.waitPrefix("#load-status", "Loaded ")
@@ -388,7 +370,7 @@ func TestWorker(t *testing.T) {
 		t.Logf("cold start: %.0f ms; worker: %s", f.MS, f.Timing)
 	}
 	sort.Float64s(cold)
-	t.Logf("translation naming the 150,000-entry file, worker stopped first: cold start %.0f ms median (each %v); warm %.1f ms", cold[len(cold)/2], round(cold), warm.MS)
+	t.Logf("a VIN's names from the 150,000-entry file, worker stopped first: cold start %.0f ms median (each %v); warm %.1f ms", cold[len(cold)/2], round(cold), warm.MS)
 	if b := os.Getenv("NITROVIN_COLD_START_BUDGET"); b != "" {
 		budget, err := time.ParseDuration(b)
 		if err != nil {
