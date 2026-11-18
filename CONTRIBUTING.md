@@ -391,7 +391,7 @@ a yard with no catalog, and a vpic catalog:
 
 ```sh
 docker run -d --name nitrovin-stock -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=stock -p 55432:5432 \
-  postgres:17@sha256:ff87138949ad9a46f32ff23bd6852b52ce024a13dffe9b4087be98292cdd3b4f
+  postgres:17@sha256:0d938e975177bef9f1f61f3f9dbcf2e0aa0a139568f66d3415ed8892eb97f6ac
 NITROVIN_STOCK_PG_DSN='postgres://postgres:postgres@127.0.0.1:55432/stock?sslmode=disable' go test -v -run Postgres ./pkg/stock/pg
 ```
 

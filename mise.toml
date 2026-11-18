@@ -54,13 +54,13 @@
 # wrangler, postgres:17 and htmx) in one issue; it never bumps.
 
 [tools]
-go = "1.27.3"
+go = "1.27.4"
 zig = "0.17.1"                    # scripts/libnitrovin.sh's C cross-compiler (zig cc)
-goreleaser = "2.20.0"             # release.yml (.goreleaser.yaml)
+goreleaser = "2.20.2"             # release.yml (.goreleaser.yaml)
 cosign = "3.1.4"                  # release.yml signs, deploy.yml verifies
-terraform = "1.17.1"              # deploy/cloudflare/terraform
+terraform = "1.17.2"              # deploy/cloudflare/terraform
 node = "26.13.1"                  # LTS: wrangler (npx), the MCP Inspector
 jq = "1.8.2"                      # the scripts and workflows; real jq, not jaq
 yq = "4.54.3"                     # release.yml's prerelease check
-uv = "0.13.7"                     # Python tooling by uvx (openapi-spec-validator)
-"github:modelcontextprotocol/registry" = { version = "1.8.8", matching_regex = "^mcp-publisher_" } # mcp-publisher
+uv = "0.13.8"                     # Python tooling by uvx (openapi-spec-validator)
+"github:modelcontextprotocol/registry" = { version = "1.8.9", matching_regex = "^mcp-publisher_" } # mcp-publisher
