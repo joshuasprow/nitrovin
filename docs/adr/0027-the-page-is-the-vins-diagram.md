@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 ---
 
 # The page is the VIN's diagram, and takes a VIN alone
