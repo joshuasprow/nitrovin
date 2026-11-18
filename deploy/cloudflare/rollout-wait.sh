@@ -2,8 +2,10 @@
 # Wait until the container rollout `wrangler deploy` started has finished:
 # no rollout active on the application, and every container instance on its
 # image. deploy.yml runs it between the deploy and smoke.sh, so the smoke
-# test's /v1/info is the new container's, not the old one's (#127). It
-# prints a line whenever what it sees changes and exits 1 at the deadline.
+# test is not left to wait out a whole rollout (#127); smoke.sh itself
+# waits out the minute or so the old containers still answer after this
+# returns (#287). It prints a line whenever what it sees changes and exits
+# 1 at the deadline.
 #
 #   deploy/cloudflare/rollout-wait.sh <application> [timeout seconds]
 #
