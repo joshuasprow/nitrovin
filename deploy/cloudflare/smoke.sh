@@ -21,7 +21,9 @@
 # (default this tree's), whose tools /mcp must list. The pages are never
 # cached: the page without JavaScript, its fragment for the plate, and /sw.js,
 # which keeps its own no-cache. Over https it also checks HSTS,
-# always-HTTPS, the www redirect and the TLS floor.
+# always-HTTPS, the www redirect and the TLS floor. A host still answering
+# as another release has 5 minutes to switch before the checks start: after
+# a rollout the old containers answer a while longer (#287).
 set -euo pipefail
 
 base=${1:?usage: smoke.sh <base-url> <image>}
@@ -107,7 +109,8 @@ docker_run() { docker run --rm --platform linux/amd64 "$image" "$@"; }
 
 # Wait until the host answers: a first deploy's custom domain (DNS and
 # certificate), or a new container's start, takes a few minutes. A rollout
-# is deploy.yml's to wait for (rollout-wait.sh): the old container answers.
+# is deploy.yml's to wait for (rollout-wait.sh), and the wait below's: the
+# old container answers.
 for i in $(seq 30); do
 	curl -fsS --max-time 10 -o /dev/null "$base/healthz" 2>/dev/null && break
 	((i < 30)) || fail "GET /healthz: no answer in 5 minutes"
@@ -119,6 +122,23 @@ pass "GET /healthz: answering"
 docker_run info >"$tmp/want-info.json"
 identity() { jq -c '{decoder_version, data_month, artifact_hash}' "$1"; }
 want=$(identity "$tmp/want-info.json")
+# Wait until the host reports it. rollout-wait.sh ends on the hosting API's
+# word, and requests reach the old containers for a minute or so after
+# that (#287). A line whenever the answer changes; the checks start only
+# once the release answers, and stay strict.
+deadline=$((SECONDS + 300))
+last=
+while :; do
+	state=$(curl -sS --max-time 10 -o "$tmp/wait.b" -w '%{http_code}' "$base/v1/info" 2>/dev/null) || state="no answer"
+	if [[ $state == 200 ]]; then
+		state=$(identity "$tmp/wait.b" 2>/dev/null) || state="200, not JSON"
+	fi
+	[[ $state == "$want" ]] && break
+	[[ $state == "$last" ]] || printf 'wait  %s\n' "$(date -u +%TZ) GET /v1/info: $state; the image reports $want"
+	last=$state
+	((SECONDS < deadline)) || fail "GET /v1/info: still $state after 5 minutes; the image reports $want"
+	sleep 10
+done
 status=$(req info "$base/v1/info")
 [[ $status == 200 ]] || fail "GET /v1/info: $status"
 got=$(identity "$tmp/info.b")

@@ -85,7 +85,13 @@ keeps no object versions), waits until the container rollout has finished
 (`rollout-wait.sh`: no rollout active and every instance on the
 application's image, at most 20 minutes, [#127](https://github.com/joshuasprow/nitrovin/issues/127)),
 and runs `smoke.sh` against `https://nitrovin.app`, whose output is the
-run's summary. Runs are serialized.
+run's summary. The old containers can answer for a minute or so after the
+rollout is reported finished, so `smoke.sh` first asks `/v1/info` every
+10 s, for at most 5 minutes, until it reports the image's release, and
+only then starts its checks; a host that never does fails the run, naming
+the release it still reports
+([#287](https://github.com/joshuasprow/nitrovin/issues/287)). Runs are
+serialized.
 
 ```sh
 gh workflow run deploy.yml -R joshuasprow/nitrovin -f tag=v0.1.6   # deploy (or redeploy) a release
