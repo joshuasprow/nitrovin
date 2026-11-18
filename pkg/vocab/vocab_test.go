@@ -17,7 +17,7 @@ import (
 
 // Headers of the files the fault cases are built from.
 const (
-	vehicleHeader = `{"format":1,"kind":"vocabulary","name":"yard","version":"1","subject":"vehicle","fields":["make","model"]}`
+	vehicleHeader = `{"format":1,"kind":"vocabulary","name":"fleet","version":"1","subject":"vehicle","fields":["make","model"]}`
 	partHeader    = `{"format":1,"kind":"vocabulary","name":"listing","version":"1","subject":"part","fields":["category"],"spine":"parts"}`
 	setHeader     = `{"format":1,"kind":"extension-set","name":"classics","version":"1"}`
 	spineHeader   = `{"format":1,"kind":"spine","name":"parts","version":"1"}`
@@ -205,14 +205,14 @@ func TestFixture(t *testing.T) {
 			t.Errorf("%s: path %q is not absolute", f.Name, f.Path)
 		}
 	}
-	if want := []string{"classics", "listing", "parts", "yard"}; !slices.Equal(names, want) {
+	if want := []string{"classics", "fleet", "listing", "parts"}; !slices.Equal(names, want) {
 		t.Fatalf("files %v; want %v", names, want)
 	}
 
-	yard := byName["yard"]
-	e, ok := yard.Entry(map[string]string{"make": " DODGE", "model": "ram   1500"})
+	fleet := byName["fleet"]
+	e, ok := fleet.Entry(map[string]string{"make": " DODGE", "model": "ram   1500"})
 	if !ok || e.Line != 2 || len(e.Mappings) != 2 {
-		t.Fatalf("yard Dodge Ram 1500: %+v, %t; want line 2's two mappings", e, ok)
+		t.Fatalf("fleet Dodge Ram 1500: %+v, %t; want line 2's two mappings", e, ok)
 	}
 	if m := e.Mappings[0]; m.Model != 1938 || m.First != nil || m.Last == nil || *m.Last != 2012 ||
 		len(m.Qualifiers) != 1 || m.Qualifiers[0].Element != 34 || !slices.Contains(m.Qualifiers[0].Values, Value{IsText: true, Text: "DS (1500)"}) || m.Origin != "curated" {
@@ -221,23 +221,23 @@ func TestFixture(t *testing.T) {
 	if m := e.Mappings[1]; m.Model != 13620 || m.First == nil || *m.First != 2013 || m.Last != nil || m.Note == "" {
 		t.Errorf("Dodge Ram 1500's second mapping: %+v", m)
 	}
-	if _, ok := yard.Entry(map[string]string{"make": "Dodge"}); ok {
+	if _, ok := fleet.Entry(map[string]string{"make": "Dodge"}); ok {
 		t.Error("an entry found by part of its fields")
 	}
-	if _, ok := yard.Entry(map[string]string{"make": "Dodge", "model": "Caravan"}); ok {
+	if _, ok := fleet.Entry(map[string]string{"make": "Dodge", "model": "Caravan"}); ok {
 		t.Error("an unknown entry found")
 	}
-	if e, ok := yard.Entry(map[string]string{"make": "studebaker", "model": "lark"}); !ok || len(e.Mappings) != 0 || e.Note == "" {
+	if e, ok := fleet.Entry(map[string]string{"make": "studebaker", "model": "lark"}); !ok || len(e.Mappings) != 0 || e.Note == "" {
 		t.Errorf("the unmapped entry: %+v, %t", e, ok)
 	}
 	var lines []int
-	for _, e := range yard.EntriesFor(Target{Model: 13620}) {
+	for _, e := range fleet.EntriesFor(Target{Model: 13620}) {
 		lines = append(lines, e.Line)
 	}
 	if want := []int{2, 3}; !slices.Equal(lines, want) {
 		t.Errorf("entries for model 13620 on lines %v; want %v", lines, want)
 	}
-	if es := yard.EntriesFor(Target{Ext: "ext:classics/corvair"}); len(es) != 1 || es[0].Fields[1] != "Corvair" {
+	if es := fleet.EntriesFor(Target{Ext: "ext:classics/corvair"}); len(es) != 1 || es[0].Fields[1] != "Corvair" {
 		t.Errorf("entries for the Corvair extension: %v", es)
 	}
 
@@ -323,7 +323,7 @@ func (month) Text(element int32, text string) bool { return element == 34 && tex
 
 // TestDrift measures files against a Month that is not an artifact.
 func TestDrift(t *testing.T) {
-	yard, err := Read("yard", strings.NewReader(strings.Join(lines(
+	fleet, err := Read("fleet", strings.NewReader(strings.Join(lines(
 		strings.Replace(vehicleHeader, `}`, `,"data_month":"2026_09"}`, 1),
 		`{"entry":{"make":"Dodge","model":"Ram"},"mappings":[{"model":1938,"qualifiers":{"15":[2],"34":["1500"]}},{"make":476}]}`,
 		`{"entry":{"make":"Dodge","model":"Ram 4x4"},"mappings":[{"model":1938,"qualifiers":{"15":["4WD"],"34":[1500],"999":[1]}}]}`,
@@ -343,18 +343,18 @@ func TestDrift(t *testing.T) {
 		t.Fatal(err)
 	}
 	var got []string
-	for _, f := range Drift(month{}, []*File{yard, set}) {
+	for _, f := range Drift(month{}, []*File{fleet, set}) {
 		if f.Severity != SeverityDrift {
 			t.Errorf("%v: severity %q", f, f.Severity)
 		}
 		got = append(got, string(f.Drift)+" "+f.String()+aboutText(f))
 	}
 	want := []string{
-		`qualifier yard:3: /mappings/0/qualifiers/15/0: element 15 is a lookup element in data month 2026_10: its values are attribute ids, not "4WD" (the file was built against 2026_09) entry {"make":"Dodge","model":"Ram 4x4"}`,
-		`qualifier yard:3: /mappings/0/qualifiers/34/0: element 34 is a text element in data month 2026_10: its values are strings, not 1500 (the file was built against 2026_09) entry {"make":"Dodge","model":"Ram 4x4"}`,
-		`qualifier yard:3: /mappings/0/qualifiers/999: element 999 is not a public element of data month 2026_10 (the file was built against 2026_09) entry {"make":"Dodge","model":"Ram 4x4"}`,
-		`model yard:4: /mappings/0/model: vPIC model 7 is not in data month 2026_10 (the file was built against 2026_09) entry {"make":"Dodge","model":"Gone"}`,
-		`make yard:4: /mappings/1/make: vPIC make 8 is not in data month 2026_10 (the file was built against 2026_09) entry {"make":"Dodge","model":"Gone"}`,
+		`qualifier fleet:3: /mappings/0/qualifiers/15/0: element 15 is a lookup element in data month 2026_10: its values are attribute ids, not "4WD" (the file was built against 2026_09) entry {"make":"Dodge","model":"Ram 4x4"}`,
+		`qualifier fleet:3: /mappings/0/qualifiers/34/0: element 34 is a text element in data month 2026_10: its values are strings, not 1500 (the file was built against 2026_09) entry {"make":"Dodge","model":"Ram 4x4"}`,
+		`qualifier fleet:3: /mappings/0/qualifiers/999: element 999 is not a public element of data month 2026_10 (the file was built against 2026_09) entry {"make":"Dodge","model":"Ram 4x4"}`,
+		`model fleet:4: /mappings/0/model: vPIC model 7 is not in data month 2026_10 (the file was built against 2026_09) entry {"make":"Dodge","model":"Gone"}`,
+		`make fleet:4: /mappings/1/make: vPIC make 8 is not in data month 2026_10 (the file was built against 2026_09) entry {"make":"Dodge","model":"Gone"}`,
 		`extension classics:2: extension "dodge" is named like vPIC make 476 (Dodge) in data month 2026_10 id "dodge"`,
 		`extension classics:3: extension "ram" is named like vPIC model 1938 (Ram) under make 476 (Dodge) in data month 2026_10 id "ram"`,
 		`make classics:4: /make: vPIC make 8 is not in data month 2026_10 id "gone"`,
@@ -410,7 +410,7 @@ func (modelMonth) AttributeName(element, id int32) (string, bool) { return "", f
 // flags every value; a refused element and a make target are not tested;
 // and Drift, what load runs, reports none of it.
 func TestModelDrift(t *testing.T) {
-	yard, err := Read("yard", strings.NewReader(strings.Join(lines(
+	fleet, err := Read("fleet", strings.NewReader(strings.Join(lines(
 		vehicleHeader,
 		`{"entry":{"make":"Dodge","model":"Ram"},"mappings":[{"model":1938,"qualifiers":{"15":[2,3],"29":["2020"],"34":["1500","2500"]}}]}`,
 		`{"entry":{"make":"Dodge","model":"Ram Van"},"mappings":[{"model":1939,"qualifiers":{"34":["1500"]}},{"model":1939,"qualifiers":{"34":["1500"]}}]}`,
@@ -419,7 +419,7 @@ func TestModelDrift(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	files := []*File{yard}
+	files := []*File{fleet}
 	if d := Drift(modelMonth{}, files); len(d) > 0 {
 		t.Errorf("Drift reports %v; want nothing, model values are ModelDrift's", d)
 	}
@@ -428,10 +428,10 @@ func TestModelDrift(t *testing.T) {
 		got = append(got, string(f.Drift)+" "+f.String()+aboutText(f))
 	}
 	want := []string{
-		`model-qualifier yard:2: /mappings/0/qualifiers/15/1: vPIC model 1938 never decodes element 15 to attribute id 3 in data month 2026_10 entry {"make":"Dodge","model":"Ram"}`,
-		`model-qualifier yard:2: /mappings/0/qualifiers/34/1: vPIC model 1938 never decodes element 34 to "2500" in data month 2026_10 entry {"make":"Dodge","model":"Ram"}`,
-		`model-qualifier yard:3: /mappings/0/qualifiers/34/0: vPIC model 1939 never decodes element 34 to "1500" in data month 2026_10 entry {"make":"Dodge","model":"Ram Van"}`,
-		`model-qualifier yard:3: /mappings/1/qualifiers/34/0: vPIC model 1939 never decodes element 34 to "1500" in data month 2026_10 entry {"make":"Dodge","model":"Ram Van"}`,
+		`model-qualifier fleet:2: /mappings/0/qualifiers/15/1: vPIC model 1938 never decodes element 15 to attribute id 3 in data month 2026_10 entry {"make":"Dodge","model":"Ram"}`,
+		`model-qualifier fleet:2: /mappings/0/qualifiers/34/1: vPIC model 1938 never decodes element 34 to "2500" in data month 2026_10 entry {"make":"Dodge","model":"Ram"}`,
+		`model-qualifier fleet:3: /mappings/0/qualifiers/34/0: vPIC model 1939 never decodes element 34 to "1500" in data month 2026_10 entry {"make":"Dodge","model":"Ram Van"}`,
+		`model-qualifier fleet:3: /mappings/1/qualifiers/34/0: vPIC model 1939 never decodes element 34 to "1500" in data month 2026_10 entry {"make":"Dodge","model":"Ram Van"}`,
 	}
 	if !slices.Equal(got, want) {
 		t.Errorf("model drift:\n%s\nwant:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))

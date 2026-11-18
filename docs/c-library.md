@@ -93,7 +93,7 @@ paths = (ctypes.c_char_p * 1)(b"vocab/")  # a directory of *.jsonl
 h = lib.nitrovin_open_vocab(b"nitrovin-2026_10.artifact", paths, 1, ctypes.byref(err))
 if not h:
     raise OSError(ctypes.string_at(err.value).decode())
-req = {"op": "translate", "from": "1GCVKREC6EZ123456", "to": ["yard"]}
+req = {"op": "translate", "from": "1GCVKREC6EZ123456", "to": ["fleet"]}
 p = lib.nitrovin_decode(h, json.dumps(req).encode())
 reply = json.loads(ctypes.string_at(p))
 lib.nitrovin_free(p)

@@ -3,9 +3,9 @@
 // catalogs, each a JSON Lines file of docs/api/vocabulary.schema.json
 // (ADR 0009, 0010, 0011, 0016, 0017).
 //
-//	files, err := vocab.Open("yard.jsonl", "vocabularies/") // a directory loads its *.jsonl
-//	findings := vocab.Drift(month, files)                  // against a data month
-//	set, err := vocab.NewSet(month, files)                 // to translate and list
+//	files, err := vocab.Open("fleet.jsonl", "vocabularies/") // a directory loads its *.jsonl
+//	findings := vocab.Drift(month, files)                   // against a data month
+//	set, err := vocab.NewSet(month, files)                  // to translate and list
 //
 // Read reads one file and refuses its faults; Open reads files and
 // directories and also checks them against each other (Link): names

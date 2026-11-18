@@ -432,12 +432,12 @@ func TestMCPVocabSession(t *testing.T) {
 	const ram2010 = "1D7RV1GT5AS123456"
 	calls := []mcpCall{
 		{tool: "list", args: `{}`},
-		{tool: "list", args: `{"of":"yard","where":{"make":"dodge"}}`},
+		{tool: "list", args: `{"of":"fleet","where":{"make":"dodge"}}`},
 		{tool: "list", args: `{"of":"parts","limit":3}`},
 		{tool: "list", args: `{"of":"parts","limit":3,"after":"` + first.Next + `"}`},
 		{tool: "list", args: `{"of":"vpic","where":{"model":1850,"element":15}}`},
-		{tool: "translate", args: `{"from":"` + ram2010 + `","to":["yard"],"now":"` + now + `"}`},
-		{tool: "translate", args: `{"from":{"vocabulary":"yard","entry":{"make":"Dodge","model":"Ram 1500"}},"vin":"` + ram2010 + `","to":["yard"],"now":"` + now + `"}`},
+		{tool: "translate", args: `{"from":"` + ram2010 + `","to":["fleet"],"now":"` + now + `"}`},
+		{tool: "translate", args: `{"from":{"vocabulary":"fleet","entry":{"make":"Dodge","model":"Ram 1500"}},"vin":"` + ram2010 + `","to":["fleet"],"now":"` + now + `"}`},
 		{tool: "translate", args: `{"from":{"vocabulary":"listing","entry":{"category":"Brake Pads"}},"to":["listing"],"now":"` + now + `"}`},
 
 		{tool: "translate", args: `{"from":"` + ram2010 + `","to":["listing"],"now":"` + now + `"}`, pointer: "/to/0"},
@@ -449,7 +449,7 @@ func TestMCPVocabSession(t *testing.T) {
 
 		{tool: "fit", args: `{"from":"` + ram2010 + `","part":{"spine":"part-types","id":"mirror"},"side":"left","now":"` + now + `"}`},
 		{tool: "fit", args: `{"from":{"vocabulary":"catalog-models","entry":{"make":"Dodge","model":"Ram 1500"}},"model_year":2010,"now":"` + now + `"}`},
-		{tool: "fit", args: `{"from":{"fitment":{"type":"brake-rotor-front","number":"BR-1999"}},"to":["yard"],"now":"` + now + `"}`},
+		{tool: "fit", args: `{"from":{"fitment":{"type":"brake-rotor-front","number":"BR-1999"}},"to":["fleet"],"now":"` + now + `"}`},
 		{tool: "fit", args: `{"from":"` + ram2010 + `","related":true,"now":"` + now + `"}`},
 		{tool: "fit", args: `{"from":"` + ram2010 + `","part":{"vocabulary":"part-codes","entry":{"code":"ROT"}},"stock":["shelf","yard"],"now":"` + now + `"}`},
 		{tool: "fit", args: `{"from":{"fitment":{"type":"brake-rotor-front","number":"BR-1999"}},"stock":["shelf","yard"],"location":["north","east"],"limit":1,"now":"` + now + `"}`},

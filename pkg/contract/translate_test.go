@@ -16,10 +16,10 @@ func TestParseTranslateRequest(t *testing.T) {
 	}{
 		{`{"from":"1HGCM82633A004352"}`, TranslateRequest{From: TranslateFrom{VIN: "1HGCM82633A004352"}}},
 		{
-			`{"from":{"vocabulary":"yard","entry":{"make":"Dodge","model":"Ram 1500"}},"to":["yard","ebay"],"model_year":2010,"vin":"1D7RV1GT5AS123456","now":"2026-11-10"}`,
+			`{"from":{"vocabulary":"fleet","entry":{"make":"Dodge","model":"Ram 1500"}},"to":["fleet","ebay"],"model_year":2010,"vin":"1D7RV1GT5AS123456","now":"2026-11-10"}`,
 			TranslateRequest{
-				From:      TranslateFrom{Vocabulary: "yard", Entry: map[string]string{"make": "Dodge", "model": "Ram 1500"}},
-				To:        []string{"yard", "ebay"},
+				From:      TranslateFrom{Vocabulary: "fleet", Entry: map[string]string{"make": "Dodge", "model": "Ram 1500"}},
+				To:        []string{"fleet", "ebay"},
 				ModelYear: Value[int32](2010),
 				VIN:       "1D7RV1GT5AS123456",
 				Now:       time.Date(2026, 11, 10, 0, 0, 0, 0, time.UTC),
@@ -64,20 +64,20 @@ func TestParseTranslateRequest(t *testing.T) {
 		{`{"from":{"make":476},"vin":""}`, InvalidRequest, "/vin", false},
 		{`{"from":{}}`, InvalidRequest, "/from", false},
 		{`{"from":{"trim":"SLT"}}`, InvalidRequest, "/from/trim", false},
-		{`{"from":{"vocabulary":"yard"}}`, InvalidRequest, "/from/entry", false},
+		{`{"from":{"vocabulary":"fleet"}}`, InvalidRequest, "/from/entry", false},
 		{`{"from":{"entry":{}}}`, InvalidRequest, "/from/vocabulary", false},
 		{`{"from":{"vocabulary":"","entry":{}}}`, InvalidRequest, "/from/vocabulary", false},
-		{`{"from":{"vocabulary":"yard","entry":[]}}`, InvalidRequest, "/from/entry", false},
-		{`{"from":{"vocabulary":"yard","entry":{"make":476}}}`, InvalidRequest, "/from/entry/make", false},
-		{`{"from":{"vocabulary":"yard","entry":{},"make":476}}`, InvalidRequest, "/from/make", false},
+		{`{"from":{"vocabulary":"fleet","entry":[]}}`, InvalidRequest, "/from/entry", false},
+		{`{"from":{"vocabulary":"fleet","entry":{"make":476}}}`, InvalidRequest, "/from/entry/make", false},
+		{`{"from":{"vocabulary":"fleet","entry":{},"make":476}}`, InvalidRequest, "/from/make", false},
 		{`{"from":{"make":476,"model":1938}}`, InvalidRequest, "/from", false},
 		{`{"from":{"make":0}}`, InvalidRequest, "/from/make", false},
 		{`{"from":{"model":"1938"}}`, InvalidRequest, "/from/model", false},
 		{`{"from":{"ext":"classics/corvair"}}`, InvalidRequest, "/from/ext", false},
 		{`{"from":{"spine":"parts"}}`, InvalidRequest, "/from/id", false},
 		{`{"from":{"id":"300"}}`, InvalidRequest, "/from/spine", false},
-		{`{"from":{"make":476},"to":"yard"}`, InvalidRequest, "/to", false},
-		{`{"from":{"make":476},"to":["yard",""]}`, InvalidRequest, "/to/1", false},
+		{`{"from":{"make":476},"to":"fleet"}`, InvalidRequest, "/to", false},
+		{`{"from":{"make":476},"to":["fleet",""]}`, InvalidRequest, "/to/1", false},
 		{`{"from":{"make":476},"model_year":"2010"}`, InvalidRequest, "/model_year", false},
 		{`{"from":{"make":476},"now":"tomorrow"}`, InvalidRequest, "/now", false},
 	}
@@ -105,7 +105,7 @@ func TestTranslateRequestValidate(t *testing.T) {
 	}{
 		{TranslateRequest{}, "/from"},
 		{TranslateRequest{From: TranslateFrom{VIN: "x", SpineRef: SpineRef{Make: 476}}}, "/from"},
-		{TranslateRequest{From: TranslateFrom{Vocabulary: "yard"}}, "/from/entry"},
+		{TranslateRequest{From: TranslateFrom{Vocabulary: "fleet"}}, "/from/entry"},
 		{TranslateRequest{From: TranslateFrom{VIN: "x"}, VIN: "y"}, "/vin"},
 		{TranslateRequest{From: TranslateFrom{SpineRef: SpineRef{ID: "300"}}}, "/from/spine"},
 		{TranslateRequest{From: TranslateFrom{SpineRef: SpineRef{Make: 476}}, To: []string{""}}, "/to/0"},
@@ -119,8 +119,8 @@ func TestTranslateRequestValidate(t *testing.T) {
 }
 
 func TestParseTranslateBatch(t *testing.T) {
-	reqs, err := ParseTranslateBatch([]byte(`[{"from":"a"},{"from":{"make":476},"to":["yard"]}]`))
-	want := []TranslateRequest{{From: TranslateFrom{VIN: "a"}}, {From: TranslateFrom{SpineRef: SpineRef{Make: 476}}, To: []string{"yard"}}}
+	reqs, err := ParseTranslateBatch([]byte(`[{"from":"a"},{"from":{"make":476},"to":["fleet"]}]`))
+	want := []TranslateRequest{{From: TranslateFrom{VIN: "a"}}, {From: TranslateFrom{SpineRef: SpineRef{Make: 476}}, To: []string{"fleet"}}}
 	if err != nil || !reflect.DeepEqual(reqs, want) {
 		t.Errorf("got %+v, %v", reqs, err)
 	}
@@ -148,8 +148,8 @@ func TestParseTranslateBatch(t *testing.T) {
 func TestParseTranslateQuery(t *testing.T) {
 	for _, c := range []struct{ query, json string }{
 		{"from.vin=1HGCM82633A004352", `{"from":"1HGCM82633A004352"}`},
-		{"from.vocabulary=yard&from.entry.make=Dodge&from.entry.model=Ram+1500&to=yard&to=ebay&model_year=2010&vin=1D7RV1GT5AS123456&now=2026-11-10",
-			`{"from":{"vocabulary":"yard","entry":{"make":"Dodge","model":"Ram 1500"}},"to":["yard","ebay"],"model_year":2010,"vin":"1D7RV1GT5AS123456","now":"2026-11-10"}`},
+		{"from.vocabulary=fleet&from.entry.make=Dodge&from.entry.model=Ram+1500&to=fleet&to=ebay&model_year=2010&vin=1D7RV1GT5AS123456&now=2026-11-10",
+			`{"from":{"vocabulary":"fleet","entry":{"make":"Dodge","model":"Ram 1500"}},"to":["fleet","ebay"],"model_year":2010,"vin":"1D7RV1GT5AS123456","now":"2026-11-10"}`},
 		{"from.vocabulary=codes&from.entry.a%2Fb=1", `{"from":{"vocabulary":"codes","entry":{"a/b":"1"}}}`},
 		{"from.make=476", `{"from":{"make":476}}`},
 		{"from.model=1938.0", `{"from":{"model":1938.0}}`},
@@ -161,10 +161,10 @@ func TestParseTranslateQuery(t *testing.T) {
 		{"from.vin=1HGCM82633A004352A", `{"from":"1HGCM82633A004352A"}`},
 		{"from.vin=a&vin=a", `{"from":"a","vin":"a"}`},
 		{"from.make=476&vin=", `{"from":{"make":476},"vin":""}`},
-		{"from.vocabulary=yard", `{"from":{"vocabulary":"yard"}}`},
+		{"from.vocabulary=fleet", `{"from":{"vocabulary":"fleet"}}`},
 		{"from.entry.make=Dodge", `{"from":{"entry":{"make":"Dodge"}}}`},
 		{"from.vocabulary=&from.entry.make=Dodge", `{"from":{"vocabulary":"","entry":{"make":"Dodge"}}}`},
-		{"from.vocabulary=yard&from.entry.make=Dodge&from.make=476", `{"from":{"vocabulary":"yard","entry":{"make":"Dodge"},"make":476}}`},
+		{"from.vocabulary=fleet&from.entry.make=Dodge&from.make=476", `{"from":{"vocabulary":"fleet","entry":{"make":"Dodge"},"make":476}}`},
 		{"from.make=476&from.model=1938", `{"from":{"make":476,"model":1938}}`},
 		{"from.make=0", `{"from":{"make":0}}`},
 		{"from.make=Dodge", `{"from":{"make":"Dodge"}}`},
@@ -172,7 +172,7 @@ func TestParseTranslateQuery(t *testing.T) {
 		{"from.ext=classics/corvair", `{"from":{"ext":"classics/corvair"}}`},
 		{"from.spine=parts", `{"from":{"spine":"parts"}}`},
 		{"from.id=300", `{"from":{"id":"300"}}`},
-		{"from.make=476&to=yard&to=", `{"from":{"make":476},"to":["yard",""]}`},
+		{"from.make=476&to=fleet&to=", `{"from":{"make":476},"to":["fleet",""]}`},
 		{"from.make=476&model_year=2010.5", `{"from":{"make":476},"model_year":2010.5}`},
 		{"from.make=476&model_year=null", `{"from":{"make":476},"model_year":"null"}`},
 		{"from.make=476&now=tomorrow", `{"from":{"make":476},"now":"tomorrow"}`},
@@ -193,7 +193,7 @@ func TestParseTranslateQuery(t *testing.T) {
 		{"from.vin=a&from.entry.make=Dodge", "/from"},
 		{"from.make=476&from.make=477", "/from/make"},
 		{"from.make=476&now=2026-11-01&now=2026-11-02", "/now"},
-		{"from.vocabulary=yard&from.entry.make=Dodge&from.entry.make=Ram", "/from/entry/make"},
+		{"from.vocabulary=fleet&from.entry.make=Dodge&from.entry.make=Ram", "/from/entry/make"},
 		{"from.make=476&from.mke=1", "/from/mke"},
 		{"from.make=476&model.year=2010", "/model/year"},
 		{"from.make=476&shape=vpic", "/shape"},
@@ -215,7 +215,7 @@ func TestParseListRequest(t *testing.T) {
 	}{
 		{`{}`, ListRequest{}},
 		{`{"of":"vpic","where":{"make":476},"limit":1000,"after":"WyJhIl0"}`, ListRequest{Of: "vpic", Where: map[string]string{"make": "476"}, Limit: 1000, After: "WyJhIl0"}},
-		{`{"of":"yard","where":{"make":"Dodge"},"limit":1}`, ListRequest{Of: "yard", Where: map[string]string{"make": "Dodge"}, Limit: 1}},
+		{`{"of":"fleet","where":{"make":"Dodge"},"limit":1}`, ListRequest{Of: "fleet", Where: map[string]string{"make": "Dodge"}, Limit: 1}},
 	}
 	listRequest := schemaDef(t, "ListRequest")
 	for _, c := range accepted {
@@ -236,13 +236,13 @@ func TestParseListRequest(t *testing.T) {
 	}{
 		{`{"of":""}`, "/of"},
 		{`{"of":7}`, "/of"},
-		{`{"of":"yard","page":2}`, "/page"},
-		{`{"of":"yard","where":[]}`, "/where"},
-		{`{"of":"yard","where":{"make":true}}`, "/where/make"},
-		{`{"of":"yard","limit":0}`, "/limit"},
-		{`{"of":"yard","limit":1001}`, "/limit"},
-		{`{"of":"yard","limit":1.5}`, "/limit"},
-		{`{"of":"yard","after":""}`, "/after"},
+		{`{"of":"fleet","page":2}`, "/page"},
+		{`{"of":"fleet","where":[]}`, "/where"},
+		{`{"of":"fleet","where":{"make":true}}`, "/where/make"},
+		{`{"of":"fleet","limit":0}`, "/limit"},
+		{`{"of":"fleet","limit":1001}`, "/limit"},
+		{`{"of":"fleet","limit":1.5}`, "/limit"},
+		{`{"of":"fleet","after":""}`, "/after"},
 	} {
 		_, err := ParseListRequest([]byte(c.in))
 		if err == nil {
@@ -261,11 +261,11 @@ func TestParseListQuery(t *testing.T) {
 	for _, c := range []struct{ of, query, json string }{
 		{"", "", `{}`},
 		{"vpic", "where.make=476&limit=1000&after=WyJhIl0", `{"of":"vpic","where":{"make":476},"limit":1000,"after":"WyJhIl0"}`},
-		{"yard", "where.make=Dodge&where.model=Ram+1500&limit=1", `{"of":"yard","where":{"make":"Dodge","model":"Ram 1500"},"limit":1}`},
-		{"yard", "limit=0", `{"of":"yard","limit":0}`},
-		{"yard", "limit=1.5", `{"of":"yard","limit":1.5}`},
-		{"yard", "limit=ten", `{"of":"yard","limit":"ten"}`},
-		{"yard", "after=", `{"of":"yard","after":""}`},
+		{"fleet", "where.make=Dodge&where.model=Ram+1500&limit=1", `{"of":"fleet","where":{"make":"Dodge","model":"Ram 1500"},"limit":1}`},
+		{"fleet", "limit=0", `{"of":"fleet","limit":0}`},
+		{"fleet", "limit=1.5", `{"of":"fleet","limit":1.5}`},
+		{"fleet", "limit=ten", `{"of":"fleet","limit":"ten"}`},
+		{"fleet", "after=", `{"of":"fleet","after":""}`},
 	} {
 		q, err := url.ParseQuery(c.query)
 		if err != nil {
@@ -278,7 +278,7 @@ func TestParseListQuery(t *testing.T) {
 		}
 	}
 	for _, c := range []struct{ query, pointer string }{
-		{"of=yard", "/of"},
+		{"of=fleet", "/of"},
 		{"page=2", "/page"},
 		{"limit=1&limit=2", "/limit"},
 		{"where.make=Dodge&where.make=Ram", "/where/make"},
@@ -288,7 +288,7 @@ func TestParseListQuery(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		_, err = ParseListQuery("yard", q)
+		_, err = ParseListQuery("fleet", q)
 		problemOf(t, err, InvalidRequest, c.pointer)
 	}
 }

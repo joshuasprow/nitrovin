@@ -126,8 +126,8 @@ func TestListModelYears(t *testing.T) {
 // outside.
 func TestModelYearsDrift(t *testing.T) {
 	d := embeddedDecoder(t)
-	f, err := vocab.Read("yard", strings.NewReader(strings.Join([]string{
-		`{"format":1,"kind":"vocabulary","name":"yard","version":"1","subject":"vehicle","fields":["make","model"]}`,
+	f, err := vocab.Read("fleet", strings.NewReader(strings.Join([]string{
+		`{"format":1,"kind":"vocabulary","name":"fleet","version":"1","subject":"vehicle","fields":["make","model"]}`,
 		`{"entry":{"make":"Oldsmobile","model":"Cutlass gap"},"mappings":[{"model":9068,"first":1985,"last":1990}]}`,
 		`{"entry":{"make":"Oldsmobile","model":"Cutlass late"},"mappings":[{"model":9068,"first":1998,"last":2002}]}`,
 		`{"entry":{"make":"Oldsmobile","model":"Cutlass"},"mappings":[{"model":9068,"first":1997,"last":1999}]}`,
@@ -152,12 +152,12 @@ func TestModelYearsDrift(t *testing.T) {
 		got = append(got, string(f.Drift)+" "+f.String())
 	}
 	want := []string{
-		`model-years yard:2: /mappings/0: model years 1985-1990 fall wholly outside vPIC model 9068's years in data month ` + embedded.Month + `: 1981-1981, 1997-1999`,
-		`model-years yard:3: /mappings/0: model years 1998-2002 fall partly outside vPIC model 9068's years in data month ` + embedded.Month + `: 1981-1981, 1997-1999`,
-		`model-years yard:9: /mappings/0: model years 2005- fall wholly outside vPIC model 9068's years in data month ` + embedded.Month + `: 1981-1981, 1997-1999`,
-		`model-years yard:10: /mappings/0: model years -1970 fall wholly outside vPIC model 9068's years in data month ` + embedded.Month + `: 1981-1981, 1997-1999`,
-		`model-years yard:11: /mappings/0: model years -1990 fall partly outside vPIC model 9068's years in data month ` + embedded.Month + `: 1981-1981, 1997-1999`,
-		`model-years yard:12: /mappings/0: model years -2010 fall wholly outside vPIC model 32453's years in data month ` + embedded.Month + `: 2019-`,
+		`model-years fleet:2: /mappings/0: model years 1985-1990 fall wholly outside vPIC model 9068's years in data month ` + embedded.Month + `: 1981-1981, 1997-1999`,
+		`model-years fleet:3: /mappings/0: model years 1998-2002 fall partly outside vPIC model 9068's years in data month ` + embedded.Month + `: 1981-1981, 1997-1999`,
+		`model-years fleet:9: /mappings/0: model years 2005- fall wholly outside vPIC model 9068's years in data month ` + embedded.Month + `: 1981-1981, 1997-1999`,
+		`model-years fleet:10: /mappings/0: model years -1970 fall wholly outside vPIC model 9068's years in data month ` + embedded.Month + `: 1981-1981, 1997-1999`,
+		`model-years fleet:11: /mappings/0: model years -1990 fall partly outside vPIC model 9068's years in data month ` + embedded.Month + `: 1981-1981, 1997-1999`,
+		`model-years fleet:12: /mappings/0: model years -2010 fall wholly outside vPIC model 32453's years in data month ` + embedded.Month + `: 2019-`,
 	}
 	if !slices.Equal(got, want) {
 		t.Errorf("drift:\n%s\nwant:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))

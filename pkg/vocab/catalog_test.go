@@ -15,7 +15,7 @@ import (
 
 // The files a catalog's cases load beside it.
 const (
-	catalogHeader = `{"format":1,"kind":"catalog","name":"cat","version":"1","spine":"parts","vehicles":"yard"}`
+	catalogHeader = `{"format":1,"kind":"catalog","name":"cat","version":"1","spine":"parts","vehicles":"fleet"}`
 	vpicCatalog   = `{"format":1,"kind":"catalog","name":"cat","version":"1","spine":"parts","vehicles":"vpic"}`
 	ram           = `{"entry":{"make":"Dodge","model":"Ram"},"mappings":[{"model":1938}]}`
 	padsFitment   = `{"fitment":{"type":"pads","number":"P1"},"applications":[{"vehicle":{"make":"Dodge","model":"Ram"},"options":""}]}`
@@ -23,7 +23,7 @@ const (
 
 var (
 	partSpine = file{"a.jsonl", lines(spineHeader, `{"id":"pads"}`, `{"id":"rotor"}`)}
-	yardFile  = file{"b.jsonl", lines(vehicleHeader, ram)}
+	fleetFile = file{"b.jsonl", lines(vehicleHeader, ram)}
 	// codesFile is a part vocabulary of a system's codes on the spine:
 	// PD for pads, RT for rotors, NM with no mapping.
 	codesFile = file{"d.jsonl", lines(`{"format":1,"kind":"vocabulary","name":"codes","version":"1","subject":"part","fields":["code"],"spine":"parts"}`,
@@ -82,77 +82,77 @@ func TestCatalogFaults(t *testing.T) {
 		detail string
 	}{
 		// The header.
-		{"missing spine", []file{partSpine, yardFile, {"c.jsonl", lines(strings.Replace(catalogHeader, `,"spine":"parts"`, ``, 1))}}, "c.jsonl", 1, `missing field "spine"`},
-		{"missing vehicles", []file{partSpine, yardFile, {"c.jsonl", lines(strings.Replace(catalogHeader, `,"vehicles":"yard"`, ``, 1))}}, "c.jsonl", 1, `missing field "vehicles"`},
-		{"bad vehicles name", []file{partSpine, yardFile, {"c.jsonl", lines(strings.Replace(catalogHeader, `"yard"`, `"Yard"`, 1))}}, "c.jsonl", 1, `/vehicles: "Yard" is not a name`},
-		{"empty release", []file{partSpine, yardFile, {"c.jsonl", lines(strings.Replace(catalogHeader, `}`, `,"release":""}`, 1))}}, "c.jsonl", 1, "/release: must not be empty"},
-		{"vocabulary field in a catalog header", []file{partSpine, yardFile, {"c.jsonl", lines(strings.Replace(catalogHeader, `}`, `,"subject":"part"}`, 1))}}, "c.jsonl", 1, `unknown field "subject"`},
+		{"missing spine", []file{partSpine, fleetFile, {"c.jsonl", lines(strings.Replace(catalogHeader, `,"spine":"parts"`, ``, 1))}}, "c.jsonl", 1, `missing field "spine"`},
+		{"missing vehicles", []file{partSpine, fleetFile, {"c.jsonl", lines(strings.Replace(catalogHeader, `,"vehicles":"fleet"`, ``, 1))}}, "c.jsonl", 1, `missing field "vehicles"`},
+		{"bad vehicles name", []file{partSpine, fleetFile, {"c.jsonl", lines(strings.Replace(catalogHeader, `"fleet"`, `"Fleet"`, 1))}}, "c.jsonl", 1, `/vehicles: "Fleet" is not a name`},
+		{"empty release", []file{partSpine, fleetFile, {"c.jsonl", lines(strings.Replace(catalogHeader, `}`, `,"release":""}`, 1))}}, "c.jsonl", 1, "/release: must not be empty"},
+		{"vocabulary field in a catalog header", []file{partSpine, fleetFile, {"c.jsonl", lines(strings.Replace(catalogHeader, `}`, `,"subject":"part"}`, 1))}}, "c.jsonl", 1, `unknown field "subject"`},
 
 		// Between files (Link).
-		{"second catalog", []file{partSpine, yardFile, catalogFile(padsFitment), {"d.jsonl", lines(strings.Replace(catalogHeader, `"cat"`, `"cat2"`, 1))}}, "d.jsonl", 1, "is a catalog too: a deployment loads one catalog"},
-		{"spine not loaded", []file{yardFile, catalogFile(padsFitment)}, "c.jsonl", 1, `/spine: spine "parts" is not loaded`},
-		{"spine of another kind", []file{{"a.jsonl", lines(strings.Replace(setHeader, `"classics"`, `"parts"`, 1))}, yardFile, catalogFile()}, "c.jsonl", 1, `/spine: "parts" is an extension set, not a spine`},
-		{"vehicle vocabulary not loaded", []file{partSpine, catalogFile(padsFitment)}, "c.jsonl", 1, `/vehicles: vocabulary "yard" is not loaded`},
-		{"vehicles a part vocabulary", []file{partSpine, {"b.jsonl", lines(strings.Replace(partHeader, `"listing"`, `"yard"`, 1))}, catalogFile()}, "c.jsonl", 1, `/vehicles: "yard" is a part vocabulary, not a vehicle vocabulary`},
-		{"vehicles a spine", []file{partSpine, yardFile, {"c.jsonl", lines(strings.Replace(catalogHeader, `"vehicles":"yard"`, `"vehicles":"parts"`, 1))}}, "c.jsonl", 1, `/vehicles: "parts" is a spine, not a vehicle vocabulary`},
-		{"part type the spine lacks", []file{partSpine, yardFile, catalogFile(strings.Replace(padsFitment, `"pads"`, `"wipers"`, 1))}, "c.jsonl", 2, `/fitment/type: spine "parts" has no id "wipers"`},
-		{"redirect from a type the spine lacks", []file{partSpine, yardFile, catalogFile(padsFitment, redirect("wipers", "pads"))}, "c.jsonl", 3, `/redirect/from: spine "parts" has no id "wipers"`},
-		{"redirect to a type the spine lacks", []file{partSpine, yardFile, catalogFile(padsFitment, redirect("rotor", "wipers"))}, "c.jsonl", 3, `/redirect/to: spine "parts" has no id "wipers"`},
-		{"vehicle missing a field", []file{partSpine, yardFile, catalogFile(app(`{"make":"Dodge"}`, ``))}, "c.jsonl", 2, `/applications/0/vehicle: fields "make" are not vocabulary "yard"'s: "make", "model"`},
-		{"vehicle with another field", []file{partSpine, yardFile, catalogFile(app(`{"make":"Dodge","model":"Ram","trim":"SLT"}`, ``))}, "c.jsonl", 2, `/applications/0/vehicle: fields "make", "model", "trim" are not`},
-		{"redirect vehicle's fields", []file{partSpine, yardFile, catalogFile(padsFitment, `{"redirect":{"vehicle":{"model":"Ram"},"from":"rotor","to":"pads"}}`)}, "c.jsonl", 3, `/redirect/vehicle: fields "model" are not`},
+		{"second catalog", []file{partSpine, fleetFile, catalogFile(padsFitment), {"d.jsonl", lines(strings.Replace(catalogHeader, `"cat"`, `"cat2"`, 1))}}, "d.jsonl", 1, "is a catalog too: a deployment loads one catalog"},
+		{"spine not loaded", []file{fleetFile, catalogFile(padsFitment)}, "c.jsonl", 1, `/spine: spine "parts" is not loaded`},
+		{"spine of another kind", []file{{"a.jsonl", lines(strings.Replace(setHeader, `"classics"`, `"parts"`, 1))}, fleetFile, catalogFile()}, "c.jsonl", 1, `/spine: "parts" is an extension set, not a spine`},
+		{"vehicle vocabulary not loaded", []file{partSpine, catalogFile(padsFitment)}, "c.jsonl", 1, `/vehicles: vocabulary "fleet" is not loaded`},
+		{"vehicles a part vocabulary", []file{partSpine, {"b.jsonl", lines(strings.Replace(partHeader, `"listing"`, `"fleet"`, 1))}, catalogFile()}, "c.jsonl", 1, `/vehicles: "fleet" is a part vocabulary, not a vehicle vocabulary`},
+		{"vehicles a spine", []file{partSpine, fleetFile, {"c.jsonl", lines(strings.Replace(catalogHeader, `"vehicles":"fleet"`, `"vehicles":"parts"`, 1))}}, "c.jsonl", 1, `/vehicles: "parts" is a spine, not a vehicle vocabulary`},
+		{"part type the spine lacks", []file{partSpine, fleetFile, catalogFile(strings.Replace(padsFitment, `"pads"`, `"wipers"`, 1))}, "c.jsonl", 2, `/fitment/type: spine "parts" has no id "wipers"`},
+		{"redirect from a type the spine lacks", []file{partSpine, fleetFile, catalogFile(padsFitment, redirect("wipers", "pads"))}, "c.jsonl", 3, `/redirect/from: spine "parts" has no id "wipers"`},
+		{"redirect to a type the spine lacks", []file{partSpine, fleetFile, catalogFile(padsFitment, redirect("rotor", "wipers"))}, "c.jsonl", 3, `/redirect/to: spine "parts" has no id "wipers"`},
+		{"vehicle missing a field", []file{partSpine, fleetFile, catalogFile(app(`{"make":"Dodge"}`, ``))}, "c.jsonl", 2, `/applications/0/vehicle: fields "make" are not vocabulary "fleet"'s: "make", "model"`},
+		{"vehicle with another field", []file{partSpine, fleetFile, catalogFile(app(`{"make":"Dodge","model":"Ram","trim":"SLT"}`, ``))}, "c.jsonl", 2, `/applications/0/vehicle: fields "make", "model", "trim" are not`},
+		{"redirect vehicle's fields", []file{partSpine, fleetFile, catalogFile(padsFitment, `{"redirect":{"vehicle":{"model":"Ram"},"from":"rotor","to":"pads"}}`)}, "c.jsonl", 3, `/redirect/vehicle: fields "model" are not`},
 		{"vpic extension not loaded", []file{partSpine, {"c.jsonl", lines(vpicCatalog, app(`{"ext":"ext:classics/corvair"}`, ``))}}, "c.jsonl", 2, `/applications/0/vehicle/ext: extension set "classics" is not loaded`},
 		{"qualifiers on an extension vehicle", []file{partSpine, {"b.jsonl", lines(setHeader, `{"id":"corvair","make":467,"name":"Corvair"}`)}, {"c.jsonl", lines(vpicCatalog, app(`{"ext":"ext:classics/corvair"}`, `,"qualifiers":{"34":["Monza"]}`))}}, "c.jsonl", 2, "/applications/0/qualifiers: an extension vehicle takes no qualifiers"},
 
 		// Lines.
-		{"line of no kind", []file{partSpine, yardFile, catalogFile(`{"note":"x"}`)}, "c.jsonl", 2, "holds none of fitment, redirect or retired"},
-		{"line of an unknown field", []file{partSpine, yardFile, catalogFile(`{"part":{"type":"pads"}}`)}, "c.jsonl", 2, `unknown field "part"`},
-		{"line of two kinds", []file{partSpine, yardFile, catalogFile(`{"fitment":{"type":"pads","number":"P1"},"applications":[],"redirect":{}}`)}, "c.jsonl", 2, "holds more than one of fitment, redirect or retired: fitment, redirect"},
-		{"another kind's field", []file{partSpine, yardFile, catalogFile(`{"fitment":{"type":"pads","number":"P1"},"applications":[],"to":{"type":"pads","number":"P2"}}`)}, "c.jsonl", 2, `unknown field "to"`},
-		{"missing applications", []file{partSpine, yardFile, catalogFile(`{"fitment":{"type":"pads","number":"P1"}}`)}, "c.jsonl", 2, `missing field "applications"`},
-		{"key without number", []file{partSpine, yardFile, catalogFile(`{"fitment":{"type":"pads"},"applications":[]}`)}, "c.jsonl", 2, `/fitment: missing field "number"`},
-		{"unknown key field", []file{partSpine, yardFile, catalogFile(`{"fitment":{"type":"pads","number":"P1","position":"front"},"applications":[]}`)}, "c.jsonl", 2, `/fitment: unknown field "position"`},
-		{"bad side", []file{partSpine, yardFile, catalogFile(`{"fitment":{"type":"pads","number":"P1","side":"front"},"applications":[]}`)}, "c.jsonl", 2, "/fitment/side: must be left, right or both"},
-		{"empty side", []file{partSpine, yardFile, catalogFile(`{"fitment":{"type":"pads","number":"P1","side":""},"applications":[]}`)}, "c.jsonl", 2, "/fitment/side: must be left, right or both"},
-		{"missing options", []file{partSpine, yardFile, catalogFile(`{"fitment":{"type":"pads","number":"P1"},"applications":[{"vehicle":{"make":"Dodge","model":"Ram"}}]}`)}, "c.jsonl", 2, `/applications/0: missing field "options"`},
-		{"missing vehicle", []file{partSpine, yardFile, catalogFile(`{"fitment":{"type":"pads","number":"P1"},"applications":[{"options":""}]}`)}, "c.jsonl", 2, `/applications/0: missing field "vehicle"`},
-		{"vehicle field not a string", []file{partSpine, yardFile, catalogFile(app(`{"make":"Dodge","model":1500}`, ``))}, "c.jsonl", 2, "/applications/0/vehicle/model: must be a string"},
-		{"application first after last", []file{partSpine, yardFile, catalogFile(app(`{"make":"Dodge","model":"Ram"}`, `,"first":2014,"last":2012`))}, "c.jsonl", 2, "/applications/0: first year 2014 is after last year 2012"},
-		{"empty qualifiers", []file{partSpine, yardFile, catalogFile(app(`{"make":"Dodge","model":"Ram"}`, `,"qualifiers":{}`))}, "c.jsonl", 2, "/applications/0/qualifiers: must name at least one element"},
-		{"unknown application field", []file{partSpine, yardFile, catalogFile(app(`{"make":"Dodge","model":"Ram"}`, `,"note":"x"`))}, "c.jsonl", 2, `/applications/0: unknown field "note"`},
+		{"line of no kind", []file{partSpine, fleetFile, catalogFile(`{"note":"x"}`)}, "c.jsonl", 2, "holds none of fitment, redirect or retired"},
+		{"line of an unknown field", []file{partSpine, fleetFile, catalogFile(`{"part":{"type":"pads"}}`)}, "c.jsonl", 2, `unknown field "part"`},
+		{"line of two kinds", []file{partSpine, fleetFile, catalogFile(`{"fitment":{"type":"pads","number":"P1"},"applications":[],"redirect":{}}`)}, "c.jsonl", 2, "holds more than one of fitment, redirect or retired: fitment, redirect"},
+		{"another kind's field", []file{partSpine, fleetFile, catalogFile(`{"fitment":{"type":"pads","number":"P1"},"applications":[],"to":{"type":"pads","number":"P2"}}`)}, "c.jsonl", 2, `unknown field "to"`},
+		{"missing applications", []file{partSpine, fleetFile, catalogFile(`{"fitment":{"type":"pads","number":"P1"}}`)}, "c.jsonl", 2, `missing field "applications"`},
+		{"key without number", []file{partSpine, fleetFile, catalogFile(`{"fitment":{"type":"pads"},"applications":[]}`)}, "c.jsonl", 2, `/fitment: missing field "number"`},
+		{"unknown key field", []file{partSpine, fleetFile, catalogFile(`{"fitment":{"type":"pads","number":"P1","position":"front"},"applications":[]}`)}, "c.jsonl", 2, `/fitment: unknown field "position"`},
+		{"bad side", []file{partSpine, fleetFile, catalogFile(`{"fitment":{"type":"pads","number":"P1","side":"front"},"applications":[]}`)}, "c.jsonl", 2, "/fitment/side: must be left, right or both"},
+		{"empty side", []file{partSpine, fleetFile, catalogFile(`{"fitment":{"type":"pads","number":"P1","side":""},"applications":[]}`)}, "c.jsonl", 2, "/fitment/side: must be left, right or both"},
+		{"missing options", []file{partSpine, fleetFile, catalogFile(`{"fitment":{"type":"pads","number":"P1"},"applications":[{"vehicle":{"make":"Dodge","model":"Ram"}}]}`)}, "c.jsonl", 2, `/applications/0: missing field "options"`},
+		{"missing vehicle", []file{partSpine, fleetFile, catalogFile(`{"fitment":{"type":"pads","number":"P1"},"applications":[{"options":""}]}`)}, "c.jsonl", 2, `/applications/0: missing field "vehicle"`},
+		{"vehicle field not a string", []file{partSpine, fleetFile, catalogFile(app(`{"make":"Dodge","model":1500}`, ``))}, "c.jsonl", 2, "/applications/0/vehicle/model: must be a string"},
+		{"application first after last", []file{partSpine, fleetFile, catalogFile(app(`{"make":"Dodge","model":"Ram"}`, `,"first":2014,"last":2012`))}, "c.jsonl", 2, "/applications/0: first year 2014 is after last year 2012"},
+		{"empty qualifiers", []file{partSpine, fleetFile, catalogFile(app(`{"make":"Dodge","model":"Ram"}`, `,"qualifiers":{}`))}, "c.jsonl", 2, "/applications/0/qualifiers: must name at least one element"},
+		{"unknown application field", []file{partSpine, fleetFile, catalogFile(app(`{"make":"Dodge","model":"Ram"}`, `,"note":"x"`))}, "c.jsonl", 2, `/applications/0: unknown field "note"`},
 		{"vpic vehicle of two targets", []file{partSpine, {"c.jsonl", lines(vpicCatalog, app(`{"make":476,"model":1938}`, ``))}}, "c.jsonl", 2, "/applications/0/vehicle: names more than one vehicle: make, model"},
 		{"vpic vehicle's other field", []file{partSpine, {"c.jsonl", lines(vpicCatalog, app(`{"model":1938,"trim":"SLT"}`, ``))}}, "c.jsonl", 2, `/applications/0/vehicle: unknown field "trim"`},
-		{"redirect missing to", []file{partSpine, yardFile, catalogFile(`{"redirect":{"vehicle":{"make":"Dodge","model":"Ram"},"from":"rotor"}}`)}, "c.jsonl", 2, `/redirect: missing field "to"`},
-		{"retired missing to", []file{partSpine, yardFile, catalogFile(padsFitment, `{"retired":{"type":"pads","number":"P0"}}`)}, "c.jsonl", 3, `missing field "to"`},
+		{"redirect missing to", []file{partSpine, fleetFile, catalogFile(`{"redirect":{"vehicle":{"make":"Dodge","model":"Ram"},"from":"rotor"}}`)}, "c.jsonl", 2, `/redirect: missing field "to"`},
+		{"retired missing to", []file{partSpine, fleetFile, catalogFile(padsFitment, `{"retired":{"type":"pads","number":"P0"}}`)}, "c.jsonl", 3, `missing field "to"`},
 
 		// Within the file.
-		{"duplicate fitment key", []file{partSpine, yardFile, catalogFile(padsFitment, strings.Replace(padsFitment, `"options":""`, `"options":"other"`, 1))}, "c.jsonl", 3, "/fitment: duplicate fitment key: line 2 has it too"},
-		{"duplicate application", []file{partSpine, yardFile, catalogFile(`{"fitment":{"type":"pads","number":"P1"},"applications":[` +
+		{"duplicate fitment key", []file{partSpine, fleetFile, catalogFile(padsFitment, strings.Replace(padsFitment, `"options":""`, `"options":"other"`, 1))}, "c.jsonl", 3, "/fitment: duplicate fitment key: line 2 has it too"},
+		{"duplicate application", []file{partSpine, fleetFile, catalogFile(`{"fitment":{"type":"pads","number":"P1"},"applications":[` +
 			`{"vehicle":{"make":"Dodge","model":"Ram"},"first":2009,"options":"4WD","qualifiers":{"15":[2,3]}},` +
 			`{"vehicle":{"make":"Dodge","model":"Ram"},"first":2010,"options":"4WD","qualifiers":{"15":[2,3]}},` +
 			`{"vehicle":{"model":"ram","make":" DODGE"},"first":2009,"options":"4WD","qualifiers":{"15":[3,2]}}]}`)}, "c.jsonl", 2,
 			"/applications/2: duplicate application: /applications/0 has the same vehicle, years, options and qualifiers"},
-		{"retired number that is live", []file{partSpine, yardFile, catalogFile(padsFitment, retired("P1", "P1"))}, "c.jsonl", 3, `/retired: {"type":"pads","number":"P1"} is a live fitment, on line 2`},
-		{"retired number pointing nowhere", []file{partSpine, yardFile, catalogFile(padsFitment, retired("P0", "P9"))}, "c.jsonl", 3, `/to: no fitment {"type":"pads","number":"P9"} in the file`},
-		{"retired number twice", []file{partSpine, yardFile, catalogFile(padsFitment, retired("P0", "P1"), retired("P0", "P1"))}, "c.jsonl", 4, "/retired: duplicate retired number: line 3 retires it too"},
+		{"retired number that is live", []file{partSpine, fleetFile, catalogFile(padsFitment, retired("P1", "P1"))}, "c.jsonl", 3, `/retired: {"type":"pads","number":"P1"} is a live fitment, on line 2`},
+		{"retired number pointing nowhere", []file{partSpine, fleetFile, catalogFile(padsFitment, retired("P0", "P9"))}, "c.jsonl", 3, `/to: no fitment {"type":"pads","number":"P9"} in the file`},
+		{"retired number twice", []file{partSpine, fleetFile, catalogFile(padsFitment, retired("P0", "P1"), retired("P0", "P1"))}, "c.jsonl", 4, "/retired: duplicate retired number: line 3 retires it too"},
 
 		// Filed under (ADR 0024): the header's vocabulary, then the line's
 		// entries.
-		{"filed_under not a name", []file{partSpine, yardFile, codesFile, {"c.jsonl", lines(strings.Replace(filedHeader, `"codes"`, `"Codes"`, 1))}}, "c.jsonl", 1, `/filed_under: "Codes" is not a name`},
-		{"filed_under vocabulary not loaded", []file{partSpine, yardFile, filedCatalog(padsFitment)}, "c.jsonl", 1, `/filed_under: vocabulary "codes" is not loaded`},
-		{"filed_under a vehicle vocabulary", []file{partSpine, yardFile, {"c.jsonl", lines(strings.Replace(filedHeader, `"filed_under":"codes"`, `"filed_under":"yard"`, 1))}}, "c.jsonl", 1, `/filed_under: "yard" is a vehicle vocabulary, not a part vocabulary`},
-		{"filed_under a spine", []file{partSpine, yardFile, {"c.jsonl", lines(strings.Replace(filedHeader, `"filed_under":"codes"`, `"filed_under":"parts"`, 1))}}, "c.jsonl", 1, `/filed_under: "parts" is a spine, not a part vocabulary`},
-		{"filed_under on another spine", []file{partSpine, yardFile, {"e.jsonl", lines(strings.Replace(spineHeader, `"parts"`, `"other"`, 1), `{"id":"pads"}`, `{"id":"rotor"}`)},
+		{"filed_under not a name", []file{partSpine, fleetFile, codesFile, {"c.jsonl", lines(strings.Replace(filedHeader, `"codes"`, `"Codes"`, 1))}}, "c.jsonl", 1, `/filed_under: "Codes" is not a name`},
+		{"filed_under vocabulary not loaded", []file{partSpine, fleetFile, filedCatalog(padsFitment)}, "c.jsonl", 1, `/filed_under: vocabulary "codes" is not loaded`},
+		{"filed_under a vehicle vocabulary", []file{partSpine, fleetFile, {"c.jsonl", lines(strings.Replace(filedHeader, `"filed_under":"codes"`, `"filed_under":"fleet"`, 1))}}, "c.jsonl", 1, `/filed_under: "fleet" is a vehicle vocabulary, not a part vocabulary`},
+		{"filed_under a spine", []file{partSpine, fleetFile, {"c.jsonl", lines(strings.Replace(filedHeader, `"filed_under":"codes"`, `"filed_under":"parts"`, 1))}}, "c.jsonl", 1, `/filed_under: "parts" is a spine, not a part vocabulary`},
+		{"filed_under on another spine", []file{partSpine, fleetFile, {"e.jsonl", lines(strings.Replace(spineHeader, `"parts"`, `"other"`, 1), `{"id":"pads"}`, `{"id":"rotor"}`)},
 			{"d.jsonl", lines(strings.Replace(codesFile.lines[0], `"spine":"parts"`, `"spine":"other"`, 1), codesFile.lines[1])}, filedCatalog(padsFitment)}, "c.jsonl", 1,
 			`/filed_under: vocabulary "codes" maps onto spine "other", not the catalog's spine "parts"`},
-		{"filed_under without a header vocabulary", []file{partSpine, yardFile, catalogFile(filedPads(`[{"code":"PD"}]`))}, "c.jsonl", 2, "/filed_under: the catalog's header names no filed_under vocabulary"},
-		{"filed_under not an array", []file{partSpine, yardFile, codesFile, filedCatalog(filedPads(`{"code":"PD"}`))}, "c.jsonl", 2, "/filed_under: must be an array"},
-		{"filed entry not an object", []file{partSpine, yardFile, codesFile, filedCatalog(filedPads(`["PD"]`))}, "c.jsonl", 2, "/filed_under/0: must be an object"},
-		{"filed entry of no field", []file{partSpine, yardFile, codesFile, filedCatalog(filedPads(`[{}]`))}, "c.jsonl", 2, `/filed_under/0: names no field: an entry of vocabulary "codes", by its fields`},
-		{"filed entry's field not a string", []file{partSpine, yardFile, codesFile, filedCatalog(filedPads(`[{"code":1}]`))}, "c.jsonl", 2, "/filed_under/0/code: must be a string"},
-		{"filed entry twice", []file{partSpine, yardFile, codesFile, filedCatalog(filedPads(`[{"code":"PD"},{"code":" pd"}]`))}, "c.jsonl", 2, "/filed_under/1: duplicate entry: /filed_under/0 is the same entry"},
-		{"filed entry's fields", []file{partSpine, yardFile, codesFile, filedCatalog(filedPads(`[{"name":"PD"}]`))}, "c.jsonl", 2, `/filed_under: {"name":"PD"}: fields "name" are not vocabulary "codes"'s: "code"`},
-		{"filed under another part type's code", []file{partSpine, yardFile, codesFile, filedCatalog(filedPads(`[{"code":"PD"},{"code":"RT"}]`))}, "c.jsonl", 2,
+		{"filed_under without a header vocabulary", []file{partSpine, fleetFile, catalogFile(filedPads(`[{"code":"PD"}]`))}, "c.jsonl", 2, "/filed_under: the catalog's header names no filed_under vocabulary"},
+		{"filed_under not an array", []file{partSpine, fleetFile, codesFile, filedCatalog(filedPads(`{"code":"PD"}`))}, "c.jsonl", 2, "/filed_under: must be an array"},
+		{"filed entry not an object", []file{partSpine, fleetFile, codesFile, filedCatalog(filedPads(`["PD"]`))}, "c.jsonl", 2, "/filed_under/0: must be an object"},
+		{"filed entry of no field", []file{partSpine, fleetFile, codesFile, filedCatalog(filedPads(`[{}]`))}, "c.jsonl", 2, `/filed_under/0: names no field: an entry of vocabulary "codes", by its fields`},
+		{"filed entry's field not a string", []file{partSpine, fleetFile, codesFile, filedCatalog(filedPads(`[{"code":1}]`))}, "c.jsonl", 2, "/filed_under/0/code: must be a string"},
+		{"filed entry twice", []file{partSpine, fleetFile, codesFile, filedCatalog(filedPads(`[{"code":"PD"},{"code":" pd"}]`))}, "c.jsonl", 2, "/filed_under/1: duplicate entry: /filed_under/0 is the same entry"},
+		{"filed entry's fields", []file{partSpine, fleetFile, codesFile, filedCatalog(filedPads(`[{"name":"PD"}]`))}, "c.jsonl", 2, `/filed_under: {"name":"PD"}: fields "name" are not vocabulary "codes"'s: "code"`},
+		{"filed under another part type's code", []file{partSpine, fleetFile, codesFile, filedCatalog(filedPads(`[{"code":"PD"},{"code":"RT"}]`))}, "c.jsonl", 2,
 			`/filed_under: vocabulary "codes" maps {"code":"RT"} to part types "rotor", none of them the part type of {"type":"pads","number":"P1"}, "pads"`},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -197,7 +197,7 @@ func TestCatalogFaults(t *testing.T) {
 // option text, is two applications; a vehicle's fields match after
 // Normalize.
 func TestCatalogNotFaults(t *testing.T) {
-	_, files, err := openFiles(t, []file{partSpine, yardFile, catalogFile(
+	_, files, err := openFiles(t, []file{partSpine, fleetFile, catalogFile(
 		`{"fitment":{"type":"pads","number":"P1","side":"left"},"applications":[{"vehicle":{"make":"Dodge","model":"Ram"},"last":2009,"options":""},{"vehicle":{"make":"Dodge","model":"Ram"},"first":2010,"options":""},{"vehicle":{"make":"Dodge","model":"Ram"},"first":2010,"options":"4WD"}]}`,
 		`{"fitment":{"type":"pads","number":"P1","side":"right"},"applications":[{"vehicle":{"make":" dodge ","model":"RAM"},"options":""}]}`,
 		`{"fitment":{"type":"pads","number":"P1"},"applications":[]}`,
@@ -220,7 +220,7 @@ func TestCatalogNotFaults(t *testing.T) {
 // by entry and number that reaches every side unless one is asked for.
 func TestCatalogFiledUnder(t *testing.T) {
 	ramApp := `"applications":[{"vehicle":{"make":"Dodge","model":"Ram"},"options":""}]`
-	_, files, err := openFiles(t, []file{partSpine, yardFile, codesFile, filedCatalog(
+	_, files, err := openFiles(t, []file{partSpine, fleetFile, codesFile, filedCatalog(
 		`{"fitment":{"type":"pads","number":"P1","side":"right"},"filed_under":[{"code":"PD"}],`+ramApp+`}`,
 		`{"fitment":{"type":"pads","number":"P1","side":"left"},"filed_under":[{"code":"pd "}],`+ramApp+`}`,
 		`{"fitment":{"type":"pads","number":"P2"},"filed_under":[{"code":"PD"},{"code":"BP"}],`+ramApp+`}`,
@@ -266,7 +266,7 @@ func TestCatalogFiledUnder(t *testing.T) {
 		t.Errorf("Fitments(rotor) = %q", got)
 	}
 	// Byte order, not length or case first: "10" before "9", "B" before "a".
-	_, ordered, err := openFiles(t, []file{partSpine, yardFile,
+	_, ordered, err := openFiles(t, []file{partSpine, fleetFile,
 		{"d.jsonl", lines(codesFile.lines[0], `{"entry":{"code":"9"},"mappings":[{"id":"pads"}]}`, `{"entry":{"code":"10"},"mappings":[{"id":"pads"}]}`,
 			`{"entry":{"code":"a"},"mappings":[{"id":"pads"}]}`, `{"entry":{"code":"B"},"mappings":[{"id":"pads"}]}`)},
 		filedCatalog(`{"fitment":{"type":"pads","number":"P1"},"filed_under":[{"code":"a"},{"code":"9"},{"code":"B"},{"code":"10"}],` + ramApp + `}`)})
@@ -496,7 +496,7 @@ func (yearsMonth) ModelYears(id int32) []YearRange {
 // answers. Only the month's own drift says what month the file was built
 // against.
 func TestCatalogDrift(t *testing.T) {
-	yard := file{"b.jsonl", lines(vehicleHeader, ram, `{"entry":{"make":"Dodge","model":"Lark"},"mappings":[]}`)}
+	fleet := file{"b.jsonl", lines(vehicleHeader, ram, `{"entry":{"make":"Dodge","model":"Lark"},"mappings":[]}`)}
 	cat := file{"c.jsonl", lines(
 		strings.Replace(catalogHeader, `}`, `,"data_month":"2026_09"}`, 1),
 		`{"fitment":{"type":"pads","number":"P1"},"applications":[{"vehicle":{"make":"Dodge","model":"Ram"},"first":2009,"options":"","qualifiers":{"15":[2,99]}},{"vehicle":{"make":"Dodge","model":"Nova"},"options":"a"},{"vehicle":{"make":"Dodge","model":"Lark"},"options":"b"}]}`,
@@ -504,7 +504,7 @@ func TestCatalogDrift(t *testing.T) {
 		`{"redirect":{"vehicle":{"make":"Dodge","model":"Ram"},"first":2010,"last":2011,"from":"rotor","to":"pads"}}`,
 		`{"redirect":{"vehicle":{"make":"Dodge","model":"Ram"},"first":2010,"from":"pads","to":"rotor"}}`,
 	)}
-	_, files, err := openFiles(t, []file{partSpine, yard, cat})
+	_, files, err := openFiles(t, []file{partSpine, fleet, cat})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -526,7 +526,7 @@ func TestCatalogDrift(t *testing.T) {
 		`{"fitment":{"type":"pads","number":"P3"},"filed_under":[],`+ramApp+`}`,
 		`{"fitment":{"type":"rotor","number":"R2"},"filed_under":[{"code":"xx"}],`+ramApp+`}`,
 	)}
-	_, filedFiles, err := openFiles(t, []file{partSpine, yardFile, codesFile, filed})
+	_, filedFiles, err := openFiles(t, []file{partSpine, fleetFile, codesFile, filed})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -536,8 +536,8 @@ func TestCatalogDrift(t *testing.T) {
 		want  []string
 	}{
 		{"a vocabulary's catalog", files, []string{
-			`2 vehicle /applications/1/vehicle: vocabulary "yard" has no entry {"make":"Dodge","model":"Nova"} (and 1 more)`,
-			`2 vehicle /applications/2/vehicle: vocabulary "yard" lists {"make":"Dodge","model":"Lark"} without a mapping, so no translation reaches it`,
+			`2 vehicle /applications/1/vehicle: vocabulary "fleet" has no entry {"make":"Dodge","model":"Nova"} (and 1 more)`,
+			`2 vehicle /applications/2/vehicle: vocabulary "fleet" lists {"make":"Dodge","model":"Lark"} without a mapping, so no translation reaches it`,
 			`2 qualifier /applications/0/qualifiers/15/1: data month 2026_10 never decodes element 15 to attribute id 99 (and 1 more) (the file was built against 2026_09)`,
 			`3 qualifier /applications/1/qualifiers/77: element 77 is not a public element of data month 2026_10 (the file was built against 2026_09)`,
 			`5 redirect /redirect/to: part type "rotor" has no application for this vehicle in 2010 on`,
@@ -578,9 +578,9 @@ func TestCatalogAcrossChunks(t *testing.T) {
 	const n, models = 6000, 10
 	spellings := []string{"Model %d", "MODEL  %d", " model %d"}
 	typeOf := func(i int) string { return []string{"pads", "rotor"}[i/models%2] }
-	yard := []string{vehicleHeader}
+	fleet := []string{vehicleHeader}
 	for m := range models {
-		yard = append(yard, fmt.Sprintf(`{"entry":{"make":"Dodge","model":"Model %d"},"mappings":[{"model":1938}]}`, m))
+		fleet = append(fleet, fmt.Sprintf(`{"entry":{"make":"Dodge","model":"Model %d"},"mappings":[{"model":1938}]}`, m))
 	}
 	rows := []string{catalogHeader}
 	for i := range n {
@@ -594,7 +594,7 @@ func TestCatalogAcrossChunks(t *testing.T) {
 	if size := len(strings.Join(rows, "\n")); size < 4*chunkSize {
 		t.Fatalf("the catalog is %d bytes, under four read chunks", size)
 	}
-	_, files, err := openFiles(t, []file{partSpine, {"b.jsonl", yard}, {"c.jsonl", rows}})
+	_, files, err := openFiles(t, []file{partSpine, {"b.jsonl", fleet}, {"c.jsonl", rows}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -629,7 +629,7 @@ func TestCatalogAcrossChunks(t *testing.T) {
 	}
 
 	dup := append(slices.Clone(rows), fmt.Sprintf(`{"fitment":{"type":%q,"number":"N00000"},"applications":[]}`, typeOf(0)))
-	_, _, err = openFiles(t, []file{partSpine, {"b.jsonl", yard}, {"c.jsonl", dup}})
+	_, _, err = openFiles(t, []file{partSpine, {"b.jsonl", fleet}, {"c.jsonl", dup}})
 	if faults, ok := errors.AsType[Faults](err); !ok || len(faults) != 1 || faults[0].Line != n+4 || !strings.Contains(faults[0].Detail, "duplicate fitment key: line 2 has it too") {
 		t.Errorf("a key repeated across chunks: %v", err)
 	}

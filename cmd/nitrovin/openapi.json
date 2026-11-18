@@ -162,7 +162,7 @@
               "type": "string",
               "minLength": 1
             },
-            "example": "yard"
+            "example": "fleet"
           },
           {
             "name": "from.make",
@@ -272,12 +272,12 @@
                 {
                   "from": "1D7RV1GT5AS123456",
                   "to": [
-                    "yard"
+                    "fleet"
                   ]
                 },
                 {
                   "from": {
-                    "vocabulary": "yard",
+                    "vocabulary": "fleet",
                     "entry": {
                       "make": "Dodge",
                       "model": "Ram 1500"
@@ -290,7 +290,7 @@
                     "make": 476
                   },
                   "to": [
-                    "yard"
+                    "fleet"
                   ]
                 }
               ]
@@ -570,7 +570,7 @@
                     }
                   },
                   "to": [
-                    "yard"
+                    "fleet"
                   ]
                 }
               ]
@@ -649,7 +649,7 @@
               "type": "string",
               "minLength": 1
             },
-            "example": "yard"
+            "example": "fleet"
           },
           {
             "name": "limit",

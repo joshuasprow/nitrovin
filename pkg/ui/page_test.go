@@ -91,17 +91,17 @@ func TestPage(t *testing.T) {
 		for old, want := range map[string]string{
 			"/?vin=1HGCM82633A004352":                                "/?from.vin=1HGCM82633A004352",
 			"/?vin=1HGCM82633A004352&model_year=2003&shape=nitrovin": "/?from.vin=1HGCM82633A004352",
-			"/?vin=1HGCM82633A004352&from.model=1861&to=yard":        "/?from.vin=1HGCM82633A004352",
+			"/?vin=1HGCM82633A004352&from.model=1861&to=fleet":       "/?from.vin=1HGCM82633A004352",
 			"/?vin=": "/",
-			"/ui/decode?vin=1HGCM82633A004352&model_year=2003&full=true&now=2026-11-01":     "/?from.vin=1HGCM82633A004352",
-			"/ui/decode?vin=1hgcm-82633%20a004352":                                          "/?from.vin=1hgcm-82633+a004352",
-			"/ui/decode":                                                                    "/",
-			"/ui/translate?from.model=1861&model_year=2003&to=yard":                         "/",
-			"/ui/translate?from.vocabulary=yard&vin=1HGCM82633A004352":                      "/?from.vin=1HGCM82633A004352",
-			"/ui/translate?from.vin=1HGCM82633A004352&to=yard&to=shelf&tab=spine&full=true": "/?from.vin=1HGCM82633A004352",
-			"/ui/translate?from.vin=1HGCM82633A004352&vin=5YJ3E1EA2JF000316&from.make=474":  "/?from.vin=1HGCM82633A004352",
+			"/ui/decode?vin=1HGCM82633A004352&model_year=2003&full=true&now=2026-11-01":      "/?from.vin=1HGCM82633A004352",
+			"/ui/decode?vin=1hgcm-82633%20a004352":                                           "/?from.vin=1hgcm-82633+a004352",
+			"/ui/decode":                                                                     "/",
+			"/ui/translate?from.model=1861&model_year=2003&to=fleet":                         "/",
+			"/ui/translate?from.vocabulary=fleet&vin=1HGCM82633A004352":                      "/?from.vin=1HGCM82633A004352",
+			"/ui/translate?from.vin=1HGCM82633A004352&to=fleet&to=shelf&tab=spine&full=true": "/?from.vin=1HGCM82633A004352",
+			"/ui/translate?from.vin=1HGCM82633A004352&vin=5YJ3E1EA2JF000316&from.make=474":   "/?from.vin=1HGCM82633A004352",
 			"/vocab":                                 "/",
-			"/vocab?tab=entry&to=yard":               "/",
+			"/vocab?tab=entry&to=fleet":              "/",
 			"/ui/vocabularies":                       "/",
 			"/ui/vocabularies?vin=1HGCM82633A004352": "/?from.vin=1HGCM82633A004352",
 		} {
@@ -287,10 +287,10 @@ func TestBrowserDecode(t *testing.T) {
 		`{"element_id":26,"value":"DODGE","attribute_id":"476"},{"element_id":28,"value":"Ram","attribute_id":"1938"},{"element_id":29,"value":"2010","attribute_id":"2010"},` +
 		`{"element_id":34,"value":"DS (1500)","attribute_id":"DS (1500)"},{"element_id":143,"value":"0","attribute_id":"0"}]}`
 	l := open(t, s, d)
-	// alpha sorts before yard, and has no name for a Dodge.
+	// alpha sorts before fleet, and has no name for a Dodge.
 	alpha := Picked{FileName: "alpha.jsonl", Data: []byte(`{"format":1,"kind":"vocabulary","name":"alpha","version":"1","data_month":"2026_10","subject":"vehicle","fields":["make","model"]}` + "\n" +
 		`{"entry":{"make":"Chevy","model":"Silverado"},"mappings":[{"model":1850}]}` + "\n")}
-	if _, err := l.Load(append(pick(t, "yard"), alpha), quiet); err != nil {
+	if _, err := l.Load(append(pick(t, "fleet"), alpha), quiet); err != nil {
 		t.Fatal(err)
 	}
 	s.gets = nil
@@ -300,8 +300,8 @@ func TestBrowserDecode(t *testing.T) {
 		"<title>2010 DODGE Ram · nitrovin</title>",
 		`<div><dt>Make</dt><dd>DODGE</dd></div>`,
 		`<div><dt>Trim</dt><dd>DS (1500)</dd></div>`,
-		`<input type="checkbox" class="fan visually-hidden" id="fan-yard" aria-label="Show every name in yard">`,
-		`<label class="stamp switch" for="fan-yard" title="yard: 3 names">`,
+		`<input type="checkbox" class="fan visually-hidden" id="fan-fleet" aria-label="Show every name in fleet">`,
+		`<label class="stamp switch" for="fan-fleet" title="fleet: 3 names">`,
 		`<span class="seg g-wmi" title="From the maker, positions 1–3"><span class="w">Dodge</span></span>` + "\n" +
 			`<span class="seg g-vds" title="From the vehicle, positions 4–8"><span class="w">Ram 1500</span></span>`,
 		`<span class="seg g-vds unsure" title="From the vehicle, positions 4–8. Not checked: element 15"><span class="w">Ram 1500 4x4</span></span>`,
@@ -309,7 +309,7 @@ func TestBrowserDecode(t *testing.T) {
 		`&#34;Make&#34;: &#34;DODGE&#34;`,
 		`&#34;now&#34;: &#34;2026-11-10T00:00:00Z&#34;`,
 		`id="translation-json" data-copy="the translation&#39;s JSON">{` + "\n" + `  &#34;from&#34;: {`,
-		`<tr data-where="browser"><th scope="row"><a href="/ui/vocabularies/yard">yard</a></th>`,
+		`<tr data-where="browser"><th scope="row"><a href="/ui/vocabularies/fleet">fleet</a></th>`,
 	} {
 		if !strings.Contains(body, want) {
 			t.Errorf("the browser's page lacks %s\n%s", want, body)
@@ -321,8 +321,8 @@ func TestBrowserDecode(t *testing.T) {
 	if want := []string{"/v1/decode/" + vin + "?full=true"}; !slices.Equal(s.gets, want) {
 		t.Errorf("the browser asked the server %q; want %q: the VIN decoded once", s.gets, want)
 	}
-	if named, blank := strings.Index(body, `id="fan-yard"`), strings.Index(body, `<span class="stamp">alpha</span>`); named > blank {
-		t.Errorf("alpha, which has no name, is listed before yard, which has\n%s", body)
+	if named, blank := strings.Index(body, `id="fan-fleet"`), strings.Index(body, `<span class="stamp">alpha</span>`); named > blank {
+		t.Errorf("alpha, which has no name, is listed before fleet, which has\n%s", body)
 	}
 
 	// A decode's options in the page's URL are ignored: the answer is the

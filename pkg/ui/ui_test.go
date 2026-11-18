@@ -77,9 +77,9 @@ func (b backend) File(name string) ([]byte, error) {
 
 const testSpine = `{"format":1,"month":"2026_10"}`
 
-// testInfo's release has two files loaded, yard and broken.
+// testInfo's release has two files loaded, fleet and broken.
 var testInfo = contract.Info{DecoderVersion: "v0.1.9-0.20261110120000-0123456789ab+dirty", DataMonth: "2026_10", ArtifactHash: "blake3:00ff",
-	Vocabularies: []contract.VocabularyFile{{Name: "yard", Blake3: "ab12"}, {Name: "broken", Blake3: "cd34"}}}
+	Vocabularies: []contract.VocabularyFile{{Name: "fleet", Blake3: "ab12"}, {Name: "broken", Blake3: "cd34"}}}
 
 // testAssets is where testInfo's release keeps its assets.
 const testAssets = "/ui/r/v0.1.9-0.20261110120000-0123456789ab+dirty/2026_10/blake3:00ff"
@@ -215,7 +215,7 @@ func TestStubRoute(t *testing.T) {
 // TestErrors: every error has its real status, as the one error page for
 // a page request and as the error fragment, for the error slot, for htmx.
 func TestErrors(t *testing.T) {
-	refused := stubHandler(t, contract.NewProblem(contract.InvalidRequest, "/from/vocabulary", `no vocabulary "yard" is loaded`))
+	refused := stubHandler(t, contract.NewProblem(contract.InvalidRequest, "/from/vocabulary", `no vocabulary "fleet" is loaded`))
 	faulty := stubHandler(t, io.ErrUnexpectedEOF)
 	for _, c := range []struct {
 		name    string
@@ -228,7 +228,7 @@ func TestErrors(t *testing.T) {
 		{"unknown path", stubHandler(t, nil), "/ui/nothing", 404, "Not Found", "There is no page at /ui/nothing."},
 		{"/ui itself", stubHandler(t, nil), "/ui/", 404, "Not Found", "There is no page at /ui/."},
 		{"escaped path", stubHandler(t, nil), "/ui/%3Cscript%3E", 404, "Not Found", "There is no page at /ui/&lt;script&gt;."},
-		{"refusal", refused, "/ui/stub", 400, "Bad Request", "no vocabulary &#34;yard&#34; is loaded"},
+		{"refusal", refused, "/ui/stub", 400, "Bad Request", "no vocabulary &#34;fleet&#34; is loaded"},
 		{"fault", faulty, "/ui/stub", 500, "Internal Server Error", "nitrovin failed: unexpected EOF"},
 	} {
 		status, hdr, body := response(t, c.h, "GET", c.target, nil)
@@ -362,14 +362,14 @@ func TestAssets(t *testing.T) {
 func TestPublished(t *testing.T) {
 	var spines atomic.Int32
 	h := New(backend{info: testInfo, spines: &spines}, log.New(io.Discard, "", 0))
-	yard := FilePath(testInfo, testInfo.Vocabularies[0])
-	if SpinePath(testInfo) != testAssets+"/spine.json" || yard != testAssets+"/vocab/ab12/yard.jsonl" {
-		t.Errorf("SpinePath %s, FilePath %s", SpinePath(testInfo), yard)
+	fleet := FilePath(testInfo, testInfo.Vocabularies[0])
+	if SpinePath(testInfo) != testAssets+"/spine.json" || fleet != testAssets+"/vocab/ab12/fleet.jsonl" {
+		t.Errorf("SpinePath %s, FilePath %s", SpinePath(testInfo), fleet)
 	}
 	for _, c := range []struct{ target, contentType, body string }{
 		{SpinePath(testInfo), "application/json", testSpine},
 		{SpinePath(testInfo), "application/json", testSpine},
-		{yard, "application/jsonl", "yard bytes"},
+		{fleet, "application/jsonl", "fleet bytes"},
 	} {
 		status, hdr, body := response(t, h, "GET", c.target, nil)
 		if status != 200 || body != c.body {
@@ -396,10 +396,10 @@ func TestPublished(t *testing.T) {
 		want   string
 	}{
 		{"/ui/r/v0.1.8/2026_10/blake3:00ff/spine.json", 404, "This release of nitrovin (" + strings.ReplaceAll(Release(testInfo), "+", "&#43;") + ") has no file /ui/r/v0.1.8/2026_10/blake3:00ff/spine.json."},
-		{"/ui/r/v0.1.8/2026_10/blake3:00ff/vocab/ab12/yard.jsonl", 404, "has no file /ui/r/v0.1.8/2026_10/blake3:00ff/vocab/ab12/yard.jsonl."},
-		{testAssets + "/vocab/ef56/yard.jsonl", 404, "This nitrovin&#39;s yard is another file now (blake3 ab12): reload the page."},
+		{"/ui/r/v0.1.8/2026_10/blake3:00ff/vocab/ab12/fleet.jsonl", 404, "has no file /ui/r/v0.1.8/2026_10/blake3:00ff/vocab/ab12/fleet.jsonl."},
+		{testAssets + "/vocab/ef56/fleet.jsonl", 404, "This nitrovin&#39;s fleet is another file now (blake3 ab12): reload the page."},
 		{testAssets + "/vocab/ab12/classics.jsonl", 404, "This nitrovin has no file named classics loaded now: reload the page."},
-		{testAssets + "/vocab/ab12/yard.json", 404, "has no file " + testAssetsAttr + "/vocab/ab12/yard.json."},
+		{testAssets + "/vocab/ab12/fleet.json", 404, "has no file " + testAssetsAttr + "/vocab/ab12/fleet.json."},
 		{testAssets + "/vocab/ab12", 404, "has no file " + testAssetsAttr + "/vocab/ab12."},
 		{testAssets + "/vocab/", 404, "has no file " + testAssetsAttr + "/vocab/."},
 		{FilePath(testInfo, testInfo.Vocabularies[1]), 500, "nitrovin failed: /srv/broken.jsonl changed since nitrovin loaded it"},
@@ -413,7 +413,7 @@ func TestPublished(t *testing.T) {
 			t.Errorf("%s: Cache-Control %q", c.target, hdr.Get("Cache-Control"))
 		}
 	}
-	for _, target := range []string{SpinePath(testInfo), yard} {
+	for _, target := range []string{SpinePath(testInfo), fleet} {
 		if status, hdr, _ := response(t, h, "POST", target, nil); status != 405 || hdr.Get("Allow") != "GET, HEAD" {
 			t.Errorf("POST %s: %d, Allow %q; want 405, GET, HEAD", target, status, hdr.Get("Allow"))
 		}

@@ -50,11 +50,11 @@ func TestVocabTranslate(t *testing.T) {
 	namesJSOn(t, path, on.URL, wire)
 }
 
-// ramNamed is the fixture's 2010 Ram, which yard has three names for and
-// the EPA sample none, and yardNames those names.
+// ramNamed is the fixture's 2010 Ram, which fleet has three names for and
+// the EPA sample none, and fleetNames those names.
 const ramNamed = "/?from.vin=1D7RV1GT5AS123456"
 
-var yardNames = []string{"Dodge Other", "Dodge Ram 1500", "Dodge Ram 1500 4x4"}
+var fleetNames = []string{"Dodge Other", "Dodge Ram 1500", "Dodge Ram 1500 4x4"}
 
 // stack is one vocabulary's stack of "Also known as": the names on its
 // plates, and how many of them the page displays now.
@@ -85,7 +85,7 @@ func stacks(tb *tab) []stack {
 }
 
 // checkStacks checks the stacks of "Also known as": their vocabularies in
-// order, yard's with its three names, shown of them displayed, and every
+// order, fleet's with its three names, shown of them displayed, and every
 // other without a name.
 func checkStacks(tb *tab, step string, shown int, vocabularies ...string) {
 	tb.t.Helper()
@@ -94,9 +94,9 @@ func checkStacks(tb *tab, step string, shown int, vocabularies ...string) {
 	for _, s := range got {
 		names = append(names, s.Vocabulary)
 		switch {
-		case s.Vocabulary == "yard" && (!slices.Equal(s.Names, yardNames) || s.Shown != shown):
-			tb.t.Errorf("%s: yard's names %q, %d displayed; want %q, %d displayed", step, s.Names, s.Shown, yardNames, shown)
-		case s.Vocabulary != "yard" && len(s.Names) != 0:
+		case s.Vocabulary == "fleet" && (!slices.Equal(s.Names, fleetNames) || s.Shown != shown):
+			tb.t.Errorf("%s: fleet's names %q, %d displayed; want %q, %d displayed", step, s.Names, s.Shown, fleetNames, shown)
+		case s.Vocabulary != "fleet" && len(s.Names) != 0:
 			tb.t.Errorf("%s: %s names %q; want none", step, s.Vocabulary, s.Names)
 		}
 	}
@@ -105,25 +105,25 @@ func checkStacks(tb *tab, step string, shown int, vocabularies ...string) {
 	}
 }
 
-// fanOut clicks yard's stamp, its stack's switch, which needs no script.
+// fanOut clicks fleet's stamp, its stack's switch, which needs no script.
 func (tb *tab) fanOut() {
 	tb.t.Helper()
-	tb.do(chromedp.Click(chromedp.CSS(`label[for="fan-yard"]`)))
-	tb.wait("#fan-yard:checked")
+	tb.do(chromedp.Click(chromedp.CSS(`label[for="fan-fleet"]`)))
+	tb.wait("#fan-fleet:checked")
 }
 
 // namesJSOff: without JavaScript a VIN's page has a stack for each of the
 // server's vocabularies on vPIC's spine, listing, on the parts spine, not
-// among them: yard's first, with its first name, and all three at a click
+// among them: fleet's first, with its first name, and all three at a click
 // on its stamp.
 func namesJSOff(t *testing.T, path, base string) {
 	tb := newTab(t, path, base, &requestLog{}, false)
 	tb.do(chromedp.Navigate(base + ramNamed))
 	tb.wait("#aka")
-	checkStacks(tb, "JS off", 1, "yard", "epa-vehicles")
+	checkStacks(tb, "JS off", 1, "fleet", "epa-vehicles")
 	tb.audit("a VIN's names, JS off")
 	tb.fanOut()
-	checkStacks(tb, "JS off, yard fanned out", 3, "yard", "epa-vehicles")
+	checkStacks(tb, "JS off, fleet fanned out", 3, "fleet", "epa-vehicles")
 	tb.audit("a vocabulary's every name, JS off")
 }
 
@@ -141,25 +141,25 @@ func namesJSOn(t *testing.T, path, base string, wire *wireLog) {
 	// A file loaded is on the page at once, and a second beside it: the
 	// vocabulary with a name first.
 	tb.vocabularies()
-	tb.do(chromedp.SetUploadFiles(chromedp.CSS("#vocab-files"), []string{filepath.Join(fixture, "yard.jsonl")}))
-	tb.waitPrefix("#load-status", "Loaded yard (")
-	tb.until("yard's names on the page", `document.querySelectorAll("#aka li.stack:has(.stamp)").length === 1`)
-	checkStacks(tb, "a load", 1, "yard")
+	tb.do(chromedp.SetUploadFiles(chromedp.CSS("#vocab-files"), []string{filepath.Join(fixture, "fleet.jsonl")}))
+	tb.waitPrefix("#load-status", "Loaded fleet (")
+	tb.until("fleet's names on the page", `document.querySelectorAll("#aka li.stack:has(.stamp)").length === 1`)
+	checkStacks(tb, "a load", 1, "fleet")
 	tb.do(chromedp.Click(chromedp.CSS("#load-epa")))
 	tb.waitPrefix("#load-status", "Loaded epa-vehicles (")
 	tb.until("EPA's stack on the page", `document.querySelectorAll("#aka li.stack:has(.stamp)").length === 2`)
-	checkStacks(tb, "a second load", 1, "yard", "epa-vehicles")
+	checkStacks(tb, "a second load", 1, "fleet", "epa-vehicles")
 	tb.audit("the dialog, two files loaded")
 	tb.closeVocabularies()
 	tb.audit("a VIN's names in the browser")
 	tb.fanOut()
-	checkStacks(tb, "yard fanned out", 3, "yard", "epa-vehicles")
+	checkStacks(tb, "fleet fanned out", 3, "fleet", "epa-vehicles")
 	tb.audit("a vocabulary's every name in the browser")
 
 	// A removed file is off the page; the rest stay.
 	tb.vocabularies()
-	tb.do(chromedp.Click(chromedp.CSS(`form.inline:has(input[value="yard"]) button`)))
-	tb.until("removing yard", `!document.querySelector('a[href="/ui/vocabularies/yard"]') && document.querySelectorAll("#aka li.stack:has(.stamp)").length === 1`)
+	tb.do(chromedp.Click(chromedp.CSS(`form.inline:has(input[value="fleet"]) button`)))
+	tb.until("removing fleet", `!document.querySelector('a[href="/ui/vocabularies/fleet"]') && document.querySelectorAll("#aka li.stack:has(.stamp)").length === 1`)
 	checkStacks(tb, "a removal", 0, "epa-vehicles")
 	tb.audit("the dialog after a removal")
 	if !eval[bool](tb, `window.stayed === true`) {
@@ -175,7 +175,7 @@ func namesJSOn(t *testing.T, path, base string, wire *wireLog) {
 		if err != nil || strings.HasPrefix(u.Path, "/ui/r/") {
 			continue
 		}
-		for _, name := range []string{"yard", "epa-vehicles"} {
+		for _, name := range []string{"fleet", "epa-vehicles"} {
 			if strings.Contains(r.target, name) {
 				t.Errorf("the server got %s, which names %s, a file the browser holds", r.target, name)
 			}

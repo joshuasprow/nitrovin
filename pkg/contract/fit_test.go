@@ -18,13 +18,13 @@ func TestParseFitRequest(t *testing.T) {
 	}{
 		{`{"from":"1D7RV1GT5AS123456"}`, FitRequest{From: FitFrom{VIN: "1D7RV1GT5AS123456"}}},
 		{
-			`{"from":{"vocabulary":"catalog-models","entry":{"make":"Dodge","model":"Ram 1500"}},"model_year":2010,"part":{"spine":"part-types","id":"mirror"},"side":"left","to":["yard"],"limit":1000,"after":"WyJhIiwxXQ","now":"2026-11-10"}`,
+			`{"from":{"vocabulary":"catalog-models","entry":{"make":"Dodge","model":"Ram 1500"}},"model_year":2010,"part":{"spine":"part-types","id":"mirror"},"side":"left","to":["fleet"],"limit":1000,"after":"WyJhIiwxXQ","now":"2026-11-10"}`,
 			FitRequest{
 				From:      FitFrom{Vocabulary: "catalog-models", Entry: ram},
 				ModelYear: Value[int32](2010),
 				Part:      &FitPart{Spine: "part-types", ID: "mirror"},
 				Side:      "left",
-				To:        []string{"yard"},
+				To:        []string{"fleet"},
 				Limit:     1000,
 				After:     "WyJhIiwxXQ",
 				Now:       time.Date(2026, 11, 10, 0, 0, 0, 0, time.UTC),
@@ -34,16 +34,16 @@ func TestParseFitRequest(t *testing.T) {
 			FitRequest{From: FitFrom{SpineRef: SpineRef{Model: 1938}}, Part: &FitPart{Vocabulary: "listing", Entry: map[string]string{"category": "Brake Parts"}}}},
 		{`{"from":{"make":476},"related":true}`, FitRequest{From: FitFrom{SpineRef: SpineRef{Make: 476}}, Related: true}},
 		{`{"from":{"ext":"ext:classics/corvair"}}`, FitRequest{From: FitFrom{SpineRef: SpineRef{Ext: "ext:classics/corvair"}}}},
-		{`{"from":{"fitment":{"type":"brake-rotor-front","number":"BR-1999"}},"to":["yard"],"side":"both"}`,
-			FitRequest{From: FitFrom{Fitment: &FitmentKey{Type: "brake-rotor-front", Number: "BR-1999"}}, To: []string{"yard"}, Side: "both"}},
+		{`{"from":{"fitment":{"type":"brake-rotor-front","number":"BR-1999"}},"to":["fleet"],"side":"both"}`,
+			FitRequest{From: FitFrom{Fitment: &FitmentKey{Type: "brake-rotor-front", Number: "BR-1999"}}, To: []string{"fleet"}, Side: "both"}},
 		{`{"from":{"fitment":{"type":"mirror","number":"MR-1001","side":"right"}},"model_year":2010}`,
 			FitRequest{From: FitFrom{Fitment: &FitmentKey{Type: "mirror", Number: "MR-1001", Side: "right"}}, ModelYear: Value[int32](2010)}},
 		// A filed-under key: an entry instead of a type, any side unless
 		// one is given (ADR 0024).
 		{`{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-1001"}}}`,
 			FitRequest{From: FitFrom{Fitment: &FitmentKey{FiledUnder: map[string]string{"code": "MIR"}, Number: "MR-1001"}}}},
-		{`{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-1001","side":"left"}},"to":["yard"]}`,
-			FitRequest{From: FitFrom{Fitment: &FitmentKey{FiledUnder: map[string]string{"code": "MIR"}, Number: "MR-1001", Side: "left"}}, To: []string{"yard"}}},
+		{`{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-1001","side":"left"}},"to":["fleet"]}`,
+			FitRequest{From: FitFrom{Fitment: &FitmentKey{FiledUnder: map[string]string{"code": "MIR"}, Number: "MR-1001", Side: "left"}}, To: []string{"fleet"}}},
 	}
 	fitRequest := schemaDef(t, "FitRequest")
 	for _, c := range accepted {
@@ -100,7 +100,7 @@ func TestParseFitRequest(t *testing.T) {
 		{`{"from":{"make":476},"part":{"spine":"part-types","id":"mirror","vocabulary":"listing"}}`, InvalidRequest, "/part/spine", false},
 		{`{"from":{"make":476},"part":{"make":476}}`, InvalidRequest, "/part/make", false},
 		{`{"from":{"make":476},"related":"yes"}`, InvalidRequest, "/related", false},
-		{`{"from":{"make":476},"to":["yard",""]}`, InvalidRequest, "/to/1", false},
+		{`{"from":{"make":476},"to":["fleet",""]}`, InvalidRequest, "/to/1", false},
 		{`{"from":{"make":476},"limit":0}`, InvalidRequest, "/limit", false},
 		{`{"from":{"make":476},"limit":1001}`, InvalidRequest, "/limit", false},
 		{`{"from":{"make":476},"after":""}`, InvalidRequest, "/after", false},
@@ -198,18 +198,18 @@ func TestParseFitQuery(t *testing.T) {
 	for _, c := range []struct{ query, json string }{
 		{"from.vin=1D7RV1GT5AS123456&part.spine=part-types&part.id=mirror&side=left&now=2026-11-10",
 			`{"from":"1D7RV1GT5AS123456","part":{"spine":"part-types","id":"mirror"},"side":"left","now":"2026-11-10"}`},
-		{"from.vocabulary=catalog-models&from.entry.make=Dodge&from.entry.model=Ram+1500&model_year=2010&related=true&to=yard&to=listing&limit=5&after=x",
-			`{"from":{"vocabulary":"catalog-models","entry":{"make":"Dodge","model":"Ram 1500"}},"model_year":2010,"related":true,"to":["yard","listing"],"limit":5,"after":"x"}`},
+		{"from.vocabulary=catalog-models&from.entry.make=Dodge&from.entry.model=Ram+1500&model_year=2010&related=true&to=fleet&to=listing&limit=5&after=x",
+			`{"from":{"vocabulary":"catalog-models","entry":{"make":"Dodge","model":"Ram 1500"}},"model_year":2010,"related":true,"to":["fleet","listing"],"limit":5,"after":"x"}`},
 		{"from.model=1938&part.vocabulary=listing&part.entry.category=Brake+Parts",
 			`{"from":{"model":1938},"part":{"vocabulary":"listing","entry":{"category":"Brake Parts"}}}`},
-		{"from.fitment.type=brake-rotor-front&from.fitment.number=BR-1999&to=yard",
-			`{"from":{"fitment":{"type":"brake-rotor-front","number":"BR-1999"}},"to":["yard"]}`},
+		{"from.fitment.type=brake-rotor-front&from.fitment.number=BR-1999&to=fleet",
+			`{"from":{"fitment":{"type":"brake-rotor-front","number":"BR-1999"}},"to":["fleet"]}`},
 		{"from.fitment.type=mirror&from.fitment.number=MR-1001&from.fitment.side=left",
 			`{"from":{"fitment":{"type":"mirror","number":"MR-1001","side":"left"}}}`},
 		{"from.fitment.filed_under.code=MIR&from.fitment.number=MR-1001",
 			`{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-1001"}}}`},
-		{"from.fitment.filed_under.code=MIR&from.fitment.number=MR-1001&from.fitment.side=right&to=yard",
-			`{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-1001","side":"right"}},"to":["yard"]}`},
+		{"from.fitment.filed_under.code=MIR&from.fitment.number=MR-1001&from.fitment.side=right&to=fleet",
+			`{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-1001","side":"right"}},"to":["fleet"]}`},
 		// Refused alike.
 		{"", `{}`},
 		{"from.fitment.type=mirror", `{"from":{"fitment":{"type":"mirror"}}}`},

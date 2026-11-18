@@ -320,7 +320,7 @@ it on the fixture, and `TestBundle` the cases 2026_10 lacks (a model with
 no `make_model` row, one under a make the lookup lacks).
 
 `testdata/vocab` is the synthetic fixture every vocabulary test shares: a
-vehicle vocabulary (`yard`: Dodge's Ram 1500
+vehicle vocabulary (`fleet`: Dodge's Ram 1500
 split by year across vPIC models 1938 and 13620, with Series and Drive
 Type qualifiers, extension mappings, make mappings and an unmapped entry),
 an extension set (`classics`), a declared spine (`parts`) and a part
@@ -759,7 +759,7 @@ or in `/Applications`; without one the browser runs skip, except in CI
 `TestWorker` (`worker_test.go`) builds the module twice with
 `scripts/sw.sh` (the builds must be the same bytes) and runs it in a fresh
 profile against a server that loaded `classics` alone: it loads `listing`,
-`yard` and `parts` as one batch, in an order that links only as a whole,
+`fleet` and `parts` as one batch, in an order that links only as a whole,
 and holds the page, bare and with a VIN on the plate, and each list page,
 as page and fragment, to a server that
 loaded the same files; stops the worker and checks it answers again; checks
@@ -805,10 +805,10 @@ is said in words (8). `TestWorker` covers the stalled load (5). It also
 loads EPA's vocabulary in one click and drops a file on the page.
 
 `TestVocabTranslate` (`vocabtranslate_test.go`) runs "Also known as" on
-the fixture's 2010 Ram, which `yard` has three names for and the EPA
+the fixture's 2010 Ram, which `fleet` has three names for and the EPA
 sample none. Without JavaScript, against a server that loaded the fixture
 and the EPA sample, the page has a stack for each vocabulary on vPIC's
-spine, `yard`'s first, showing its first name, and all three at a click on
+spine, `fleet`'s first, showing its first name, and all three at a click on
 its stamp. With JavaScript, against a server with no vocabulary on vPIC's
 spine, the worker draws the page over the files the browser holds: a file
 loaded is on the page at once, a second beside it, a file removed is off

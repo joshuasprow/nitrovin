@@ -95,7 +95,7 @@ func TestUI(t *testing.T) {
 // refuses a file whose bytes changed on disk since it was loaded.
 func TestServePublished(t *testing.T) {
 	dir := t.TempDir()
-	for _, name := range []string{"classics.jsonl", "yard.jsonl"} {
+	for _, name := range []string{"classics.jsonl", "fleet.jsonl"} {
 		b, err := os.ReadFile(filepath.Join(fixture, name))
 		if err != nil {
 			t.Fatal(err)
@@ -170,16 +170,16 @@ func TestServePublished(t *testing.T) {
 		immutable(target, hdr, "application/jsonl")
 	}
 
-	// yard changes on disk: its URL names the bytes loaded, so it refuses.
-	yard := info.Vocabularies[1]
-	if err := os.WriteFile(yard.Path, []byte("{}\n"), 0o644); err != nil {
+	// fleet changes on disk: its URL names the bytes loaded, so it refuses.
+	fleet := info.Vocabularies[1]
+	if err := os.WriteFile(fleet.Path, []byte("{}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	status, hdr, body = get(ui.FilePath(info, yard))
-	if want := yard.Path + " changed since nitrovin loaded it as yard: restart nitrovin serve to serve it"; status != 500 || !strings.Contains(string(body), want) {
-		t.Errorf("a changed yard: %d\n%s\nwant 500 with %q", status, body, want)
+	status, hdr, body = get(ui.FilePath(info, fleet))
+	if want := fleet.Path + " changed since nitrovin loaded it as fleet: restart nitrovin serve to serve it"; status != 500 || !strings.Contains(string(body), want) {
+		t.Errorf("a changed fleet: %d\n%s\nwant 500 with %q", status, body, want)
 	}
 	if hdr.Get("Cache-Control") != "" {
-		t.Errorf("a changed yard: Cache-Control %q", hdr.Get("Cache-Control"))
+		t.Errorf("a changed fleet: Cache-Control %q", hdr.Get("Cache-Control"))
 	}
 }

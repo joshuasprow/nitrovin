@@ -68,7 +68,7 @@ func TestIndex(t *testing.T) {
 	for _, f := range files {
 		if f.Kind == KindVocabulary {
 			for _, e := range f.Entries {
-				q := Query{From: From{Vocabulary: f.Name, Entry: f.FieldsOf(&e)}, To: []string{"yard", "odd"}}
+				q := Query{From: From{Vocabulary: f.Name, Entry: f.FieldsOf(&e)}, To: []string{"fleet", "odd"}}
 				if f.Subject == SubjectPart {
 					q.To = nil
 				}

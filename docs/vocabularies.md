@@ -27,7 +27,7 @@ vocabulary author's work, done before the file is written.
 
 The examples run from a checkout of this repository, with `nitrovin` built
 from it on `PATH`, against the synthetic vocabularies in
-[`testdata/vocab/`](../testdata/vocab) (a yard, a parts listing, its part
+[`testdata/vocab/`](../testdata/vocab) (a fleet, a parts listing, its part
 spine, an extension set of classics), the synthetic catalog in
 [`testdata/vocab/fitment/`](../testdata/vocab/fitment), its synthetic
 shelf and yard in [`testdata/vocab/stock/`](../testdata/vocab/stock) and
@@ -44,7 +44,7 @@ per entry. A file is one of five kinds:
 
 | Kind | What it holds | Lines after the header | Fixture |
 | --- | --- | --- | --- |
-| `vocabulary` | A system's names (`entry`), each mapped to spine entries (`mappings`). `subject` `vehicle` maps onto vPIC; `subject` `part` onto the declared spine its header names | `{"entry": {…}, "mappings": […]}` | `yard.jsonl` (vehicle), `listing.jsonl` (part) |
+| `vocabulary` | A system's names (`entry`), each mapped to spine entries (`mappings`). `subject` `vehicle` maps onto vPIC; `subject` `part` onto the declared spine its header names | `{"entry": {…}, "mappings": […]}` | `fleet.jsonl` (vehicle), `listing.jsonl` (part) |
 | `extension-set` | Vehicles vPIC lacks, minted so vocabularies can map to them: a make, or a model under a vPIC make or an extension make | `{"id", "make_name"}` or `{"id", "make", "name"}` | `classics.jsonl` |
 | `spine` | A declared part-type spine: every id, flat, names optional | `{"id", "name"}` | `parts.jsonl` |
 | `catalog` | Which parts fit which vehicles: fitments with their applications, redirects and retired numbers ([below](#a-catalog)) | `{"fitment", "applications"}`, `{"redirect"}` or `{"retired", "to"}` | `fitment/catalog.jsonl` |
@@ -57,10 +57,10 @@ silently.
 
 ## A vehicle vocabulary
 
-[`testdata/vocab/yard.jsonl`](../testdata/vocab/yard.jsonl) begins:
+[`testdata/vocab/fleet.jsonl`](../testdata/vocab/fleet.jsonl) begins:
 
 ```json
-{"format":1,"kind":"vocabulary","name":"yard","version":"2026.11","data_month":"2026_10","subject":"vehicle","fields":["make","model"]}
+{"format":1,"kind":"vocabulary","name":"fleet","version":"2026.11","data_month":"2026_10","subject":"vehicle","fields":["make","model"]}
 {"entry":{"make":"Dodge","model":"Ram 1500"},"mappings":[{"model":1938,"last":2012,"qualifiers":{"34":["1500","DS (1500)"]},"origin":"curated"},{"model":13620,"first":2013,"origin":"curated","note":"Ram is its own make from 2013"}]}
 {"entry":{"make":"Dodge","model":"Other"},"mappings":[{"make":476}],"note":"any Dodge"}
 {"entry":{"make":"Studebaker","model":"Lark"},"mappings":[],"note":"listed, not yet placed"}
@@ -798,11 +798,11 @@ nitrovin vocab check testdata/vocab/unchecked  # one fault, four unchecked lines
 ```
 
 ```json
-{"file":".../testdata/vocab/drift/yard.jsonl","line":4,"severity":"drift","detail":"/mappings/0/make: vPIC make 99999 is not in data month 2026_10","kind":"make","entry":{"make":"Imperial","model":"Other"}}
-{"file":".../testdata/vocab/unchecked/catalog.jsonl","line":0,"severity":"unchecked","detail":"its drift was not measured: it links through .../yard.jsonl to .../classics.jsonl, which has faults"}
+{"file":".../testdata/vocab/drift/fleet.jsonl","line":4,"severity":"drift","detail":"/mappings/0/make: vPIC make 99999 is not in data month 2026_10","kind":"make","entry":{"make":"Imperial","model":"Other"}}
+{"file":".../testdata/vocab/unchecked/catalog.jsonl","line":0,"severity":"unchecked","detail":"its drift was not measured: it links through .../fleet.jsonl to .../classics.jsonl, which has faults"}
 {"file":".../testdata/vocab/unchecked/classics.jsonl","line":3,"severity":"fault","detail":"malformed JSON: unexpected end of JSON input"}
 {"file":".../testdata/vocab/unchecked/classics.jsonl","line":0,"severity":"unchecked","detail":"its drift was not measured: it has faults"}
-{"file":".../testdata/vocab/unchecked/yard.jsonl","line":0,"severity":"unchecked","detail":"its drift was not measured: it links to .../classics.jsonl, which has faults"}
+{"file":".../testdata/vocab/unchecked/fleet.jsonl","line":0,"severity":"unchecked","detail":"its drift was not measured: it links to .../classics.jsonl, which has faults"}
 ```
 
 A fault:
@@ -829,7 +829,7 @@ reaches the spine, and answers the entries of the `to` vocabularies that
 map there. Without `to` it answers the spine alone.
 
 ```sh
-nitrovin --vocab testdata/vocab translate --to yard 1D7RV1GT5AS123456 | jq -c '.to[0].entries[].entry'
+nitrovin --vocab testdata/vocab translate --to fleet 1D7RV1GT5AS123456 | jq -c '.to[0].entries[].entry'
 ```
 
 ```json
@@ -863,9 +863,9 @@ a VIN as context (`vin`) to check them against its decode:
 
 ```sh
 nitrovin --vocab testdata/vocab translate - <<'EOF' | jq -c '{from: .from.status, spine: [.spine[] | .name]}'
-{"from": {"vocabulary": "yard", "entry": {"make": "Packard", "model": "Clipper"}}, "model_year": 1955}
-{"from": {"vocabulary": "yard", "entry": {"make": "Studebaker", "model": "Lark"}}}
-{"from": {"vocabulary": "yard", "entry": {"make": "Nash", "model": "Rambler"}}}
+{"from": {"vocabulary": "fleet", "entry": {"make": "Packard", "model": "Clipper"}}, "model_year": 1955}
+{"from": {"vocabulary": "fleet", "entry": {"make": "Studebaker", "model": "Lark"}}}
+{"from": {"vocabulary": "fleet", "entry": {"make": "Nash", "model": "Rambler"}}}
 {"from": {"vocabulary": "listing", "entry": {"category": "Brake Parts"}}, "to": ["listing"], "vin": "1D7RV1GT5AS123456"}
 EOF
 ```
@@ -891,8 +891,8 @@ is the cursor for the following page.
 
 ```sh
 nitrovin --vocab testdata/vocab list
-nitrovin --vocab testdata/vocab list yard --where make=dodge --limit 2 | jq -c '[.entries[].entry], .next'
-nitrovin --vocab testdata/vocab list yard --where make=dodge --limit 2 --after WyJkb2RnZSIsInJhbSAxNTAwIl0 | jq -c '[.entries[].entry]'
+nitrovin --vocab testdata/vocab list fleet --where make=dodge --limit 2 | jq -c '[.entries[].entry], .next'
+nitrovin --vocab testdata/vocab list fleet --where make=dodge --limit 2 --after WyJkb2RnZSIsInJhbSAxNTAwIl0 | jq -c '[.entries[].entry]'
 ```
 
 ## On every surface
@@ -916,11 +916,11 @@ nitrovin --vocab testdata/vocab serve    # 127.0.0.1:8080; then, from another sh
 ```
 
 ```sh
-curl 'localhost:8080/v1/translate?from.vin=1D7RV1GT5AS123456&to=yard'
-curl 'localhost:8080/v1/translate?from.vocabulary=yard&from.entry.make=Dodge&from.entry.model=Ram%201500&model_year=2015'
-curl localhost:8080/v1/translate -d '[{"from": {"model": 1850}, "to": ["yard"]}, {"from": {"spine": "parts", "id": "brake-rotor"}, "to": ["listing"]}]'
+curl 'localhost:8080/v1/translate?from.vin=1D7RV1GT5AS123456&to=fleet'
+curl 'localhost:8080/v1/translate?from.vocabulary=fleet&from.entry.make=Dodge&from.entry.model=Ram%201500&model_year=2015'
+curl localhost:8080/v1/translate -d '[{"from": {"model": 1850}, "to": ["fleet"]}, {"from": {"spine": "parts", "id": "brake-rotor"}, "to": ["listing"]}]'
 curl localhost:8080/v1/vocabularies
-curl 'localhost:8080/v1/vocabularies/yard/entries?where.make=dodge&limit=2'
+curl 'localhost:8080/v1/vocabularies/fleet/entries?where.make=dodge&limit=2'
 ```
 
 `serve` also publishes each loaded file but a catalog, byte for byte, for a browser that
@@ -1019,7 +1019,7 @@ data. A connector's file is refused: connectors run on a server.
 request, and its reply is keyed `translation` or `list`:
 
 ```sh
-printf '%s\n' '{"id":1,"op":"translate","from":"1D7RV1GT5AS123456","to":["yard"]}' \
+printf '%s\n' '{"id":1,"op":"translate","from":"1D7RV1GT5AS123456","to":["fleet"]}' \
   '{"id":2,"op":"list","of":"parts"}' | nitrovin --vocab testdata/vocab stdio
 ```
 
@@ -1029,9 +1029,9 @@ absolute path in the client's `args`) or at `serve`'s `/mcp`:
 
 ```sh
 npx @modelcontextprotocol/inspector --cli http://127.0.0.1:8080/mcp --transport http \
-  --method tools/call --tool-name translate --tool-arg from=1D7RV1GT5AS123456 --tool-arg 'to=["yard"]'
+  --method tools/call --tool-name translate --tool-arg from=1D7RV1GT5AS123456 --tool-arg 'to=["fleet"]'
 npx @modelcontextprotocol/inspector --cli http://127.0.0.1:8080/mcp --transport http \
-  --method tools/call --tool-name list --tool-arg of=yard --tool-arg limit=2
+  --method tools/call --tool-name list --tool-arg of=fleet --tool-arg limit=2
 ```
 
 The tool descriptions never name what is loaded; an assistant calls
@@ -1067,7 +1067,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	req, err := contract.ParseTranslateRequest([]byte(`{"from": "1D7RV1GT5AS123456", "to": ["yard"]}`))
+	req, err := contract.ParseTranslateRequest([]byte(`{"from": "1D7RV1GT5AS123456", "to": ["fleet"]}`))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -1100,10 +1100,10 @@ int main(void) {
     return 1;
   }
   char *reply = nitrovin_decode(h,
-      "{\"id\":1,\"op\":\"translate\",\"from\":\"1D7RV1GT5AS123456\",\"to\":[\"yard\"]}");
+      "{\"id\":1,\"op\":\"translate\",\"from\":\"1D7RV1GT5AS123456\",\"to\":[\"fleet\"]}");
   puts(reply); /* {"id":1,"translation":{...}} */
   nitrovin_free(reply);
-  reply = nitrovin_decode(h, "{\"id\":2,\"op\":\"list\",\"of\":\"yard\",\"limit\":2}");
+  reply = nitrovin_decode(h, "{\"id\":2,\"op\":\"list\",\"of\":\"fleet\",\"limit\":2}");
   puts(reply); /* {"id":2,"list":{...}} */
   nitrovin_free(reply);
   nitrovin_close(h);
@@ -1135,12 +1135,12 @@ no fault. It loads like any vocabulary:
 curl -fsSLO https://github.com/joshuasprow/nitrovin-data/releases/latest/download/epa-vehicles.jsonl
 nitrovin --vocab epa-vehicles.jsonl translate --to epa-vehicles 1C6RR7LT5FS123456 | jq -c '.to[0].entries[].entry'
 nitrovin --vocab testdata/vocab --vocab epa-vehicles.jsonl translate - <<'EOF' | jq -c '.to[0].entries[].entry'
-{"from": {"vocabulary": "yard", "entry": {"make": "chevy", "model": "silverado"}}, "to": ["epa-vehicles"], "model_year": 2004}
+{"from": {"vocabulary": "fleet", "entry": {"make": "chevy", "model": "silverado"}}, "to": ["epa-vehicles"], "model_year": 2004}
 EOF
 ```
 
 The VIN's four-wheel drive narrows the 2015 Ram to EPA's `1500 4WD`; the
-yard's `Chevy Silverado`, a name with no decode to check qualifiers
+fleet's `Chevy Silverado`, a name with no decode to check qualifiers
 against, reaches every EPA name mapped to vPIC's Silverado for 2004.
 
 ## The demo set

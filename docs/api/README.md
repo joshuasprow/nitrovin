@@ -467,7 +467,7 @@ specifies.
 - **Faults refuse.** A fault stops every command before it answers: exit 1
   and an `#internal` problem whose `detail` names the flag or variable, the
   file and line, and a JSON Pointer into the line where there is one, then
-  counts any further faults (`--vocab: /srv/yard.jsonl:7: /mappings/0:
+  counts any further faults (`--vocab: /srv/fleet.jsonl:7: /mappings/0:
   first year 2014 is after last year 2012 (and 2 more)`). Faults are a file
   that cannot be read; a malformed line; an unknown format, kind, subject or
   field; a missing or ill-typed field; entry fields other than the header's;
@@ -931,7 +931,7 @@ The synthetic catalog's examples, tested on every surface, with
 {"op":"fit","from":{"vocabulary":"catalog-models","entry":{"make":"Dodge","model":"Ram 1500"}},"model_year":2010}
 {"op":"fit","from":"1D7RV1GT5AS123456","part":{"spine":"part-types","id":"mirror"},"side":"left"}
 {"op":"fit","from":{"vocabulary":"catalog-models","entry":{"make":"Chevrolet","model":"Silverado 1500"}},"model_year":2010,"part":{"spine":"part-types","id":"brake-rotor-rear"}}
-{"op":"fit","from":{"fitment":{"type":"brake-rotor-front","number":"BR-1999"}},"to":["yard"]}
+{"op":"fit","from":{"fitment":{"type":"brake-rotor-front","number":"BR-1999"}},"to":["fleet"]}
 {"op":"fit","from":"1D7RV1GT5AS123456","related":true}
 ```
 
@@ -947,7 +947,7 @@ The synthetic catalog's examples, tested on every surface, with
   Silverado whose decoded Series fails that qualifier answers `no-fitment`.
 - The retired number `BR-1999`: `BR-2001`, `reached: retired`, with the
   Ram 1500 (2009–2012) and the Silverado 1500 (2007–2013), each named in
-  `yard`.
+  `fleet`.
 - The Ram's related vehicles: the Silverado 1500, 2007–2013, sharing one
   `brake-rotor-front`.
 

@@ -240,7 +240,7 @@ func generated(t testing.TB, vpic bool, n int) []*File {
 		}
 		return s
 	}
-	header := `{"format":1,"kind":"catalog","name":"gen","version":"1","release":"r1","data_month":"2026_09","spine":"parts","vehicles":"yard","filed_under":"codes"}`
+	header := `{"format":1,"kind":"catalog","name":"gen","version":"1","release":"r1","data_month":"2026_09","spine":"parts","vehicles":"fleet","filed_under":"codes"}`
 	// The codes: one per part type, two for pads, one for both door and
 	// hood, and NM, unmapped; drawn from their own source, so the rest of
 	// the catalog is as it was.
@@ -276,7 +276,7 @@ func generated(t testing.TB, vpic bool, n int) []*File {
 		return `,"filed_under":[` + strings.Join(entries, ",") + "]"
 	}
 	if vpic {
-		header = strings.Replace(header, `"yard"`, `"vpic"`, 1)
+		header = strings.Replace(header, `"fleet"`, `"vpic"`, 1)
 	}
 	cat := []string{header}
 	type key struct {

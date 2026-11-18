@@ -121,19 +121,19 @@ func TestWorkerUpdate(t *testing.T) {
 	tb := newTab(t, path, srv.URL, &requestLog{}, true)
 	tb.do(chromedp.Navigate(srv.URL + "/"))
 	tb.vocabularies()
-	tb.do(chromedp.SetUploadFiles(chromedp.CSS("#vocab-files"), []string{filepath.Join(fixture, "yard.jsonl")}))
+	tb.do(chromedp.SetUploadFiles(chromedp.CSS("#vocab-files"), []string{filepath.Join(fixture, "fleet.jsonl")}))
 	tb.waitPrefix("#load-status", "Loaded ")
 	tb.closeVocabularies()
 
-	// The old release's worker draws the page over yard, a VIN's names in
+	// The old release's worker draws the page over fleet, a VIN's names in
 	// it; its page's header is the server's: nitrovin v0.3.2, linked to
 	// its release.
 	entry := "/?from.vin=1D7RV1GT5AS123456"
 	since := len(wire.all())
 	tb.do(chromedp.Navigate(srv.URL + entry))
-	tb.wait("#aka #fan-yard")
+	tb.wait("#aka #fan-fleet")
 	if served(since, entry) {
-		t.Fatalf("%s: the server answered it; want the worker, yard is the browser's", entry)
+		t.Fatalf("%s: the server answered it; want the worker, fleet is the browser's", entry)
 	}
 	if got, want := eval[string](tb, `document.querySelector("header").outerHTML`), header(tb, old); got != want ||
 		!strings.Contains(got, `<a href="https://github.com/joshuasprow/nitrovin/releases/tag/v0.3.2">v0.3.2</a>`) {
@@ -206,16 +206,16 @@ func TestWorkerUpdate(t *testing.T) {
 	if served(since, "/") {
 		t.Error("after Update now: the server answered /; want the next release's worker, files stored")
 	}
-	if got := storedNames(tb); !slices.Equal(got, []string{"yard"}) {
-		t.Errorf("after Update now: stored files %q; want yard", got)
+	if got := storedNames(tb); !slices.Equal(got, []string{"fleet"}) {
+		t.Errorf("after Update now: stored files %q; want fleet", got)
 	}
 	since = len(wire.all())
 	tb.do(chromedp.Navigate(srv.URL + entry))
-	tb.wait("#aka #fan-yard")
+	tb.wait("#aka #fan-fleet")
 	if served(since, entry) {
 		t.Errorf("%s after Update now: the server answered it; want the next release's worker", entry)
 	}
-	same, _ := releaseServer(t, module, "v0.3.3", classics, filepath.Join(fixture, "yard.jsonl"))
+	same, _ := releaseServer(t, module, "v0.3.3", classics, filepath.Join(fixture, "fleet.jsonl"))
 	if got, want := mainHTML(tb), mainAs(tb, mainOf(t, same, srv.URL, entry, false)); got != want {
 		t.Errorf("%s after Update now: the worker's page differs from the server's\nworker: %s\nserver: %s", entry, got, want)
 	}

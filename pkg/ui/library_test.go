@@ -434,23 +434,23 @@ func translateLines(t *testing.T, l *Library, q string) []string {
 func TestLibraryBatch(t *testing.T) {
 	s, d := server(t, "classics"), newDisk()
 	l := open(t, s, d)
-	if _, err := l.Load(pick(t, "listing", "yard", "parts"), quiet); err != nil {
+	if _, err := l.Load(pick(t, "listing", "fleet", "parts"), quiet); err != nil {
 		t.Fatal(err)
 	}
-	if got := stored(l); !slices.Equal(got, []string{"listing", "parts", "yard"}) {
+	if got := stored(l); !slices.Equal(got, []string{"fleet", "listing", "parts"}) {
 		t.Errorf("stored %q", got)
 	}
-	got := translateLines(t, l, "from.vocabulary=yard&from.entry.make=Packard&from.entry.model=Clipper&to=yard")
-	if want := []string{"mapped", "ext:classics/packard-clipper", "ext:classics/packard", "yard: Packard Clipper"}; !slices.Equal(got, want) {
+	got := translateLines(t, l, "from.vocabulary=fleet&from.entry.make=Packard&from.entry.model=Clipper&to=fleet")
+	if want := []string{"mapped", "ext:classics/packard-clipper", "ext:classics/packard", "fleet: Packard Clipper"}; !slices.Equal(got, want) {
 		t.Errorf("Packard Clipper through the server's classics: %q; want %q", got, want)
 	}
 
-	// Without the server's classics, yard alone does not link.
+	// Without the server's classics, fleet alone does not link.
 	s2, d2 := server(t), newDisk()
 	l2 := open(t, s2, d2)
-	_, err := l2.Load(pick(t, "yard"), quiet)
-	if err == nil || !strings.Contains(err.Error(), `extension set "classics" is not loaded`) || !strings.Contains(err.Error(), "yard.jsonl") {
-		t.Errorf("yard without classics: %v", err)
+	_, err := l2.Load(pick(t, "fleet"), quiet)
+	if err == nil || !strings.Contains(err.Error(), `extension set "classics" is not loaded`) || !strings.Contains(err.Error(), "fleet.jsonl") {
+		t.Errorf("fleet without classics: %v", err)
 	}
 	if len(d2.records) != 0 || len(stored(l2)) != 0 {
 		t.Errorf("a refused batch stored %v", d2.records)
@@ -481,7 +481,7 @@ func TestLibraryBatch(t *testing.T) {
 		t.Errorf("a load storage refused succeeded")
 	}
 	d.fail = nil
-	if got := stored(l); !slices.Equal(got, []string{"listing", "parts", "yard"}) {
+	if got := stored(l); !slices.Equal(got, []string{"fleet", "listing", "parts"}) {
 		t.Errorf("after refusals: stored %q", got)
 	}
 }
@@ -491,10 +491,10 @@ func TestLibraryBatch(t *testing.T) {
 func TestLibraryColdStart(t *testing.T) {
 	s, d := server(t, "classics"), newDisk()
 	l := open(t, s, d)
-	if _, err := l.Load(pick(t, "listing", "yard", "parts"), quiet); err != nil {
+	if _, err := l.Load(pick(t, "listing", "fleet", "parts"), quiet); err != nil {
 		t.Fatal(err)
 	}
-	const q = "from.vocabulary=yard&from.entry.make=Dodge&from.entry.model=Ram+1500&model_year=2010&to=yard"
+	const q = "from.vocabulary=fleet&from.entry.make=Dodge&from.entry.model=Ram+1500&model_year=2010&to=fleet"
 	want := translateLines(t, l, q)
 	d.textReads = 0
 	again := open(t, s, d)
@@ -518,7 +518,7 @@ func TestLibraryColdStart(t *testing.T) {
 func TestLibraryFaults(t *testing.T) {
 	s, d := server(t, "classics"), newDisk()
 	l := open(t, s, d)
-	if _, err := l.Load(pick(t, "yard", "listing", "parts"), quiet); err != nil {
+	if _, err := l.Load(pick(t, "fleet", "listing", "parts"), quiet); err != nil {
 		t.Fatal(err)
 	}
 	// The listing's text now fails to read, and there is no index for it.
@@ -529,15 +529,15 @@ func TestLibraryFaults(t *testing.T) {
 		}
 		_ = b
 	}
-	// The server no longer loads classics, which yard maps into.
+	// The server no longer loads classics, which fleet maps into.
 	s2 := server(t)
 	s2.files[SpinePath(s2.info)] = s.files[SpinePath(s.info)]
 	l = open(t, s2, d)
 	got := stored(l)
-	if len(got) != 3 || !strings.HasPrefix(got[0], "listing: ") || got[1] != "parts" || !strings.Contains(got[2], `yard: yard.jsonl:7: /mappings/0/ext: extension set "classics" is not loaded`) {
+	if len(got) != 3 || !strings.Contains(got[0], `fleet: fleet.jsonl:7: /mappings/0/ext: extension set "classics" is not loaded`) || !strings.HasPrefix(got[1], "listing: ") || got[2] != "parts" {
 		t.Errorf("stored %q", got)
 	}
-	if err := l.Remove([]string{"listing", "yard"}, false); err != nil {
+	if err := l.Remove([]string{"listing", "fleet"}, false); err != nil {
 		t.Fatal(err)
 	}
 	if got := stored(l); !slices.Equal(got, []string{"parts"}) || len(d.records) != 1 {
@@ -550,18 +550,18 @@ func TestLibraryFaults(t *testing.T) {
 func TestLibraryRemove(t *testing.T) {
 	s, d := server(t), newDisk()
 	l := open(t, s, d)
-	if _, err := l.Load(pick(t, "classics", "yard", "parts", "listing"), quiet); err != nil {
+	if _, err := l.Load(pick(t, "classics", "fleet", "parts", "listing"), quiet); err != nil {
 		t.Fatal(err)
 	}
 	err := l.Remove([]string{"classics"}, false)
 	refusal, ok := errors.AsType[*removeRefusal](err)
-	if !ok || !slices.Equal(refusal.Dependants, []string{"yard"}) {
+	if !ok || !slices.Equal(refusal.Dependants, []string{"fleet"}) {
 		t.Fatalf("removing classics: %v", err)
 	}
 	if got := stored(l); len(got) != 4 || len(d.records) != 4 {
 		t.Errorf("a refused remove changed %q", got)
 	}
-	if got := translateLines(t, l, "from.vocabulary=yard&from.entry.make=Packard&from.entry.model=Clipper&to=yard"); got[0] != "mapped" {
+	if got := translateLines(t, l, "from.vocabulary=fleet&from.entry.make=Packard&from.entry.model=Clipper&to=fleet"); got[0] != "mapped" {
 		t.Errorf("after a refused remove: %q", got)
 	}
 	if err := l.Remove([]string{"classics"}, true); err != nil {
@@ -570,7 +570,7 @@ func TestLibraryRemove(t *testing.T) {
 	if got := stored(l); !slices.Equal(got, []string{"listing", "parts"}) || len(d.records) != 2 {
 		t.Errorf("after removing all: %q", got)
 	}
-	if err := l.Remove([]string{"yard"}, false); err == nil || !strings.Contains(err.Error(), `No file named "yard"`) {
+	if err := l.Remove([]string{"fleet"}, false); err == nil || !strings.Contains(err.Error(), `No file named "fleet"`) {
 		t.Errorf("removing what is gone: %v", err)
 	}
 	// Replacing a file in place keeps its name, once.
@@ -588,13 +588,13 @@ func TestLibraryRemove(t *testing.T) {
 func TestLibraryDecode(t *testing.T) {
 	s, d := server(t, "classics"), newDisk()
 	l := open(t, s, d)
-	if _, err := l.Load(pick(t, "yard"), quiet); err != nil {
+	if _, err := l.Load(pick(t, "fleet"), quiet); err != nil {
 		t.Fatal(err)
 	}
 	const decode = `{"vin":"1D7RV1GT5AS123456","wmi":"1D7","check_digit_valid":true,"data_month":"%s","decoder_version":"v9","items":[` +
 		`{"element_id":26,"value":"DODGE","attribute_id":"476"},{"element_id":28,"value":"Ram","attribute_id":"1938"},{"element_id":29,"value":"2010","attribute_id":"2010"},{"element_id":34,"value":"DS (1500)","attribute_id":"DS (1500)"}]}`
 	s.decodes["1D7RV1GT5AS123456"] = fmt.Sprintf(decode, "2026_10")
-	req := contract.TranslateRequest{From: contract.TranslateFrom{VIN: "1D7RV1GT5AS123456"}, To: []string{"yard"}}
+	req := contract.TranslateRequest{From: contract.TranslateFrom{VIN: "1D7RV1GT5AS123456"}, To: []string{"fleet"}}
 	tr, err := l.Translate(req)
 	if err != nil {
 		t.Fatal(err)
@@ -618,7 +618,7 @@ func TestLibraryDecode(t *testing.T) {
 		t.Errorf("offline: %v", err)
 	}
 	// A name still translates offline.
-	if got := translateLines(t, l, "from.vocabulary=yard&from.entry.make=Chevy&from.entry.model=Silverado&to=yard"); got[0] != "mapped" {
+	if got := translateLines(t, l, "from.vocabulary=fleet&from.entry.make=Chevy&from.entry.model=Silverado&to=fleet"); got[0] != "mapped" {
 		t.Errorf("offline name: %q", got)
 	}
 }
@@ -631,16 +631,16 @@ func TestLibraryDecode(t *testing.T) {
 func TestBrowserPages(t *testing.T) {
 	s, d := server(t, "parts"), newDisk()
 	l := open(t, s, d)
-	if _, err := l.Load(pick(t, "classics", "yard"), quiet); err != nil {
+	if _, err := l.Load(pick(t, "classics", "fleet"), quiet); err != nil {
 		t.Fatal(err)
 	}
-	var yard string
+	var fleet string
 	for _, f := range l.Files() {
-		if f.Name == "yard" {
-			yard = f.Blake3
+		if f.Name == "fleet" {
+			fleet = f.Blake3
 		}
 	}
-	offer := &Offer{Name: "yard", Version: "2026.12", Blake3: "ff00", Size: 956_057, URL: testAssets + "/vocab/ff00/yard.jsonl"}
+	offer := &Offer{Name: "fleet", Version: "2026.12", Blake3: "ff00", Size: 956_057, URL: testAssets + "/vocab/ff00/fleet.jsonl"}
 	h := NewInBrowser(l, BrowserConfig{Offer: offer}, log.New(io.Discard, "", 0))
 	status, _, body := response(t, h, "GET", "/ui/files", htmx)
 	for _, want := range []string{
@@ -648,9 +648,9 @@ func TestBrowserPages(t *testing.T) {
 		`<tr data-where="server"><th scope="row"><a href="/ui/vocabularies/parts">parts</a></th>` + "\n<td>spine of parts\n", `<dd class="version">2026.11</dd>` + "\n<dt>Kept in</dt><dd>this server</dd>",
 		`<tr data-where="browser"><th scope="row"><a href="/ui/vocabularies/classics">classics</a></th>` + "\n<td>extension set of vehicles → vpic, ", "<dt>Kept in</dt><dd>this browser: classics.jsonl, ",
 		`<td>vocabulary of vehicles: make, model → vpic, `,
-		`<button type="submit">Remove<span class="visually-hidden"> yard</span></button>`,
+		`<button type="submit">Remove<span class="visually-hidden"> fleet</span></button>`,
 		`id="vocab-files"`,
-		`id="load-epa" data-url="` + testAssetsAttr + `/vocab/ff00/yard.jsonl" data-file="yard.jsonl"`,
+		`id="load-epa" data-url="` + testAssetsAttr + `/vocab/ff00/fleet.jsonl" data-file="fleet.jsonl"`,
 		"956 kB", "replaces 2026.11",
 	} {
 		if !strings.Contains(body, want) {
@@ -660,7 +660,7 @@ func TestBrowserPages(t *testing.T) {
 	if status != 200 || strings.Contains(body, "Remove parts") {
 		t.Errorf("files: %d\n%s", status, body)
 	}
-	offer.Blake3 = yard
+	offer.Blake3 = fleet
 	if _, _, body := response(t, h, "GET", "/ui/files", htmx); strings.Contains(body, "load-epa") || !strings.Contains(body, "EPA 2026.12 loaded") {
 		t.Errorf("files with the offer held:\n%s", body)
 	}
@@ -675,7 +675,7 @@ func TestBrowserPages(t *testing.T) {
 		return w.Code, w.Result().Header, w.Body.String()
 	}
 	status, hdr, body := form("name=classics", htmx)
-	if status != http.StatusConflict || hdr.Get("HX-Retarget") != filesTarget || !strings.Contains(body, "classics cannot go alone: yard link to it.") || !strings.Contains(body, `name="all" value="true"`) {
+	if status != http.StatusConflict || hdr.Get("HX-Retarget") != filesTarget || !strings.Contains(body, "classics cannot go alone: fleet link to it.") || !strings.Contains(body, `name="all" value="true"`) {
 		t.Errorf("refused remove: %d %v\n%s", status, hdr, body)
 	}
 	status, hdr, _ = form("name=classics&all=true", nil)
@@ -699,7 +699,7 @@ func TestBrowserPages(t *testing.T) {
 func TestBrowserDrift(t *testing.T) {
 	s, d := server(t), newDisk()
 	l := open(t, s, d)
-	if _, err := l.Load(pick(t, "drift/classics", "drift/yard"), quiet); err != nil {
+	if _, err := l.Load(pick(t, "drift/classics", "drift/fleet"), quiet); err != nil {
 		t.Fatal(err)
 	}
 	byName := map[string]StoredFile{}
@@ -709,8 +709,8 @@ func TestBrowserDrift(t *testing.T) {
 	// The browser tests qualifiers month-wide only (its spine bundle has
 	// no model values, ADR 0015), and this test's month lacks lines 8 and
 	// 9's Series: four qualifier findings, no model-qualifier kind.
-	if c := byName["yard"].Drift; len(c) != 3 || c[0].Kind != "make" || c[0].Count != 1 || c[1].Kind != "model" || c[1].Count != 1 || c[2].Kind != "qualifier" || c[2].Count != 4 {
-		t.Errorf("yard's drift: %+v", c)
+	if c := byName["fleet"].Drift; len(c) != 3 || c[0].Kind != "make" || c[0].Count != 1 || c[1].Kind != "model" || c[1].Count != 1 || c[2].Kind != "qualifier" || c[2].Count != 4 {
+		t.Errorf("fleet's drift: %+v", c)
 	}
 	if c := byName["classics"].Drift; len(c) != 1 || c[0].Kind != "extension" || c[0].Examples[0].Line != 2 {
 		t.Errorf("classics's drift: %+v", c)
@@ -756,7 +756,7 @@ func TestServiceWorker(t *testing.T) {
 	if status != 200 || hdr.Get("Cache-Control") != "no-cache" || hdr.Get("Content-Security-Policy") != workerCSP || !strings.HasPrefix(hdr.Get("Content-Type"), "text/javascript") {
 		t.Errorf("/sw.js: %d %v", status, hdr)
 	}
-	for _, want := range []string{`"release":"` + Release(testInfo) + `"`, `"name":"yard"`, `"blake3":"ab12"`, `importScripts(...["` + testAssets + `/wasm_exec.js","` + testAssets + `/disk.js","` + testAssets + `/worker.js"]);`} {
+	for _, want := range []string{`"release":"` + Release(testInfo) + `"`, `"name":"fleet"`, `"blake3":"ab12"`, `importScripts(...["` + testAssets + `/wasm_exec.js","` + testAssets + `/disk.js","` + testAssets + `/worker.js"]);`} {
 		if !strings.Contains(body, want) {
 			t.Errorf("/sw.js lacks %s:\n%s", want, body)
 		}
@@ -769,7 +769,7 @@ func TestServiceWorker(t *testing.T) {
 	withCatalog.Vocabularies = append(slices.Clone(testInfo.Vocabularies), catalog)
 	hc := New(backend{info: withCatalog}, log.New(io.Discard, "", 0)).WithWorker(Worker{Module: []byte("\x00asm"), Exec: []byte("// go")})
 	_, _, body = response(t, hc, "GET", "/sw.js", nil)
-	if !strings.Contains(body, `"name":"yard"`) || !strings.Contains(body, `"catalog":{"name":"parts-catalog","kind":"catalog","version":"1","blake3":"cd34"}`) || strings.Contains(body, "parts-catalog.jsonl") {
+	if !strings.Contains(body, `"name":"fleet"`) || !strings.Contains(body, `"catalog":{"name":"parts-catalog","kind":"catalog","version":"1","blake3":"cd34"}`) || strings.Contains(body, "parts-catalog.jsonl") {
 		t.Errorf("/sw.js with a server's catalog:\n%s", body)
 	}
 	config, _, _ := strings.Cut(strings.TrimPrefix(body[strings.Index(body, "self.nitrovinConfig = "):], "self.nitrovinConfig = "), ";\n")

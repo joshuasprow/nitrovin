@@ -159,11 +159,11 @@ func vocabJSOn(t *testing.T, path, base string, wire *wireLog, off offPages, epa
 		t.Errorf("a batch: IndexedDB holds %q", got)
 	}
 
-	// Files dropped on the page load as if picked: yard, with drift, which
+	// Files dropped on the page load as if picked: fleet, with drift, which
 	// maps into the server's classics.
-	tb.dropFiles(filepath.Join(driftDir, "yard.jsonl"))
-	tb.waitPrefix("#load-status", "Loaded yard (")
-	if s := tb.html(`tr[data-where="browser"]:has(a[href="/ui/vocabularies/yard"])`); !strings.Contains(s, "<summary>Drift: 1 make, 1 model, 2 qualifier</summary>") ||
+	tb.dropFiles(filepath.Join(driftDir, "fleet.jsonl"))
+	tb.waitPrefix("#load-status", "Loaded fleet (")
+	if s := tb.html(`tr[data-where="browser"]:has(a[href="/ui/vocabularies/fleet"])`); !strings.Contains(s, "<summary>Drift: 1 make, 1 model, 2 qualifier</summary>") ||
 		!strings.Contains(s, "<li>line 4: "+driftDetail("/mappings/0/make: vPIC make 99999 is not in data month %[1]s")+"</li>") {
 		t.Errorf("a dropped file with drift: %s", s)
 	}
@@ -175,13 +175,13 @@ func vocabJSOn(t *testing.T, path, base string, wire *wireLog, off offPages, epa
 		t.Errorf("EPA loaded: the panel still offers it: %s", tb.html("#browser-files"))
 	}
 	tb.until("the storage usage", `(document.getElementById("storage-usage") || {}).textContent.startsWith("This site keeps ")`)
-	if got := catalogRows(tb); !slices.Equal(got, []string{"vpic vpic", "server classics", "browser epa-vehicles", "browser listing", "browser parts", "browser yard"}) {
+	if got := catalogRows(tb); !slices.Equal(got, []string{"vpic vpic", "server classics", "browser epa-vehicles", "browser fleet", "browser listing", "browser parts"}) {
 		t.Errorf("EPA loaded: catalog %q", got)
 	}
 	// A VIN's names are the browser's as on a server that loaded the same
 	// files.
 	same := vocabServer(t, nil, filepath.Join(driftDir, "classics.jsonl"), filepath.Join(fixture, "listing.jsonl"), filepath.Join(fixture, "parts.jsonl"),
-		filepath.Join(driftDir, "yard.jsonl"), epaPath)
+		filepath.Join(driftDir, "fleet.jsonl"), epaPath)
 	for _, target := range []string{
 		"/?from.vin=" + ram2015,
 		"/?from.vin=1D7RV1GT5AS123456",
@@ -230,7 +230,7 @@ func vocabJSOn(t *testing.T, path, base string, wire *wireLog, off offPages, epa
 	if s := tb.html("#load-status"); regexp.MustCompile(`[0-9a-f]{64}`).MatchString(s) {
 		t.Errorf("a refused load names a key: %s", s)
 	}
-	if got := storedNames(tb); !slices.Equal(got, []string{"epa-vehicles", "listing", "parts", "yard"}) {
+	if got := storedNames(tb); !slices.Equal(got, []string{"epa-vehicles", "fleet", "listing", "parts"}) {
 		t.Errorf("a refused load: IndexedDB holds %q", got)
 	}
 
@@ -241,19 +241,19 @@ func vocabJSOn(t *testing.T, path, base string, wire *wireLog, off offPages, epa
 	if s := tb.html(".refusal"); !strings.Contains(s, "parts cannot go alone: listing link to it.") {
 		t.Errorf("a refused remove: %s", s)
 	}
-	if got := storedNames(tb); !slices.Equal(got, []string{"epa-vehicles", "listing", "parts", "yard"}) {
+	if got := storedNames(tb); !slices.Equal(got, []string{"epa-vehicles", "fleet", "listing", "parts"}) {
 		t.Errorf("a refused remove: IndexedDB holds %q", got)
 	}
-	if got := catalogRows(tb); !slices.Equal(got, []string{"vpic vpic", "server classics", "browser epa-vehicles", "browser listing", "browser parts", "browser yard"}) {
+	if got := catalogRows(tb); !slices.Equal(got, []string{"vpic vpic", "server classics", "browser epa-vehicles", "browser fleet", "browser listing", "browser parts"}) {
 		t.Errorf("a refused remove: catalog %q", got)
 	}
 	tb.audit("a refused remove")
 	tb.do(chromedp.Click(chromedp.CSS(`.refusal button`)))
 	tb.until("remove all", `!document.querySelector(".refusal") && !document.querySelector('a[href="/ui/vocabularies/parts"]')`)
-	if got := storedNames(tb); !slices.Equal(got, []string{"epa-vehicles", "yard"}) {
+	if got := storedNames(tb); !slices.Equal(got, []string{"epa-vehicles", "fleet"}) {
 		t.Errorf("remove all: IndexedDB holds %q", got)
 	}
-	if got := catalogRows(tb); !slices.Equal(got, []string{"vpic vpic", "server classics", "browser epa-vehicles", "browser yard"}) {
+	if got := catalogRows(tb); !slices.Equal(got, []string{"vpic vpic", "server classics", "browser epa-vehicles", "browser fleet"}) {
 		t.Errorf("remove all: catalog %q", got)
 	}
 	if !eval[bool](tb, `window.stayed === true`) {
@@ -265,14 +265,14 @@ func vocabJSOn(t *testing.T, path, base string, wire *wireLog, off offPages, epa
 	tb.do(chromedp.Navigate(base + "/"))
 	eval[bool](tb, `new Promise(resolve => {
 		(function poll() {
-			const button = document.querySelector('form.inline:has(input[value="yard"]) button');
+			const button = document.querySelector('form.inline:has(input[value="fleet"]) button');
 			if (document.getElementById("browser").dataset.state !== "ready" || !button) return setTimeout(poll, 0);
 			window.stayed = true;
 			button.click();
 			resolve(true);
 		})();
 	})`)
-	tb.until("a remove at once", `!document.querySelector('a[href="/ui/vocabularies/yard"]')`)
+	tb.until("a remove at once", `!document.querySelector('a[href="/ui/vocabularies/fleet"]')`)
 	if !eval[bool](tb, `window.stayed === true`) {
 		t.Error("a remove at once went as a page")
 	}
@@ -366,7 +366,7 @@ func vocabJSOn(t *testing.T, path, base string, wire *wireLog, off offPages, epa
 	// No file reached the server: every request it got was a GET or HEAD
 	// with no body, and none but the release's EPA asset named a file the
 	// browser holds.
-	held := []string{"listing", "parts", "yard", "epa-vehicles", "bad", "broken"}
+	held := []string{"listing", "parts", "fleet", "epa-vehicles", "bad", "broken"}
 	for _, r := range wire.all() {
 		if (r.method != http.MethodGet && r.method != http.MethodHead) || r.body != 0 {
 			t.Errorf("the server got %s %s with %d bytes of body", r.method, r.target, r.body)
