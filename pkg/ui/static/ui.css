@@ -343,7 +343,7 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
 .tagplate.blank .none:first-child { grid-column: 1 / -1; }
 .tagplate .info { position: absolute; right: .45rem; top: 50%; transform: translateY(-50%); width: 1.35rem; height: 1.35rem; padding: 0; border-radius: 50%; font: italic 700 12px Georgia, serif; text-transform: none; letter-spacing: 0; }
 .tagplate .info:active { transform: translateY(calc(-50% + 2px)); }
-.note[popover] { max-width: min(30rem, calc(100vw - 2rem)); padding: .75rem 1rem; border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .4); }
+.note[popover] { box-sizing: border-box; max-width: min(30rem, calc(100vw - 2rem)); padding: .75rem 1rem; border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .4); }
 .note[popover]::backdrop { background: rgb(10 18 26 / .35); }
 
 /* The VINs menu, under the header's button: recent VINs or the examples,
@@ -400,14 +400,21 @@ button.linkish:active { transform: none; box-shadow: none; }
   .card dl { grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); }
   .aka { margin: 1.25rem 0 0; }
   .aka h2 { position: static; width: fit-content; margin-bottom: -6px; }
-  .tagplate { grid-template-columns: 1fr 2fr 1.4fr; }
+  .tagplate { grid-template-columns: minmax(0, 1.3fr) minmax(0, 2fr) minmax(0, 1.3fr); }
   .tagplate .stamp { grid-column: 1 / -1; padding-block: .2rem; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18); }
   .tagplate.below .stamp { display: none; }
   .tagplate.blank { grid-template-columns: minmax(0, 1fr); }
   .tagplate.blank .none { grid-column: 1; }
   .seg::before, .seg::after { display: none; }
-  .seg .w { font-size: .9rem; }
+  /* A long make ("Roush Performance") breaks at its space, not in a word:
+     the words are smaller and closer here. A row under the top one has no
+     stamp row for its note's button, which sits at the row's end, clear
+     of the years. */
+  .seg { padding-inline: .35rem; }
+  .seg .w { font-size: .8rem; letter-spacing: .03em; overflow-wrap: normal; }
   .tagplate .info { top: .1rem; right: .3rem; width: 1.1rem; height: 1.1rem; font-size: 10px; transform: none; }
+  .tagplate.below .g-year { padding-right: 1.5rem; }
+  .tagplate.below .info { top: calc(50% - .55rem); }
   .tagplate .info:active { transform: none; }
   .problems { padding-inline: 0; margin-inline: 0; }
   nav.top { margin-left: 0; flex-basis: 100%; }
