@@ -1014,10 +1014,12 @@ ANALYZE nvtest.shelf`)
 // alone, through the system catalogs' indexes, never every column of the
 // database: on a database of tens of thousands of columns a check that
 // scans every one runs past the default statement timeout (#310). The
-// plan, at the planner's own costs, reads pg_class by index and
-// pg_attribute by its relation at every read of it: the view's own, and
-// the one beside it for each column's collation, whose index condition
-// alone would say nothing of the view's.
+// plan, at the planner's own costs, reads pg_class by its relation's oid
+// or name and pg_attribute by its relation, at every read of either: an
+// index read of every relation of a schema, and of each one's columns, is
+// no Seq Scan and still the whole catalog. pg_attribute is read twice, the
+// view's own and the one beside it for each column's collation, whose
+// index condition alone would say nothing of the view's.
 func TestColumnCheckPostgres(t *testing.T) {
 	conn, _ := testDB(t)
 	exec(t, conn, nvtest)
@@ -1027,9 +1029,13 @@ func TestColumnCheckPostgres(t *testing.T) {
 		t.Errorf("the column check scans every column of the database:\n%s", text)
 	}
 	read, byRelation := regexp.MustCompile(`\bon pg_attribute\b`), regexp.MustCompile(`^\s*(Index|Recheck) Cond: \(+attrelid = `)
+	readClass, byName := regexp.MustCompile(`\bon pg_class\b`), regexp.MustCompile(`^\s*(Index|Recheck) Cond: \(+(oid|relname) = `)
 	lines := strings.Split(text, "\n")
 	reads := 0
 	for i, l := range lines {
+		if readClass.MatchString(l) && (i+1 == len(lines) || !byName.MatchString(lines[i+1])) {
+			t.Errorf("the column check reads pg_class other than by its relation's oid or name, at %q:\n%s", strings.TrimSpace(l), text)
+		}
 		if !read.MatchString(l) {
 			continue
 		}
