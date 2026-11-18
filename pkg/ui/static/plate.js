@@ -209,27 +209,56 @@
   // selection. Focused by anything but a pointer (the page opening, a
   // script), the caret goes after what is there, not before it.
   let touched = -Infinity;
-  let finger = false;
   for (const type of ['pointerdown', 'pointerup']) {
-    document.addEventListener(type, (e) => {
-      touched = performance.now();
-      finger = e.pointerType === 'touch';
-    }, true);
+    document.addEventListener(type, () => { touched = performance.now(); }, true);
   }
-  // A finger's tap is the exception: a phone puts the caret at the end of
-  // the word tapped, and a VIN is one word, so the tap's gap is worked
-  // out here (seen in the iPhone simulator, iOS 26.5). Its double taps,
-  // drags and handles stay the phone's own.
+  // A finger's tap is the exception. A phone puts the caret at an end of
+  // the word tapped, and a VIN is one word; and a tap beside the caret
+  // only brings up its menu, with no click (both seen in the iPhone
+  // simulator, iOS 26.5). So the tap's gap is worked out here, from the
+  // pointer and not the click, and held for a moment against the phone's
+  // own placing. The pointer's target there is an element inside the
+  // field, not the field, so the tap is known by where it lands. Its
+  // double taps, drags and handles stay the phone's own.
+  let down = null;
+  let tapped = -Infinity;
+  let want = null;
+  const onPlate = (e) => {
+    const plate = document.querySelector('#vin-form.live .plate');
+    if (!plate || e.pointerType !== 'touch') return false;
+    const r = plate.getBoundingClientRect();
+    return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+  };
+  document.addEventListener('pointerdown', (e) => {
+    down = onPlate(e) ? { x: e.clientX, y: e.clientY, at: performance.now() } : null;
+    want = null;
+  }, true);
+  // The phone places its caret only once it knows the tap is not the
+  // first of two, so the gap is held past that, or until a key is typed.
+  document.addEventListener('beforeinput', () => { want = null; }, true);
+  document.addEventListener('pointerup', (e) => {
+    const now = performance.now();
+    const tap = down && onPlate(e) && now - down.at < 400 && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 10;
+    down = null;
+    if (!tap) return;
+    const second = now - tapped < 350;
+    tapped = now;
+    if (second) {
+      want = null;
+      return;
+    }
+    want = { gap: gapAt(e.clientX, e.clientY, document.getElementById('from-vin').value.length), until: now + 1000 };
+    hold();
+  }, true);
+  const hold = () => {
+    const input = document.getElementById('from-vin');
+    if (!want || !input || performance.now() > want.until) return;
+    if (input.selectionStart === input.selectionEnd && input.selectionStart !== want.gap) input.setSelectionRange(want.gap, want.gap);
+    show();
+  };
+  document.addEventListener('selectionchange', hold);
   document.addEventListener('click', (e) => {
-    const input = e.target;
-    if (input.id !== 'from-vin' || !finger || e.detail > 1 || !input.closest('.live')) return;
-    const edge = gapAt(e.clientX, e.clientY, input.value.length);
-    const put = () => {
-      input.setSelectionRange(edge, edge);
-      show();
-    };
-    put();
-    setTimeout(put);
+    if (e.target.id === 'from-vin') hold();
   });
   document.addEventListener('focusin', (e) => {
     const input = e.target;
