@@ -642,14 +642,18 @@ equality, and the other two `IS NULL`, which the same index serves.
 
 **Through a barrier.** A lookup hands each of its keys to the relation as
 conditions on the relation's own columns, the key's values as parameters:
-a probe of the index per key (a scan per key where the index is
-missing), whether the relation is a table, a plain view or a
-`security_barrier` view. A barrier lets a condition through to the
-view's tables only when every function in it is leakproof, which is
-Postgres's mark on a function that shows nothing of its arguments, in an
-error or otherwise; it holds any other back until the view has made its
-rows. Every condition a lookup puts on a column is leakproof, but for a
-`character` column's (below):
+a probe of the index per key, whether the relation is a table, a plain
+view or a `security_barrier` view. Where no index can serve the key, a
+lookup reads the whole relation once per key, not once per lookup.
+
+A barrier lets a condition through to the view's tables only when every
+function in it that is given one of the view's columns is leakproof,
+which is Postgres's mark on a function that reveals nothing about its
+arguments other than by its return value; it holds any other back until
+the view has made its rows. A function of the request's values alone,
+such as the one that asks whether the request names any location, needs
+no mark. These are all the conditions a lookup puts on a column, and
+each passes:
 
 - `=` on a text or an integer column: `type`, `number`, `part_type`,
   `decoded_model`, a vehicle column, `year`;
@@ -661,22 +665,28 @@ rows. Every condition a lookup puts on a column is leakproof, but for a
 So the indexes serve a barrier view as they serve a plain one, as long as
 the view leaves each indexed column something its index answers those
 conditions with. The rule is on the lookup's conditions, not on the view,
-whose own expressions need not be leakproof:
+whose own expressions need not be leakproof. Where a column below is not
+served, no index serves the key, and a lookup reads the relation once
+per key:
 
 - a table's column under the relation's name, as in the worked view
   below, is served;
 - an expression is served when the index is on the same expression: a
   view that trims, `btrim(catalog_no) AS number`, needs its index on
   `btrim(catalog_no)`, which one on `catalog_no` is not;
-- a `character` column is not: it is compared as text, through a cast
-  that an index on the column does not answer and that is not leakproof,
-  so a barrier holds its condition back as well. Cast it in the view,
+- a `character` column is served by an index on the column. Postgres
+  compares it with a key as text, through a cast that no index on the
+  column answers and no barrier passes, so a lookup first holds the
+  column to the key as `character`, which both do; the answers are the
+  text comparison's. Under a nondeterministic collation the two
+  comparisons can disagree, so the lookup makes the text one alone and
+  no index on the column serves it: cast such a column in the view,
   `part_class::text AS type`, and index that expression;
 - a view with `LIMIT` or `OFFSET` takes no condition at all, and so
-  makes its every row for every lookup; so does a view with a window
-  function, unless the window partitions by the key's columns. A column
-  that is an aggregate's result takes its condition only after the
-  grouping.
+  makes its every row for every key of every lookup; so does a view with
+  a window function, unless the window partitions by the key's columns.
+  A column that is an aggregate's result takes its condition only after
+  the grouping.
 
 **A worked view.** `testdata/vocab/stock/live/views.sql` is a synthetic
 parts system's table and a yard system's, the views the connectors read,
@@ -711,12 +721,13 @@ The role sees what the views show and no more, should its DSN reach
 anyone but nitrovin:
 
 - **`security_barrier`** runs a view's `WHERE` before any condition of
-  the query reading it that is not leakproof. A plain view lets the
-  planner run a cheap condition first, so a function the reader wrote,
-  which can raise or log its arguments, would see the rows the view
-  leaves out. It costs a lookup no index: its conditions are all
-  leakproof (Through a barrier, above), so they reach `shelf_by_number`
-  and `shelf_by_vehicle` as they would through a plain view.
+  the query reading it that gives a column to a function not marked
+  leakproof. A plain view lets the planner run a cheap condition first,
+  so a function the reader wrote, which can raise or log its arguments,
+  would see the rows the view leaves out. It costs a lookup no index:
+  every function its conditions give a column to is leakproof
+  (**Through a barrier**, above), so they reach `shelf_by_number` and
+  `shelf_by_vehicle` as they would through a plain view.
 - **`TEMPORARY` revoked from `PUBLIC`** leaves the role nowhere to write
   such a function. Every role holds `TEMPORARY` through `PUBLIC`, and it
   lets a role create one in `pg_temp`; a database made by Postgres 15 or

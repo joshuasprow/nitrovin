@@ -57,7 +57,8 @@ Each key reaches the relation as a restriction on the relation's own columns, wi
 the key's values as parameters: every condition on the relation sits in a subquery
 `LATERAL` to the key, fenced with `OFFSET 0` so that the planner cannot pull it up.
 A lookup is one index probe per key, and a `security_barrier` relation keeps the
-indexes above, as a table or a plain view does.
+indexes above, as a table or a plain view does. Where no index can serve a key, the
+lookup reads the relation once per key, where a join read it once per lookup.
 
 - **Why not a join.** As first built, a lookup joined the relation to its keys.
   Postgres never flattens a `security_barrier` view, and pushes no join condition
@@ -66,27 +67,51 @@ indexes above, as a table or a plain view does.
   153,119 rows, for three fitment keys, first run then warm: 25 ms and 1.0 ms as a
   plain view, 55 s and 22 s behind a barrier, against the 1 s statement timeout. The
   documentation's own advice for the connection's role, a `security_barrier` view,
-  made every list `unavailable`.
+  would have made its shelf lists `unavailable`.
 - **The fence is required.** Without it Postgres pulls a simple lateral subquery up,
   and its conditions are join conditions again.
-- **A condition on a relation column is leakproof.** A barrier passes a restriction
-  to its tables only when every function in it is leakproof. The lookups' are: text
-  and integer equality, `IS NULL`, `IS NOT DISTINCT FROM`, `= ANY` on text, and
-  integer `>=` and `<=`. A new condition has to be leakproof too, or it stays above
-  the barrier and the lookup scans. The casts that build a result's columns are not
-  conditions. One column type is outside this: a `character` column is compared as
-  text through a cast that is not leakproof, and the documentation says to cast it
-  in the view.
+- **A relation column goes only to leakproof functions.** A barrier passes a
+  restriction to its tables only when every function in it that takes a relation
+  column is leakproof. A function of the request's values alone needs no mark: the
+  location filter's `cardinality` is not leakproof, and passes. The lookups give a
+  column to text and integer equality, `IS NULL`, `IS NOT DISTINCT FROM`, `= ANY` on
+  text, and integer `>=` and `<=`. A new condition has to keep to leakproof
+  functions of a column too, or it stays above the barrier and the lookup scans. The
+  casts that build a result's columns are not conditions.
+- **A `character` column is held to the key as `character` first.** Postgres
+  compares one with a text key as text, through a cast that is not leakproof and
+  that no index on the column serves, so on a plain relation too the fenced lookup
+  scanned once per key. The lookup therefore adds the `character` comparison, which
+  is leakproof and indexed, beside the text one. It changes no answer: the text
+  comparison is true only of a key equal byte for byte to the value without its
+  padding, so of a key ending in no space, and of those the `character` comparison,
+  which ignores trailing spaces on both sides, is true too. That holds under a
+  deterministic collation only (under one where a no-break space equals a space, a
+  value ending in the first equals as text a key ending in the second, and not as
+  `character`), so the column check reads each column's collation and a
+  `character` column of a nondeterministic one keeps the text comparison alone.
+- **The price is a scan per key where no index serves it.** The planner cannot turn
+  a fenced subquery into one hash join, so a relation with no index on a key column
+  is read once per key: an unindexed table, a key column the view computes with no
+  matching expression index, a view with `LIMIT`, `OFFSET` or a window function not
+  partitioned by the key, a `character` column of a nondeterministic collation. On
+  a plain table of 150,000 rows with no index (Postgres 17, shelf by fitment, warm):
+  8.0 ms, 8.1 ms and 8.2 ms as a join for 1, 10 and 40 keys; 8.9 ms, 80 ms and
+  375 ms as built. The documentation says which relations these are.
 - **The plan is tested, not the time.** Fixture-sized tables never show the cost.
   `pkg/stock/pg` holds each of the four lookups to its index, with an index
-  condition on the key's columns, through the worked view's barrier, and the
-  fitment lookup through a plain view as well.
+  condition on the key's columns, through the worked view's barrier, the fitment
+  lookup through a plain view as well, and both shelf lookups over `character`
+  columns, on a table and behind a barrier.
 - **Measured when built**, on a synthetic shelf of 150,000 rows behind the worked
   view's barrier (Postgres 17, three fitment keys of one number, first run then
   warm): 9.1 ms and 8.7 ms as a join, by a parallel scan of the table; 0.13 ms and
   0.06 ms as built, which is what the plain view takes either way. Behind a barrier
   view that works per row (two tables in a `UNION ALL`, two joins, an anti-join and
   an aggregate per row): 298 ms and 282 ms as a join, 0.29 ms and 0.14 ms as built.
+  With `character` key columns, indexed, and 40 keys (warm): 14 ms on the table and
+  16 ms behind a barrier as a join, which no index served either; 677 ms and 960 ms
+  fenced with the text comparison alone; 0.33 ms on both as built.
 
 **At first connection** nitrovin checks the relation's columns against
 `information_schema`. A missing or mistyped column makes the source `unavailable`,

@@ -1029,6 +1029,83 @@ func TestColumnCheckPostgres(t *testing.T) {
 	}
 }
 
+// TestCharacterPostgres: a relation whose key columns are character
+// answers as a text comparison of each has it, a padded value matching
+// the key without its padding and nothing matching a key that ends in a
+// space, and its lookups read the columns' own indexes, on the table and
+// through a security_barrier view. A character column of a
+// nondeterministic collation keeps the text comparison alone: there a
+// value can equal a key that ends in a space, which a character
+// comparison would lose.
+func TestCharacterPostgres(t *testing.T) {
+	conn, u := testDB(t)
+	exec(t, conn, `DROP SCHEMA IF EXISTS nvtest CASCADE; CREATE SCHEMA nvtest;
+CREATE TABLE nvtest.fixed (id text, location text, type character(24), number character(12), side text, part_type character(24),
+  vehicle_make character(16), vehicle_model character(24), year integer, fields jsonb);
+INSERT INTO nvtest.fixed VALUES
+  ('C-1', 'north', 'mirror', 'MR-1001', 'left', NULL, NULL, NULL, NULL, '{}'),
+  ('C-2', 'north', 'mirror', 'MR-1001 X', 'left', NULL, NULL, NULL, NULL, '{}'),
+  ('C-3', 'north', NULL, NULL, NULL, 'mirror', 'Dodge', 'Ram 1500', 2010, '{}');
+CREATE INDEX fixed_by_number ON nvtest.fixed (type, number, side);
+CREATE INDEX fixed_by_vehicle ON nvtest.fixed (part_type, vehicle_make, vehicle_model, year);
+CREATE VIEW nvtest.fixed_barrier WITH (security_barrier) AS SELECT * FROM nvtest.fixed;
+CREATE COLLATION nvtest.loose (provider = icu, locale = 'und-u-ks-level2', deterministic = false);
+CREATE TABLE nvtest.fixed_loose (LIKE nvtest.fixed);
+ALTER TABLE nvtest.fixed_loose ALTER COLUMN number TYPE character(12) COLLATE nvtest.loose;
+INSERT INTO nvtest.fixed_loose VALUES ('L-1', 'north', 'mirror', E'MR-1001\u00A0', 'left', NULL, NULL, NULL, NULL, '{}')`)
+	t.Cleanup(func() { exec(t, conn, `DROP SCHEMA IF EXISTS nvtest CASCADE`) })
+	ctx := context.Background()
+	key := func(number string) []vocab.FitmentKey {
+		return []vocab.FitmentKey{{Type: "mirror", Number: number, Side: vocab.SideLeft}}
+	}
+	ram := func(model string) stock.ShelfVehicle {
+		return stock.ShelfVehicle{PartTypes: []string{"mirror"}, Vehicles: []vocab.Vehicle{{Entry: map[string]string{"make": "Dodge", "model": model}}}, Year: new(2010)}
+	}
+	// served are each list's rows, as id and the number or model served.
+	served := func(rs []stock.Result, err error) []string {
+		t.Helper()
+		if err != nil {
+			t.Fatal(err)
+		}
+		out := make([]string, len(rs))
+		for i, r := range rs {
+			for _, row := range r.Rows {
+				if row.Fitment != nil {
+					out[i] += fmt.Sprintf("%s %q", row.ID, row.Fitment.Number)
+				} else {
+					out[i] += fmt.Sprintf("%s %q", row.ID, row.Vehicle.Entry["model"])
+				}
+			}
+		}
+		return out
+	}
+	exec(t, conn, `SET enable_seqscan = off`)
+	t.Cleanup(func() { exec(t, conn, `RESET enable_seqscan`) })
+	for _, relation := range []string{"nvtest.fixed", "nvtest.fixed_barrier"} {
+		s := connector(t, relation, u.String(), "")
+		rs, _, err := s.ShelfByFitment(ctx, [][]vocab.FitmentKey{key("MR-1001"), key("MR-1001 "), key("MR-1001 X"), key("MR-1001 X  "), key("MR-100")}, stock.Page{Limit: 10})
+		if got, want := served(rs, err), []string{`C-1 "MR-1001"`, "", `C-2 "MR-1001 X"`, "", ""}; !slices.Equal(got, want) {
+			t.Errorf("%s by fitment: %q, want %q", relation, got, want)
+		}
+		rs, _, err = s.ShelfByVehicle(ctx, []stock.ShelfVehicle{ram("Ram 1500"), ram("Ram 1500 "), ram("Ram")}, stock.Page{Limit: 10})
+		if got, want := served(rs, err), []string{`C-3 "Ram 1500"`, "", ""}; !slices.Equal(got, want) {
+			t.Errorf("%s by vehicle: %q, want %q", relation, got, want)
+		}
+		probes(t, explain(t, conn, s.q.byFitment, int32(1), []string{}, int64(0), int64(10),
+			[]int32{0}, []string{"mirror"}, []string{"MR-1001"}, []*string{new("left")}), "fixed", "fixed_by_number", "type", "number")
+		probes(t, explain(t, conn, s.q.byVehicle, int32(1), []string{}, int64(0), int64(10),
+			[]int32{0}, []string{"mirror"}, []*int32{new(int32(2010))}, []*string{new("Dodge")}, []*string{new("Ram 1500")}), "fixed", "fixed_by_vehicle", "part_type", "vehicle_make", "vehicle_model")
+	}
+
+	// At this collation's strength a no-break space equals a space, so
+	// the value ending in one equals, as text, the key ending in a space.
+	s := connector(t, "nvtest.fixed_loose", u.String(), "")
+	rs, _, err := s.ShelfByFitment(ctx, [][]vocab.FitmentKey{key("MR-1001 "), key("mr-1001\u00a0"), key("MR-1001")}, stock.Page{Limit: 10})
+	if got, want := served(rs, err), []string{`L-1 "MR-1001\u00a0"`, `L-1 "MR-1001\u00a0"`, ""}; !slices.Equal(got, want) {
+		t.Errorf("a nondeterministic collation: %q, want %q", got, want)
+	}
+}
+
 // TestLostPostgres: a database lost after its check passed (connections
 // gone, new ones hanging past the connect timeout) makes the source
 // unavailable and resets it: the next lookups answer at once, dialling

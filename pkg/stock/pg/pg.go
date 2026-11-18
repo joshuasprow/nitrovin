@@ -254,7 +254,7 @@ func (s *Source) check(ctx context.Context, pool *pgxpool.Pool) (*queries, *stoc
 		return nil, s.unavailable(ctx, err)
 	}
 	defer conn.Release()
-	got, err := relationColumns(bctx, conn, s.c.Relation)
+	got, padded, err := relationColumns(bctx, conn, s.c.Relation)
 	if err != nil {
 		return nil, s.unavailable(ctx, err)
 	}
@@ -263,7 +263,7 @@ func (s *Source) check(ctx context.Context, pool *pgxpool.Pool) (*queries, *stoc
 		return nil, down
 	}
 	if s.c.ReleaseRelation != "" {
-		got, err := relationColumns(bctx, conn, s.c.ReleaseRelation)
+		got, _, err := relationColumns(bctx, conn, s.c.ReleaseRelation)
 		if err != nil {
 			return nil, s.unavailable(ctx, err)
 		}
@@ -271,34 +271,47 @@ func (s *Source) check(ctx context.Context, pool *pgxpool.Pool) (*queries, *stoc
 			return nil, down
 		}
 	}
-	return s.queries(asOf), nil
+	return s.queries(asOf, padded), nil
 }
 
-// columnsQuery is relation $1's columns, as relationColumns reads them.
-// The view is filtered by its own columns, given as values, so the planner
-// reads the relation's rows by the system catalogs' indexes; joined to
-// pg_class instead, it reads every column of the database first (#310).
-const columnsQuery = `SELECT column_name::text, data_type::text
-FROM information_schema.columns
-WHERE (table_schema, table_name) = (SELECT n.nspname, k.relname
+// columnsQuery is relation $1's columns, as relationColumns reads them:
+// each one's name, its data type and whether its collation is
+// deterministic. The view is filtered by its own columns, given as
+// values, so the planner reads the relation's rows by the system
+// catalogs' indexes; joined to pg_class instead, it reads every column of
+// the database first (#310). The collation is pg_attribute's, read by
+// the relation's oid and the column's name, so it joins the view to
+// nothing the view is not already filtered by. to_jsonb reads
+// collisdeterministic where there is one: Postgres 11 and older have no
+// such column, and no nondeterministic collation.
+const columnsQuery = `SELECT c.column_name::text, c.data_type::text, coalesce((to_jsonb(o) ->> 'collisdeterministic')::boolean, true)
+FROM information_schema.columns c
+JOIN pg_catalog.pg_attribute a ON a.attrelid = to_regclass($1) AND a.attname = c.column_name::name
+LEFT JOIN pg_catalog.pg_collation o ON o.oid = a.attcollation
+WHERE (c.table_schema, c.table_name) = (SELECT n.nspname, k.relname
   FROM pg_catalog.pg_class k JOIN pg_catalog.pg_namespace n ON n.oid = k.relnamespace
   WHERE k.oid = to_regclass($1))`
 
 // relationColumns are relation's columns that the connection's user can
 // read, by name, each its information_schema data_type; empty when there
-// is no such relation.
-func relationColumns(ctx context.Context, conn *pgxpool.Conn, relation string) (map[string]string, error) {
+// is no such relation. padded are those of them that are character under
+// a deterministic collation.
+func relationColumns(ctx context.Context, conn *pgxpool.Conn, relation string) (got map[string]string, padded map[string]bool, err error) {
 	rows, err := conn.Query(ctx, columnsQuery, quoted(relation))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	got := map[string]string{}
+	got, padded = map[string]string{}, map[string]bool{}
 	var name, typ string
-	_, err = pgx.ForEachRow(rows, []any{&name, &typ}, func() error {
+	var deterministic bool
+	_, err = pgx.ForEachRow(rows, []any{&name, &typ, &deterministic}, func() error {
 		got[name] = typ
+		if typ == "character" && deterministic {
+			padded[name] = true
+		}
 		return nil
 	})
-	return got, err
+	return got, padded, err
 }
 
 // A column class is the data types a column may have.
