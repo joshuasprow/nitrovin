@@ -1797,10 +1797,14 @@ page, the typing on the plate included.
   cells, and the cells draw them: a bar in the gap between two cells for the
   caret, the selected cells inked, the next empty cell marked. Under a mouse a
   faint caret shows the gap a click would pick. A whole VIN takes no more: a
-  character typed into it is refused and nothing is pushed off its end. A
-  phone places the caret of a tap at an end of the word, and a VIN is one
-  word, so for a finger the script works the gap out from the pointer and
-  holds the caret there; double taps, drags and handles stay the phone's own.
+  character typed into it is refused and nothing is pushed off its end. Where
+  a pointer lands is the script's to say, from the cell under it, because the
+  browsers do not agree with the cells: Firefox halves a character at its
+  glyph and not at its cell, and a phone places the caret of a tap at an end
+  of the word, a VIN being one word. So a click or a tap's gap, and the cells
+  a mouse drags over, are worked out from the pointer and held there; double
+  clicks and taps, Shift and a click, and a phone's drags and handles stay
+  the browser's own.
 - **Pasted input is cleaned first** (finding 4). Only letters and digits are
   kept, upper-cased, and cut at 17, by the same rule on the server and in the
   browser. Letters are never swapped: an O stays an O, and a character no VIN
@@ -1819,7 +1823,7 @@ page, the typing on the plate included.
   anything, so the page with and without JavaScript is the same drawing, and
   there is nothing to redraw on scroll or resize (explainshell redraws on
   both). The script reads the cells' places for one thing: the gap nearest a
-  tap or the mouse.
+  pointer.
 - **On a phone the plate is two rows** (below 34rem), so a cell is wide enough
   for a finger. It splits where a VIN does, after the check digit: nine cells
   above (maker, vehicle, check digit) under their labels, and eight below

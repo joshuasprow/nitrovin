@@ -238,10 +238,12 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(own(e.request, download));
     return;
   }
-  // An old link may name a file of this browser's: it moves here, as the
-  // server moves it, and the server never sees it.
+  // An old link moves here as the server moves it (pkg/ui's moved), with
+  // the VIN it named and nothing else, and the server never sees it.
   if (url.pathname === MOVED) {
-    e.respondWith(own(e.request, async () => Response.redirect(new URL(PAGE + url.search, location.origin).href, 301)));
+    const vin = url.searchParams.get('from.vin') || url.searchParams.get('vin');
+    const to = PAGE + (vin ? '?' + new URLSearchParams({ 'from.vin': vin }) : '');
+    e.respondWith(own(e.request, async () => Response.redirect(new URL(to, location.origin).href, 301)));
     return;
   }
   // The page is the module's once this browser holds a file: its "Also

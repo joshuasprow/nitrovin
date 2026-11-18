@@ -6,6 +6,7 @@ import (
 	_ "embed"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -371,8 +372,8 @@ func (tb *tab) waitText(sel, want string) {
 // profile: without JavaScript every step is a page the browser loads, and
 // with it the plate asks the server for each answer as a fragment
 // (HX-Request), the page never reloading. Its dialogs open either way.
-// Then the plate is typed on, key by key. axe audits each state. CI (CI
-// set) needs the browser; a machine without one skips.
+// Then the plate is typed on, key by key, and pasted into. axe audits
+// each state. CI (CI set) needs the browser; a machine without one skips.
 func browserForm(t *testing.T, srv *httptest.Server) {
 	path := chromePath()
 	if path == "" {
@@ -387,6 +388,7 @@ func browserForm(t *testing.T, srv *httptest.Server) {
 	t.Run("js-off", func(t *testing.T) { formJSOff(t, path, bsrv.URL, log) })
 	t.Run("js-on", func(t *testing.T) { formJSOn(t, path, bsrv.URL, log) })
 	t.Run("plate", func(t *testing.T) { plateJSOn(t, path, bsrv.URL, log) })
+	t.Run("paste", func(t *testing.T) { pasteJSOn(t, path, bsrv.URL, log) })
 }
 
 const (
@@ -715,6 +717,113 @@ func plateJSOn(t *testing.T, path, base string, log *requestLog) {
 	tb.until("Enter", `document.getElementById("answer") !== window.answered`)
 	held("Enter", vin, entries+1)
 	tb.requests("Enter", true, submitted)
+
+	if !eval[bool](tb, `window.stayed === true`) {
+		t.Errorf("the page reloaded")
+	}
+	if refused := eval[[]string](tb, `refused`); len(refused) > 0 {
+		t.Errorf("CSP refused %q", refused)
+	}
+	tb.mu.Lock()
+	defer tb.mu.Unlock()
+	if len(tb.thrown) > 0 {
+		t.Errorf("thrown: %q", tb.thrown)
+	}
+}
+
+// pasteJSOn: pasting into the plate with JavaScript, in a fresh profile
+// (plate.js's paste). Each paste is a paste event on the field with its
+// text on the clipboard, which the plate takes for its own. A VIN pasted
+// with spaces, dashes and lower case is its 17 characters, answered once
+// and one history entry; a whole VIN pasted over another replaces it;
+// pasted into a plate partly typed, as much goes in at the caret as there
+// is room for; and text with no letter or digit changes nothing.
+func pasteJSOn(t *testing.T, path, base string, log *requestLog) {
+	tb := newTab(t, path, base, log, true)
+	tb.do(chromedp.Navigate(base + "/"))
+	tb.wait("#vin-form.live")
+	tb.requests("/", false, "/")
+	eval[bool](tb, `window.stayed = true`)
+	// The field's input events are counted: each is one change to the
+	// plate, and the plate asks for an answer after one alone.
+	eval[bool](tb, `(window.inputs = 0, document.addEventListener("input", (e) => { if (e.target.id === "from-vin") inputs++; }), true)`)
+	entries := eval[int](tb, `history.length`)
+	const other = "5YJ3E1EA2JF000316"
+	target := func(held string) string { return "/?from.vin=" + held }
+	// paste pastes text into the field, where its caret or selection is,
+	// and checks that the plate took the paste from the browser.
+	paste := func(step, text string) {
+		t.Helper()
+		if !eval[bool](tb, `(() => {
+			const field = document.getElementById("from-vin"), data = new DataTransfer();
+			field.focus();
+			data.setData("text/plain", `+jsString(text)+`);
+			return !field.dispatchEvent(new ClipboardEvent("paste", { clipboardData: data, bubbles: true, cancelable: true }));
+		})()`) {
+			t.Errorf("%s: the paste was left to the browser", step)
+		}
+	}
+	// held waits for want's answer and checks where the tab is, what the
+	// plate holds and shows, and how many changes it took.
+	held := func(step, want string, entries, inputs int) {
+		t.Helper()
+		tb.wait(`#answer[data-vin="` + want + `"]`)
+		tb.until(step, `location.pathname + location.search === `+jsString(target(want)))
+		at, value, n := tb.at(), eval[string](tb, `document.getElementById("from-vin").value`), eval[int](tb, `history.length`)
+		if at != target(want) || value != want || n != entries {
+			t.Errorf("%s: at %s, the plate holds %q, %d history entries; want %s, %q, %d", step, at, value, n, target(want), want, entries)
+		}
+		if cells := eval[string](tb, `[...document.querySelectorAll("#vin-form .cell")].map((c) => c.firstElementChild.textContent).join("")`); cells != want {
+			t.Errorf("%s: the cells show %q; want %q", step, cells, want)
+		}
+		if got := eval[int](tb, `inputs`); got != inputs {
+			t.Errorf("%s: %d changes to the plate; want %d", step, got, inputs)
+		}
+	}
+
+	// A VIN as it is copied from a listing, into the empty plate: its 17
+	// characters, asked for once, one entry.
+	paste("a VIN pasted", " 1hgcm-82633 a004352\n")
+	held("a VIN pasted", vin, entries+1, 1)
+	if body := tb.html("#answer"); !strings.Contains(body, "<dt>Make</dt><dd>HONDA</dd>") || !strings.Contains(body, `<p class="big">Checks out</p>`) {
+		t.Errorf("a VIN pasted: not its answer\n%s", body)
+	}
+	tb.requests("a VIN pasted", true, submitted)
+
+	// Another whole VIN replaces it, wherever the caret is: here after
+	// the last character, where nothing typed would go in.
+	paste("a VIN pasted over a VIN", strings.ToLower(other[:9])+" - "+other[9:])
+	held("a VIN pasted over a VIN", other, entries+2, 2)
+	if body := tb.html("#answer"); !strings.Contains(body, "<dt>Make</dt><dd>TESLA</dd>") {
+		t.Errorf("a VIN pasted over a VIN: not its answer\n%s", body)
+	}
+	tb.requests("a VIN pasted over a VIN", true, target(other))
+
+	// Less than a VIN goes in over the selection: here all of it.
+	eval[bool](tb, `(document.getElementById("from-vin").select(), true)`)
+	paste("three characters pasted over a VIN", vin[:3])
+	held("three characters pasted over a VIN", vin[:3], entries+3, 3)
+	tb.requests("three characters pasted over a VIN", true, target(vin[:3]))
+
+	// More than fits, pasted after them: the 14 there is room for, and
+	// the rest is dropped.
+	paste("more than fits pasted", strings.ToLower(vin[3:10])+"-"+vin[10:]+"9Z")
+	held("more than fits pasted", vin, entries+4, 4)
+	tb.requests("more than fits pasted", true, submitted)
+
+	// Text with no letter or digit changes nothing, with the caret in the
+	// plate or a selection it would otherwise replace: no change, so no
+	// request, and the selection as it was.
+	for _, selection := range [][2]int{{17, 17}, {5, 5}, {2, 9}} {
+		step := fmt.Sprintf("nothing pasted at %d-%d", selection[0], selection[1])
+		eval[bool](tb, fmt.Sprintf(`(document.getElementById("from-vin").setSelectionRange(%d, %d), true)`, selection[0], selection[1]))
+		paste(step, " -- \t\n.")
+		held(step, vin, entries+4, 4)
+		if got := eval[[]int](tb, `(() => { const f = document.getElementById("from-vin"); return [f.selectionStart, f.selectionEnd]; })()`); !slices.Equal(got, selection[:]) {
+			t.Errorf("%s: the selection is %v; want %v", step, got, selection)
+		}
+	}
+	tb.requests("nothing pasted", true)
 
 	if !eval[bool](tb, `window.stayed === true`) {
 		t.Errorf("the page reloaded")

@@ -591,7 +591,8 @@ offers to a whole VIN whose check digit checks out. The dialogs, the
 menu, the check digit's arithmetic and a name's note are popovers, so
 they open without a script; the Vocabularies dialog is on each entry
 list too. Old links (`/?vin=…`, `/ui/decode`, `/ui/translate`, `/vocab`,
-`/ui/vocabularies`) move to the page with a `301`.
+`/ui/vocabularies`) move to the page with a `301`, carrying the VIN they
+named (as `vin` or `from.vin`) and nothing else.
 
 The server draws all of it, on a fixed grid of 17 columns (`ui.css`; CSP
 allows no inline style, so every position is a class), so the page with
@@ -600,7 +601,8 @@ is an input below the cells and Decode sends it. `plate.js` puts a
 textarea in its place, laid over the cells with its characters spaced a
 cell apart, so the field's own caret and selection fall on the cells,
 which draw them; under a mouse a faint caret marks the gap a click would
-pick, and a finger's tap is placed from the pointer. On a narrow window
+pick, and a click, a tap and a mouse's drag are placed from the pointer,
+the browsers not agreeing with the cells on their own. On a narrow window
 (a phone) the plate is two rows, nine cells and eight, split after the
 check digit, and the field's text wraps with them. As the visitor types,
 `plate.js` asks the page for the answer as a fragment (`HX-Request`,
@@ -738,7 +740,11 @@ snapshot, and the VINs menu offers the VIN that decoded. Then the plate
 is typed on, a key at a time (`plate`): each character is answered once
 without a submit, a character no VIN holds and an 18th are not typed,
 the URL follows in place, the whole VIN alone is a history entry, and
-Enter on the VIN the page is at adds none. Nothing may be refused by
+Enter on the VIN the page is at adds none. Then it is pasted into
+(`paste`): a VIN with spaces, dashes and lower case is its 17 characters,
+answered once and one history entry, a whole VIN replaces the one there,
+a partly typed plate takes what fits, and text with no letter or digit
+changes nothing. Nothing may be refused by
 CSP, and an answer's dialogs open with JavaScript and without. axe-core
 audits every state of each run and fails on any violation; it is vendored
 as `cmd/nitrovin/testdata/axe.min.js` (npm's `axe-core` at `axeVersion`,

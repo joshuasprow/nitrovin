@@ -208,55 +208,86 @@
     return Math.min(gap, n);
   };
 
-  // The clicks, drags and keys are the input's own; the cells follow its
-  // selection. Focused by anything but a pointer (the page opening, a
-  // script), the caret goes after what is there, not before it.
+  // The keys are the input's own, and the cells follow its selection.
+  // Focused by anything but a pointer (the page opening, a script), the
+  // caret goes after what is there, not before it.
   let touched = -Infinity;
   for (const type of ['pointerdown', 'pointerup']) {
     document.addEventListener(type, () => { touched = performance.now(); }, true);
   }
-  // A finger's tap is the exception. A phone puts the caret at an end of
-  // the word tapped, and a VIN is one word; and a tap beside the caret
-  // only brings up its menu, with no click (both seen in the iPhone
-  // simulator, iOS 26.5). So the tap's gap is worked out here, from the
-  // pointer and not the click, and held for a moment against the phone's
-  // own placing. The pointer's target there is an element inside the
-  // field, not the field, so the tap is known by where it lands. Its
-  // double taps, drags and handles stay the phone's own.
+  // Where a pointer puts the caret is worked out here, from the cell under
+  // it (gapAt), because the browsers do not agree with the cells on their
+  // own. Firefox halves a character at its glyph and not at its cell, so a
+  // click in a cell's left half lands after it. A phone puts the caret at
+  // an end of the word tapped, and a VIN is one word; and its tap beside
+  // the caret only brings up the caret's menu, with no click (both seen in
+  // the iPhone simulator, iOS 26.5). So a click or tap's gap, and a mouse
+  // drag's cells, are taken from the pointer and held for a moment against
+  // the browser's own placing. A phone's target is an element inside the
+  // field, not the field, so the pointer is known by where it lands. Double
+  // clicks and taps, Shift and a click, and a phone's drags and handles
+  // stay the browser's own.
   let down = null;
-  let tapped = -Infinity;
+  let tapped = { at: -Infinity, x: 0, y: 0 };
   let want = null;
   const onPlate = (e) => {
     const plate = document.querySelector('#vin-form.live .plate');
-    if (!plate || e.pointerType !== 'touch') return false;
+    if (!plate) return false;
     const r = plate.getBoundingClientRect();
     return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
   };
+  const gapOf = (e) => gapAt(e.clientX, e.clientY, document.getElementById('from-vin').value.length);
   document.addEventListener('pointerdown', (e) => {
-    down = onPlate(e) ? { x: e.clientX, y: e.clientY, at: performance.now() } : null;
     want = null;
+    down = null;
+    if (!onPlate(e) || e.shiftKey || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    down = { x: e.clientX, y: e.clientY, at: performance.now(), gap: gapOf(e), dragged: false };
   }, true);
-  // The phone places its caret only once it knows the tap is not the
-  // first of two, so the gap is held past that, or until a key is typed.
+  document.addEventListener('pointermove', (e) => {
+    if (!down || e.pointerType !== 'mouse' || e.buttons !== 1) return;
+    if (!down.dragged && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 4) return;
+    down.dragged = true;
+    const gap = gapOf(e);
+    want = { from: Math.min(down.gap, gap), to: Math.max(down.gap, gap), back: gap < down.gap, until: performance.now() + 1000 };
+    hold();
+  }, true);
+  // A phone places its caret only once it knows the tap is not the first
+  // of two, so the gap is held past that, or until a key is typed.
   document.addEventListener('beforeinput', () => { want = null; }, true);
   document.addEventListener('pointerup', (e) => {
     const now = performance.now();
-    const tap = down && onPlate(e) && now - down.at < 400 && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 10;
+    const was = down;
     down = null;
-    if (!tap) return;
-    const second = now - tapped < 350;
-    tapped = now;
+    if (!was) return;
+    if (was.dragged) {
+      if (want) want.until = now + 150;
+      hold();
+      return;
+    }
+    const touch = e.pointerType === 'touch';
+    if (!onPlate(e) || (touch && now - was.at >= 400) || Math.hypot(e.clientX - was.x, e.clientY - was.y) >= 10) return;
+    // The second of two in one place is the browser's (it selects).
+    const second = now - tapped.at < 350 && Math.hypot(e.clientX - tapped.x, e.clientY - tapped.y) < 25;
+    tapped = { at: now, x: e.clientX, y: e.clientY };
     if (second) {
       want = null;
       return;
     }
-    want = { gap: gapAt(e.clientX, e.clientY, document.getElementById('from-vin').value.length), until: now + 1000 };
+    const gap = gapOf(e);
+    want = { from: gap, to: gap, back: false, until: now + (touch ? 1000 : 150) };
     hold();
   }, true);
+  // hold keeps the selection where the pointer put it: a caret only while
+  // the browser shows a caret (a selection it made is its own), a drag's
+  // cells whatever it shows.
   const hold = () => {
     const input = document.getElementById('from-vin');
     if (!want || !input || performance.now() > want.until) return;
-    if (input.selectionStart === input.selectionEnd && input.selectionStart !== want.gap) input.setSelectionRange(want.gap, want.gap);
+    const caret = want.from === want.to;
+    const same = input.selectionStart === want.from && input.selectionEnd === want.to;
+    if (!same && (!caret || input.selectionStart === input.selectionEnd)) {
+      input.setSelectionRange(want.from, want.to, want.back ? 'backward' : 'forward');
+    }
     show();
   };
   document.addEventListener('selectionchange', hold);

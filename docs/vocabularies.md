@@ -945,7 +945,8 @@ what is shown. The page reads no other parameter: a model year or a
 clock in its URL is ignored, and the translation is the VIN's as of now.
 A refusal is said below the plate. Older links
 (`/?vin=…`, `/ui/decode`, `/ui/translate`, `/vocab`,
-`/ui/vocabularies`) redirect to it (`301`). Below the plate the answer
+`/ui/vocabularies`) redirect to it (`301`) with the VIN they named and
+nothing else. Below the plate the answer
 is a card for each group and, under them, "Also known as": a stack for
 each vocabulary, one with a name before one without. A name reads the
 vocabulary, then the make, the rest of the entry and the years its

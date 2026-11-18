@@ -84,19 +84,26 @@ func TestPage(t *testing.T) {
 		t.Errorf("a query without a VIN, as a fragment: %d\n%s", status, body)
 	}
 
-	// Old links move to the page, their query along, less the decode's
-	// options the page no longer reads: the decode form's VIN is the
-	// page's from.
+	// Old links move to the page with the VIN they named, as the decode
+	// form's vin or a translation's from.vin, and nothing else: the page
+	// reads nothing else. One that named none moves to the empty page.
 	for _, method := range []string{"GET", "HEAD"} {
 		for old, want := range map[string]string{
-			"/?vin=1HGCM82633A004352":                                                   "/?from.vin=1HGCM82633A004352",
-			"/?vin=1HGCM82633A004352&model_year=2003&shape=nitrovin":                    "/?from.vin=1HGCM82633A004352",
-			"/ui/decode?vin=1HGCM82633A004352&model_year=2003&full=true&now=2026-11-01": "/?from.vin=1HGCM82633A004352",
-			"/ui/decode": "/",
-			"/ui/translate?from.model=1861&model_year=2003&to=yard":    "/?from.model=1861&to=yard",
-			"/ui/translate?from.vocabulary=yard&vin=1HGCM82633A004352": "/?from.vocabulary=yard&vin=1HGCM82633A004352",
-			"/vocab":           "/",
-			"/ui/vocabularies": "/",
+			"/?vin=1HGCM82633A004352":                                "/?from.vin=1HGCM82633A004352",
+			"/?vin=1HGCM82633A004352&model_year=2003&shape=nitrovin": "/?from.vin=1HGCM82633A004352",
+			"/?vin=1HGCM82633A004352&from.model=1861&to=yard":        "/?from.vin=1HGCM82633A004352",
+			"/?vin=": "/",
+			"/ui/decode?vin=1HGCM82633A004352&model_year=2003&full=true&now=2026-11-01":     "/?from.vin=1HGCM82633A004352",
+			"/ui/decode?vin=1hgcm-82633%20a004352":                                          "/?from.vin=1hgcm-82633+a004352",
+			"/ui/decode":                                                                    "/",
+			"/ui/translate?from.model=1861&model_year=2003&to=yard":                         "/",
+			"/ui/translate?from.vocabulary=yard&vin=1HGCM82633A004352":                      "/?from.vin=1HGCM82633A004352",
+			"/ui/translate?from.vin=1HGCM82633A004352&to=yard&to=shelf&tab=spine&full=true": "/?from.vin=1HGCM82633A004352",
+			"/ui/translate?from.vin=1HGCM82633A004352&vin=5YJ3E1EA2JF000316&from.make=474":  "/?from.vin=1HGCM82633A004352",
+			"/vocab":                                 "/",
+			"/vocab?tab=entry&to=yard":               "/",
+			"/ui/vocabularies":                       "/",
+			"/ui/vocabularies?vin=1HGCM82633A004352": "/?from.vin=1HGCM82633A004352",
 		} {
 			status, hdr, _ := response(t, h, method, old, nil)
 			if status != http.StatusMovedPermanently || hdr.Get("Location") != want {

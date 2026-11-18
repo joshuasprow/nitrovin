@@ -170,7 +170,8 @@ dashed. A refusal is said below the plate. The page is rendered on the
 server and every answer is a
 shareable URL (`/?from.vin=1HGCM82633A004352`; older `/?vin=`,
 `/ui/decode`, `/ui/translate`, `/vocab` and `/ui/vocabularies` links
-redirect to it). The page takes a VIN and nothing else: `model_year`,
+redirect to it, with their VIN and nothing else). The page takes a VIN
+and nothing else: `model_year`,
 `shape`, `full` and `now` are the API's and the command line's, and the
 page ignores them. Three buttons in the header open the rest: VINs offers
 examples, the VINs you decoded lately and Surprise me;

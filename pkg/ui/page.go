@@ -7,7 +7,6 @@ import (
 	jsonv2 "encoding/json/v2"
 	"errors"
 	"html/template"
-	"maps"
 	"math/rand/v2"
 	"net/http"
 	"net/url"
@@ -39,18 +38,13 @@ import (
 // there too, asked for once (decoded). Without JavaScript every step is a
 // page load, and the dialogs still open: they are popovers. Old links, to
 // /ui/decode, /ui/translate, /vocab and the form at /?vin=…, move to the
-// page.
+// page, with the VIN they named and nothing else.
 
 const (
 	homePath = "/"
 	// homeTitle is the page's title before it has an answer.
 	homeTitle = "VIN decoder"
 )
-
-// retiredOptions are the decode's options the page read from its URL
-// once. It ignores them now, as it does any parameter it does not know,
-// and an old link moves without them (moved).
-var retiredOptions = []string{"model_year", "shape", "full", "now"}
 
 // homePage is what the page's template renders: the plate and everything
 // hanging off it (diagram.go), the chips to try, and what the Developers
@@ -163,29 +157,23 @@ func (w htmlText) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-// oldForm reports whether q is an old link to the decode form, /?vin=…:
-// a VIN that is no translation's context.
-func oldForm(q url.Values) bool {
-	return q.Has("vin") && !slices.ContainsFunc(slices.Collect(maps.Keys(q)), func(k string) bool { return strings.HasPrefix(k, "from.") })
+// oldVIN is the VIN an old link named, as the decode form's vin or a
+// translation's from.vin, the from first; "" when it named none.
+func oldVIN(q url.Values) string {
+	if vin := q.Get("from.vin"); vin != "" {
+		return vin
+	}
+	return q.Get("vin")
 }
 
 // moved answers a page that the one page holds now by sending the
-// visitor there, its query along, less the decode's options the page no
-// longer reads: the decode form's VIN is the page's from.
+// visitor there with the VIN the link named, if it named one, and
+// nothing else of its query: the page reads nothing else. worker.js
+// moves /ui/translate by the same rule.
 func (h *Handler) moved(r *http.Request) (view, error) {
-	q := r.URL.Query()
-	if r.URL.Path == decodePath || oldForm(q) {
-		if vs, ok := q["vin"]; ok {
-			q["from.vin"] = vs
-			delete(q, "vin")
-		}
-	}
-	for _, k := range retiredOptions {
-		delete(q, k)
-	}
 	loc := homePath
-	if len(q) > 0 {
-		loc += "?" + q.Encode()
+	if vin := oldVIN(r.URL.Query()); vin != "" {
+		loc = vinHref(vin)
 	}
 	return view{location: loc, status: http.StatusMovedPermanently}, nil
 }
@@ -202,7 +190,8 @@ func (h *Handler) home(r *http.Request) (view, error) {
 	if malformed != nil {
 		raw = url.Values{}
 	}
-	if oldForm(raw) {
+	// A vin is the old decode form's: no page asks with one now.
+	if raw.Has("vin") {
 		return h.moved(r)
 	}
 	if raw.Has("surprise") {
