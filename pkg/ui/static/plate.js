@@ -102,6 +102,9 @@
     if (pending === mine) pending = null;
     swap(new DOMParser().parseFromString(html, 'text/html'));
     const whole = vin.length === LENGTH;
+    // Asked again for the VIN the page is at (Enter on it), it is the
+    // same entry: a second would make Back do nothing.
+    if (how === 'push' && url === location.pathname + location.search) how = 'replace';
     if (how === 'push') history.pushState({ whole }, '', url);
     else if (how === 'replace') history.replaceState({ whole }, '', url);
   };

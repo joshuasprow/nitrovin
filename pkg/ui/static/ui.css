@@ -18,7 +18,7 @@
 /* ---- Shared ---------------------------------------------------------- */
 :root { color-scheme: light dark; }
 body { --bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint: #a9bccb; --card-bg: #ffffff; --link: #0b4fa8; --bad: #b91c1c;
-  --c-wmi: #c8102e; --c-vds: #0b4fa8; --c-check: #5b2d8e; --c-year: #b3540a; --c-plant: #0f6b46; --c-serial: #3d4650; --on: #ffffff;
+  --c-wmi: #c8102e; --c-vds: #0b4fa8; --c-check: #5b2d8e; --c-year: #a34c09; --c-plant: #0f6b46; --c-serial: #3d4650; --on: #ffffff;
   --label-font: "Arial Black", "Helvetica Neue", system-ui, sans-serif; --cell-font: ui-monospace, monospace;
   /* The metal, the same in both colour schemes: its body, its edge, the
      colour struck or printed on it, a rivet, and a slotted screw. */
@@ -177,7 +177,7 @@ form.filter label { flex-basis: 100%; }
 .cell { display: flex; align-items: center; justify-content: center; height: var(--cell-h); margin: 0 2px; box-sizing: border-box;
   font: 700 clamp(15px, 5.1cqw, 46px)/1 var(--cell-font); color: var(--on-metal); text-shadow: var(--emboss); border-bottom: 4px solid var(--cm); }
 .cell .ch { display: inline-block; }
-.cell.bad { background: var(--bad); color: #fff; text-shadow: none; border-bottom-color: var(--bad); }
+.cell.bad { background: var(--bad); color: var(--on); text-shadow: none; border-bottom-color: var(--bad); }
 .under { padding: 0 16px; }
 .brk { height: 9px; margin: 4px 3px 0; border: 3px solid var(--faint); border-top: 0; }
 .brk .name { display: none; }
@@ -223,7 +223,7 @@ form.filter label { flex-basis: 100%; }
 .live .cell.ghost::after, .live .cell.ghost-end::after { content: ""; position: absolute; left: -4px; top: 10%; bottom: 10%; width: 4px; border-radius: 2px; background: var(--on-metal); opacity: .35; }
 .live .cell.ghost-end::after { left: auto; right: -4px; }
 .live .cell.sel { background: #16202b; color: #fff; text-shadow: none; border-radius: 4px; box-shadow: inset 0 0 0 3px var(--c); }
-.live .cell.sel.bad { background: var(--bad); }
+.live .cell.sel.bad { background: var(--bad); color: var(--on); }
 
 /* The cards: six in a row, each a tag hung under its leader line by an
    eyelet, a hole a radial mask punches through it (mask-clip keeps the
@@ -243,7 +243,7 @@ form.filter label { flex-basis: 100%; }
 .card .big { margin: 0; font: 700 1.5rem/1.2 var(--cell-font); }
 .card.g-check .big { font: 900 1rem/1.25 var(--label-font); }
 .card.bad { border-color: var(--bad); }
-.card.bad h2 { background: var(--bad); color: #fff; }
+.card.bad h2 { background: var(--bad); color: var(--on); }
 .card .how { margin-top: .5rem; padding: .25rem .5rem; font-size: 10px; }
 ol.years { list-style: none; margin: .4rem 0 0; padding: 0; font-size: 11px; color: var(--muted); line-height: 1.35; }
 ol.years li.current { color: var(--fg); font-weight: 700; }
