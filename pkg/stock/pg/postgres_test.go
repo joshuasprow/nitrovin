@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"slices"
 	"strings"
 	"sync/atomic"
@@ -58,6 +59,22 @@ func exec(t *testing.T, conn *pgx.Conn, sql string, args ...any) {
 	if _, err := conn.Exec(context.Background(), sql, args...); err != nil {
 		t.Fatalf("%s: %v", sql, err)
 	}
+}
+
+// explain is the plan of sql with args, one line a line, failing the test
+// on an error.
+func explain(t *testing.T, conn *pgx.Conn, sql string, args ...any) string {
+	t.Helper()
+	rows, err := conn.Query(context.Background(), "EXPLAIN "+sql, args...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var plan []string
+	var line string
+	if _, err := pgx.ForEachRow(rows, []any{&line}, func() error { plan = append(plan, line); return nil }); err != nil {
+		t.Fatal(err)
+	}
+	return strings.Join(plan, "\n")
 }
 
 // withUser is u as user and password.
@@ -836,25 +853,34 @@ CREATE INDEX shelf_by_vehicle ON nvtest.shelf (part_type, vehicle_make, vehicle_
 
 	// The documented index serves every vehicle column of the match: the
 	// plan, with sequential scans priced out, reads it, never the table.
-	ctx := context.Background()
 	exec(t, conn, `SET enable_seqscan = off`)
 	t.Cleanup(func() { exec(t, conn, `RESET enable_seqscan`) })
-	rows, err := conn.Query(ctx, "EXPLAIN "+s.q.byVehicle, int32(1), []string{}, int64(0), int64(10),
+	text := explain(t, conn, s.q.byVehicle, int32(1), []string{}, int64(0), int64(10),
 		[]int32{0}, []string{"mirror"}, []*int32{new(int32(2010))}, []*int32{nil}, []*int32{new(int32(1938))}, []*string{nil})
-	if err != nil {
-		t.Fatal(err)
-	}
-	var plan []string
-	var line string
-	if _, err := pgx.ForEachRow(rows, []any{&line}, func() error { plan = append(plan, line); return nil }); err != nil {
-		t.Fatal(err)
-	}
-	text := strings.Join(plan, "\n")
 	if !strings.Contains(text, "shelf_by_vehicle") || strings.Contains(text, "Seq Scan on shelf") {
 		t.Errorf("the vpic match does not read shelf_by_vehicle:\n%s", text)
 	}
 	if !strings.Contains(text, "vehicle_model = ") || !strings.Contains(text, "vehicle_make IS NULL") {
 		t.Errorf("the index conditions are not the key's column and IS NULLs:\n%s", text)
+	}
+}
+
+// TestColumnCheckPostgres: the column check reads its relation's columns
+// alone, through the system catalogs' indexes, never every column of the
+// database: on a database of tens of thousands of columns a check that
+// scans every one runs past the default statement timeout (#310). The
+// plan, at the planner's own costs, reads pg_class and pg_attribute by
+// index.
+func TestColumnCheckPostgres(t *testing.T) {
+	conn, _ := testDB(t)
+	exec(t, conn, nvtest)
+	t.Cleanup(func() { exec(t, conn, `DROP SCHEMA IF EXISTS nvtest CASCADE`) })
+	text := explain(t, conn, columnsQuery, quoted("nvtest.shelf"))
+	if strings.Contains(text, "Seq Scan on pg_attribute") || strings.Contains(text, "Seq Scan on pg_class") {
+		t.Errorf("the column check scans every column of the database:\n%s", text)
+	}
+	if !regexp.MustCompile(`Index Cond: \(+attrelid = `).MatchString(text) {
+		t.Errorf("the column check does not read pg_attribute by its relation:\n%s", text)
 	}
 }
 

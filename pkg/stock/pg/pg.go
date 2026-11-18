@@ -274,15 +274,21 @@ func (s *Source) check(ctx context.Context, pool *pgxpool.Pool) (*queries, *stoc
 	return s.queries(asOf), nil
 }
 
+// columnsQuery is relation $1's columns, as relationColumns reads them.
+// The view is filtered by its own columns, given as values, so the planner
+// reads the relation's rows by the system catalogs' indexes; joined to
+// pg_class instead, it reads every column of the database first (#310).
+const columnsQuery = `SELECT column_name::text, data_type::text
+FROM information_schema.columns
+WHERE (table_schema, table_name) = (SELECT n.nspname, k.relname
+  FROM pg_catalog.pg_class k JOIN pg_catalog.pg_namespace n ON n.oid = k.relnamespace
+  WHERE k.oid = to_regclass($1))`
+
 // relationColumns are relation's columns that the connection's user can
 // read, by name, each its information_schema data_type; empty when there
 // is no such relation.
 func relationColumns(ctx context.Context, conn *pgxpool.Conn, relation string) (map[string]string, error) {
-	rows, err := conn.Query(ctx, `SELECT c.column_name::text, c.data_type::text
-FROM information_schema.columns c
-JOIN pg_catalog.pg_class k ON k.oid = to_regclass($1)
-JOIN pg_catalog.pg_namespace n ON n.oid = k.relnamespace
-WHERE c.table_schema = n.nspname AND c.table_name = k.relname`, quoted(relation))
+	rows, err := conn.Query(ctx, columnsQuery, quoted(relation))
 	if err != nil {
 		return nil, err
 	}
