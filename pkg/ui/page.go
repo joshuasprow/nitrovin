@@ -19,25 +19,25 @@ import (
 )
 
 // The page (ADR 0013). GET / is nitrovin's one page for browsers: the VIN
-// decoder. Its form asks the page itself: its query is a VIN's from
-// (from.vin) and targets (to) of GET /v1/translate's, with the decode's
-// options (model_year, shape, full) beside them, so every answer is a
-// shareable URL. Below the form is the answer: the VIN's decode, the map
-// of its translation (map.go) when it has targets, and the JSON of both
-// behind a button, in a dialog. A refusal is the page still, said beside
-// the field it names, else above the form, with its status. The
-// vocabularies loaded are behind the Vocabularies floating button, in a
-// dialog of their own (vocab.go), which the layout holds beside the page's
-// main, so no answer replaces it; what developers need is behind the
-// Developers one, in the page's fragment (decode.html).
+// decoder, drawn as the VIN's diagram (diagram.go). Its form, the plate,
+// asks the page itself with a VIN's from (from.vin) and nothing else, so
+// every answer is a shareable URL. Below the plate is the answer for
+// whatever is typed so far, a partial VIN included: a card for each of the
+// VIN's groups, and the vehicle's names in every vocabulary loaded, its
+// translation on vPIC's spine. A VIN the decoder refuses is the page
+// still, with what is wrong said below the plate. The vocabularies loaded
+// are behind the header's Vocabularies button, in a dialog of their own
+// (vocab.go), which the layout holds beside the page's main, so no answer
+// replaces it; what developers need, the answer's JSON included, is
+// behind the Developers one, in the page's fragment (decode.html).
 //
 // The page answers the same on the server and in the browser's Service
-// Worker, which answers a request naming a file the browser holds, over
-// the server's files and the browser's, and sends the server every other;
-// a VIN's decode is the server's there too, asked for once (decoded).
-// Without JavaScript every step is a page load, and the dialogs still
-// open: they are popovers. Old links, to /ui/decode, /ui/translate, /vocab
-// and the form at /?vin=…, move to the page.
+// Worker, which answers the page whenever the browser holds files, over
+// the server's files and the browser's; a VIN's decode is the server's
+// there too, asked for once (decoded). Without JavaScript every step is a
+// page load, and the dialogs still open: they are popovers. Old links, to
+// /ui/decode, /ui/translate, /vocab and the form at /?vin=…, move to the
+// page.
 
 const (
 	homePath = "/"

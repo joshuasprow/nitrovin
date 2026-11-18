@@ -545,7 +545,7 @@ func TestLibraryCatalogStale(t *testing.T) {
 	}
 }
 
-// TestJSONText: the fit page's JSON is the bytes json.MarshalIndent writes,
+// TestJSONText: the page's JSON is the bytes json.MarshalIndent writes,
 // escaped as html/template escapes a string, written in one pass.
 func TestJSONText(t *testing.T) {
 	d := embedded(t)

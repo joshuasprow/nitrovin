@@ -20,12 +20,14 @@ import (
 // any test executes them.
 var _ = template.Must(tpl.New("stub").Parse(`<p id="stub">{{.}}</p>`))
 
-// backend is a Backend answering a fixed Info, every decode with the error
-// codes alone, or err, testSpine as its spine bundle and "<name> bytes" as
-// each loaded file's but broken's, which it fails to read. It counts
-// SpineBundle's calls in spines, when not nil.
+// backend is a Backend answering a fixed Info, every decode with decode
+// (of the VIN asked) or, when it is nil, the error codes alone, or err,
+// testSpine as its spine bundle and "<name> bytes" as each loaded file's
+// but broken's, which it fails to read. It counts SpineBundle's calls in
+// spines, when not nil.
 type backend struct {
 	info   contract.Info
+	decode *contract.Decode
 	err    error
 	spines *atomic.Int32
 }
@@ -35,6 +37,11 @@ func (b backend) Info() contract.Info { return b.info }
 func (b backend) Decode(req contract.Request) (contract.Decode, error) {
 	if b.err != nil {
 		return contract.Decode{}, b.err
+	}
+	if b.decode != nil {
+		dec := *b.decode
+		dec.VIN = req.VIN
+		return dec, nil
 	}
 	return contract.Decode{VIN: req.VIN, ErrorCodes: []int{0}, Attributes: contract.VpicAttributes{}}, nil
 }
@@ -134,7 +141,7 @@ func checkHTMLOf(t *testing.T, name string, header http.Header, release string) 
 }
 
 // checkPage checks body is a whole page in the layout, titled title,
-// linking the release's htmx, copy.js, map.js and stylesheet, its header
+// linking the release's htmx, copy.js, plate.js and stylesheet, its header
 // naming testInfo's version, which is no tagged release.
 func checkPage(t *testing.T, name, body, title string) {
 	t.Helper()
@@ -145,7 +152,7 @@ func checkPage(t *testing.T, name, body, title string) {
 		`<link rel="stylesheet" href="` + testAssetsAttr + `/ui.css">`,
 		`<script src="` + testAssetsAttr + `/htmx.min.js" defer></script>`,
 		`<script src="` + testAssetsAttr + `/copy.js" defer></script>`,
-		`<script src="` + testAssetsAttr + `/map.js" defer></script>`,
+		`<script src="` + testAssetsAttr + `/plate.js" defer></script>`,
 		`<a class="brand" href="/">nitrovin</a>` + "\n" + `<small class="version">v0.1.9-0.20261110120000-0123456789ab&#43;dirty · data 2026_10</small>`,
 		`<div id="ui-error" role="alert"></div>`,
 		"</html>\n",
@@ -301,9 +308,10 @@ func TestVersion(t *testing.T) {
 func TestAssets(t *testing.T) {
 	h := stubHandler(t, nil)
 	for name, contentType := range map[string]string{
+		"brushed.svg": "image/svg+xml",
 		"copy.js":     "text/javascript; charset=utf-8",
 		"htmx.min.js": "text/javascript; charset=utf-8",
-		"map.js":      "text/javascript; charset=utf-8",
+		"plate.js":    "text/javascript; charset=utf-8",
 		"ui.css":      "text/css; charset=utf-8",
 	} {
 		want, err := files.ReadFile("static/" + name)

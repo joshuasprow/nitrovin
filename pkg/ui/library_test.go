@@ -858,7 +858,7 @@ func TestServiceWorker(t *testing.T) {
 		t.Errorf("the page with a module:\n%s", body)
 	}
 	// A link naming a file this server lacks says where such a file lives.
-	status, _, body = response(t, h, "GET", "/?from.vocabulary=mine&from.entry.make=x&to=mine", nil)
+	status, _, body = response(t, h, "GET", "/ui/vocabularies/mine", nil)
 	if status != 404 || !strings.Contains(body, "open this link in the browser that holds it") {
 		t.Errorf("a browser file's link on the server: %d\n%s", status, body)
 	}
