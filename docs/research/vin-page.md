@@ -1947,11 +1947,14 @@ repaired.
     Tesla, PartSelect and RealOEM cannot transfer);
   - the card is to be judged against RockAuto's density: by the owner's view
     (§4), a parts buyer values dense, quick and intuitive over good-looking.
-- **The input accepting other kinds** is decided in outline and not built:
-  there is no guessing code and no tag. The one input would take a vehicle
-  ("2015 F-150") or a part number as well, guess the kind and show it as a
-  small tag on the plate that can be clicked to change; a VIN-shaped string is
-  always a VIN. Other kinds would use the same plate: brackets over the words
-  (year, make, model), each with its card, and the same derived cards beneath.
-  Suggestions of makes and models come with the vehicle kind. The drawn cells
-  are a decoration over an ordinary input so that another kind can swap them.
+
+### Dropped
+
+- **The input accepting other kinds.** The spec had the one input also taking
+  a vehicle ("2015 F-150") or a part number, guessing the kind and showing it
+  as a tag on the plate, with brackets over the words. It was never built and
+  was dropped on 2026-11-17: the plate takes a VIN and nothing else. A VIN is
+  17 fixed characters, which is what lets the cells, the two rows on a phone
+  and the caret between cells be drawn by arithmetic; words of any length
+  would give that up. Looking a vehicle up by name or a part by number, if it
+  comes, is a control of its own and not the plate.
