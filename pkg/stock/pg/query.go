@@ -42,8 +42,9 @@ type queries struct {
 func col(name string) string { return "r." + pgx.Identifier{name}.Sanitize() }
 
 // queries are the lookups of the source's relation, whose as_of column
-// has data type asOf ("" when it has none).
-func (s *Source) queries(asOf string) *queries {
+// has data type asOf ("" when it has none) and whose columns padded are
+// character under a deterministic collation.
+func (s *Source) queries(asOf string, padded map[string]bool) *queries {
 	q := &queries{fields: s.cols.fields, vpic: s.cols.vpic}
 	vehicle := s.cols.vehicle()
 	q.nv = len(vehicle)
@@ -103,6 +104,21 @@ func (s *Source) queries(asOf string) *queries {
 		return strings.Join(b, ", ")
 	}
 	where := col("id") + " IS NOT NULL AND " + col("location") + " IS NOT NULL AND (cardinality($2::text[]) = 0 OR " + col("location") + " = ANY($2::text[]))"
+	// is holds relation column name to a key's value v. Postgres compares
+	// a character column with a text key as text, through a cast that no
+	// index on the column serves and no security_barrier view passes, so
+	// a padded column is first held to the key as character, which both
+	// do. That changes no answer: under a deterministic collation the
+	// text comparison is true only of a key equal byte for byte to the
+	// value without its padding, so one that ends in no space, and of
+	// those the character comparison, which ignores each side's trailing
+	// spaces, is true too.
+	is := func(name, v string) string {
+		if padded[name] {
+			return col(name) + " = " + v + "::bpchar AND " + col(name) + " = " + v
+		}
+		return col(name) + " = " + v
+	}
 	// vehicleIs matches a relation row's vehicle to the vehicle columns
 	// of key k, c_v0…: a vocabulary's every field, or vpic's make, model
 	// and ext as a whole, as a file's vehicle key does, so a row matches
@@ -113,7 +129,7 @@ func (s *Source) queries(asOf string) *queries {
 		if q.vpic {
 			branches := make([]string, len(vehicle))
 			for i, c := range vehicle {
-				b := []string{col(c) + " = " + k + ".v" + strconv.Itoa(i)}
+				b := []string{is(c, k+".v"+strconv.Itoa(i))}
 				for j, other := range vehicle {
 					if j != i {
 						b = append(b, col(other)+" IS NULL")
@@ -125,7 +141,7 @@ func (s *Source) queries(asOf string) *queries {
 		}
 		var b []string
 		for i, c := range vehicle {
-			b = append(b, col(c)+" = "+k+".v"+strconv.Itoa(i))
+			b = append(b, is(c, k+".v"+strconv.Itoa(i)))
 		}
 		return strings.Join(b, " AND ")
 	}
@@ -163,31 +179,49 @@ func (s *Source) queries(asOf string) *queries {
 			"LEFT JOIN p ON p.list = l.list AND p.rn > $3::int8 AND p.rn <= $3::int8 + $4::int8\n" +
 			"ORDER BY l.list, p.rn"
 	}
+	// matched are the relation's rows of each key of k: a row's columns
+	// cols and, for a yard's, whether its decode matched, byModel.
+	//
+	// Every condition on the relation, cond and where, is in a subquery
+	// LATERAL to the key, fenced with OFFSET 0 so that the planner cannot
+	// pull it up. There the key is a parameter and each condition a
+	// restriction on the relation, which a security_barrier view passes
+	// to its tables' indexes when every function it gives a relation
+	// column to is leakproof (ADR 0020). Pulled up, or written as a join,
+	// they are join conditions, which no barrier lets through: the lookup
+	// computes the whole view. So, a character column's cast to text
+	// aside (is, above), a relation column goes only to a text, character
+	// or integer comparison, IS NULL, IS NOT DISTINCT FROM or = ANY, which
+	// are leakproof. The fence has a price where no index serves a key:
+	// the lookup reads the relation once per key, not once.
+	matched := func(k, cols, byModel, cond string) string {
+		return "SELECT " + k + ".list, found.* FROM " + k + " CROSS JOIN LATERAL (SELECT " + cols + ", " + byModel + " AS c_by_model FROM " + rel + " r WHERE " +
+			cond + " AND " + where + " OFFSET 0) found"
+	}
 
 	if s.info.Holds == stock.Shelf {
 		q.byFitment = page(
 			keys("k", 5, []string{"list", "type", "number", "side"}, []string{"int4[]", "text[]", "text[]", "text[]"}),
-			"SELECT k.list, "+selected(true, false, false, false)+", NULL::bool AS c_by_model FROM k JOIN "+rel+" r ON "+
-				col("type")+" = k.type AND "+col("number")+" = k.number AND "+col("side")+" IS NOT DISTINCT FROM k.side WHERE "+where)
+			matched("k", selected(true, false, false, false), "NULL::bool",
+				is("type", "k.type")+" AND "+is("number", "k.number")+" AND "+col("side")+" IS NOT DISTINCT FROM k.side"))
 		q.byVehicle = page(
 			keys("k", 5, append([]string{"list", "part_type", "year"}, vnames...), append([]string{"int4[]", "text[]", "int4[]"}, vtypes...)),
-			"SELECT k.list, "+selected(false, true, true, false)+", NULL::bool AS c_by_model FROM k JOIN "+rel+" r ON "+
-				col("number")+" IS NULL AND "+col("part_type")+" = k.part_type AND "+vehicleIs("k")+" AND "+
-				col("year")+" IS NOT NULL AND (k.year IS NULL OR "+col("year")+" = k.year) WHERE "+where)
+			matched("k", selected(false, true, true, false), "NULL::bool",
+				col("number")+" IS NULL AND "+is("part_type", "k.part_type")+" AND "+vehicleIs("k")+" AND "+
+					col("year")+" IS NOT NULL AND (k.year IS NULL OR "+col("year")+" = k.year)"))
 		return q
 	}
 	decoded := col("decoded_make") + " IS NOT NULL AND " + col("decoded_model") + " IS NOT NULL AND " + col("decoded_year") + " IS NOT NULL"
 	within := func(k, year string) string {
 		return "(" + k + ".first IS NULL OR " + year + " >= " + k + ".first) AND (" + k + ".last IS NULL OR " + year + " <= " + k + ".last)"
 	}
-	m := "SELECT km.list, " + selected(false, false, true, true) + ", true AS c_by_model FROM km JOIN " + rel + " r ON " +
-		col("decoded_model") + " = km.model AND " + decoded + " AND " + within("km", col("decoded_year")) + " WHERE " + where
+	m := matched("km", selected(false, false, true, true), "true",
+		col("decoded_model")+" = km.model AND "+decoded+" AND "+within("km", col("decoded_year")))
 	with := keys("km", 5, []string{"list", "model", "first", "last"}, []string{"int4[]", "int4[]", "int4[]", "int4[]"})
 	if len(vehicle) > 0 {
 		with += ",\n" + keys("kv", 9, append([]string{"list", "first", "last"}, vnames...), append([]string{"int4[]", "int4[]", "int4[]"}, vtypes...))
-		m += "\nUNION ALL\nSELECT kv.list, " + selected(false, false, true, true) + ", false FROM kv JOIN " + rel + " r ON " +
-			vehicleIs("kv") + " AND " + col("year") + " IS NOT NULL AND " + within("kv", col("year")) +
-			" WHERE " + where + " AND NOT (" + decoded + ")"
+		m += "\nUNION ALL\n" + matched("kv", selected(false, false, true, true), "false",
+			vehicleIs("kv")+" AND "+col("year")+" IS NOT NULL AND "+within("kv", col("year"))+" AND NOT ("+decoded+")")
 	}
 	q.yard = page(with, m)
 	return q

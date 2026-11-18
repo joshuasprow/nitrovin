@@ -726,7 +726,10 @@ func TestSlowPostgres(t *testing.T) {
 			t.Fatal(err)
 		}
 		tr := open(t, d, map[string]string{"DSN": u.String()}, "../../../testdata/vocab", "../../../testdata/vocab/fitment", "../../../testdata/vocab/stock", dir)
-		req, err := contract.ParseFitRequest([]byte(`{"from":{"fitment":{"type":"brake-rotor-front","number":"BR-2001"}},"stock":["shelf","yard"]}`))
+		// The fitment is mirrorKey's: nvtest.slow sleeps on a row only
+		// after the lookup's own conditions have kept it, so a key it
+		// holds no row of answers at once.
+		req, err := contract.ParseFitRequest([]byte(`{"from":{"fitment":{"type":"mirror","number":"MR-1001","side":"left"}},"stock":["shelf","yard"]}`))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -794,10 +797,142 @@ func TestChangedPostgres(t *testing.T) {
 	}
 }
 
+// indexConds are the index conditions of plan's scans of index, in plan
+// order: "" for a scan with none, which reads the whole index.
+func indexConds(plan, index string) []string {
+	var out []string
+	lines := strings.Split(plan, "\n")
+	for i, l := range lines {
+		if !strings.Contains(l, "Scan using "+index+" on ") && !strings.Contains(l, "Bitmap Index Scan on "+index+" ") {
+			continue
+		}
+		cond := ""
+		if i+1 < len(lines) {
+			if c, ok := strings.CutPrefix(strings.TrimSpace(lines[i+1]), "Index Cond: "); ok {
+				cond = c
+			}
+		}
+		out = append(out, cond)
+	}
+	return out
+}
+
+// equates is whether an index condition holds column to a value by
+// equality.
+func equates(cond, column string) bool {
+	return regexp.MustCompile(`\b` + regexp.QuoteMeta(column) + ` = `).MatchString(cond)
+}
+
+// probes fails the test unless plan reads table through index and never
+// by a sequential scan, every scan of the index holding each of columns
+// to its key by equality in its index condition. The index's name is not
+// enough: a key that stayed outside a view leaves a scan of the whole
+// index, with no condition or one on no key column.
+func probes(t *testing.T, plan, table, index string, columns ...string) {
+	t.Helper()
+	conds := indexConds(plan, index)
+	ok := len(conds) > 0 && !strings.Contains(plan, "Seq Scan on "+table)
+	for _, cond := range conds {
+		for _, c := range columns {
+			ok = ok && equates(cond, c)
+		}
+	}
+	if !ok {
+		t.Errorf("the lookup does not read %s by an index condition on %s:\n%s", index, strings.Join(columns, ", "), plan)
+	}
+}
+
+// TestPlansPostgres: through the security_barrier views of
+// testdata/vocab/stock/live/views.sql, as the role that reads them, each
+// of the four lookups reads its table's documented index with an index
+// condition on its key's columns, with every location and with one named;
+// and the shelf's lookup by fitment does the same once its view is plain.
+// Sequential scans are priced out, so the plans do not turn on the tables'
+// sizes.
+func TestPlansPostgres(t *testing.T) {
+	conn, u := testDB(t)
+	exec(t, conn, resetViews)
+	views, err := os.ReadFile("../../../testdata/vocab/stock/live/views.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+	exec(t, conn, string(views))
+	t.Cleanup(func() { exec(t, conn, resetViews) })
+	ctx := context.Background()
+	var barriers int
+	if err := conn.QueryRow(ctx, `SELECT count(*) FROM pg_class WHERE oid IN ('stock.shelf_stock'::regclass, 'stock.yard_stock'::regclass) AND reloptions @> '{security_barrier=true}'`).Scan(&barriers); err != nil || barriers != 2 {
+		t.Fatalf("%d of stock.shelf_stock and stock.yard_stock are security_barrier views, %v; want both", barriers, err)
+	}
+
+	const fixtures = "../../../testdata/vocab"
+	files, err := vocab.Open(fixtures+"/fitment", fixtures+"/stock/live")
+	if err != nil {
+		t.Fatal(err)
+	}
+	byName := map[string]*vocab.File{}
+	for _, f := range files {
+		byName[f.Name] = f
+	}
+	reader := withUser(u, "nitrovin_stock", "stock-reader")
+	lookups := func(name string) *queries {
+		t.Helper()
+		s := New(stock.Declared{File: byName[name], Catalog: byName["parts-catalog"], Vehicles: byName["catalog-models"]}, reader)
+		t.Cleanup(s.Close)
+		q, _, err := s.ready(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return q
+	}
+	shelf, yard := lookups("shelf-stock"), lookups("yard-stock")
+	rc, err := pgx.Connect(ctx, reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { rc.Close(ctx) })
+	exec(t, rc, `SET enable_seqscan = off`)
+
+	// Each lookup's own parameters, for one list, after the four every
+	// lookup takes: a fitment key, a part type's vehicle and year, and
+	// for the yard a model in its years and a vehicle from a year on.
+	fitmentKey := []any{[]int32{0}, []string{"brake-rotor-front"}, []string{"BR-2001"}, []*string{nil}}
+	vehicleKey := []any{[]int32{0}, []string{"engine"}, []*int32{new(int32(2010))}, []*string{new("Chevrolet")}, []*string{new("Silverado 1500")}}
+	yardKeys := []any{[]int32{0}, []int32{1938}, []*int32{new(int32(2009))}, []*int32{new(int32(2012))},
+		[]int32{0}, []*int32{new(int32(2009))}, []*int32{nil}, []*string{new("Dodge")}, []*string{new("Ram 1500")}}
+	type route struct {
+		name, sql    string
+		args         []any
+		table, index string
+		columns      []string
+	}
+	routes := []route{
+		{"shelf by fitment", shelf.byFitment, fitmentKey, "shelf", "shelf_by_number", []string{"part_class", "catalog_no"}},
+		{"shelf by vehicle", shelf.byVehicle, vehicleKey, "shelf", "shelf_by_vehicle", []string{"spine_part", "make", "model"}},
+		{"yard by vPIC model", yard.yard, yardKeys, "vehicles", "yard_by_model", []string{"vpic_model"}},
+		{"yard by catalog vehicle", yard.yard, yardKeys, "vehicles", "yard_by_vehicle", []string{"make", "model"}},
+	}
+	check := func(t *testing.T, r route) {
+		t.Helper()
+		for _, location := range [][]string{{}, {"north"}} {
+			args := append([]any{int32(1), location, int64(0), int64(10)}, r.args...)
+			probes(t, explain(t, rc, r.sql, args...), r.table, r.index, r.columns...)
+		}
+	}
+	for _, r := range routes {
+		t.Run(r.name, func(t *testing.T) { check(t, r) })
+	}
+	t.Run("shelf by fitment, a plain view", func(t *testing.T) {
+		exec(t, conn, `ALTER VIEW stock.shelf_stock RESET (security_barrier)`)
+		check(t, routes[0])
+	})
+}
+
 // TestVPICPostgres: under a catalog whose vehicles are vpic, a relation's
 // vehicle columns are vehicle_make, vehicle_model and vehicle_ext, one of
 // them set; rows match a vehicle as a whole, as a file's do, so a row
-// setting two of them matches neither, and none is served twice.
+// setting two of them matches neither, and none is served twice. The
+// relation is a security_barrier view, and the lookup reads its table's
+// documented index through it, one scan per vehicle column.
 func TestVPICPostgres(t *testing.T) {
 	conn, u := testDB(t)
 	exec(t, conn, `DROP SCHEMA IF EXISTS nvtest CASCADE; CREATE SCHEMA nvtest;
@@ -808,13 +943,16 @@ INSERT INTO nvtest.shelf VALUES
   ('V-2', 'north', NULL, NULL, NULL, 'mirror', 476, NULL, NULL, 2010, '{}'),
   ('V-3', 'north', NULL, NULL, NULL, 'mirror', NULL, NULL, 'ext:classics/corvair', 2010, '{}'),
   ('V-4', 'north', NULL, NULL, NULL, 'mirror', 476, 1938, NULL, 2010, '{}');
-CREATE INDEX shelf_by_vehicle ON nvtest.shelf (part_type, vehicle_make, vehicle_model, vehicle_ext, year)`)
+INSERT INTO nvtest.shelf SELECT 'F-' || g, 'north', NULL, NULL, NULL, 'mirror', NULL, 100000 + g, NULL, 2010, '{}' FROM generate_series(1, 2000) g;
+CREATE INDEX shelf_by_vehicle ON nvtest.shelf (part_type, vehicle_make, vehicle_model, vehicle_ext, year);
+CREATE VIEW nvtest.shelf_barrier WITH (security_barrier) AS SELECT * FROM nvtest.shelf;
+ANALYZE nvtest.shelf`)
 	t.Cleanup(func() { exec(t, conn, `DROP SCHEMA IF EXISTS nvtest CASCADE`) })
 	dir := t.TempDir()
 	catalog := `{"format":1,"kind":"catalog","name":"vpic-catalog","version":"1","spine":"part-types","vehicles":"vpic"}
 {"fitment":{"type":"mirror","number":"MR-9","side":"left"},"applications":[{"vehicle":{"model":1938},"first":2009,"last":2012,"options":""}]}
 `
-	header := `{"format":1,"kind":"stock","name":"shelf-vpic","version":"1","source":"shelf","catalog":"vpic-catalog","connector":{"postgres":{"relation":"nvtest.shelf","dsn_env":"DSN"}}}` + "\n"
+	header := `{"format":1,"kind":"stock","name":"shelf-vpic","version":"1","source":"shelf","catalog":"vpic-catalog","connector":{"postgres":{"relation":"nvtest.shelf_barrier","dsn_env":"DSN"}}}` + "\n"
 	for name, data := range map[string]string{"vpic-catalog.jsonl": catalog, "shelf-vpic.jsonl": header} {
 		if err := os.WriteFile(filepath.Join(dir, name), []byte(data), 0o644); err != nil {
 			t.Fatal(err)
@@ -852,16 +990,23 @@ CREATE INDEX shelf_by_vehicle ON nvtest.shelf (part_type, vehicle_make, vehicle_
 	}
 
 	// The documented index serves every vehicle column of the match: the
-	// plan, with sequential scans priced out, reads it, never the table.
+	// plan, with sequential scans priced out, reads it once per column,
+	// by the key's value there and the other two IS NULL. The table's
+	// 2,000 other mirrors are why: on four rows the planner settles for
+	// one scan by part type and filters the vehicle.
 	exec(t, conn, `SET enable_seqscan = off`)
 	t.Cleanup(func() { exec(t, conn, `RESET enable_seqscan`) })
-	text := explain(t, conn, s.q.byVehicle, int32(1), []string{}, int64(0), int64(10),
+	plan := explain(t, conn, s.q.byVehicle, int32(1), []string{}, int64(0), int64(10),
 		[]int32{0}, []string{"mirror"}, []*int32{new(int32(2010))}, []*int32{nil}, []*int32{new(int32(1938))}, []*string{nil})
-	if !strings.Contains(text, "shelf_by_vehicle") || strings.Contains(text, "Seq Scan on shelf") {
-		t.Errorf("the vpic match does not read shelf_by_vehicle:\n%s", text)
-	}
-	if !strings.Contains(text, "vehicle_model = ") || !strings.Contains(text, "vehicle_make IS NULL") {
-		t.Errorf("the index conditions are not the key's column and IS NULLs:\n%s", text)
+	probes(t, plan, "shelf", "shelf_by_vehicle", "part_type")
+	columns := []string{"vehicle_make", "vehicle_model", "vehicle_ext"}
+	conds := indexConds(plan, "shelf_by_vehicle")
+	for i, c := range columns {
+		if !slices.ContainsFunc(conds, func(cond string) bool {
+			return equates(cond, c) && strings.Contains(cond, columns[(i+1)%3]+" IS NULL") && strings.Contains(cond, columns[(i+2)%3]+" IS NULL")
+		}) {
+			t.Errorf("no scan of shelf_by_vehicle holds %s to the key's and the other two columns IS NULL; its scans' index conditions: %q", c, conds)
+		}
 	}
 }
 
@@ -869,8 +1014,12 @@ CREATE INDEX shelf_by_vehicle ON nvtest.shelf (part_type, vehicle_make, vehicle_
 // alone, through the system catalogs' indexes, never every column of the
 // database: on a database of tens of thousands of columns a check that
 // scans every one runs past the default statement timeout (#310). The
-// plan, at the planner's own costs, reads pg_class and pg_attribute by
-// index.
+// plan, at the planner's own costs, reads pg_class by its relation's oid
+// or name and pg_attribute by its relation, at every read of either: an
+// index read of every relation of a schema, and of each one's columns, is
+// no Seq Scan and still the whole catalog. pg_attribute is read twice, the
+// view's own and the one beside it for each column's collation, whose
+// index condition alone would say nothing of the view's.
 func TestColumnCheckPostgres(t *testing.T) {
 	conn, _ := testDB(t)
 	exec(t, conn, nvtest)
@@ -879,8 +1028,101 @@ func TestColumnCheckPostgres(t *testing.T) {
 	if strings.Contains(text, "Seq Scan on pg_attribute") || strings.Contains(text, "Seq Scan on pg_class") {
 		t.Errorf("the column check scans every column of the database:\n%s", text)
 	}
-	if !regexp.MustCompile(`Index Cond: \(+attrelid = `).MatchString(text) {
-		t.Errorf("the column check does not read pg_attribute by its relation:\n%s", text)
+	read, byRelation := regexp.MustCompile(`\bon pg_attribute\b`), regexp.MustCompile(`^\s*(Index|Recheck) Cond: \(+attrelid = `)
+	readClass, byName := regexp.MustCompile(`\bon pg_class\b`), regexp.MustCompile(`^\s*(Index|Recheck) Cond: \(+(oid|relname) = `)
+	lines := strings.Split(text, "\n")
+	reads := 0
+	for i, l := range lines {
+		if readClass.MatchString(l) && (i+1 == len(lines) || !byName.MatchString(lines[i+1])) {
+			t.Errorf("the column check reads pg_class other than by its relation's oid or name, at %q:\n%s", strings.TrimSpace(l), text)
+		}
+		if !read.MatchString(l) {
+			continue
+		}
+		reads++
+		if i+1 == len(lines) || !byRelation.MatchString(lines[i+1]) {
+			t.Errorf("the column check reads pg_attribute other than by its relation, at %q:\n%s", strings.TrimSpace(l), text)
+		}
+	}
+	if reads < 2 {
+		t.Errorf("the column check's plan reads pg_attribute %d times; want the view's read and the collation's:\n%s", reads, text)
+	}
+}
+
+// TestCharacterPostgres: a relation whose key columns are character
+// answers as a text comparison of each has it, a padded value matching
+// the key without its padding and nothing matching a key that ends in a
+// space, and its lookups read the columns' own indexes, on the table and
+// through a security_barrier view. A character column of a
+// nondeterministic collation keeps the text comparison alone: there a
+// value can equal a key that ends in a space, which a character
+// comparison would lose.
+func TestCharacterPostgres(t *testing.T) {
+	conn, u := testDB(t)
+	exec(t, conn, `DROP SCHEMA IF EXISTS nvtest CASCADE; CREATE SCHEMA nvtest;
+CREATE TABLE nvtest.fixed (id text, location text, type character(24), number character(12), side text, part_type character(24),
+  vehicle_make character(16), vehicle_model character(24), year integer, fields jsonb);
+INSERT INTO nvtest.fixed VALUES
+  ('C-1', 'north', 'mirror', 'MR-1001', 'left', NULL, NULL, NULL, NULL, '{}'),
+  ('C-2', 'north', 'mirror', 'MR-1001 X', 'left', NULL, NULL, NULL, NULL, '{}'),
+  ('C-3', 'north', NULL, NULL, NULL, 'mirror', 'Dodge', 'Ram 1500', 2010, '{}');
+CREATE INDEX fixed_by_number ON nvtest.fixed (type, number, side);
+CREATE INDEX fixed_by_vehicle ON nvtest.fixed (part_type, vehicle_make, vehicle_model, year);
+CREATE VIEW nvtest.fixed_barrier WITH (security_barrier) AS SELECT * FROM nvtest.fixed;
+CREATE COLLATION nvtest.loose (provider = icu, locale = 'und-u-ks-level2', deterministic = false);
+CREATE TABLE nvtest.fixed_loose (LIKE nvtest.fixed);
+ALTER TABLE nvtest.fixed_loose ALTER COLUMN number TYPE character(12) COLLATE nvtest.loose;
+INSERT INTO nvtest.fixed_loose VALUES ('L-1', 'north', 'mirror', E'MR-1001\u00A0', 'left', NULL, NULL, NULL, NULL, '{}')`)
+	t.Cleanup(func() { exec(t, conn, `DROP SCHEMA IF EXISTS nvtest CASCADE`) })
+	ctx := context.Background()
+	key := func(number string) []vocab.FitmentKey {
+		return []vocab.FitmentKey{{Type: "mirror", Number: number, Side: vocab.SideLeft}}
+	}
+	ram := func(model string) stock.ShelfVehicle {
+		return stock.ShelfVehicle{PartTypes: []string{"mirror"}, Vehicles: []vocab.Vehicle{{Entry: map[string]string{"make": "Dodge", "model": model}}}, Year: new(2010)}
+	}
+	// served are each list's rows, as id and the number or model served.
+	served := func(rs []stock.Result, err error) []string {
+		t.Helper()
+		if err != nil {
+			t.Fatal(err)
+		}
+		out := make([]string, len(rs))
+		for i, r := range rs {
+			for _, row := range r.Rows {
+				if row.Fitment != nil {
+					out[i] += fmt.Sprintf("%s %q", row.ID, row.Fitment.Number)
+				} else {
+					out[i] += fmt.Sprintf("%s %q", row.ID, row.Vehicle.Entry["model"])
+				}
+			}
+		}
+		return out
+	}
+	exec(t, conn, `SET enable_seqscan = off`)
+	t.Cleanup(func() { exec(t, conn, `RESET enable_seqscan`) })
+	for _, relation := range []string{"nvtest.fixed", "nvtest.fixed_barrier"} {
+		s := connector(t, relation, u.String(), "")
+		rs, _, err := s.ShelfByFitment(ctx, [][]vocab.FitmentKey{key("MR-1001"), key("MR-1001 "), key("MR-1001 X"), key("MR-1001 X  "), key("MR-100")}, stock.Page{Limit: 10})
+		if got, want := served(rs, err), []string{`C-1 "MR-1001"`, "", `C-2 "MR-1001 X"`, "", ""}; !slices.Equal(got, want) {
+			t.Errorf("%s by fitment: %q, want %q", relation, got, want)
+		}
+		rs, _, err = s.ShelfByVehicle(ctx, []stock.ShelfVehicle{ram("Ram 1500"), ram("Ram 1500 "), ram("Ram")}, stock.Page{Limit: 10})
+		if got, want := served(rs, err), []string{`C-3 "Ram 1500"`, "", ""}; !slices.Equal(got, want) {
+			t.Errorf("%s by vehicle: %q, want %q", relation, got, want)
+		}
+		probes(t, explain(t, conn, s.q.byFitment, int32(1), []string{}, int64(0), int64(10),
+			[]int32{0}, []string{"mirror"}, []string{"MR-1001"}, []*string{new("left")}), "fixed", "fixed_by_number", "type", "number")
+		probes(t, explain(t, conn, s.q.byVehicle, int32(1), []string{}, int64(0), int64(10),
+			[]int32{0}, []string{"mirror"}, []*int32{new(int32(2010))}, []*string{new("Dodge")}, []*string{new("Ram 1500")}), "fixed", "fixed_by_vehicle", "part_type", "vehicle_make", "vehicle_model")
+	}
+
+	// At this collation's strength a no-break space equals a space, so
+	// the value ending in one equals, as text, the key ending in a space.
+	s := connector(t, "nvtest.fixed_loose", u.String(), "")
+	rs, _, err := s.ShelfByFitment(ctx, [][]vocab.FitmentKey{key("MR-1001 "), key("mr-1001\u00a0"), key("MR-1001")}, stock.Page{Limit: 10})
+	if got, want := served(rs, err), []string{`L-1 "MR-1001\u00a0"`, `L-1 "MR-1001\u00a0"`, ""}; !slices.Equal(got, want) {
+		t.Errorf("a nondeterministic collation: %q, want %q", got, want)
 	}
 }
 
