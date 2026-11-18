@@ -114,7 +114,8 @@
   const how = (vin) => (vin.length === LENGTH || (history.state && history.state.whole) ? 'push' : 'replace');
 
   // show draws the input's selection on the cells: the cells selected,
-  // or the caret, a bar before the cell it stands at (after the last
+  // the first and the last of them marked for a finger's handles (hs,
+  // he), or the caret, a bar before the cell it stands at (after the last
   // cell of a whole VIN) and the next empty cell's mark at the end.
   const show = () => {
     const input = document.getElementById('from-vin');
@@ -125,8 +126,12 @@
     const from = input.selectionStart;
     const to = input.selectionEnd;
     const caret = on && from === to;
+    const some = on && from < to;
+    form.classList.toggle('selecting', some);
     form.querySelectorAll('.cell').forEach((cell, i) => {
-      cell.classList.toggle('sel', on && i >= from && i < to);
+      cell.classList.toggle('sel', some && i >= from && i < to);
+      cell.classList.toggle('hs', some && i === from);
+      cell.classList.toggle('he', some && i === to - 1);
       cell.classList.toggle('next', i === n && !(on && from < n));
       cell.classList.toggle('caret', caret && from < n && i === from);
       cell.classList.toggle('caret-end', caret && from === LENGTH && i === LENGTH - 1);
@@ -224,10 +229,15 @@
   // the iPhone simulator, iOS 26.5). So a click or tap's gap, and a mouse
   // drag's cells, are taken from the pointer and held for a moment against
   // the browser's own placing. A phone's target is an element inside the
-  // field, not the field, so the pointer is known by where it lands. Double
-  // clicks and taps, Shift and a click, and a phone's drags and handles
-  // stay the browser's own.
+  // field, not the field, so the pointer is known by where it lands. The
+  // second of two clicks or taps in one place stays the browser's own.
+  //
+  // For a finger the field's text is out of sight (ui.css), so that the
+  // phone draws no highlight or handles of its own over the cells: the
+  // handles are the cells' (show's hs and he), and dragging one is done
+  // here.
   let down = null;
+  let grab = null;
   let tapped = { at: -Infinity, x: 0, y: 0 };
   let want = null;
   const onPlate = (e) => {
@@ -237,12 +247,61 @@
     return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
   };
   const gapOf = (e) => gapAt(e.clientX, e.clientY, document.getElementById('from-vin').value.length);
+  // handleAt is the handle a finger at e takes hold of: the selection's
+  // start, at its first cell's left edge with its knob above, or its end,
+  // at its last cell's right edge with its knob below.
+  const handleAt = (e) => {
+    const input = document.getElementById('from-vin');
+    const from = input.selectionStart;
+    const to = input.selectionEnd;
+    if (document.activeElement !== input || from === to) return null;
+    const cells = document.querySelectorAll('#vin-form .cell');
+    const a = cells[from].getBoundingClientRect();
+    const b = cells[to - 1].getBoundingClientRect();
+    const near = (x, top, bottom) => Math.abs(e.clientX - x) < 20 && e.clientY > top && e.clientY < bottom;
+    const start = near(a.left, a.top - 30, a.bottom + 6);
+    const end = near(b.right, b.top - 6, b.bottom + 30);
+    if (start && end) return Math.hypot(e.clientX - a.left, e.clientY - a.top) < Math.hypot(e.clientX - b.right, e.clientY - b.bottom) ? { fixed: to, start: true } : { fixed: from, start: false };
+    if (start) return { fixed: to, start: true };
+    return end ? { fixed: from, start: false } : null;
+  };
   document.addEventListener('pointerdown', (e) => {
     want = null;
     down = null;
-    if (!onPlate(e) || e.shiftKey || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    grab = null;
+    if (!onPlate(e) || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    if (e.pointerType === 'touch') {
+      grab = handleAt(e);
+      if (grab) return;
+    }
+    if (e.shiftKey) {
+      // Shift and a click selects from where the selection began to there.
+      const input = document.getElementById('from-vin');
+      const anchor = input.selectionDirection === 'backward' ? input.selectionEnd : input.selectionStart;
+      const gap = gapOf(e);
+      want = { from: Math.min(anchor, gap), to: Math.max(anchor, gap), back: gap < anchor, until: performance.now() + 300 };
+      hold();
+      return;
+    }
     down = { x: e.clientX, y: e.clientY, at: performance.now(), gap: gapOf(e), dragged: false };
   }, true);
+  // A finger on a handle is the script's alone: the phone's own gestures
+  // (a scroll, a long press) are kept off it.
+  document.addEventListener('touchstart', (e) => {
+    if (grab) e.preventDefault();
+  }, { capture: true, passive: false });
+  document.addEventListener('pointermove', (e) => {
+    if (!grab || e.pointerType !== 'touch') return;
+    const input = document.getElementById('from-vin');
+    const gap = gapOf(e);
+    // A handle stops a cell short of the other: a selection keeps a cell.
+    if (grab.start) input.setSelectionRange(Math.min(gap, grab.fixed - 1), grab.fixed, 'backward');
+    else input.setSelectionRange(grab.fixed, Math.max(gap, grab.fixed + 1), 'forward');
+    show();
+  }, true);
+  for (const type of ['pointerup', 'pointercancel']) {
+    document.addEventListener(type, () => { grab = null; }, true);
+  }
   document.addEventListener('pointermove', (e) => {
     if (!down || e.pointerType !== 'mouse' || e.buttons !== 1) return;
     if (!down.dragged && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 4) return;
@@ -274,6 +333,8 @@
       return;
     }
     const gap = gapOf(e);
+    // A click or tap ends a selection, which the phone would leave be.
+    document.getElementById('from-vin').setSelectionRange(gap, gap);
     want = { from: gap, to: gap, back: false, until: now + (touch ? 1000 : 150) };
     hold();
   }, true);

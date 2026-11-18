@@ -110,8 +110,11 @@ URL to the VIN.
   characters spaced a cell apart. The keys, the selection and a paste are the
   browser's own, and the cells draw them. Where a pointer lands is the
   script's to say, because the browsers do not agree with the cells (Firefox
-  halves a character at its glyph, a phone puts the caret at a word's end). A
-  whole VIN takes no more.
+  halves a character at its glyph, a phone puts the caret at a word's end). For
+  a finger the field's text is collapsed to a point and the selection's
+  handles are the cells', dragged by the script: a phone's own highlight and
+  handles do not fit the cells and cannot be styled away. A whole VIN takes no
+  more.
 - **The plate takes a VIN and nothing else.** The spec had the one field also
   take a vehicle ("2015 F-150") or a part number and guess which. It was
   dropped on 2026-11-17, never built: words of any length would give up the

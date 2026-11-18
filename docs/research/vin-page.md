@@ -1802,9 +1802,14 @@ page, the typing on the plate included.
   browsers do not agree with the cells: Firefox halves a character at its
   glyph and not at its cell, and a phone places the caret of a tap at an end
   of the word, a VIN being one word. So a click or a tap's gap, and the cells
-  a mouse drags over, are worked out from the pointer and held there; double
-  clicks and taps, Shift and a click, and a phone's drags and handles stay
-  the browser's own.
+  a mouse drags over, are worked out from the pointer and held there; the
+  second of two clicks or taps in one place stays the browser's own. For a
+  finger the page goes further. A phone draws its own highlight and handles
+  over a field's selected text, in sizes that are not the cells', and no
+  style removes them. So where the pointer is coarse the field's text is
+  collapsed to a point at the plate's middle (the phone's edit menu still
+  opens there), the selection's handles are drawn on its first and last
+  cells, and the script drags them.
 - **Pasted input is cleaned first** (finding 4). Only letters and digits are
   kept, upper-cased, and cut at 17, by the same rule on the server and in the
   browser. Letters are never swapped: an O stays an O, and a character no VIN

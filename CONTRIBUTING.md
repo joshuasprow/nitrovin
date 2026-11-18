@@ -602,7 +602,10 @@ textarea in its place, laid over the cells with its characters spaced a
 cell apart, so the field's own caret and selection fall on the cells,
 which draw them; under a mouse a faint caret marks the gap a click would
 pick, and a click, a tap and a mouse's drag are placed from the pointer,
-the browsers not agreeing with the cells on their own. On a narrow window
+the browsers not agreeing with the cells on their own. For a finger
+(`pointer: coarse`) the field's text is collapsed to a point, so a phone
+draws no highlight or handles of its own, and the selection's handles are
+drawn on the cells and dragged by `plate.js`. On a narrow window
 (a phone) the plate is two rows, nine cells and eight, split after the
 check digit, and the field's text wraps with them. As the visitor types,
 `plate.js` asks the page for the answer as a fragment (`HX-Request`,
