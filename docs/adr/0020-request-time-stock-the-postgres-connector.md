@@ -52,6 +52,42 @@ says a source should have:
 All the stock lists of one answer are fetched together: at most one query per
 source and list kind, each bounded by the page.
 
+**Through a barrier (amended, [#306](https://github.com/joshuasprow/nitrovin/issues/306)).**
+Each key reaches the relation as a restriction on the relation's own columns, with
+the key's values as parameters: every condition on the relation sits in a subquery
+`LATERAL` to the key, fenced with `OFFSET 0` so that the planner cannot pull it up.
+A lookup is one index probe per key, and a `security_barrier` relation keeps the
+indexes above, as a table or a plain view does.
+
+- **Why not a join.** As first built, a lookup joined the relation to its keys.
+  Postgres never flattens a `security_barrier` view, and pushes no join condition
+  into a subquery it did not flatten, so no key reached the view's tables and every
+  lookup computed the whole view. The first user measured it on its shelf view of
+  153,119 rows, for three fitment keys, first run then warm: 25 ms and 1.0 ms as a
+  plain view, 55 s and 22 s behind a barrier, against the 1 s statement timeout. The
+  documentation's own advice for the connection's role, a `security_barrier` view,
+  made every list `unavailable`.
+- **The fence is required.** Without it Postgres pulls a simple lateral subquery up,
+  and its conditions are join conditions again.
+- **A condition on a relation column is leakproof.** A barrier passes a restriction
+  to its tables only when every function in it is leakproof. The lookups' are: text
+  and integer equality, `IS NULL`, `IS NOT DISTINCT FROM`, `= ANY` on text, and
+  integer `>=` and `<=`. A new condition has to be leakproof too, or it stays above
+  the barrier and the lookup scans. The casts that build a result's columns are not
+  conditions. One column type is outside this: a `character` column is compared as
+  text through a cast that is not leakproof, and the documentation says to cast it
+  in the view.
+- **The plan is tested, not the time.** Fixture-sized tables never show the cost.
+  `pkg/stock/pg` holds each of the four lookups to its index, with an index
+  condition on the key's columns, through the worked view's barrier, and the
+  fitment lookup through a plain view as well.
+- **Measured when built**, on a synthetic shelf of 150,000 rows behind the worked
+  view's barrier (Postgres 17, three fitment keys of one number, first run then
+  warm): 9.1 ms and 8.7 ms as a join, by a parallel scan of the table; 0.13 ms and
+  0.06 ms as built, which is what the plain view takes either way. Behind a barrier
+  view that works per row (two tables in a `UNION ALL`, two joins, an anti-join and
+  an aggregate per row): 298 ms and 282 ms as a join, 0.29 ms and 0.14 ms as built.
+
 **At first connection** nitrovin checks the relation's columns against
 `information_schema`. A missing or mistyped column makes the source `unavailable`,
 with the reason. Nothing guesses.

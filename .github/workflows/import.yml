@@ -36,10 +36,10 @@
 # stock: pkg/stock/pg's Postgres tests, against an empty Postgres 17 the
 # job starts (no dump): the stock connector (ADR 0020) reads views over the
 # synthetic shelf and yard (testdata/vocab/stock/live/views.sql) and must
-# answer every fit as the same rows loaded as files do, and degrade to
-# unavailable on a missing column, a slow query, a full pool, a dead
-# database. It takes about a minute, so it runs for every path this
-# workflow watches.
+# answer every fit as the same rows loaded as files do, read its tables'
+# indexes through the views' security_barrier, and degrade to unavailable
+# on a missing column, a slow query, a full pool, a dead database. It takes
+# about a minute, so it runs for every path this workflow watches.
 name: Tests
 
 on:
@@ -307,6 +307,7 @@ jobs:
         run: |
           go test -count=1 -race -v ./pkg/stock/pg/ | tee "$RUNNER_TEMP/stock.log"
           for t in TestParityPostgres TestUnavailablePostgres TestRowsPostgres TestSlowPostgres \
-                   TestChangedPostgres TestVPICPostgres TestColumnCheckPostgres TestLostPostgres TestNoCatalogPostgres; do
+                   TestChangedPostgres TestPlansPostgres TestVPICPostgres TestColumnCheckPostgres \
+                   TestLostPostgres TestNoCatalogPostgres; do
             grep -q -- "--- PASS: $t " "$RUNNER_TEMP/stock.log" || { echo "stock: $t did not pass" >&2; exit 1; }
           done

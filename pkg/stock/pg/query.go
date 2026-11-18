@@ -163,31 +163,46 @@ func (s *Source) queries(asOf string) *queries {
 			"LEFT JOIN p ON p.list = l.list AND p.rn > $3::int8 AND p.rn <= $3::int8 + $4::int8\n" +
 			"ORDER BY l.list, p.rn"
 	}
+	// matched are the relation's rows of each key of k: a row's columns
+	// cols and, for a yard's, whether its decode matched, byModel.
+	//
+	// Every condition on the relation, cond and where, is in a subquery
+	// LATERAL to the key, fenced with OFFSET 0 so that the planner cannot
+	// pull it up. There the key is a parameter and each condition a
+	// restriction on the relation, which a security_barrier view passes
+	// to its tables' indexes when it is leakproof (ADR 0020). Pulled up,
+	// or written as a join, they are join conditions, which no barrier
+	// lets through: the lookup computes the whole view. So a condition on
+	// a relation column stays one of text or integer comparison, IS NULL,
+	// IS NOT DISTINCT FROM and = ANY, which are leakproof.
+	matched := func(k, cols, byModel, cond string) string {
+		return "SELECT " + k + ".list, found.* FROM " + k + " CROSS JOIN LATERAL (SELECT " + cols + ", " + byModel + " AS c_by_model FROM " + rel + " r WHERE " +
+			cond + " AND " + where + " OFFSET 0) found"
+	}
 
 	if s.info.Holds == stock.Shelf {
 		q.byFitment = page(
 			keys("k", 5, []string{"list", "type", "number", "side"}, []string{"int4[]", "text[]", "text[]", "text[]"}),
-			"SELECT k.list, "+selected(true, false, false, false)+", NULL::bool AS c_by_model FROM k JOIN "+rel+" r ON "+
-				col("type")+" = k.type AND "+col("number")+" = k.number AND "+col("side")+" IS NOT DISTINCT FROM k.side WHERE "+where)
+			matched("k", selected(true, false, false, false), "NULL::bool",
+				col("type")+" = k.type AND "+col("number")+" = k.number AND "+col("side")+" IS NOT DISTINCT FROM k.side"))
 		q.byVehicle = page(
 			keys("k", 5, append([]string{"list", "part_type", "year"}, vnames...), append([]string{"int4[]", "text[]", "int4[]"}, vtypes...)),
-			"SELECT k.list, "+selected(false, true, true, false)+", NULL::bool AS c_by_model FROM k JOIN "+rel+" r ON "+
+			matched("k", selected(false, true, true, false), "NULL::bool",
 				col("number")+" IS NULL AND "+col("part_type")+" = k.part_type AND "+vehicleIs("k")+" AND "+
-				col("year")+" IS NOT NULL AND (k.year IS NULL OR "+col("year")+" = k.year) WHERE "+where)
+					col("year")+" IS NOT NULL AND (k.year IS NULL OR "+col("year")+" = k.year)"))
 		return q
 	}
 	decoded := col("decoded_make") + " IS NOT NULL AND " + col("decoded_model") + " IS NOT NULL AND " + col("decoded_year") + " IS NOT NULL"
 	within := func(k, year string) string {
 		return "(" + k + ".first IS NULL OR " + year + " >= " + k + ".first) AND (" + k + ".last IS NULL OR " + year + " <= " + k + ".last)"
 	}
-	m := "SELECT km.list, " + selected(false, false, true, true) + ", true AS c_by_model FROM km JOIN " + rel + " r ON " +
-		col("decoded_model") + " = km.model AND " + decoded + " AND " + within("km", col("decoded_year")) + " WHERE " + where
+	m := matched("km", selected(false, false, true, true), "true",
+		col("decoded_model")+" = km.model AND "+decoded+" AND "+within("km", col("decoded_year")))
 	with := keys("km", 5, []string{"list", "model", "first", "last"}, []string{"int4[]", "int4[]", "int4[]", "int4[]"})
 	if len(vehicle) > 0 {
 		with += ",\n" + keys("kv", 9, append([]string{"list", "first", "last"}, vnames...), append([]string{"int4[]", "int4[]", "int4[]"}, vtypes...))
-		m += "\nUNION ALL\nSELECT kv.list, " + selected(false, false, true, true) + ", false FROM kv JOIN " + rel + " r ON " +
-			vehicleIs("kv") + " AND " + col("year") + " IS NOT NULL AND " + within("kv", col("year")) +
-			" WHERE " + where + " AND NOT (" + decoded + ")"
+		m += "\nUNION ALL\n" + matched("kv", selected(false, false, true, true), "false",
+			vehicleIs("kv")+" AND "+col("year")+" IS NOT NULL AND "+within("kv", col("year"))+" AND NOT ("+decoded+")")
 	}
 	q.yard = page(with, m)
 	return q

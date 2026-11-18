@@ -53,9 +53,11 @@ CREATE INDEX yard_by_vehicle ON yard.vehicles (make, model, model_year);
 -- part. Either may add as_of, a row's own time.
 --
 -- Each is a security_barrier view: its WHERE runs before any condition of
--- the query reading it, so a function the reader writes, which may raise
--- or log its arguments, never sees a row the view leaves out. A plain
--- view lets the planner run a cheap condition first.
+-- the query reading it that is not leakproof, so a function the reader
+-- writes, which may raise or log its arguments, never sees a row the view
+-- leaves out. A plain view lets the planner run a cheap condition first.
+-- The connectors' own conditions are leakproof, so the barrier passes
+-- them to the indexes above, which TestPlansPostgres holds them to.
 CREATE SCHEMA stock;
 CREATE VIEW stock.shelf_stock WITH (security_barrier) AS
 SELECT stock_id AS id, bin AS location,
