@@ -3,12 +3,10 @@
 // swaps the worker's panel (the merged catalog, with the browser's files)
 // over the server's catalog in the dialog, and hands the files the visitor
 // picks or drops, EPA's vocabulary on a click and the demo set on another,
-// to the worker by postMessage, and the targets the visitor ticks too. A
-// catalog picked on its own, and the demo set's, is compiled in a
-// dedicated worker it starts (compile.js, ADR 0023), the File handed over
-// and read in place. Without this script
-// the dialog says that loading files needs JavaScript; everything else
-// works.
+// to the worker by postMessage. A catalog picked on its own, and the demo
+// set's, is compiled in a dedicated worker it starts (compile.js, ADR
+// 0023), the File handed over and read in place. Without this script the
+// dialog says that loading files needs JavaScript; everything else works.
 //
 // The worker is the module's 12 MB, so a visitor who never opens the
 // dialog never gets it: it is registered when the dialog first opens or a
@@ -25,9 +23,7 @@
 // visitor's files wait for the update), unsupported (no Service Workers),
 // and failed. An update waiting for the old worker's pages to close is
 // said beside the state (data-update="waiting"), with Update now, which
-// hands the page to it at once and reloads. #browser's data-ticked is
-// set once the page's first tick of the visitor's selection is done,
-// whether it ticked anything or not.
+// hands the page to it at once and reloads.
 'use strict';
 
 (() => {
@@ -74,8 +70,8 @@
   });
 
   const showFiles = () => htmx.ajax('GET', '/ui/files', { target: '#browser-files', swap: 'innerHTML' });
-  // redraw asks for the page's main again: its forms and its answer are
-  // over the files loaded, which just changed.
+  // redraw asks for the page's main again: its answer is over the files
+  // loaded, which just changed.
   const redraw = () => htmx.ajax('GET', location.pathname + location.search, { target: '#ui-main', swap: 'innerHTML' });
 
   // Update now hands the page to the waiting worker at once (it skips
@@ -188,69 +184,7 @@
     failed: 'the translator in this browser could not start. Reload the page, then load them again.',
   })[section.dataset.state] || 'files load once the translator in this browser is ready.';
 
-  // retarget is href, a link to a lookup, to the targets ticked now on
-  // spine, else to fallback (names): a link the page drew names its
-  // targets when the page has them.
-  const retarget = (href, spine, fallback) => {
-    const url = new URL(href, location.origin);
-    url.searchParams.delete('to');
-    const boxes = spine && document.querySelector('#controls fieldset[data-spine="' + CSS.escape(spine) + '"]');
-    const ticked = boxes ? [...boxes.querySelectorAll('input[name=to]:checked')].map((b) => b.value) : [];
-    for (const name of ticked.length ? ticked : fallback) url.searchParams.append('to', name);
-    return url.pathname + url.search;
-  };
-  // An example goes to the targets ticked now on its spine (data-spine),
-  // else to its own (data-to), not to those ticked when the form was
-  // drawn.
-  const relink = () => {
-    for (const a of document.querySelectorAll('#controls a.example')) {
-      a.setAttribute('href', retarget(a.getAttribute('href'), a.dataset.spine, (a.dataset.to || '').split(' ').filter(Boolean)));
-    }
-  };
-
-  // The targets ticked in the page's form are the visitor's selection,
-  // which the worker keeps beside the files: a tick goes to it at once.
-  document.addEventListener('change', (e) => {
-    const box = e.target;
-    if (!box.matches || !box.matches('#controls input[name=to]')) return;
-    relink();
-    if (ready()) sw.controller.postMessage({ op: 'select', name: box.value, spine: box.closest('fieldset').dataset.spine, checked: box.checked });
-  });
-
-  // tick ticks the visitor's selection in the forms, on each spine it
-  // holds targets for, when the page's lookup (path) named none of its
-  // own: so what the visitor asks next names its targets (to=), and a
-  // link naming none means the same in every browser. The selection is
-  // the worker's, asked for whenever one of the page's release controls
-  // the page, beside that question: the forms are ticked without waiting
-  // for the dialog's panel.
-  const tick = async (path) => {
-    if (!sw.controller || new URL(path, location.origin).searchParams.has('to')) return;
-    const [m, selection] = await Promise.all([mine(), ask({ op: 'selection' }, 5000)]);
-    if (!matched(m) || section.dataset.state === 'outdated' || !selection) return;
-    for (const set of document.querySelectorAll('#controls fieldset[data-spine]')) {
-      const names = selection[set.dataset.spine];
-      if (!names) continue;
-      for (const box of set.querySelectorAll('input[name=to]')) box.checked = names.includes(box.value);
-    }
-    relink();
-  };
-  // data-ticked on #browser marks the end of the page's first tick,
-  // whatever came of it: the forms hold what the page will show.
-  tick(location.pathname + location.search).catch(() => {}).finally(() => { section.dataset.ticked = ''; });
-  document.addEventListener('htmx:afterSettle', (e) => {
-    if (e.detail.target && e.detail.target.id === 'ui-main') tick((e.detail.pathInfo && e.detail.pathInfo.requestPath) || location.href).catch(() => {});
-  });
-
-  // htmx asks with the href a link had when it was drawn: an example
-  // asks for its targets as relink sets them.
-  document.addEventListener('htmx:configRequest', (e) => {
-    const a = e.detail.elt;
-    if (!a.matches || !a.matches('#controls a.example')) return;
-    e.detail.path = retarget(e.detail.path, a.dataset.spine, (a.dataset.to || '').split(' ').filter(Boolean));
-  });
-
-  // A file removed changes what the page's forms and answer are over.
+  // A file removed changes what the page's answer is over.
   document.addEventListener('htmx:afterRequest', (e) => {
     if (e.detail.successful && e.detail.pathInfo.requestPath === '/ui/files/remove') redraw();
   });

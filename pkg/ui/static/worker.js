@@ -5,15 +5,14 @@
 // server's pages) over the files this browser holds in IndexedDB and the
 // server's, which it links from their release URLs.
 //
-// - It answers a lookup on the page (/) only when it names a file this
-//   browser holds (its from or a target: named), the page without a
-//   lookup once it holds one (its forms over the browser's files too), an
-//   entry list (/ui/vocabularies/<name>) of a file it holds, and
-//   /ui/files, and the browser's compiled catalog's download
-//   (/ui/files/catalog);
-//   everything else goes to the server unchanged, a lookup
-//   naming no target included, so one URL means one thing with
-//   JavaScript on or off, and in every browser.
+// - It answers the page (/) once this browser holds a file: the page's
+//   "Also known as" is then over the browser's vocabularies and the
+//   server's. It answers an old link to /ui/translate the same way, by
+//   moving it to the page as the server does, an entry list
+//   (/ui/vocabularies/<name>) of a file it holds, /ui/files, and the
+//   browser's compiled catalog's download (/ui/files/catalog);
+//   everything else goes to the server unchanged, and so does the page
+//   of a browser that holds no file.
 // - A file reaches it by postMessage from the page, never by a request: no
 //   file's bytes are ever sent to the server. A yard stock file's VINs
 //   alone go to the server's POST /v1/decode, once, as it loads.
@@ -33,13 +32,6 @@
 //   controls hear {op: "outdated"}, so they say so and offer Update now,
 //   until a newer worker replaces it. A server it cannot reach leaves it
 //   answering, as offline.
-// - It keeps the visitor's selection of targets beside the files, by the
-//   spine they are on, which vocab.js ticks in the page's forms: each
-//   file loaded joins it, each removed leaves it, a target ticked or
-//   cleared changes it, and a lookup naming its targets sets it on its
-//   spine to them (the module's pages do, for the ones they answer; this
-//   script, for the ones the server answers, by the answer's data-from
-//   and data-spine).
 'use strict';
 
 const config = self.nitrovinConfig;
@@ -229,20 +221,6 @@ async function download() {
   });
 }
 
-// named is what a lookup on the page names, as the module's pages read
-// it (pkg/ui, named): the from's vocabulary, spine or extension set, and
-// the targets.
-function named(q) {
-  const out = [q.get('from.vocabulary'), q.get('from.spine'), ...q.getAll('to')];
-  const ext = q.get('from.ext');
-  if (ext && ext.startsWith('ext:')) out.push(ext.slice(4).split('/')[0]);
-  return out.filter(Boolean);
-}
-
-// asks reports whether q asks a lookup: a from beside a vocabulary's
-// name, a form's choice.
-const asks = (q) => [...q].some(([k, v]) => k.startsWith('from.') && k !== 'from.vocabulary' && v.trim() !== '');
-
 // The worker answers a request only while it is not outdated, and what it
 // draws itself (own) only while the server runs its release.
 self.addEventListener('fetch', (e) => {
@@ -279,20 +257,6 @@ self.addEventListener('fetch', (e) => {
   e.respondWith(storedNames().then((stored) => (stored.has(name) ? own(e.request, () => serve(e.request)) : network(e.request))));
 });
 
-// remember makes the targets of a lookup the server answered, a link's
-// own included, the visitor's selection on their spine, as the module's
-// pages do for the ones they answer (ui's remember): the answer says
-// which from it is of and its spine (data-from, data-spine). A lookup
-// naming no target, a refusal, and history going back to an older page
-// change nothing.
-async function remember(q, req, res) {
-  if (!res.ok || !q.has('to') || req.headers.get('HX-History-Restore-Request')) return;
-  const m = /<section id="result"[^>]* data-from="([^"]+)" data-spine="([^"]+)"/.exec(await res.text());
-  if (!m) return;
-  const to = q.getAll('to');
-  await select(m[2], () => to);
-}
-
 // serve answers req from the module's pages.
 async function serve(req) {
   try {
@@ -315,12 +279,9 @@ async function serve(req) {
 // A load: {op: "load", files: [{name, data: ArrayBuffer}]} on a
 // MessageChannel. The page hears {progress} at each step, then {done, ok,
 // message}; it gives up after a minute without either. An outdated worker
-// refuses it in words. A tick: {op: "select", name, spine, checked}, a
-// target the visitor ticked in the page's form or cleared, kept in the
-// selection on its spine or dropped from it. Questions on a
-// MessageChannel: {op: "selection"}, answered with the selection ({spine:
-// [name]}), which vocab.js ticks; {op: "release"}, answered with {release,
-// server}, this worker's release and, once it is outdated, the server's.
+// refuses it in words. A question on a MessageChannel: {op: "release"},
+// answered with {release, server}, this worker's release and, once it is
+// outdated, the server's.
 // {op: "skipWaiting"} is Update now: a waiting worker takes over at once.
 // A catalog compiles in a dedicated worker the page starts (compile.js),
 // not here: a browser may stop a Service Worker that spends minutes on one
@@ -351,7 +312,6 @@ self.addEventListener('message', (e) => {
     return;
   }
   if (op === 'catalog') {
-    forget();
     if (self.nitrovin) self.nitrovin.reset();
     if (e.ports[0]) e.ports[0].postMessage({ done: true });
     return;
@@ -360,19 +320,9 @@ self.addEventListener('message', (e) => {
     e.waitUntil(self.skipWaiting());
     return;
   }
-  if (op === 'select' && typeof e.data.name === 'string' && typeof e.data.spine === 'string') {
-    const { name, spine, checked } = e.data;
-    e.waitUntil(select(spine, (s) => s.filter((n) => n !== name).concat(checked ? [name] : [])));
-    return;
-  }
   const port = e.ports[0];
   if (port && op === 'release') {
     port.postMessage({ release: config.release, server: outdated });
-    return;
-  }
-  if (port && op === 'selection') {
-    e.waitUntil(tx(['state'], 'readonly', (t) => request(t.objectStore('state').get('selection')), stateDB)
-      .then((s) => port.postMessage(s || {}), () => port.postMessage({})));
     return;
   }
   if (!port || op !== 'load') return;
