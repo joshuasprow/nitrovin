@@ -9,7 +9,7 @@ import (
 	"github.com/joshuasprow/nitrovin/pkg/contract"
 )
 
-// PROTOTYPE (prototype/pare-back-ui, local://vin-page-spec.md): the VIN as
+// The page (docs/research/vin-page.md has its references) draws the VIN as
 // its diagram. The plate is 17 cells under six brackets, the standard
 // groups of a VIN; each bracket leads to a card of what its characters
 // decode to, and a derived card beneath them, "Also known as", holds the

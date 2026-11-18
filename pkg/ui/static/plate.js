@@ -1,4 +1,4 @@
-// PROTOTYPE (prototype/pare-back-ui, local://vin-page-spec.md). The plate
+// The plate
 // (pkg/ui, page.html): served from /ui/r/<release>/plate.js under
 // script-src 'self'. Without this script the plate shows what the server
 // drew and the input below it is sent with Decode. With it:

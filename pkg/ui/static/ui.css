@@ -1,4 +1,4 @@
-/* PROTOTYPE (prototype/pare-back-ui, local://vin-page-spec.md). The pages'
+/* The pages'
    one stylesheet (pkg/ui). CSP allows no inline style, so every position
    is a class.
 
@@ -264,7 +264,6 @@ table.sum .skip { color: var(--muted); }
    The line into a strip is drawn by the strip (::after), in the gap above
    it, so the lines run from strip to strip. A dashed line or bracket is a
    doubt.
-
 
    A vocabulary with several names is a stack: the first plate on top and
    the edges of up to three more under it (shadows), which the lines to

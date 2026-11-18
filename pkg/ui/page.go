@@ -202,13 +202,6 @@ func (h *Handler) home(r *http.Request) (view, error) {
 	if raw.Has("surprise") {
 		return view{location: vinHref(surpriseVINs[rand.IntN(len(surpriseVINs))]), status: http.StatusSeeOther}, nil
 	}
-	// TEMPORARY, while the cards below the plate are being designed: the
-	// page with no VIN opens on one that has names in the demo set and in
-	// EPA's vocabulary. A fragment (plate.js clearing the plate) is left
-	// alone.
-	if !raw.Has("from.vin") && !fragment(r) {
-		return view{location: vinHref("1FTEW1EG7FFA12345"), status: http.StatusSeeOther}, nil
-	}
 	d := newDiagram(cleanVIN(raw.Get("from.vin")))
 	page := &homePage{Diagram: d, DataMonth: info.DataMonth, DecoderVersion: info.DecoderVersion, Links: h.links(info)}
 	for _, e := range exampleVINs {
