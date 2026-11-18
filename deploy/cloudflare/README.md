@@ -86,10 +86,12 @@ keeps no object versions), waits until the container rollout has finished
 application's image, at most 20 minutes, [#127](https://github.com/joshuasprow/nitrovin/issues/127)),
 and runs `smoke.sh` against `https://nitrovin.app`, whose output is the
 run's summary. The old containers can answer for a minute or so after the
-rollout is reported finished, so `smoke.sh` first asks `/v1/info` every
-10 s, for at most 5 minutes, until it reports the image's release, and
-only then starts its checks; a host that never does fails the run, naming
-the release it still reports
+rollout is reported finished, so once `/healthz` answers, `smoke.sh` asks
+`/v1/info` every 10 s, for at most 5 minutes, until it reports the
+image's release, and only then starts its checks. It asks under a URL new
+to the cache, so the answer is the container's. A host that never reports
+the release fails the run, naming what it last reported instead: another
+release, a status code or no answer
 ([#287](https://github.com/joshuasprow/nitrovin/issues/287)). Runs are
 serialized.
 

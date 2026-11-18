@@ -125,18 +125,24 @@ want=$(identity "$tmp/want-info.json")
 # Wait until the host reports it. rollout-wait.sh ends on the hosting API's
 # word, and requests reach the old containers for a minute or so after
 # that (#287). A line whenever the answer changes; the checks start only
-# once the release answers, and stay strict.
+# once the release answers, and stay strict. The query, which /v1/info
+# ignores, makes the URL new as the decode's is: plain /v1/info may sit in
+# the cache under this release from a deploy of it within the day, and a
+# hit says nothing of the container. An old container's answer to a new
+# URL is never stored, so each poll reaches the container until the
+# release answers.
 deadline=$((SECONDS + 300))
 last=
 while :; do
-	state=$(curl -sS --max-time 10 -o "$tmp/wait.b" -w '%{http_code}' "$base/v1/info" 2>/dev/null) || state="no answer"
+	state=$(curl -sS --max-time 10 -o "$tmp/wait.b" -w '%{http_code}' "$base/v1/info?now=$now" 2>/dev/null) || state="no answer"
 	if [[ $state == 200 ]]; then
-		state=$(identity "$tmp/wait.b" 2>/dev/null) || state="200, not JSON"
+		# jq prints nothing for an empty body, and exits 0.
+		state=$(identity "$tmp/wait.b" 2>/dev/null) && [[ -n $state ]] || state="200, not JSON"
 	fi
 	[[ $state == "$want" ]] && break
-	[[ $state == "$last" ]] || printf 'wait  %s\n' "$(date -u +%TZ) GET /v1/info: $state; the image reports $want"
+	[[ $state == "$last" ]] || printf 'wait  %s\n' "$(date -u +%TZ) GET /v1/info?now=$now: $state; the image reports $want"
 	last=$state
-	((SECONDS < deadline)) || fail "GET /v1/info: still $state after 5 minutes; the image reports $want"
+	((SECONDS < deadline)) || fail "GET /v1/info?now=$now: still $state after 5 minutes; the image reports $want"
 	sleep 10
 done
 status=$(req info "$base/v1/info")
