@@ -84,11 +84,10 @@ func (fixtureMonth) Values() iter.Seq2[int32, string] {
 
 // memDisk is a Disk in memory, which counts what it is asked.
 type memDisk struct {
-	mu        sync.Mutex
-	records   map[string]Record
-	texts     map[string][]byte
-	indexes   map[string][]byte
-	selection Selection
+	mu      sync.Mutex
+	records map[string]Record
+	texts   map[string][]byte
+	indexes map[string][]byte
 	// textReads counts Text calls; fail fails Change.
 	textReads int
 	fail      error
@@ -144,15 +143,9 @@ func (d *memDisk) Text(b string) ([]byte, error) {
 	return t, nil
 }
 
-func (d *memDisk) Selection() (Selection, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	return d.cloneSelection(d.selection), nil
-}
-
-// Change does what worker.js's change does: puts, deletes, stores the
-// selection, and drops texts and indexes no record keeps.
-func (d *memDisk) Change(put []Stored, remove []string, selection Selection) error {
+// Change does what disk.js's change does: puts, deletes, and drops texts
+// and indexes no record keeps.
+func (d *memDisk) Change(put []Stored, remove []string) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	if d.fail != nil {
@@ -166,7 +159,6 @@ func (d *memDisk) Change(put []Stored, remove []string, selection Selection) err
 		d.texts[p.Blake3] = p.Text
 		d.indexes[p.Blake3] = p.Index
 	}
-	d.selection = d.cloneSelection(selection)
 	kept := map[string]bool{}
 	for _, r := range d.records {
 		kept[r.Blake3] = true
@@ -304,18 +296,6 @@ func (c *memCatalog) end() {
 		c.done = true
 		c.d.writing--
 	}
-}
-
-// cloneSelection is s, its lists the disk's own, as IndexedDB keeps a copy.
-func (d *memDisk) cloneSelection(s Selection) Selection {
-	if s == nil {
-		return nil
-	}
-	out := Selection{}
-	for spine, names := range s {
-		out[spine] = slices.Clone(names)
-	}
-	return out
 }
 
 // fakeServer is the server as a Remote: the bundle, its files, and
@@ -602,51 +582,6 @@ func TestLibraryRemove(t *testing.T) {
 	}
 }
 
-// TestLibrarySelection: each vocabulary loaded joins the selected targets
-// on its spine, once, beside what the visitor selected before; a spine or
-// an extension set does not. A translation's targets replace those on
-// their spine alone. A removed file leaves the selection, and so do the
-// dependants removed with it.
-func TestLibrarySelection(t *testing.T) {
-	s, d := server(t), newDisk()
-	l := open(t, s, d)
-	d.selection = Selection{"vpic": {"elsewhere"}}
-	check := func(step, want string) {
-		t.Helper()
-		got, err := l.Selection()
-		if err != nil {
-			t.Fatal(err)
-		}
-		if fmt.Sprint(got) != want {
-			t.Errorf("%s: selection %v; want %s", step, got, want)
-		}
-	}
-	if _, err := l.Load(pick(t, "classics", "yard"), quiet); err != nil {
-		t.Fatal(err)
-	}
-	check("a load", "map[vpic:[elsewhere yard]]")
-	if _, err := l.Load(pick(t, "parts", "listing"), quiet); err != nil {
-		t.Fatal(err)
-	}
-	check("a second load", "map[parts:[listing] vpic:[elsewhere yard]]")
-	if _, err := l.Load(pick(t, "yard"), quiet); err != nil {
-		t.Fatal(err)
-	}
-	check("yard replaced", "map[parts:[listing] vpic:[elsewhere yard]]")
-	if err := l.Select("vpic", []string{"yard"}); err != nil {
-		t.Fatal(err)
-	}
-	check("a translation to yard", "map[parts:[listing] vpic:[yard]]")
-	if err := l.Remove([]string{"classics"}, false); err == nil {
-		t.Fatal("removing classics alone: no refusal")
-	}
-	check("a refused remove", "map[parts:[listing] vpic:[yard]]")
-	if err := l.Remove([]string{"classics"}, true); err != nil {
-		t.Fatal(err)
-	}
-	check("classics removed with yard", "map[parts:[listing] vpic:[]]")
-}
-
 // TestLibraryDecode: a VIN is decoded by the server; a decode of another
 // data month is refused, a server that cannot be reached is said in words,
 // and the server's refusal is passed through.
@@ -716,17 +651,17 @@ func TestBrowserPages(t *testing.T) {
 		`<button type="submit">Remove<span class="visually-hidden"> yard</span></button>`,
 		`id="vocab-files"`,
 		`id="load-epa" data-url="` + testAssetsAttr + `/vocab/ff00/yard.jsonl" data-file="yard.jsonl"`,
-		"956 kB", "replacing version 2026.11",
+		"956 kB", "replaces 2026.11",
 	} {
 		if !strings.Contains(body, want) {
 			t.Errorf("files lack %s:\n%s", want, body)
 		}
 	}
-	if status != 200 || strings.Contains(body, "Remove parts") || strings.Contains(body, "No files are kept") {
+	if status != 200 || strings.Contains(body, "Remove parts") {
 		t.Errorf("files: %d\n%s", status, body)
 	}
 	offer.Blake3 = yard
-	if _, _, body := response(t, h, "GET", "/ui/files", htmx); strings.Contains(body, "load-epa") || !strings.Contains(body, "EPA's vocabulary, yard 2026.12, is kept in this browser.") {
+	if _, _, body := response(t, h, "GET", "/ui/files", htmx); strings.Contains(body, "load-epa") || !strings.Contains(body, "EPA 2026.12 loaded") {
 		t.Errorf("files with the offer held:\n%s", body)
 	}
 	form := func(v string, header http.Header) (int, http.Header, string) {
@@ -812,7 +747,7 @@ func TestServiceWorker(t *testing.T) {
 		t.Errorf("sw.wasm without a module: %d", status)
 	}
 	_, _, body := response(t, h, "GET", "/", nil)
-	if !strings.Contains(body, "built without its browser translator") || strings.Contains(body, "data-worker") {
+	if !strings.Contains(body, "Built without the browser translator") || strings.Contains(body, "data-worker") {
 		t.Errorf("the page without a module:\n%s", body)
 	}
 
@@ -858,7 +793,7 @@ func TestServiceWorker(t *testing.T) {
 		t.Errorf("the page with a module:\n%s", body)
 	}
 	// A link naming a file this server lacks says where such a file lives.
-	status, _, body = response(t, h, "GET", "/?from.vocabulary=mine&from.entry.make=x&to=mine", nil)
+	status, _, body = response(t, h, "GET", "/ui/vocabularies/mine", nil)
 	if status != 404 || !strings.Contains(body, "open this link in the browser that holds it") {
 		t.Errorf("a browser file's link on the server: %d\n%s", status, body)
 	}

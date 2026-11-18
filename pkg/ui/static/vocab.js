@@ -3,12 +3,10 @@
 // swaps the worker's panel (the merged catalog, with the browser's files)
 // over the server's catalog in the dialog, and hands the files the visitor
 // picks or drops, EPA's vocabulary on a click and the demo set on another,
-// to the worker by postMessage, and the targets the visitor ticks too. A
-// catalog picked on its own, and the demo set's, is compiled in a
-// dedicated worker it starts (compile.js, ADR 0023), the File handed over
-// and read in place. Without this script
-// the dialog says that loading files needs JavaScript; everything else
-// works.
+// to the worker by postMessage. A catalog picked on its own, and the demo
+// set's, is compiled in a dedicated worker it starts (compile.js, ADR
+// 0023), the File handed over and read in place. Without this script the
+// dialog says that loading files needs JavaScript; everything else works.
 //
 // The worker is the module's 12 MB, so a visitor who never opens the
 // dialog never gets it: it is registered when the dialog first opens or a
@@ -25,9 +23,7 @@
 // visitor's files wait for the update), unsupported (no Service Workers),
 // and failed. An update waiting for the old worker's pages to close is
 // said beside the state (data-update="waiting"), with Update now, which
-// hands the page to it at once and reloads. #browser's data-ticked is
-// set once the page's first tick of the visitor's selection is done,
-// whether it ticked anything or not.
+// hands the page to it at once and reloads.
 'use strict';
 
 (() => {
@@ -54,7 +50,7 @@
   };
 
   if (!('serviceWorker' in navigator)) {
-    say('unsupported', 'This browser has no Service Workers, which keep and translate your own files here: they cannot be loaded. Translation through vPIC and this server\'s own files works.');
+    say('unsupported', 'No Service Workers in this browser: no own files');
     return;
   }
   const sw = navigator.serviceWorker;
@@ -74,8 +70,8 @@
   });
 
   const showFiles = () => htmx.ajax('GET', '/ui/files', { target: '#browser-files', swap: 'innerHTML' });
-  // redraw asks for the page's main again: its forms and its answer are
-  // over the files loaded, which just changed.
+  // redraw asks for the page's main again: its answer is over the files
+  // loaded, which just changed.
   const redraw = () => htmx.ajax('GET', location.pathname + location.search, { target: '#ui-main', swap: 'innerHTML' });
 
   // Update now hands the page to the waiting worker at once (it skips
@@ -104,9 +100,9 @@
 
   const watchUpdates = (reg) => {
     const waiting = () => {
-      update = ' A new release of nitrovin is ready: it starts once every nitrovin tab is closed, or now with Update now.';
+      update = ' · New release ready';
       section.dataset.update = 'waiting';
-      status.textContent = status.textContent.replace(/ A new release.*$/, '') + update;
+      status.textContent = status.textContent.replace(/ · New release.*$/, '') + update;
       updateNow.hidden = false;
     };
     // track waits for w, a worker installing, to be installed.
@@ -123,10 +119,8 @@
   // has the browser look for the new release's worker.
   const outdated = (mine) => {
     const server = mine && mine.server && mine.server.includes('/') ? mine.server : release;
-    const what = !mine ? 'does not answer this page, so it is of another release of nitrovin than this server\'s'
-      : version(mine.release) !== version(server) ? 'is nitrovin ' + version(mine.release) + ', and this server runs ' + version(server)
-        : 'is of another release of nitrovin than this server\'s';
-    say('outdated', 'Your own files are paused: the translator in this browser ' + what + '. Until it updates, every page comes from the server.');
+    const what = mine && version(mine.release) !== version(server) ? version(mine.release) + ' here, ' + version(server) + ' on the server' : 'another release here';
+    say('outdated', 'Own files paused: ' + what);
     if (registration && !registration.waiting && !registration.installing) registration.update().catch(() => {});
   };
   // The worker in control tells the page once it learns the server runs
@@ -152,13 +146,13 @@
   const start = () => {
     if (!starting) {
       starting = (async () => {
-        say('starting', 'Starting the translator in this browser…');
+        say('starting', 'Starting…');
         const before = await sw.getRegistration('/');
         if (before && before.active && !sw.controller) {
           // Installed, yet not in control: this load bypassed it (a hard reload).
           registration = before;
           watchUpdates(before);
-          say('paused', 'Your own files are paused for this load: a hard reload bypasses the Service Worker that holds them. Reload the page normally to use them.');
+          say('paused', 'Own files paused by a hard reload: reload normally');
           return;
         }
         const reg = await sw.register(section.dataset.worker, { scope: '/' });
@@ -171,7 +165,7 @@
           return;
         }
         await showFiles();
-        say('ready', 'Your files stay in this browser and are translated here.');
+        say('ready', 'Files stay in this browser');
         // The panel settled before the page was ready, so what a compile
         // not finished left is dropped and said now.
         usage().catch(() => {});
@@ -190,78 +184,7 @@
     failed: 'the translator in this browser could not start. Reload the page, then load them again.',
   })[section.dataset.state] || 'files load once the translator in this browser is ready.';
 
-  // retarget is href, a link to a lookup, to the targets ticked now on
-  // spine, else to fallback (names): a link the page drew names its
-  // targets when the page has them.
-  const retarget = (href, spine, fallback) => {
-    const url = new URL(href, location.origin);
-    url.searchParams.delete('to');
-    const boxes = spine && document.querySelector('#controls fieldset[data-spine="' + CSS.escape(spine) + '"]');
-    const ticked = boxes ? [...boxes.querySelectorAll('input[name=to]:checked')].map((b) => b.value) : [];
-    for (const name of ticked.length ? ticked : fallback) url.searchParams.append('to', name);
-    return url.pathname + url.search;
-  };
-  // An example goes to the targets ticked now on its spine (data-spine),
-  // else to its own (data-to), not to those ticked when the form was
-  // drawn.
-  const relink = () => {
-    for (const a of document.querySelectorAll('#controls a.example')) {
-      a.setAttribute('href', retarget(a.getAttribute('href'), a.dataset.spine, (a.dataset.to || '').split(' ').filter(Boolean)));
-    }
-  };
-
-  // The targets ticked in the page's form are the visitor's selection,
-  // which the worker keeps beside the files: a tick goes to it at once.
-  document.addEventListener('change', (e) => {
-    const box = e.target;
-    if (!box.matches || !box.matches('#controls input[name=to]')) return;
-    relink();
-    if (ready()) sw.controller.postMessage({ op: 'select', name: box.value, spine: box.closest('fieldset').dataset.spine, checked: box.checked });
-  });
-
-  // tick ticks the visitor's selection in the forms, on each spine it
-  // holds targets for, when the page's lookup (path) named none of its
-  // own: so what the visitor asks next names its targets (to=), and a
-  // link naming none means the same in every browser. The selection is
-  // the worker's, asked for whenever one of the page's release controls
-  // the page, beside that question: the forms are ticked without waiting
-  // for the dialog's panel.
-  const tick = async (path) => {
-    if (!sw.controller || new URL(path, location.origin).searchParams.has('to')) return;
-    const [m, selection] = await Promise.all([mine(), ask({ op: 'selection' }, 5000)]);
-    if (!matched(m) || section.dataset.state === 'outdated' || !selection) return;
-    for (const set of document.querySelectorAll('#controls fieldset[data-spine]')) {
-      const names = selection[set.dataset.spine];
-      if (!names) continue;
-      for (const box of set.querySelectorAll('input[name=to]')) box.checked = names.includes(box.value);
-    }
-    relink();
-  };
-  // data-ticked on #browser marks the end of the page's first tick,
-  // whatever came of it: the forms hold what the page will show.
-  tick(location.pathname + location.search).catch(() => {}).finally(() => { section.dataset.ticked = ''; });
-  document.addEventListener('htmx:afterSettle', (e) => {
-    if (e.detail.target && e.detail.target.id === 'ui-main') tick((e.detail.pathInfo && e.detail.pathInfo.requestPath) || location.href).catch(() => {});
-  });
-
-  // htmx asks with the href a link had when it was drawn: an example
-  // asks for its targets as relink sets them, and any other link to a
-  // lookup that names no target, a map's card among them, for the
-  // targets ticked now on the answer's spine.
-  document.addEventListener('htmx:configRequest', (e) => {
-    const a = e.detail.elt;
-    if (!a.matches || !a.matches('#ui-main a[href]')) return;
-    if (a.matches('#controls a.example')) {
-      e.detail.path = retarget(e.detail.path, a.dataset.spine, (a.dataset.to || '').split(' ').filter(Boolean));
-      return;
-    }
-    const url = new URL(e.detail.path, location.origin);
-    if (url.pathname !== '/' || url.searchParams.has('to') || ![...url.searchParams.keys()].some((k) => k.startsWith('from.'))) return;
-    const result = document.getElementById('result');
-    e.detail.path = retarget(e.detail.path, result && result.dataset.spine, []);
-  });
-
-  // A file removed changes what the page's forms and answer are over.
+  // A file removed changes what the page's answer is over.
   document.addEventListener('htmx:afterRequest', (e) => {
     if (e.detail.successful && e.detail.pathInfo.requestPath === '/ui/files/remove') redraw();
   });
@@ -528,7 +451,7 @@
       said.push(done.message);
     }
     section.dataset.demoMs = String(Math.round(performance.now() - t0));
-    tell('Loaded the demo set in ' + ((performance.now() - t0) / 1000).toFixed(1) + ' s. ' + said.join(' ') + ' Its examples are on the fit page.');
+    tell('Loaded the demo set in ' + ((performance.now() - t0) / 1000).toFixed(1) + ' s. ' + said.join(' '));
   };
   document.addEventListener('click', (e) => {
     const button = e.target.closest && e.target.closest('#load-demo');

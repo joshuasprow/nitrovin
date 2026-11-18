@@ -1,213 +1,184 @@
-{{/* The page (page.go): home is GET /, the controls and below them the
-answer, or before one what developers need. The forms ask the page itself,
-as a page without JavaScript; with it, htmx fills the layout's main with
-the answer and pushes its URL, and the tabs, the examples and the map's
-cards are boosted the same way. */}}
+{{/* The page, its design's references in docs/research/vin-page.md
+(page.go, diagram.go): home is GET /, the VIN as its diagram. The form is
+the plate: 17 cells under six brackets' labels, and one real input, which
+plate.js lays over the cells (without JavaScript it sits below them, and
+Decode sends it). Everything below the plate is the answer (#answer): the
+brackets under the plate, a card for each on its leader line, and the
+derived card "Also known as". The server draws it for whatever is typed so
+far; plate.js asks again as the visitor types and swaps #answer and #dev.
+What developers need is behind the header's Developers button (developers,
+decode.html), and the VINs to try behind its VINs button (chips). No
+inline script or style: CSP refuses both, so every position is a class on
+a fixed grid of 17 columns. */}}
 {{define "home" -}}
-<h1>Decode and translate</h1>
-<p>Type a VIN to see the year, make, model and engine NHTSA's <a href="https://vpic.nhtsa.dot.gov/">vPIC</a> data gives it, and its names in each vocabulary loaded.</p>
-{{template "controls" .Controls}}
-{{with .Result}}{{template "result" .}}{{else}}{{template "developers" .}}{{end}}
-{{template "page-footer" .}}
+<h1 class="visually-hidden">VIN decoder</h1>
+{{template "plate" .}}
+{{template "answer" .Diagram}}
+{{template "chips" .}}
+<div id="dev">{{template "developers" .}}</div>
 {{- end}}
 
-{{/* controls is the box at the top of the page: a tab for each thing to
-translate from, each a link to the page with its form, then the current
-tab's form, a refusal that names none of its fields above it, and
-examples to try, each a link to the page with the form filled in. */}}
-{{define "controls" -}}
-<section id="controls" class="controls" aria-label="What to translate">
-<nav class="tabs" aria-label="Translate from" hx-boost="true" hx-target="#ui-main">
-{{range .Tabs}}<a id="tab-{{.Key}}" href="{{.Href}}"{{if .Current}} aria-current="page"{{end}}>{{.Label}}</a>
-{{end}}</nav>
-{{with index .Errors ""}}<p class="error" role="alert">{{.}}</p>{{end}}
-{{if eq .Tab "vin"}}{{template "vin-form" .}}{{else if eq .Tab "id"}}{{template "id-form" .}}{{else}}{{with .Entry}}{{template "entry-form" .}}{{end}}{{end}}
-{{if .Examples}}<p class="try">Try one:</p>
-<ul class="examples" hx-boost="true" hx-target="#ui-main">
-{{range .Examples}}<li><a class="example" href="{{.Href}}" data-spine="{{.Spine}}" data-to="{{.DefaultTo}}">{{.Label}}</a> <span class="hint">{{.Hint}}</span></li>
-{{end}}</ul>{{end}}
+{{/* plate is the form: the groups' labels over their cells, the cells,
+and the input. data-vin is the VIN the server drew. */}}
+{{define "plate" -}}
+<form id="vin-form" class="plate-form" method="get" action="/" aria-label="Decode a VIN" data-vin="{{.Diagram.VIN}}">
+<div class="stage">
+<div class="labels" aria-hidden="true">
+{{range .Diagram.Groups}}<span class="lab g-{{.Key}}"><span>{{.Label}}</span></span>
+{{end}}</div>
+<div class="plate">
+<div class="cells" aria-hidden="true">
+{{range .Diagram.Cells}}<span class="cell g-{{.Group}}{{if .Char}} filled{{end}}{{if .Bad}} bad{{end}}"><span class="ch">{{.Char}}</span></span>
+{{end}}</div>
+<label for="from-vin" class="visually-hidden">VIN</label>
+<input type="text" id="from-vin" name="from.vin" value="{{.Diagram.VIN}}" placeholder="Type a VIN" autocomplete="off" autocapitalize="characters" spellcheck="false" autofocus aria-describedby="answer">
+</div>
+</div>
+<button type="submit" class="decode">Decode</button>
+</form>
+{{- end}}
+
+{{/* answer takes the diagram: what hangs off the plate. data-vin and
+data-label are what it answers, which plate.js keeps as a recent VIN once
+it is whole; data-done the groups whose characters are all typed. */}}
+{{define "answer" -}}
+<div id="answer" class="stage" data-vin="{{.VIN}}" data-label="{{.Label}}"{{if .Complete}} data-complete{{end}} data-done="{{range .Groups}}{{if .Done}}{{.Key}} {{end}}{{end}}">
+<div class="under" aria-hidden="true">
+{{range .Groups}}<span class="brk g-{{.Key}}{{if .Done}} done{{end}}"><span class="name">{{.Label}}</span></span>
+{{end}}</div>
+<svg class="leaders" viewBox="0 0 1020 36" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+<path class="g-wmi" pathLength="1" d="M90 0V18H85V36" vector-effect="non-scaling-stroke"/>
+<path class="g-vds" pathLength="1" d="M330 0V18H255V36" vector-effect="non-scaling-stroke"/>
+<path class="g-check" pathLength="1" d="M510 0V18H425V36" vector-effect="non-scaling-stroke"/>
+<path class="g-year" pathLength="1" d="M570 0V18H595V36" vector-effect="non-scaling-stroke"/>
+<path class="g-plant" pathLength="1" d="M630 0V18H765V36" vector-effect="non-scaling-stroke"/>
+<path class="g-serial" pathLength="1" d="M840 0V18H935V36" vector-effect="non-scaling-stroke"/>
+</svg>
+<div class="cards">
+{{range .Groups}}{{template "card" .}}
+{{end}}</div>
+<svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+<path class="g-wmi" pathLength="1" d="M85 0V18H215V28" vector-effect="non-scaling-stroke"/>
+<path class="g-vds" pathLength="1" d="M255 0V9H532.5V28" vector-effect="non-scaling-stroke"/>
+<path class="g-year" pathLength="1" d="M595 0V18H892.5V28" vector-effect="non-scaling-stroke"/>
+</svg>
+{{template "aka" .Names}}
+{{with .Error}}<p class="error" role="alert">{{.}}</p>{{end}}
+{{if or .Problems .Fix}}<div class="problems" role="status">
+{{range .Problems}}<p>{{.}}</p>
+{{end}}{{with .Fix}}<p><a class="fix" href="{{.}}">Use <span class="mono">{{$.FixV}}</span> instead</a></p>{{end}}
+</div>{{end}}
+</div>
+{{- end}}
+
+{{/* card is a bracket's card: its rows, or its one large value, there
+but empty until its characters are typed. The check digit's opens its
+arithmetic, a popover; the year's carries the codes around it. */}}
+{{define "card" -}}
+<section class="card g-{{.Key}}{{if .Done}} done{{end}}{{if .Bad}} bad{{end}}" data-group="{{.Key}}" aria-labelledby="card-{{.Key}}">
+<h2 id="card-{{.Key}}">{{.Title}} <span class="pos">{{if eq .From .To}}{{.From}}{{else}}{{.From}}–{{.To}}{{end}}</span></h2>
+{{with .Text}}<p class="big">{{.}}</p>{{end}}
+{{if .Rows}}<dl>
+{{range .Rows}}<div><dt>{{.Label}}</dt><dd>{{with .Flag}}<span class="flag" aria-hidden="true">{{.}}</span> {{end}}{{.Value}}</dd></div>
+{{end}}</dl>{{end}}
+{{if .Years}}<ol class="years" aria-label="Year codes">
+{{range .Years}}<li{{if .Current}} class="current" aria-current="true"{{end}}><span class="mono">{{.Char}}</span> {{.Year}}</li>
+{{end}}</ol>{{end}}
+{{with .Check}}<button type="button" class="how" popovertarget="check-sum">Show the sum</button>
+<dialog id="check-sum" popover aria-labelledby="check-sum-h">
+<div class="dialog-head">
+<h2 id="check-sum-h">The check digit</h2>
+<button type="button" popovertarget="check-sum" popovertargetaction="hide">Close</button>
+</div>
+<div class="scroll"><table class="sum">
+<tbody>
+<tr><th scope="row">Character</th>{{range .Steps}}<td class="mono{{if .IsCheckPostion}} skip{{end}}">{{.Char}}</td>{{end}}</tr>
+<tr><th scope="row">Value</th>{{range .Steps}}<td{{if .IsCheckPostion}} class="skip"{{end}}>{{.Value}}</td>{{end}}</tr>
+<tr><th scope="row">× weight</th>{{range .Steps}}<td{{if .IsCheckPostion}} class="skip"{{end}}>{{.Weight}}</td>{{end}}</tr>
+<tr><th scope="row">Product</th>{{range .Steps}}<td{{if .IsCheckPostion}} class="skip"{{end}}>{{.Product}}</td>{{end}}</tr>
+</tbody>
+</table></div>
+<p>Sum {{.Sum}}. Remainder by 11: {{.Remainder}}{{if eq .Remainder 10}}, written X{{end}}. The VIN carries <span class="mono">{{.Got}}</span>{{if .Valid}}: it checks out.{{else}}, so it should be <span class="mono">{{.Want}}</span>.{{end}}</p>
+</dialog>{{end}}
 </section>
 {{- end}}
 
-{{/* vin-form decodes a VIN and translates it: the decode's options
-(GET /v1/decode/{vin}'s) are behind a disclosure, open when one is
-refused. */}}
-{{define "vin-form" -}}
-<form method="get" action="/" hx-get="/" hx-target="#ui-main" hx-swap="innerHTML show:window:top" hx-push-url="true" aria-labelledby="tab-vin">
-<div>
-<label for="from-vin">VIN</label>
-<div class="vin-row">
-<input type="text" id="from-vin" name="from.vin" value="{{.FromVIN}}" autocomplete="off" spellcheck="false" autofocus{{with index .Errors "vin"}} aria-invalid="true" aria-describedby="vin-error"{{end}}>
-<button type="submit">Decode</button>
-</div>
-{{with index .Errors "vin"}}<p class="error" id="vin-error">{{.}}</p>{{end}}
-</div>
-{{template "targets" (.TargetsOn "vpic")}}
-<details class="options"{{if or (index .Errors "model_year") (index .Errors "shape") (index .Errors "full")}} open{{end}}>
-<summary>Options</summary>
-<div>
-<label for="model_year">Model year <span class="hint">(optional hint)</span></label>
-<input type="text" id="model_year" name="model_year" value="{{.ModelYear}}" inputmode="numeric" autocomplete="off"{{with index .Errors "model_year"}} aria-invalid="true" aria-describedby="model_year-error"{{end}}>
-{{with index .Errors "model_year"}}<p class="error" id="model_year-error">{{.}}</p>{{end}}
-</div>
-<fieldset{{with index .Errors "shape"}} aria-describedby="shape-error"{{end}}>
-<legend>Shape</legend>
-<label><input type="radio" name="shape" value="vpic"{{if eq .Shape "vpic"}} checked{{end}}> vpic <span class="hint">(vPIC's element codes)</span></label>
-<label><input type="radio" name="shape" value="nitrovin"{{if eq .Shape "nitrovin"}} checked{{end}}> nitrovin <span class="hint">(variable names, lists)</span></label>
-{{with index .Errors "shape"}}<p class="error" id="shape-error">{{.}}</p>{{end}}
-</fieldset>
-<div>
-<label class="check"><input type="checkbox" name="full" value="true"{{if .Full}} checked{{end}}{{with index .Errors "full"}} aria-describedby="full-error"{{end}}> full <span class="hint">(every row the decoder emitted)</span></label>
-{{with index .Errors "full"}}<p class="error" id="full-error">{{.}}</p>{{end}}
-<label class="check"><input type="checkbox" name="show_empty" value="true"{{if .ShowEmpty}} checked{{end}}> show empty values <span class="hint">(vpic shape)</span></label>
-</div>
-</details>
-</form>
-{{- end}}
-
-{{/* id-form translates a vPIC make or model id, or an extension, whose
-field shows only when one is asked: a map's card links to it. */}}
-{{define "id-form" -}}
-<form method="get" action="/" hx-get="/" hx-target="#ui-main" hx-swap="innerHTML show:window:top" hx-push-url="true" aria-labelledby="tab-id">
-<p class="hint">{{if eq .Kind "ext"}}One of the three: an id from <a href="/ui/vocabularies/vpic">vPIC's makes and their models</a>, or an extension.{{else}}One of the two: an id from <a href="/ui/vocabularies/vpic">vPIC's makes and their models</a>.{{end}}</p>
-<div>
-<label for="from-make">vPIC make id</label>
-<input type="text" id="from-make" name="from.make" value="{{.FromMake}}" inputmode="numeric" autocomplete="off"{{with index .Errors "from.make"}} aria-invalid="true" aria-describedby="from-make-error"{{end}}>
-{{with index .Errors "from.make"}}<p class="error" id="from-make-error">{{.}}</p>{{end}}
-</div>
-<div>
-<label for="from-model">vPIC model id</label>
-<input type="text" id="from-model" name="from.model" value="{{.FromModel}}" inputmode="numeric" autocomplete="off"{{with index .Errors "from.model"}} aria-invalid="true" aria-describedby="from-model-error"{{end}}>
-{{with index .Errors "from.model"}}<p class="error" id="from-model-error">{{.}}</p>{{end}}
-</div>
-{{if eq .Kind "ext"}}<div>
-<label for="from-ext">Extension <span class="hint">(ext:&lt;set&gt;/&lt;id&gt;)</span></label>
-<input type="text" id="from-ext" name="from.ext" value="{{.FromExt}}" autocomplete="off" spellcheck="false"{{with index .Errors "from.ext"}} aria-invalid="true" aria-describedby="from-ext-error"{{end}}>
-{{with index .Errors "from.ext"}}<p class="error" id="from-ext-error">{{.}}</p>{{end}}
-</div>
-{{end}}<div>
-<label for="vpic-model-year">Model year <span class="hint">(optional)</span></label>
-<input type="text" id="vpic-model-year" name="model_year" value="{{.ModelYear}}" inputmode="numeric" autocomplete="off"{{with index .Errors "model_year"}} aria-invalid="true" aria-describedby="vpic-model-year-error"{{end}}>
-{{with index .Errors "model_year"}}<p class="error" id="vpic-model-year-error">{{.}}</p>{{end}}
-</div>
-{{template "targets" (.TargetsOn "vpic")}}
-<button type="submit">Translate</button>
-</form>
-{{- end}}
-
-{{/* entry-form translates a vocabulary's entry: the vocabulary, then its
-entry's fields. Another vocabulary chosen draws its fields: at once with
-htmx, and without it when the form is next sent. A translation from the
-spine's own entry, which no vocabulary's field holds, shows it first,
-read-only and not sent: the form translates a vocabulary's entry. */}}
-{{define "entry-form" -}}
-{{$f := .}}<form method="get" action="/" hx-get="/" hx-target="#ui-main" hx-swap="innerHTML show:window:top" hx-push-url="true" aria-labelledby="tab-{{.Key}}">
-{{if .AsksSpine}}<div>
-<label for="from-{{.Key}}-id">Spine entry <span class="hint">({{.Spine}}: what the answer is from)</span></label>
-<input type="text" id="from-{{.Key}}-id" value="{{.SpineID}}" readonly autocomplete="off" spellcheck="false"{{with index .Errors "from.id"}} aria-invalid="true" aria-describedby="from-{{$f.Key}}-id-error"{{end}}>
-{{with index .Errors "from.id"}}<p class="error" id="from-{{$f.Key}}-id-error">{{.}}</p>{{end}}
-</div>
-{{end}}<div>
-<label for="from-{{.Key}}-vocabulary">Vocabulary</label>
-<select id="from-{{.Key}}-vocabulary" name="from.vocabulary" hx-get="/" hx-trigger="change" hx-target="#ui-main" hx-push-url="true"{{with index .Errors "from.vocabulary"}} aria-invalid="true" aria-describedby="from-{{$f.Key}}-vocabulary-error"{{end}}>
-{{range .Vocabularies}}<option value="{{.Name}}"{{if eq .Name $f.From.Name}} selected{{end}}>{{.Name}}</option>
-{{end}}</select>
-{{with index .Errors "from.vocabulary"}}<p class="error" id="from-{{$f.Key}}-vocabulary-error">{{.}}</p>{{end}}
-</div>
-{{range .Fields}}{{$name := .Name}}{{$err := index $f.Errors (print "from.entry." .Name)}}<div>
-<label for="entry-{{.Name}}">{{.Name}}</label>
-<input type="text" id="entry-{{.Name}}" name="from.entry.{{.Name}}" value="{{.Value}}" autocomplete="off"{{with $err}} aria-invalid="true" aria-describedby="entry-{{$name}}-error"{{end}}>
-{{with $err}}<p class="error" id="entry-{{$name}}-error">{{.}}</p>{{end}}
-</div>
-{{end}}{{if eq .Spine "vpic"}}<div>
-<label for="entry-model-year">Model year <span class="hint">(optional)</span></label>
-<input type="text" id="entry-model-year" name="model_year" value="{{.Year}}" inputmode="numeric" autocomplete="off"{{with index .Errors "model_year"}} aria-invalid="true" aria-describedby="entry-model-year-error"{{end}}>
-{{with index .Errors "model_year"}}<p class="error" id="entry-model-year-error">{{.}}</p>{{end}}
-</div>
-<div>
-<label for="context-vin">VIN <span class="hint">(optional: its decode checks qualifiers)</span></label>
-<input type="text" id="context-vin" name="vin" value="{{.VIN}}" autocomplete="off" spellcheck="false"{{with index .Errors "vin"}} aria-invalid="true" aria-describedby="context-vin-error"{{end}}>
-{{with index .Errors "vin"}}<p class="error" id="context-vin-error">{{.}}</p>{{end}}
-</div>
-{{end}}{{template "targets" .Targets}}
-<button type="submit">Translate</button>
-</form>
-{{- end}}
-
-{{/* targets is a form's targets, the vocabularies on one spine, which
-vocab.js keeps as the visitor's selection. */}}
-{{define "targets" -}}
-{{if .List}}<fieldset data-spine="{{.Spine}}">
-<legend>To</legend>
-{{range .List}}<label><input type="checkbox" name="to" value="{{.Name}}"{{if .Checked}} checked{{end}}> {{.Name}}</label>
-{{end}}</fieldset>{{end}}
-{{- end}}
-
-{{/* result is the answer: what was looked up, a VIN's decode in brief,
-the translation's map, the JSON of both behind a button, and the rest of
-the decode. */}}
-{{define "result" -}}
-<section id="result" aria-labelledby="result-h" data-from="{{.From}}" data-spine="{{.Spine}}">
-<h2 id="result-h">{{.Heading}}</h2>
-{{with .Decode}}{{template "decoded-head" .}}{{end}}
-{{template "map" .Map}}
-{{template "json" .}}
-{{if .Decode}}{{template "decoded" .}}{{end}}
+{{/* aka is "Also known as", the first derived card, with no box of its
+own: the maker's, the vehicle's and the year's lines run on down through
+its stacks, one for each vocabulary loaded. A stack is the vocabulary's
+names as plates (aka-tag), the first on top and the rest under it, their
+edges showing. The vocabulary's name on the top plate is the stack's
+switch, the label of a checkbox (no script): on, the stack is one plate,
+a row to a name, under the one stamp. The columns are fixed fractions of
+the width (130, 170, 465 and 255 of 1020), which the lines above are drawn
+to. A vocabulary with no name, and the card before the model is known or
+with no vocabulary loaded, keep a blank plate in their place. */}}
+{{define "aka" -}}
+<section class="aka{{if not (or .Waiting .None)}} done{{end}}" id="aka" aria-labelledby="aka-h">
+<h2 id="aka-h">Also known as</h2>
+<ol class="stacks">
+{{if .None}}<li class="stack"><ol class="tags"><li class="tagplate blank"><span class="none">No vocabulary loaded. <button type="button" popovertarget="vocabularies">Add a vocabulary</button></span></li></ol></li>
+{{else if .Waiting}}<li class="stack"><ol class="tags"><li class="tagplate blank"><span class="none">Names turn up once the model is known.</span></li></ol></li>
+{{else}}{{range .Rows}}<li class="stack d{{.Depth}}">
+{{if .Fan}}<input type="checkbox" class="fan visually-hidden" id="{{.Fan}}" aria-label="Show every name in {{.Vocabulary}}">{{end}}
+<ol class="tags">
+{{range .Names}}{{template "aka-tag" .}}
+{{else}}<li class="tagplate blank"><span class="stamp">{{.Vocabulary}}</span><span class="none">No name for this one yet.</span></li>
+{{end}}</ol>
+</li>
+{{end}}{{end}}</ol>
 </section>
 {{- end}}
 
-{{/* map is the translation's map (map.go): from, the spine and the
-targets in three columns of cards, and behind them the lines, an SVG the
-server draws, stretched across the columns' width; its height is the
-columns'. Each card's text says what its lines draw (rel): read as part
-of its name, and shown, the lines hidden, when a narrow window stacks the
-columns. map.js lights the route through a card (data-lit). */}}
-{{define "map" -}}
-<ul class="map-key" aria-label="Key">
-<li class="key-lines"><span class="key-line" aria-hidden="true"></span> a mapping</li>
-{{if .Derived}}<li class="key-lines"><span class="key-line derived" aria-hidden="true"></span> a mapping matched by rule</li>
-{{end}}{{if .Under}}<li class="key-lines"><span class="key-line under" aria-hidden="true"></span> a model under its make</li>
-{{end}}{{if .Decoded}}<li class="key-lines"><span class="key-line decoded" aria-hidden="true"></span> a VIN to the model it decodes to</li>
-{{end}}<li><span class="key-card" aria-hidden="true"></span> not every qualifier or the model year checked</li>
-</ul>
-<div class="map" role="group" aria-label="Map of the translation" hx-boost="true" hx-target="#ui-main" hx-swap="innerHTML show:window:top">
-<svg class="map-edges" viewBox="0 0 100 {{.Height}}" preserveAspectRatio="none" width="100%" height="{{.Height}}" aria-hidden="true" focusable="false">
-{{range .Edges}}<path id="{{.ID}}" class="{{if .Derived}}derived{{end}}{{if .Under}}under{{end}}{{if .Decoded}}decoded{{end}}" d="{{.D}}" vector-effect="non-scaling-stroke"/>
-{{end}}</svg>
-<div class="map-cols">
-{{range .Columns}}<div class="map-col">
-<h3 class="map-head">{{.Heading}}</h3>
-{{range .Items}}{{template "map-item" .}}
-{{end}}</div>
-{{end}}</div>
+{{/* aka-tag is one name: the vocabulary's stamp, then its make, model and
+years, each under its group's bracket on the line from above. The top
+plate of a stack of several carries the stamp as the stack's switch, with
+how many names it holds; the plates under it carry none. A dashed line,
+bracket or mark is a doubt (akaTag), which the segment's title and the
+tag's note, a popover behind its button, say in words. */}}
+{{define "aka-tag" -}}
+<li class="tagplate{{if .Rule}} rule{{end}}{{if .Under}} below{{end}}">
+{{if .Fan}}<label class="stamp switch" for="{{.Fan}}" title="{{.Vocabulary}}: {{.Count}} names"><span class="voc">{{.Vocabulary}}</span> <span class="count">{{.Count}}</span></label>
+{{else if .Under}}<span class="stamp"></span>
+{{else}}<span class="stamp" title="{{.Vocabulary}}"><span class="voc">{{.Vocabulary}}</span></span>{{end}}
+<span class="seg g-wmi{{if not .Make}} none{{end}}" title="{{.MakeNote}}"><span class="w">{{.Make}}</span></span>
+<span class="seg g-vds{{if .ModelUnsure}} unsure{{end}}" title="{{.ModelNote}}"><span class="w">{{.Model}}</span></span>
+<span class="seg g-year{{if .YearUnsure}} unsure{{end}}" title="{{.YearNote}}"><span class="w">{{.Years}}</span></span>
+{{with .Details}}<button type="button" class="info" popovertarget="{{$.ID}}" aria-label="How {{$.Make}} {{$.Model}} was reached">i</button>
+<div class="note" id="{{$.ID}}" popover>{{.}}</div>{{end}}
+</li>
+{{- end}}
+
+{{/* chips are what to try, the menu the header's VINs button opens (a
+popover, so it opens without a script): the recent VINs of this browser,
+which plate.js draws in place of the examples once it has any, and
+Surprise me. */}}
+{{define "chips" -}}
+<div id="vins" class="menu" popover aria-label="VINs to try">
+<ul id="recent" class="examples" aria-label="Recent" hidden></ul>
+<ul id="examples" class="examples" aria-label="Examples">
+{{range .Examples}}<li><a class="example" href="{{.Href}}" title="{{.Hint}}">{{.Label}}</a></li>
+{{end}}</ul>
+<a class="example surprise" href="/?surprise">Surprise me</a>
+<button type="button" id="clear-recent" class="linkish" hidden>Clear recent</button>
 </div>
 {{- end}}
 
-{{/* map-item is a row of a column: a vocabulary's heading, a line saying
-nothing is there, or a card, a link, its box drawn inside it so a long
-name spills over the cards below while the card is under the pointer or
-focused, never moving them. The hidden punctuation separates its name,
-rel and meta for a screen reader. */}}
-{{define "map-item" -}}
-{{if .Group}}<h4 class="map-group">{{.Group}}</h4>
-{{- else if .Empty}}<p class="map-empty">{{.Empty}}</p>
-{{- else}}<a id="{{.ID}}" class="node{{if .Under}} under{{end}}{{if .Unchecked}} unchecked{{end}}" href="{{.Href}}" data-lit="{{.Lit}}"{{with .Details}} title="{{.}}"{{end}}><span class="box"><span class="name{{if .Mono}} mono{{end}}">{{.Name}}</span>{{with .Rel}}<span class="rel"><span class="visually-hidden">, </span>{{.}}<span class="visually-hidden">;</span></span>{{end}} <span class="meta">{{.Meta}}</span></span></a>
-{{- end}}
-{{- end}}
-
-{{/* json is the answer's JSON, the translation's object and a VIN's
-decode's, in a dialog behind its button: a popover, so it opens and closes
+{{/* json is the button of the answer's JSON, and json-dialog its dialog,
+the VIN's decode and its translation: a popover, so it opens and closes
 without a script. Its link to the same request on /v1 is a document of its
-own, never htmx's, even inside a boosted answer (the fit page's). */}}
+own. */}}
 {{define "json" -}}
-<p><button type="button" class="open-dialog" popovertarget="result-json">Show the JSON</button></p>
+<button type="button" class="open-dialog" popovertarget="result-json">JSON</button>
+{{- end}}
+
+{{define "json-dialog" -}}
 <dialog id="result-json" popover aria-labelledby="result-json-h">
 <div class="dialog-head">
 <h2 id="result-json-h">JSON</h2>
 <button type="button" popovertarget="result-json" popovertargetaction="hide">Close</button>
 </div>
-{{range .JSON}}<h3>{{.Title}}</h3>
-{{with .Href}}<p class="hint"><a href="{{.}}" hx-boost="false">The same request on /v1</a></p>{{end}}
+{{range .JSON}}<h3>{{.Title}}{{with .Href}} <a class="hint" href="{{.}}" hx-boost="false">/v1</a>{{end}}</h3>
 <div class="copyable"><pre tabindex="0" id="{{.ID}}" data-copy="{{.What}}">{{.Text}}</pre></div>
 {{end}}</dialog>
 {{- end}}
@@ -224,12 +195,7 @@ vocab.js holds the worker in control to. */}}
 <h2 id="browser-h">Vocabularies</h2>
 <button type="button" popovertarget="vocabularies" popovertargetaction="hide">Close</button>
 </div>
-<p>A vocabulary is one system's names for vehicles or parts. Load yours; it stays in this browser.</p>
-<p id="browser-status" role="status" aria-live="polite">{{if .Worker -}}
-Loading your own files needs JavaScript. Your files never leave this browser. Translating through vPIC and this server's files works without it.{{if .Demo}} The demo set loads into this browser in one click, so it needs JavaScript too.{{end}}
-{{- else -}}
-This nitrovin was built without its browser translator (scripts/sw.sh builds it; release builds include it), so it cannot load your own files. Translation through vPIC and this server's own files works.
-{{- end}}</p>
+<p id="browser-status" class="hint" role="status" aria-live="polite">{{if .Worker}}Own files need JavaScript{{else}}Built without the browser translator: no own files{{end}}</p>
 <p id="load-status" role="status" aria-live="polite"></p>
 <div id="browser-files">
 {{template "catalog" .Catalog}}

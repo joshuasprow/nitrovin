@@ -1,102 +1,68 @@
-{{/* A VIN's decode on the page (decode.go), around its translation's map
-(page.html's result): decoded-head above it, the vehicle and the VIN's
-errors, and decoded below it, every element by group and the same request
-elsewhere. developers is what the page shows before any answer. */}}
-{{define "decoded-head" -}}
-{{with .Summary}}<p class="summary">{{.}}</p>{{end}}
-<p class="status">{{if .Clean}}<span class="chip chip-ok">Valid VIN</span>{{else}}Error codes:
-<span class="mono codes-flagged">{{range $i, $c := .ErrorCodes}}{{if $i}}, {{end}}{{$c}}{{end}}</span>
-· check digit {{if .CheckDigitValid}}valid{{else}}invalid{{end}}{{end}}</p>
-{{if not .Clean}}<ul class="codes">
-{{range .Codes}}<li>{{if .Text}}{{.Text}}{{else}}{{.Code}}{{end}}</li>
-{{end}}</ul>{{end}}
-{{with .AdditionalErrorText}}<p>{{.}}</p>{{end}}
-{{if .Suggested}}<table class="kv">
-<tbody>
-<tr><th scope="row">VIN</th><td class="mono">{{template "chars" .Input}}</td></tr>
-<tr><th scope="row">Suggested VIN</th><td><span class="mono">{{template "chars" .Suggested}}</span>{{with .DifferAt}} <span class="hint">differs at {{.}}</span>{{end}}</td></tr>
-</tbody>
-</table>{{end}}
-{{- end}}
+{{/* developers is the Developers
+dialog, which the header's button opens: the answer's own request with its
+JSON and NHTSA's decoder, then install, MCP, verify and links, each a
+label over what to copy. */}}
 
-{{/* decoded takes the result: its decode, and the page's own links. */}}
-{{define "decoded" -}}
-<h3>The decode</h3>
-<p><a href="{{.Decode.NHTSA}}">This VIN on NHTSA's decoder</a></p>
-{{if .EmptyToggle}}<p hx-boost="true" hx-target="#ui-main">{{if .ShowEmpty}}Empty values shown. <a href="{{.EmptyToggle}}">Hide them</a>{{else}}{{.Decode.Hidden}} empty values hidden. <a href="{{.EmptyToggle}}">Show them</a>{{end}}</p>{{end}}
-{{range .Decode.Groups}}<details{{if .Open}} open{{end}}>
-<summary>{{.Name}} <span class="hint">({{len .Rows}})</span></summary>
-<table class="kv">
-<tbody>
-{{range .Rows}}<tr><th scope="row">{{.Name}}</th><td>{{if .List}}<ul>{{range .Values}}<li>{{.}}</li>{{end}}</ul>{{else}}{{range .Values}}{{.}}{{else}}<span class="null">empty</span>{{end}}{{end}}</td></tr>
-{{end}}</tbody>
-</table>
-</details>
-{{end}}
-<details class="dev">
-<summary>For developers</summary>
-<h4>This page's URL</h4>
-<div class="copyable"><pre tabindex="0" class="wrap" id="copy-url" data-copy="this page's URL">{{.URL}}</pre></div>
-<h4>The same request with curl</h4>
-<div class="copyable"><pre tabindex="0" class="wrap" id="copy-curl" data-copy="the curl command">{{.Decode.Copy.Curl}}</pre></div>
-<h4>The same decode on the command line</h4>
-<div class="copyable"><pre tabindex="0" class="wrap" id="copy-cli" data-copy="the nitrovin decode command">{{.Decode.Copy.CLI}}</pre></div>
-</details>
-{{if .Decode.Items}}
-<h3>Items</h3>
-<div class="wide">
-<table>
-<thead><tr><th>Element</th><th>Variable</th><th>Value</th><th>Attribute</th><th>Source</th><th>Pattern</th><th>VIN schema</th><th>Keys</th></tr></thead>
-<tbody>
-{{range .Decode.Items}}<tr><td>{{.ElementID}}</td><td>{{.Variable}}</td><td>{{template "null" .Value}}</td><td>{{template "null" .AttributeID}}</td><td>{{template "null" .Source}}</td><td>{{template "null" .PatternID}}</td><td>{{template "null" .VinSchemaID}}</td><td class="mono">{{template "null" .Keys}}</td></tr>
-{{end}}</tbody>
-</table>
-</div>
-{{end}}
-{{- end}}
-
+{{/* developers takes the page: the dialog, a popover in the page's
+fragment, so every answer redraws it with its own request first. */}}
 {{define "developers" -}}
-<details class="dev">
-<summary>For developers</summary>
-<h2 id="install">Install</h2>
-<p>Every release embeds one vPIC data month; <code>nitrovin --version</code> names it.</p>
-<table class="install">
-<thead><tr><th>Channel</th><th>Command</th><th>Platforms</th></tr></thead>
-<tbody>
-<tr><th scope="row">Homebrew</th><td><div class="copyable"><pre tabindex="0" data-copy="the Homebrew install command">brew install joshuasprow/tap/nitrovin</pre></div></td><td>macOS, Linux</td></tr>
-<tr><th scope="row">Scoop</th><td><div class="copyable"><pre tabindex="0" data-copy="the Scoop install commands">scoop bucket add joshuasprow https://github.com/joshuasprow/scoop-bucket
-scoop install nitrovin</pre></div></td><td>Windows amd64, arm64</td></tr>
-<tr><th scope="row">winget</th><td><code>JoshuaSprow.Nitrovin</code>, not yet submitted (<a href="https://github.com/joshuasprow/nitrovin/issues/78">#78</a>)</td><td>Windows</td></tr>
-<tr><th scope="row">Docker</th><td><div class="copyable"><pre tabindex="0" data-copy="the Docker command">docker run --rm -p 8080:8080 ghcr.io/joshuasprow/nitrovin</pre></div></td><td>linux/amd64, linux/arm64</td></tr>
-<tr><th scope="row">Go 1.27+</th><td><div class="copyable"><pre tabindex="0" data-copy="the go install command">go install github.com/joshuasprow/nitrovin/cmd/nitrovin@latest</pre></div></td><td>anywhere Go builds</td></tr>
-</tbody>
-</table>
-<p>Archives and the C library for linux, darwin and windows on amd64 and arm64 are on <a href="{{.Links.Release}}">{{if .Links.Tag}}the {{.Links.Tag}} release{{else}}GitHub Releases{{end}}</a>.</p>
+<dialog id="developers" popover aria-labelledby="developers-h">
+<div class="dialog-head">
+<h2 id="developers-h">Developers</h2>
+<button type="button" popovertarget="developers" popovertargetaction="hide">Close</button>
+</div>
+<p class="hint">decoder {{.DecoderVersion}} · data {{.DataMonth}}</p>
+{{with .Result}}{{if .Decode}}
+<h3 id="this-request">This decode</h3>
+<dl class="snippets">
+<dt>URL</dt>
+<dd><div class="copyable"><pre tabindex="0" class="wrap" id="copy-url" data-copy="this page's URL">{{.URL}}</pre></div></dd>
+<dt>curl</dt>
+<dd><div class="copyable"><pre tabindex="0" class="wrap" id="copy-curl" data-copy="the curl command">{{.Decode.Copy.Curl}}</pre></div></dd>
+<dt>CLI</dt>
+<dd><div class="copyable"><pre tabindex="0" class="wrap" id="copy-cli" data-copy="the nitrovin decode command">{{.Decode.Copy.CLI}}</pre></div></dd>
+<dt>Answer</dt>
+<dd class="actions">{{template "json" .}} <a href="{{.Decode.NHTSA}}">NHTSA's decoder</a></dd>
+</dl>
+{{end}}{{end}}
+<h3 id="install">Install</h3>
+<dl class="snippets">
+<dt>Homebrew</dt>
+<dd><div class="copyable"><pre tabindex="0" data-copy="the Homebrew install command">brew install joshuasprow/tap/nitrovin</pre></div></dd>
+<dt>Scoop</dt>
+<dd><div class="copyable"><pre tabindex="0" data-copy="the Scoop install commands">scoop bucket add joshuasprow https://github.com/joshuasprow/scoop-bucket
+scoop install nitrovin</pre></div></dd>
+<dt>Docker</dt>
+<dd><div class="copyable"><pre tabindex="0" data-copy="the Docker command">docker run --rm -p 8080:8080 ghcr.io/joshuasprow/nitrovin</pre></div></dd>
+<dt>Go 1.27+</dt>
+<dd><div class="copyable"><pre tabindex="0" data-copy="the go install command">go install github.com/joshuasprow/nitrovin/cmd/nitrovin@latest</pre></div></dd>
+<dt>Binaries, C library</dt>
+<dd><a href="{{.Links.Release}}">{{if .Links.Tag}}{{.Links.Tag}} release{{else}}GitHub Releases{{end}}</a></dd>
+</dl>
 
-<h2 id="mcp">In an AI assistant (MCP)</h2>
-<p><code>nitrovin mcp</code> is an MCP server over stdio with the tools <code>decode_vin</code>, <code>translate</code> and <code>list</code>. For Claude Desktop (<code>~/Library/Application Support/Claude/claude_desktop_config.json</code> on macOS, <code>%APPDATA%\Claude\claude_desktop_config.json</code> on Windows) and Cursor (<code>~/.cursor/mcp.json</code>) the entry is the same.</p>
-<h3>A local binary</h3>
-<p>Use the absolute path <code>which nitrovin</code> prints: desktop apps do not see your shell's <code>PATH</code>.</p>
-<div class="copyable"><pre tabindex="0" id="mcp-local" data-copy="the MCP configuration for a local binary">{
+<h3 id="mcp">MCP <span class="hint">Claude Desktop, Cursor</span></h3>
+<dl class="snippets">
+<dt>Local binary <span class="hint">absolute path</span></dt>
+<dd><div class="copyable"><pre tabindex="0" id="mcp-local" data-copy="the MCP configuration for a local binary">{
   "mcpServers": {
     "nitrovin": {
       "command": "/opt/homebrew/bin/nitrovin",
       "args": ["mcp"]
     }
   }
-}</pre></div>
-<h3>The Docker image</h3>
-<div class="copyable"><pre tabindex="0" id="mcp-docker" data-copy="the MCP configuration for the Docker image">{
+}</pre></div></dd>
+<dt>Docker</dt>
+<dd><div class="copyable"><pre tabindex="0" id="mcp-docker" data-copy="the MCP configuration for the Docker image">{
   "mcpServers": {
     "nitrovin": {
       "command": "docker",
       "args": ["run", "--rm", "-i", "ghcr.io/joshuasprow/nitrovin", "mcp"]
     }
   }
-}</pre></div>
+}</pre></div></dd>
+</dl>
 
-<h2 id="verify">Verify a release</h2>
-<p>Releases are signed with cosign keyless signatures from GitHub Actions: every asset has an <code>&lt;asset&gt;.sigstore.json</code> bundle and a line in <code>checksums.txt</code>. {{if .Links.Tag}}From the directory you downloaded {{.Links.Tag}}'s assets to:{{else}}This build, {{.DecoderVersion}}, is not a release: set <code>TAG</code> to the release you downloaded.{{end}}</p>
+<h3 id="verify">Verify a release <span class="hint">cosign</span></h3>
 <div class="copyable"><pre tabindex="0" id="verify-commands" data-copy="the verify commands">TAG={{with .Links.Tag}}{{.}}{{else}}vX.Y.Z{{end}}
 cosign verify-blob --bundle checksums.txt.sigstore.json \
   --certificate-identity https://github.com/joshuasprow/nitrovin/.github/workflows/release.yml@refs/tags/$TAG \
@@ -106,27 +72,18 @@ cosign verify ghcr.io/joshuasprow/nitrovin:$TAG \
   --certificate-identity https://github.com/joshuasprow/nitrovin/.github/workflows/release.yml@refs/tags/$TAG \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com</pre></div>
 
-<h2 id="links">Links</h2>
-<ul>
-<li><a href="{{.Links.Release}}">{{if .Links.Tag}}nitrovin {{.Links.Tag}}{{else}}nitrovin's releases{{end}}</a>: binaries, checksums and signatures{{if .Links.Tag}} (<a href="https://github.com/joshuasprow/nitrovin/releases">every release</a>){{end}}</li>
-<li><a href="{{.Links.DataRelease}}">nitrovin-data {{.DataMonth}}</a>: the artifact, NHTSA's dump and the month's frozen parity key</li>
-<li><a href="{{.Links.ParityReport}}">the {{.DataMonth}} parity report</a> and <a href="{{.Links.Parity}}">what parity means</a></li>
-<li><a href="https://vpic.nhtsa.dot.gov/">vPIC</a>, the data's source, and <a href="https://vpic.nhtsa.dot.gov/api/">its API documentation</a></li>
-<li><a href="https://vpic.nhtsa.dot.gov/decoder/">NHTSA's online decoder</a>, to compare answers</li>
-<li><a href="/v1/openapi.json">this server's API</a> and <a href="https://github.com/joshuasprow/nitrovin#readme">the README</a></li>
+<h3 id="links">Links</h3>
+<ul class="links">
+<li><a href="/v1/openapi.json">OpenAPI</a></li>
+<li><a href="{{.Links.APIDocs}}">API docs</a></li>
+<li><a href="https://github.com/joshuasprow/nitrovin">Source</a></li>
+<li><a href="{{.Links.Release}}">{{if .Links.Tag}}Release {{.Links.Tag}}{{else}}Releases{{end}}</a></li>
+<li><a href="{{.Links.DataRelease}}">Data {{.DataMonth}}</a></li>
+<li><a href="{{.Links.ParityReport}}">Parity report</a></li>
+<li><a href="{{.Links.Parity}}">Parity</a></li>
+<li><a href="https://vpic.nhtsa.dot.gov/">vPIC</a></li>
+<li><a href="https://vpic.nhtsa.dot.gov/api/">vPIC API</a></li>
 </ul>
-</details>
+</dialog>
+{{with .Result}}{{template "json-dialog" .}}{{end}}
 {{- end}}
-
-{{define "page-footer" -}}
-<footer>
-data {{.DataMonth}} · decoder {{.DecoderVersion}} ·
-<a href="{{.Links.Parity}}">parity</a> ·
-<a href="https://github.com/joshuasprow/nitrovin">source</a> ·
-<a href="{{.Links.Release}}">{{if .Links.Tag}}release {{.Links.Tag}}{{else}}releases{{end}}</a> ·
-the API is <a href="/v1/openapi.json">/v1</a>
-</footer>
-{{- end}}
-
-{{define "null"}}{{if .Valid}}{{.V}}{{else}}<span class="null">NULL</span>{{end}}{{end}}
-{{define "chars"}}{{range .}}{{if .Differs}}<mark>{{.C}}</mark>{{else}}{{.C}}{{end}}{{end}}{{end}}

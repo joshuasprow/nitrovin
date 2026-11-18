@@ -936,32 +936,32 @@ file again when it is asked for, and refuses with a 500 a file that
 changed on disk since it was loaded: restart `serve` to publish the new
 one.
 
-**In a browser**: `serve`'s page at `/` decodes a VIN and translates,
-through the server's files, with JavaScript or without. Its controls
-(Translate from) have a tab for each thing to translate from: VIN ·
-Year, make and model (an entry of a vehicle vocabulary) · one for each
-declared spine, named by what its vocabularies name (Part (parts spine):
-an entry of its vocabularies) · vPIC id (a make or model id, or an
-extension when a map's card asks for one). Each tab's form shows what
-the page's URL asks, a declared spine's own entry read-only, and a
-refusal is said beside the field holding the value it names, else above
-the form. Older links (`/?vin=…`, `/ui/decode`, `/ui/translate`, `/vocab`,
-`/ui/vocabularies`) redirect to it (`301`). Below the controls the answer
-is drawn as a map: what it is from, the spine entries it crosses and the
-entries it reaches as cards in three columns, each mapping a line. Its
-key: a mapping; a mapping matched by rule, dashed; a model under its
-make; a VIN to the model it decodes to; and a card marked when not every
-qualifier or the model year was checked. Each card's text says what its
-lines draw (its make, what it was reached through and how), so a screen
-reader reads it with the card's name; a name shows on two lines, and
-whole while its card is under the pointer or focused. On a phone the
-columns stack, the lines and their key are hidden, and each card shows
-that text instead. Every card is a link to the page from it (the From
-card to the answer's own URL); with JavaScript the card under the
-pointer or focus lights the routes through it, and a button shows the
-translation's JSON. Back and forward ask the server for each page again,
-never a copy the browser kept. The Vocabularies button in the page's
-header opens a dialog that
+**In a browser**: `serve`'s page at `/` decodes a VIN, as a diagram of
+its six groups, and shows the vehicle's names in every vocabulary loaded
+on vPIC's spine, with JavaScript or without. Its form is a plate that
+takes a VIN and nothing else, so the page's URL is `/?from.vin=…` and
+names no vocabulary: there are no targets to pick, and what is loaded is
+what is shown. The page reads no other parameter: a model year or a
+clock in its URL is ignored, and the translation is the VIN's as of now.
+A refusal is said below the plate. Older links
+(`/?vin=…`, `/ui/decode`, `/ui/translate`, `/vocab`,
+`/ui/vocabularies`) redirect to it (`301`) with the VIN they named and
+nothing else. Below the plate the answer
+is a card for each group and, under them, "Also known as": a stack for
+each vocabulary, one with a name before one without. A name reads the
+vocabulary, then the make, the rest of the entry and the years its
+mapping holds for. A vocabulary with several names shows its first, with
+their count, and all of them at a click on its name, which needs no
+script. A dashed line or mark is a doubt: a mapping matched by rule, or
+a qualifier or the model year that was not checked; each part's title
+says which, and a small button on the name opens how it was reached.
+A vocabulary with no name for the vehicle
+keeps a blank place that says so. On a phone the lines are hidden and
+the dashed underlines stay. The Developers button in the page's header
+shows the answer's JSON, the decode's and the translation's. Back and
+forward ask the server for each page again,
+never a copy the browser kept. The header's Vocabularies button
+opens a dialog that
 lists what is loaded, each file marked by where it is kept, with its
 drift counted by kind as `/v1/info` counts it (the first examples behind
 a disclosure), each linked to its entries (`/ui/vocabularies/{name}`, a
@@ -982,21 +982,20 @@ a stored one replaces it; a file named like one of the server's is
 refused, and so is a file with a fault, naming the file and line. Removing
 a file others link to is refused, naming them, with an offer to remove
 them all. A stored file that this release can no longer read, or that no
-longer links, is listed with its fault and can be removed. The worker
-answers only a request naming a file the browser holds (what it is from,
-or a target `to=`), and the entry lists of those files, and leaves
-every other request to the server (for a VIN it answers itself, the
-decode is `/v1/decode`'s), so a bare link such as `/?from.vin=…` is the
-server's answer and means the same with JavaScript on or off and in every
-browser; opened in another browser, a link naming your file
-says where it lives. The targets you tick are your selection, kept beside
-your files and ticked into the forms, so what you ask next names them as
-an explicit `to=`. Answers carry the `decoder_version` and `data_month`
+longer links, is listed with its fault and can be removed. Once the
+browser holds a file, the worker answers the page, over the server's
+files and yours, and the entry lists of your files, and leaves
+every other request to the server (for a VIN, the
+decode is `/v1/decode`'s). The page's link names no file, so it opens in
+every browser and with JavaScript off: it shows the server's
+vocabularies everywhere, and yours beside them only in the browser that
+holds them. A link to the entries of your file, opened in another
+browser, says where it lives. Answers carry the `decoder_version` and `data_month`
 of the decode they used. When the server moves to a new release, the
 worker steps aside: every page comes from the server, your files are
 paused, and Vocabularies says so. Once the new release's worker is ready,
-**Update now** hands the page to it and reloads, and your files and
-selection stay; without the click, the new worker takes over once every
+**Update now** hands the page to it and reloads, and your files
+stay; without the click, the new worker takes over once every
 tab of the site is closed. Every page's header names the release that
 drew it. A page loaded with
 a hard reload is not the worker's, and says your files are paused for
@@ -1006,14 +1005,13 @@ byte as nitrovin-data's release has it, at
 `/ui/r/<release>/vocab/<blake3>/epa-vehicles.jsonl`, and the browser keeps
 it like a file of yours. Every build with the worker offers [the demo
 set](#the-demo-set) the same way, publishing each of its files there. A catalog picked on its own is compiled in the
-browser instead, while the server has none, and the worker then answers
-the fit page (`/ui/fit`) from it
+browser instead, while the server has none, and the dialog offers the
+compiled file as a download
 ([ADR 0023](adr/0023-fitment-in-the-browser.md)). Stock files load in the
 dialog too: a shelf beside that catalog, which the browser must hold, and
 a yard, whose VINs (of the rows with no `decoded`) the worker sends to the
 server's `POST /v1/decode` once as it loads, keeping the decodes with the
-file. The fit page lists them as a server lists the same files loaded in
-the same order (the browser's in name order). A row's fields never leave
+file. A row's fields never leave
 the browser, and the dialog repeats that a stock file supplies no personal
 data. A connector's file is refused: connectors run on a server.
 
@@ -1167,18 +1165,18 @@ value in it is made up, and says so.
 | `demo-yard-stock` | `stock` (yard) | whole vehicles, nine by VIN and two by the catalog's vehicle |
 
 **In a browser**, the Vocabularies dialog of any `serve` with the browser
-translator (release builds, and nitrovin.app) offers it as one **Load the
+translator (release builds, and nitrovin.app) offers it as one **Load
 demo**: the vocabularies load as one batch, the catalog compiles in the
 browser as a catalog you pick does, and the shelf and the yard load
 beside it, the yard's VINs alone going to the server to be decoded. It
 loads in well under a second. One catalog per nitrovin holds: while the
 server or the browser holds another catalog, the dialog says so instead.
-**Remove the demo** removes every file of it; after a new release whose
-demo differs, the dialog offers **Refresh the demo**. **On a server**, it
+**Remove demo** removes every file of it; after a new release whose
+demo differs, the dialog offers **Refresh demo**. **On a server**, it
 loads like any directory, for `/v1/fit`, stdio and MCP over the same data:
 
 ```sh
-nitrovin --vocab pkg/ui/demo serve       # then open localhost:8080/ui/fit
+nitrovin --vocab pkg/ui/demo serve       # then ask localhost:8080/v1/fit
 nitrovin --vocab pkg/ui/demo fit --part demo-part-types:alternator --stock shelf 1FTEW1EG7FFA12345
 ```
 
@@ -1186,73 +1184,61 @@ nitrovin --vocab pkg/ui/demo fit --part demo-part-types:alternator --stock shelf
 and CI holds it there (`TestDemoCheck`), so a month that drops one of its
 ids fails before a release ships it.
 
-**A walkthrough.** With the demo loaded, the fit page's examples (Try
-one) are these requests, kept with the demo set in
-[`demo-examples.json`](../pkg/ui/demo/demo-examples.json), one for each
-thing to see. Each tab lists the requests its own form asks, as the
-translate page's tabs do: a request whose from is a VIN on the VIN tab,
-and so on, with its part, related vehicles and stock. Each is a link on
-the page, and the same query on `/v1/fit` (the entry tab's last, a
-translation, on `/v1/translate`).
+**A walkthrough.** On a server that loaded the set (the `serve` above),
+these requests show one thing each.
 
-On the **VIN** tab:
+From a VIN:
 
-1. `/ui/fit?from.vin=1FTEW1EG7FFA12345`: a 2015 F-150 with four-wheel drive,
+1. `/v1/fit?from.vin=1FTEW1EG7FFA12345`: a 2015 F-150 with four-wheel drive,
    from its VIN: its part types, each with its count of fitments.
-2. `/ui/fit?from.vin=1FTEW1EG7FFA12345&part.spine=demo-part-types&part.id=alternator`:
+2. `/v1/fit?from.vin=1FTEW1EG7FFA12345&part.spine=demo-part-types&part.id=alternator`:
    its three alternators, each with the catalog's own option text, verbatim
    (`3.5L V6 EcoBoost (VIN G, 8th digit)`): a person settles which.
-3. `/ui/fit?from.vin=2HKRW2H53KH612345&part.spine=demo-part-types&part.id=transfer-case`:
+3. `/v1/fit?from.vin=2HKRW2H53KH612345&part.spine=demo-part-types&part.id=transfer-case`:
    a 2019 CR-V, whose VIN carries no drive type, so the AWD fitment comes
    back with Drive Type not checked (`unconfirmed`).
-4. `/ui/fit?from.vin=1FTEW1CG3FFA12345&part.spine=demo-part-types&part.id=brake-rotor-front`:
+4. `/v1/fit?from.vin=1FTEW1CG3FFA12345&part.spine=demo-part-types&part.id=brake-rotor-front`:
    a two-wheel-drive F-150: the 4WD rotor's qualifier rules it out.
-5. `/ui/fit?from.vin=1GCVKREC6EZ123456&part.spine=demo-part-types&part.id=brake-rotor-rear`:
+5. `/v1/fit?from.vin=1GCVKREC6EZ123456&part.spine=demo-part-types&part.id=brake-rotor-rear`:
    a 2014 Silverado's rear rotors, listed under the front: fit follows
    the redirect and says so.
-6. `/ui/fit?from.vin=2HKRW2H53KH612345&part.vocabulary=demo-part-codes&part.entry.code=DEMO-ROT`:
+6. `/v1/fit?from.vin=2HKRW2H53KH612345&part.vocabulary=demo-part-codes&part.entry.code=DEMO-ROT`:
    a part by a parts system's code, translated onto both rotors.
-7. `/ui/fit?from.vin=1FTEW1EG7FFA12345&part.spine=demo-part-types&part.id=alternator&stock=shelf`:
+7. `/v1/fit?from.vin=1FTEW1EG7FFA12345&part.spine=demo-part-types&part.id=alternator&stock=shelf`:
    shelf stock with its locations; `DEMO-S-02`, filed under the retired
    `DEMO-0901`, under its successor, marked; and the shelf's release
    `DEMO-1` marked as another than the catalog's (`catalog_mismatch`).
-8. `/ui/fit?from.vin=4T1B11HK7JU512345&part.spine=demo-part-types&part.id=alternator&stock=yard`:
+8. `/v1/fit?from.vin=4T1B11HK7JU512345&part.spine=demo-part-types&part.id=alternator&stock=yard`:
    the yard's vehicles the part would come off, matched by their VINs.
-9. `/ui/fit?from.vin=1FTEW1EG7FFA12345&part.spine=demo-part-types&part.id=brake-rotor-front&stock=shelf&stock=yard&location=demo-north`:
+9. `/v1/fit?from.vin=1FTEW1EG7FFA12345&part.spine=demo-part-types&part.id=brake-rotor-front&stock=shelf&stock=yard&location=demo-north`:
    stock at one location.
-10. `/ui/fit?from.vin=1C6RR7LT6FS512345`: a 2015 Ram 1500, which vPIC
+10. `/v1/fit?from.vin=1C6RR7LT6FS512345`: a 2015 Ram 1500, which vPIC
     decodes to make Ram, model 1500, and the vehicle vocabulary maps to the
     catalog's `Dodge Ram 1500`.
 
-On the **Year, make and model** tab, entries of `demo-vehicles`:
+From an entry of `demo-vehicles`:
 
-1. `/ui/fit?from.vocabulary=demo-vehicles&from.entry.make=Toyota&from.entry.model=Camry&model_year=2018&part.spine=demo-part-types&part.id=fog-lamp&side=left`:
+1. `/v1/fit?from.vocabulary=demo-vehicles&from.entry.make=Toyota&from.entry.model=Camry&model_year=2018&part.spine=demo-part-types&part.id=fog-lamp&side=left`:
    the side filter keeps the left fog lamp and the one for both sides.
-2. `/ui/fit?from.vocabulary=demo-vehicles&from.entry.make=Honda&from.entry.model=Civic&model_year=2018&related=true&stock=yard`:
+2. `/v1/fit?from.vocabulary=demo-vehicles&from.entry.make=Honda&from.entry.model=Civic&model_year=2018&related=true&stock=yard`:
    related vehicles, the CR-V sharing the Civic's alternator and starter,
    with the yard's count of each.
-3. `/?from.vocabulary=demo-vehicles&from.entry.make=Chevrolet&from.entry.model=Silverado+1500&model_year=2011&to=epa-vehicles`:
+3. `/v1/translate?from.vocabulary=demo-vehicles&from.entry.make=Chevrolet&from.entry.model=Silverado+1500&model_year=2011&to=epa-vehicles`:
    the catalog's Silverado 1500 in [EPA's vocabulary](#epas-vocabulary),
-   loaded beside it (the page offers only the requests whose files are
-   loaded). It is a translation, on the translate page, but its from is
-   an entry of `demo-vehicles`, what this tab asks for, so it is listed
-   here: a catalog's vehicle in another vocabulary's names.
+   loaded beside it (`--vocab epa-vehicles.jsonl`): a catalog's vehicle
+   in another vocabulary's names.
 
-On the **vPIC id** tab:
+From an extension:
 
-1. `/ui/fit?from.ext=ext:demo-classics/vw-type-2&model_year=1974`: a
+1. `/v1/fit?from.ext=ext:demo-classics/vw-type-2&model_year=1974`: a
    vehicle vPIC lacks, minted by the extension set, with its parts.
 
-On the **Fitment** tab:
+From a fitment's key:
 
-1. `/ui/fit?from.fitment.type=alternator&from.fitment.number=DEMO-0901`: a
+1. `/v1/fit?from.fitment.type=alternator&from.fitment.number=DEMO-0901`: a
    retired number lands on its successor, `DEMO-1001`.
-2. `/ui/fit?from.fitment.type=alternator&from.fitment.number=DEMO-5001`: a
+2. `/v1/fit?from.fitment.type=alternator&from.fitment.number=DEMO-5001`: a
    fitment's vehicles and years, a Camry and a RAV4.
-
-A link to one of them names the demo's files, so it answers in a browser
-that holds the demo; elsewhere, where the demo can load (no catalog on the
-server, no file of a demo name), the page says how to load it.
 
 ## Keeping a vocabulary private
 

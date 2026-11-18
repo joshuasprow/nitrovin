@@ -5,12 +5,9 @@
 //
 // - "nitrovin": files (records, by name), texts (by blake3) and indexes
 //   (by release and blake3); a change is one transaction over the three.
-// - "nitrovin-state": state, whose "selection" is the vocabularies the
-//   visitor selected as targets by spine ({spine: [name]}), a database of
-//   its own so that an older release, which opens "nitrovin" at version 1,
-//   still can.
-// - "nitrovin-catalog": the browser's one compiled catalog, kept apart
-//   for the same reason. catalog's "catalog" is its record and the key of
+// - "nitrovin-catalog": the browser's one compiled catalog, a database of
+//   its own so that an older release, which opens "nitrovin" at version
+//   1, still can. catalog's "catalog" is its record and the key of
 //   its parts; parts are files kept in Blobs of a MiB, by [key, n], each
 //   read back as one Blob: the compiled catalog, and the compile's
 //   scratch files while it runs. Neither Go nor the page ever holds a
@@ -18,6 +15,9 @@
 //   own and commits them in one transaction, which drops the parts of
 //   the catalog it replaces; a compile that stopped half way leaves parts
 //   no record keeps, which the next compile drops (clearParts).
+// - "nitrovin-state" is not opened: a browser that held files before the
+//   page showed every vocabulary keeps in it the targets its visitor
+//   ticked, which nothing reads or writes any more. It is left as it is.
 'use strict';
 
 // opener opens database name once per script, upgrade making its stores.
@@ -51,7 +51,6 @@ const filesDB = opener('nitrovin', (d) => {
   d.createObjectStore('texts');
   d.createObjectStore('indexes');
 });
-const stateDB = opener('nitrovin-state', (d) => d.createObjectStore('state'));
 const catalogDB = opener('nitrovin-catalog', (d) => {
   d.createObjectStore('catalog');
   d.createObjectStore('parts');
@@ -91,33 +90,16 @@ const bytes = (v) => (v === undefined ? null : new Uint8Array(v));
 const partsOf = (key) => IDBKeyRange.bound([key, 0], [key, Infinity]);
 
 // names is the stored files' names, read once per script and kept in step
-// with every change; held is the stored catalog's name ("" for none) the
-// same way.
-let names = null, held = null;
+// with every change.
+let names = null;
 async function storedNames() {
   if (!names) names = new Set((await tx(['files'], 'readonly', (t) => request(t.objectStore('files').getAllKeys()))));
   return names;
 }
-async function heldCatalog() {
-  if (held === null) {
-    const c = await tx(['catalog'], 'readonly', (t) => request(t.objectStore('catalog').get('catalog')), catalogDB);
-    held = c ? c.record.name : '';
-  }
-  return held;
-}
-// forget makes the next storedNames and heldCatalog read them again.
+// forget makes the next storedNames read them again.
 function forget() {
   names = null;
-  held = null;
 }
-
-// select changes the stored selection on spine to what f makes of it.
-const select = (spine, f) => tx(['state'], 'readwrite', async (t) => {
-  const state = t.objectStore('state');
-  const s = (await request(state.get('selection'))) || {};
-  s[spine] = f(s[spine] || []);
-  await request(state.put(s, 'selection'));
-}, stateDB);
 
 self.nitrovinDisk = {
   records: () => tx(['files'], 'readonly', (t) => request(t.objectStore('files').getAll())),
@@ -127,11 +109,9 @@ self.nitrovinDisk = {
     if (v === undefined) throw new Error('its text is not stored');
     return bytes(v);
   }),
-  selection: () => tx(['state'], 'readonly', (t) => request(t.objectStore('state').get('selection')), stateDB).then((v) => v || {}),
   // change puts [{record, text, index}] and deletes the records named
-  // remove, a text or index no record keeps any more going with them;
-  // then it stores selection.
-  change: async (put, remove, selection) => {
+  // remove, a text or index no record keeps any more going with them.
+  change: async (put, remove) => {
     await tx(['files', 'texts', 'indexes'], 'readwrite', async (t) => {
       const files = t.objectStore('files'), texts = t.objectStore('texts'), indexes = t.objectStore('indexes');
       const before = await request(files.getAll());
@@ -150,7 +130,6 @@ self.nitrovinDisk = {
       }
     });
     forget();
-    await tx(['state'], 'readwrite', (t) => request(t.objectStore('state').put(selection, 'selection')), stateDB);
   },
 
   // read is bytes [start, end) of blob, a File or a Blob IndexedDB keeps;
@@ -193,23 +172,17 @@ self.nitrovinDisk = {
   }, catalogDB),
   // commitCatalog makes file key the stored catalog, recorded as record,
   // dropping the parts of the one it replaces.
-  commitCatalog: async (key, record) => {
-    await tx(['catalog', 'parts'], 'readwrite', async (t) => {
-      const store = t.objectStore('catalog');
-      const before = await request(store.get('catalog'));
-      if (before && before.parts !== key) await request(t.objectStore('parts').delete(partsOf(before.parts)));
-      await request(store.put({ record, parts: key }, 'catalog'));
-    }, catalogDB);
-    forget();
-  },
-  removeCatalog: async () => {
-    await tx(['catalog', 'parts'], 'readwrite', async (t) => {
-      const store = t.objectStore('catalog');
-      const c = await request(store.get('catalog'));
-      if (!c) return;
-      await request(t.objectStore('parts').delete(partsOf(c.parts)));
-      await request(store.delete('catalog'));
-    }, catalogDB);
-    forget();
-  },
+  commitCatalog: (key, record) => tx(['catalog', 'parts'], 'readwrite', async (t) => {
+    const store = t.objectStore('catalog');
+    const before = await request(store.get('catalog'));
+    if (before && before.parts !== key) await request(t.objectStore('parts').delete(partsOf(before.parts)));
+    await request(store.put({ record, parts: key }, 'catalog'));
+  }, catalogDB),
+  removeCatalog: () => tx(['catalog', 'parts'], 'readwrite', async (t) => {
+    const store = t.objectStore('catalog');
+    const c = await request(store.get('catalog'));
+    if (!c) return;
+    await request(t.objectStore('parts').delete(partsOf(c.parts)));
+    await request(store.delete('catalog'));
+  }, catalogDB),
 };

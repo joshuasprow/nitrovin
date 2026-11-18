@@ -6,6 +6,7 @@ import (
 	_ "embed"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/chromedp/cdproto/browser"
 	"github.com/chromedp/cdproto/emulation"
+	"github.com/chromedp/cdproto/input"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
@@ -74,8 +76,8 @@ func chromePath() string {
 // pageRequest is a request for one of the pages, as the server got it.
 type pageRequest struct {
 	target string // path and query
-	// htmx sent it (HX-Request), to restore history (HX-History-Restore-Request).
-	htmx, restore bool
+	// htmx is whether it asked for a fragment (HX-Request).
+	htmx bool
 }
 
 // requestLog serves h and records the requests for pages, assets aside.
@@ -90,7 +92,7 @@ type requestLog struct {
 func (l *requestLog) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if p := r.URL.Path; p == "/" || strings.HasPrefix(p, "/ui/") && !strings.HasPrefix(p, "/ui/r/") {
 		l.mu.Lock()
-		l.seen = append(l.seen, pageRequest{r.URL.RequestURI(), r.Header.Get("HX-Request") == "true", r.Header.Get("HX-History-Restore-Request") == "true"})
+		l.seen = append(l.seen, pageRequest{r.URL.RequestURI(), r.Header.Get("HX-Request") == "true"})
 		l.mu.Unlock()
 	}
 	l.h.ServeHTTP(w, r)
@@ -123,8 +125,8 @@ type tab struct {
 // clipboard. The back/forward cache is off, besides chromedp's defaults:
 // a page it restores is no new document to the DevTools protocol, so
 // queries wait on the one that left. Back and forward without JavaScript
-// load the page again; with it, htmx restores the page, which the cache
-// never sees.
+// load the page again; with it, the plate asks the server for the answer
+// (plate.js), which the cache never sees.
 func newTab(t *testing.T, path, base string, log *requestLog, js bool) *tab {
 	t.Helper()
 	opts := append(chromedp.DefaultExecAllocatorOptions[:], chromedp.ExecPath(path), chromedp.NoSandbox,
@@ -229,6 +231,21 @@ func (tb *tab) count(sel string) int {
 	return len(nodes)
 }
 
+// attributes are the attributes of each element sel matches, as the page
+// has them, none when it matches nothing: no script needed.
+func attributes(tb *tab, sel string) []map[string]string {
+	tb.t.Helper()
+	if tb.count(sel) == 0 {
+		return nil
+	}
+	var out []map[string]string
+	tb.call(func(ctx context.Context) (err error) {
+		out, err = chromedp.Run(ctx, chromedp.AttributesAll(chromedp.CSSAll(sel)))
+		return err
+	})
+	return out
+}
+
 // wait waits until sel matches.
 func (tb *tab) wait(sel string) {
 	tb.t.Helper()
@@ -252,23 +269,6 @@ func (tb *tab) requests(step string, htmx bool, targets ...string) {
 	}
 }
 
-// restores checks the page requests since the last check: htmx's, to
-// restore history, for targets.
-func (tb *tab) restores(step string, targets ...string) {
-	tb.t.Helper()
-	seen := tb.log.take()
-	var got []string
-	for _, r := range seen {
-		got = append(got, r.target)
-		if !r.htmx || !r.restore {
-			tb.t.Errorf("%s: %s with HX-Request %v, HX-History-Restore-Request %v; want both", step, r.target, r.htmx, r.restore)
-		}
-	}
-	if !slices.Equal(got, targets) {
-		tb.t.Errorf("%s: requests %q; want %q", step, got, targets)
-	}
-}
-
 // violation is one axe finding: the rule, its impact, where, and axe's
 // account of the first place.
 type violation struct {
@@ -281,7 +281,9 @@ type violation struct {
 
 // audit runs axe on the page as it is now, in the light color scheme and
 // in the dark, and fails on any violation: WCAG 2.2 A and AA, and axe's
-// best practices. Without JavaScript, the page's scripts never ran;
+// best practices. An answer the plate swapped in is drawn in by
+// animations that end, and the audit waits for them: a frame of one is no
+// state of the page. Without JavaScript, the page's scripts never ran;
 // scripts are let run for the audit alone, which runs none of the page's.
 func (tb *tab) audit(state string) {
 	tb.t.Helper()
@@ -302,7 +304,10 @@ func (tb *tab) audit(state string) {
 			})
 			return err
 		})
-		found := eval[[]violation](tb, `axe.run(document, {resultTypes: ["violations"]}).then(r => r.violations.map(v => ({
+		found := eval[[]violation](tb, `Promise.all(document.getAnimations()
+			.filter(a => a.effect && Number.isFinite(a.effect.getComputedTiming().endTime))
+			.map(a => a.finished.catch(() => {}))
+		).then(() => axe.run(document, {resultTypes: ["violations"]})).then(r => r.violations.map(v => ({
 			id: v.id, impact: v.impact, help: v.help, targets: v.nodes.map(n => n.target.join(" ")), summary: v.nodes[0].failureSummary,
 		})))`)
 		for _, v := range found {
@@ -363,11 +368,12 @@ func (tb *tab) waitText(sel, want string) {
 	}
 }
 
-// browserForm runs the page's VIN form in a browser twice, each in a
-// fresh profile: without JavaScript every step is a page the browser
-// loads, and with it htmx makes the same steps fragments, the page never
-// reloading. Both dialogs open either way. axe audits each state in both
-// runs. CI (CI set) needs the browser; a machine without one skips.
+// browserForm runs the page's VIN form in a browser, each run in a fresh
+// profile: without JavaScript every step is a page the browser loads, and
+// with it the plate asks the server for each answer as a fragment
+// (HX-Request), the page never reloading. Its dialogs open either way.
+// Then the plate is typed on, key by key, and pasted into. axe audits
+// each state. CI (CI set) needs the browser; a machine without one skips.
 func browserForm(t *testing.T, srv *httptest.Server) {
 	path := chromePath()
 	if path == "" {
@@ -381,51 +387,104 @@ func browserForm(t *testing.T, srv *httptest.Server) {
 	t.Cleanup(bsrv.Close)
 	t.Run("js-off", func(t *testing.T) { formJSOff(t, path, bsrv.URL, log) })
 	t.Run("js-on", func(t *testing.T) { formJSOn(t, path, bsrv.URL, log) })
+	t.Run("plate", func(t *testing.T) { plateJSOn(t, path, bsrv.URL, log) })
+	t.Run("paste", func(t *testing.T) { pasteJSOn(t, path, bsrv.URL, log) })
 }
 
 const (
 	vin = "1HGCM82633A004352"
-	// submitted is the form's request for vin, every field as it starts.
-	submitted = "/?from.vin=" + vin + "&model_year=&shape=vpic"
+	// submitted is the form's request for vin.
+	submitted = "/?from.vin=" + vin
 	// oldLink is an old link to the decode form, and movedLink where it
 	// lands.
 	oldLink   = "/?vin=5YJ3E1EA2JF000316"
 	movedLink = "/?from.vin=5YJ3E1EA2JF000316"
+	// emptyPlate matches the answer to a plate with nothing on it.
+	emptyPlate = `#answer[data-vin=""]`
 )
 
-// dialogs opens each of the page's dialogs from its button, audits it
+// dialogs opens each of an answer's dialogs from its button, audits it
 // open, and closes it by its own button: popovers, which need no script.
+// The JSON's button is in the Developers dialog, which stays open under
+// it.
 func (tb *tab) dialogs(step string) {
 	tb.t.Helper()
-	for dialog, opener := range map[string]string{"#vocabularies": "button.open-vocabularies", "#result-json": "button.open-dialog"} {
+	open := func(dialog, opener string) {
+		tb.t.Helper()
 		tb.do(chromedp.Click(chromedp.CSS(opener)))
 		tb.wait(dialog + ":popover-open")
 		tb.audit(step + ", " + dialog + " open")
+	}
+	shut := func(dialog string) {
+		tb.t.Helper()
 		tb.do(chromedp.Click(chromedp.CSS(dialog + " .dialog-head button")))
 		tb.wait(dialog + ":not(:popover-open)")
 	}
+	open("#vocabularies", "button.open-vocabularies")
+	shut("#vocabularies")
+	open("#check-sum", "button.how")
+	shut("#check-sum")
+	open("#developers", "button.open-developers")
+	open("#result-json", "button.open-dialog")
+	shut("#result-json")
+	shut("#developers")
+}
+
+// vins opens the header's VINs menu, a popover.
+func (tb *tab) vins() {
+	tb.t.Helper()
+	tb.do(chromedp.Click(chromedp.CSS("button.open-vins")))
+	tb.wait("#vins:popover-open")
+}
+
+// send puts text in the plate's field with no key typed, as a browser's
+// autofill does, and presses Enter as a keyboard does: the key down with
+// its character, which the browser types only when the page lets the key
+// through, and up. chromedp's own SetValue tells the page of an input,
+// which the plate answers without a submit, and its keys send the
+// character apart from the key, cancelled or not.
+func (tb *tab) send(text string) {
+	tb.t.Helper()
+	eval[bool](tb, `(document.getElementById("from-vin").value = `+jsString(text)+`, true)`)
+	tb.enter()
+}
+
+// enter presses Enter in the plate's field (send).
+func (tb *tab) enter() {
+	tb.t.Helper()
+	tb.do(chromedp.Focus(chromedp.CSS("#from-vin")))
+	tb.call(func(ctx context.Context) error {
+		key := input.DispatchKeyEventParams{Type: input.DispatchKeyEventTypeKeyDown, Key: "Enter", Code: "Enter", WindowsVirtualKeyCode: 13, Text: "\r", UnmodifiedText: "\r"}
+		if _, err := chromedp.Call(ctx, input.DispatchKeyEvent, key); err != nil {
+			return err
+		}
+		key.Type, key.Text, key.UnmodifiedText = input.DispatchKeyEventTypeKeyUp, "", ""
+		_, err := chromedp.Call(ctx, input.DispatchKeyEvent, key)
+		return err
+	})
 }
 
 // formJSOff: the page without JavaScript, in a fresh profile. Each step is
 // a page; no copy buttons appear; back and forward are the browser's own,
+// an example in the VINs menu is a link to the page with it on the plate,
 // and an old link moves to the page.
 func formJSOff(t *testing.T, path, base string, log *requestLog) {
 	tb := newTab(t, path, base, log, false)
 
 	tb.do(chromedp.Navigate(base + "/"))
-	tb.wait("#install")
+	tb.wait(emptyPlate)
 	if n := tb.count("button.copy"); n != 0 {
 		t.Errorf("/: %d copy buttons; JavaScript ran", n)
 	}
 	tb.requests("/", false, "/")
 	tb.audit("/")
 
-	tb.do(chromedp.SetValue(chromedp.CSS("#from-vin"), vin), chromedp.Click(chromedp.CSS(`#controls form button[type=submit]`)))
+	tb.do(chromedp.SetValue(chromedp.CSS("#from-vin"), vin), chromedp.Click(chromedp.CSS(`#vin-form button[type=submit]`)))
 	tb.wait("#copy-url")
 	if got := tb.at(); got != submitted {
 		t.Errorf("submit: at %s; want %s", got, submitted)
 	}
-	if !strings.Contains(tb.html("main"), `<th scope="row">Make</th><td>HONDA</td>`) {
+	if !strings.Contains(tb.html("main"), "<dt>Make</dt><dd>HONDA</dd>") {
 		t.Errorf("submit: no Make HONDA")
 	}
 	tb.requests("submit", false, submitted)
@@ -434,7 +493,7 @@ func formJSOff(t *testing.T, path, base string, log *requestLog) {
 
 	// Back is the empty page again, forward the decode.
 	tb.history(-1)
-	tb.wait("#install")
+	tb.wait(emptyPlate)
 	if got := tb.at(); got != "/" {
 		t.Errorf("back: at %s; want /", got)
 	}
@@ -445,56 +504,65 @@ func formJSOff(t *testing.T, path, base string, log *requestLog) {
 	}
 	tb.log.take() // the browser may or may not ask again: its cache's choice
 
-	// A refusal is the form with the refusal beside its field.
-	const refused = "/?from.vin=" + vin + "&model_year=2003.5"
+	// A refusal is the page with the refusal below the plate: a query
+	// the server cannot read.
+	const refused = "/?from.vin=" + vin + "&%zz"
 	tb.do(chromedp.Navigate(base + refused))
-	tb.wait("#model_year-error")
+	tb.wait("#answer .error")
 	tb.requests("refusal", false, refused)
 	tb.audit("refusal")
 
-	// A tab is a link to the page with its form.
-	tb.do(chromedp.Click(chromedp.CSS("#tab-id")))
-	tb.wait("#from-model")
-	if got := tb.at(); got != "/?tab=id" {
-		t.Errorf("the vPIC id tab: at %s; want /?tab=id", got)
+	// The VINs menu opens without a script, and an example in it is a link
+	// to the page with that VIN on the plate.
+	tb.vins()
+	tb.audit("the VINs menu")
+	examples := attributes(tb, "#examples a.example")
+	if len(examples) == 0 {
+		t.Fatal("the VINs menu: no example")
 	}
-	tb.requests("the vPIC id tab", false, "/?tab=id")
-	tb.audit("the vPIC id tab")
+	example := examples[0]["href"]
+	tb.do(chromedp.Click(chromedp.CSS("#examples a.example")))
+	tb.wait("#copy-url")
+	if got := tb.at(); got != example {
+		t.Errorf("example: at %s; want %s", got, example)
+	}
+	tb.requests("example", false, example)
 
 	// An old link lands on the same decode on the page.
 	tb.do(chromedp.Navigate(base + oldLink))
-	tb.wait("#copy-url")
+	tb.wait(`#answer[data-vin="` + strings.TrimPrefix(movedLink, "/?from.vin=") + `"]`)
 	if got := tb.at(); got != movedLink {
 		t.Errorf("old link: at %s; want %s", got, movedLink)
 	}
 	tb.requests("old link", false, oldLink, movedLink)
 }
 
-// formJSOn: the page with JavaScript, in a fresh profile. htmx asks for
-// each step as a fragment (HX-Request), swaps it into the page's main and
-// pushes its URL, and the page never reloads; copy buttons come with each
-// swap; back and forward ask the server for each state, never a snapshot
-// (pkg/ui, ui.html); nothing is refused by CSP and nothing throws.
+// formJSOn: the page with JavaScript, in a fresh profile. Enter sends the
+// form: the plate asks for the answer as a fragment (HX-Request), swaps it
+// in and pushes its URL, and the page never reloads; copy buttons come
+// with each answer; back and forward ask the server for each state the
+// same way; the VIN that decoded is kept in this browser, and the VINs
+// menu offers it; nothing is refused by CSP and nothing throws.
 func formJSOn(t *testing.T, path, base string, log *requestLog) {
 	tb := newTab(t, path, base, log, true)
 
 	tb.do(chromedp.Navigate(base + "/"))
-	tb.wait("#install")
+	tb.wait("#vin-form.live")
 	tb.wait("#mcp-local + button.copy")
 	tb.requests("/", false, "/")
 	tb.audit("/")
 	// A page that reloads loses this.
 	eval[bool](tb, `window.stayed = true`)
 
-	tb.do(chromedp.SetValue(chromedp.CSS("#from-vin"), vin), chromedp.Click(chromedp.CSS(`#controls form button[type=submit]`)))
+	tb.send(vin)
 	tb.wait("#copy-url + button.copy")
 	if got := tb.at(); got != submitted {
 		t.Errorf("submit: at %s; want %s", got, submitted)
 	}
-	if !strings.Contains(tb.html("main"), `<th scope="row">Make</th><td>HONDA</td>`) {
+	if !strings.Contains(tb.html("main"), "<dt>Make</dt><dd>HONDA</dd>") {
 		t.Errorf("submit: no Make HONDA")
 	}
-	if title := eval[string](tb, `document.title`); title != "2003 Honda Accord · nitrovin" {
+	if title := eval[string](tb, `document.title`); title != "2003 HONDA Accord · nitrovin" {
 		t.Errorf("submit: title %q", title)
 	}
 	tb.requests("submit", true, submitted)
@@ -503,6 +571,8 @@ func formJSOn(t *testing.T, path, base string, log *requestLog) {
 
 	// A copy button copies its text and says so: the decode's JSON, in
 	// its dialog.
+	tb.do(chromedp.Click(chromedp.CSS("button.open-developers")))
+	tb.wait("#developers:popover-open")
 	tb.do(chromedp.Click(chromedp.CSS("button.open-dialog")))
 	tb.wait("#result-json:popover-open")
 	tb.do(chromedp.Click(chromedp.CSS(`#decode-json + button.copy`)))
@@ -512,29 +582,14 @@ func formJSOn(t *testing.T, path, base string, log *requestLog) {
 	}
 	tb.do(chromedp.Click(chromedp.CSS("#result-json .dialog-head button")))
 	tb.wait("#result-json:not(:popover-open)")
+	tb.do(chromedp.Click(chromedp.CSS("#developers .dialog-head button")))
+	tb.wait("#developers:not(:popover-open)")
 
-	// A refusal is the form with the refusal beside its field, in the
-	// page's main, and the error slot stays empty.
-	tb.do(chromedp.SetValue(chromedp.CSS("#model_year"), "2003.5"), chromedp.Click(chromedp.CSS(`#controls form button[type=submit]`)))
-	tb.wait("#model_year-error")
-	const refused = "/?from.vin=" + vin + "&model_year=2003.5&shape=vpic"
-	tb.requests("refusal", true, refused)
-	if slot := eval[string](tb, `document.getElementById("ui-error").innerHTML`); slot != "" {
-		t.Errorf("refusal: error slot %q", slot)
-	}
-	tb.audit("refusal")
-
-	// Back and forward ask the server for each state, the whole page,
-	// which htmx takes the main out of: live copy buttons, one each, and
-	// one main and one Vocabularies button.
+	// Back and forward ask the server for each state, a fragment the
+	// plate swaps in: live copy buttons, one each, and one main and one
+	// Vocabularies button.
 	eval[bool](tb, `history.back(), true`)
-	tb.wait("#copy-url + button.copy")
-	if got := tb.at(); got != submitted {
-		t.Errorf("back: at %s; want %s", got, submitted)
-	}
-	eval[bool](tb, `history.back(), true`)
-	tb.wait("#install")
-	tb.wait("#mcp-local + button.copy")
+	tb.wait(emptyPlate)
 	if got := tb.at(); got != "/" {
 		t.Errorf("back: at %s; want /", got)
 	}
@@ -546,37 +601,28 @@ func formJSOn(t *testing.T, path, base string, log *requestLog) {
 	if copies, buttons := tb.count("[data-copy]"), tb.count("button.copy"); copies != buttons {
 		t.Errorf("forward: %d copy buttons for %d texts", buttons, copies)
 	}
-	eval[bool](tb, `document.querySelectorAll("details.dev").forEach(d => d.open = true), true`)
+	tb.do(chromedp.Click(chromedp.CSS("button.open-developers")))
+	tb.wait("#developers:popover-open")
 	tb.do(chromedp.Click(chromedp.CSS(`#copy-cli + button.copy`)))
 	tb.waitText("#copy-status", "Copied the nitrovin decode command")
-	eval[bool](tb, `history.back(), true`)
-	tb.wait("#install")
-	if got := tb.at(); got != "/" {
-		t.Errorf("back again: at %s; want /", got)
-	}
+	tb.do(chromedp.Click(chromedp.CSS("#developers .dialog-head button")))
+	tb.wait("#developers:not(:popover-open)")
 	if mains, buttons := tb.count("main"), tb.count("button.open-vocabularies"); mains != 1 || buttons != 1 {
-		t.Errorf("back again: %d mains, %d Vocabularies buttons", mains, buttons)
+		t.Errorf("forward: %d mains, %d Vocabularies buttons", mains, buttons)
 	}
-	tb.restores("back and forward", submitted, "/", submitted, "/")
-	if n := eval[int](tb, `sessionStorage.getItem("htmx-history-cache") === null ? 0 : JSON.parse(sessionStorage.getItem("htmx-history-cache")).length`); n != 0 {
-		t.Errorf("back and forward: htmx kept %d snapshots", n)
-	}
-	tb.audit("restored /")
+	tb.requests("back and forward", true, "/", submitted)
 
-	// The examples and the tabs are links htmx follows the same way.
-	tb.do(chromedp.Click(chromedp.CSS(`a.example[href="` + movedLink + `"]`)))
-	tb.wait("#copy-url + button.copy")
-	if got := tb.at(); got != movedLink {
-		t.Errorf("example: at %s", got)
+	// The VIN that decoded is kept in this browser: the VINs menu offers
+	// it by its vehicle's name, in the examples' place.
+	tb.vins()
+	tb.waitText("#recent a", "2003 HONDA Accord")
+	if got := attributes(tb, "#recent a"); len(got) != 1 || got[0]["href"] != submitted {
+		t.Errorf("the VINs menu: recent %v; want one link to %s", got, submitted)
 	}
-	tb.requests("example", true, movedLink)
-	tb.do(chromedp.Click(chromedp.CSS("#tab-id")))
-	tb.wait("#from-model")
-	if got := tb.at(); got != "/?tab=id" {
-		t.Errorf("the vPIC id tab: at %s; want /?tab=id", got)
+	if n := tb.count("#examples:not([hidden])"); n != 0 {
+		t.Errorf("the VINs menu: the examples show beside a recent VIN")
 	}
-	tb.requests("the vPIC id tab", true, "/?tab=id")
-	tb.audit("the vPIC id tab")
+	tb.audit("the VINs menu, a recent VIN")
 
 	if !eval[bool](tb, `window.stayed === true`) {
 		t.Errorf("the page reloaded")
@@ -592,9 +638,202 @@ func formJSOn(t *testing.T, path, base string, log *requestLog) {
 
 	// An old link lands on the same decode on the page.
 	tb.do(chromedp.Navigate(base + oldLink))
-	tb.wait("#copy-url + button.copy")
+	tb.wait(`#answer[data-vin="` + strings.TrimPrefix(movedLink, "/?from.vin=") + `"]`)
 	if got := tb.at(); got != movedLink {
 		t.Errorf("old link: at %s; want %s", got, movedLink)
 	}
 	tb.requests("old link", false, oldLink, movedLink)
+}
+
+// plateJSOn: the plate with JavaScript, in a fresh profile (pkg/ui's
+// plate.js). Each character typed is answered without a submit, the card
+// of a group filled once its last character is typed, and kept as the
+// server keeps it: letters and digits, upper case, no 18th. The URL
+// follows what is typed in place, and the whole VIN alone is a history
+// entry, which Back returns from and forward to. Enter asks at once for
+// what the plate holds, and adds no entry for the VIN the page is at.
+// Every answer is a fragment (HX-Request), and the page never reloads.
+func plateJSOn(t *testing.T, path, base string, log *requestLog) {
+	tb := newTab(t, path, base, log, true)
+	tb.do(chromedp.Navigate(base + "/"))
+	tb.wait("#vin-form.live")
+	tb.requests("/", false, "/")
+	eval[bool](tb, `window.stayed = true`)
+	entries := eval[int](tb, `history.length`)
+	field := chromedp.CSS("#from-vin")
+	target := func(typed string) string { return "/?from.vin=" + typed }
+	// held checks where the tab is and what the plate holds.
+	held := func(step, want string, entries int) {
+		t.Helper()
+		if at, value, n := tb.at(), eval[string](tb, `document.getElementById("from-vin").value`), eval[int](tb, `history.length`); at != target(want) || value != want || n != entries {
+			t.Errorf("%s: at %s, the plate holds %q, %d history entries; want %s, %q, %d", step, at, value, n, target(want), want, entries)
+		}
+	}
+
+	// The VIN a key at a time, in lower case: each is answered, once.
+	cards := map[int]string{
+		3:  "<dt>Make</dt><dd>HONDA</dd>",
+		8:  "<dt>Model</dt><dd>Accord</dd>",
+		11: "<dt>City</dt><dd>MARYSVILLE, OHIO</dd>",
+		17: `<p class="big">Checks out</p>`,
+	}
+	var asked []string
+	for i := range len(vin) {
+		typed := vin[:i+1]
+		tb.do(chromedp.SendKeys(field, strings.ToLower(vin[i:i+1])))
+		tb.wait(`#answer[data-vin="` + typed + `"]`)
+		asked = append(asked, target(typed))
+		if want, ok := cards[len(typed)]; ok && !strings.Contains(tb.html("#answer"), want) {
+			t.Errorf("%s typed: the answer lacks %s", typed, want)
+		}
+		if len(typed) == 3 {
+			// A character no VIN holds is not typed, and the URL follows
+			// in place: no entry.
+			tb.do(chromedp.SendKeys(field, "-"))
+			held("the maker typed", typed, entries)
+		}
+	}
+	// The whole VIN takes no more, and is one entry more.
+	tb.do(chromedp.SendKeys(field, "9"))
+	held("the VIN typed", vin, entries+1)
+	tb.requests("typing", true, asked...)
+
+	// Back from the whole VIN is the plate as it stood before it, asked
+	// of the server again, and forward the VIN.
+	before := vin[:len(vin)-1]
+	eval[bool](tb, `history.back(), true`)
+	tb.wait(`#answer[data-vin="` + before + `"]`)
+	held("back", before, entries+1)
+	tb.requests("back", true, target(before))
+	eval[bool](tb, `history.forward(), true`)
+	tb.wait(`#answer[data-vin="` + vin + `"]`)
+	held("forward", vin, entries+1)
+	tb.requests("forward", true, submitted)
+
+	// Enter asks at once for what the plate holds, a new answer, and the
+	// VIN it is at already is no new entry.
+	eval[bool](tb, `window.answered = document.getElementById("answer"), true`)
+	tb.enter()
+	tb.until("Enter", `document.getElementById("answer") !== window.answered`)
+	held("Enter", vin, entries+1)
+	tb.requests("Enter", true, submitted)
+
+	if !eval[bool](tb, `window.stayed === true`) {
+		t.Errorf("the page reloaded")
+	}
+	if refused := eval[[]string](tb, `refused`); len(refused) > 0 {
+		t.Errorf("CSP refused %q", refused)
+	}
+	tb.mu.Lock()
+	defer tb.mu.Unlock()
+	if len(tb.thrown) > 0 {
+		t.Errorf("thrown: %q", tb.thrown)
+	}
+}
+
+// pasteJSOn: pasting into the plate with JavaScript, in a fresh profile
+// (plate.js's paste). Each paste is a paste event on the field with its
+// text on the clipboard, which the plate takes for its own. A VIN pasted
+// with spaces, dashes and lower case is its 17 characters, answered once
+// and one history entry; a whole VIN pasted over another replaces it;
+// pasted into a plate partly typed, as much goes in at the caret as there
+// is room for; and text with no letter or digit changes nothing.
+func pasteJSOn(t *testing.T, path, base string, log *requestLog) {
+	tb := newTab(t, path, base, log, true)
+	tb.do(chromedp.Navigate(base + "/"))
+	tb.wait("#vin-form.live")
+	tb.requests("/", false, "/")
+	eval[bool](tb, `window.stayed = true`)
+	// The field's input events are counted: each is one change to the
+	// plate, and the plate asks for an answer after one alone.
+	eval[bool](tb, `(window.inputs = 0, document.addEventListener("input", (e) => { if (e.target.id === "from-vin") inputs++; }), true)`)
+	entries := eval[int](tb, `history.length`)
+	const other = "5YJ3E1EA2JF000316"
+	target := func(held string) string { return "/?from.vin=" + held }
+	// paste pastes text into the field, where its caret or selection is,
+	// and checks that the plate took the paste from the browser.
+	paste := func(step, text string) {
+		t.Helper()
+		if !eval[bool](tb, `(() => {
+			const field = document.getElementById("from-vin"), data = new DataTransfer();
+			field.focus();
+			data.setData("text/plain", `+jsString(text)+`);
+			return !field.dispatchEvent(new ClipboardEvent("paste", { clipboardData: data, bubbles: true, cancelable: true }));
+		})()`) {
+			t.Errorf("%s: the paste was left to the browser", step)
+		}
+	}
+	// held waits for want's answer and checks where the tab is, what the
+	// plate holds and shows, and how many changes it took.
+	held := func(step, want string, entries, inputs int) {
+		t.Helper()
+		tb.wait(`#answer[data-vin="` + want + `"]`)
+		tb.until(step, `location.pathname + location.search === `+jsString(target(want)))
+		at, value, n := tb.at(), eval[string](tb, `document.getElementById("from-vin").value`), eval[int](tb, `history.length`)
+		if at != target(want) || value != want || n != entries {
+			t.Errorf("%s: at %s, the plate holds %q, %d history entries; want %s, %q, %d", step, at, value, n, target(want), want, entries)
+		}
+		if cells := eval[string](tb, `[...document.querySelectorAll("#vin-form .cell")].map((c) => c.firstElementChild.textContent).join("")`); cells != want {
+			t.Errorf("%s: the cells show %q; want %q", step, cells, want)
+		}
+		if got := eval[int](tb, `inputs`); got != inputs {
+			t.Errorf("%s: %d changes to the plate; want %d", step, got, inputs)
+		}
+	}
+
+	// A VIN as it is copied from a listing, into the empty plate: its 17
+	// characters, asked for once, one entry.
+	paste("a VIN pasted", " 1hgcm-82633 a004352\n")
+	held("a VIN pasted", vin, entries+1, 1)
+	if body := tb.html("#answer"); !strings.Contains(body, "<dt>Make</dt><dd>HONDA</dd>") || !strings.Contains(body, `<p class="big">Checks out</p>`) {
+		t.Errorf("a VIN pasted: not its answer\n%s", body)
+	}
+	tb.requests("a VIN pasted", true, submitted)
+
+	// Another whole VIN replaces it, wherever the caret is: here after
+	// the last character, where nothing typed would go in.
+	paste("a VIN pasted over a VIN", strings.ToLower(other[:9])+" - "+other[9:])
+	held("a VIN pasted over a VIN", other, entries+2, 2)
+	if body := tb.html("#answer"); !strings.Contains(body, "<dt>Make</dt><dd>TESLA</dd>") {
+		t.Errorf("a VIN pasted over a VIN: not its answer\n%s", body)
+	}
+	tb.requests("a VIN pasted over a VIN", true, target(other))
+
+	// Less than a VIN goes in over the selection: here all of it.
+	eval[bool](tb, `(document.getElementById("from-vin").select(), true)`)
+	paste("three characters pasted over a VIN", vin[:3])
+	held("three characters pasted over a VIN", vin[:3], entries+3, 3)
+	tb.requests("three characters pasted over a VIN", true, target(vin[:3]))
+
+	// More than fits, pasted after them: the 14 there is room for, and
+	// the rest is dropped.
+	paste("more than fits pasted", strings.ToLower(vin[3:10])+"-"+vin[10:]+"9Z")
+	held("more than fits pasted", vin, entries+4, 4)
+	tb.requests("more than fits pasted", true, submitted)
+
+	// Text with no letter or digit changes nothing, with the caret in the
+	// plate or a selection it would otherwise replace: no change, so no
+	// request, and the selection as it was.
+	for _, selection := range [][2]int{{17, 17}, {5, 5}, {2, 9}} {
+		step := fmt.Sprintf("nothing pasted at %d-%d", selection[0], selection[1])
+		eval[bool](tb, fmt.Sprintf(`(document.getElementById("from-vin").setSelectionRange(%d, %d), true)`, selection[0], selection[1]))
+		paste(step, " -- \t\n.")
+		held(step, vin, entries+4, 4)
+		if got := eval[[]int](tb, `(() => { const f = document.getElementById("from-vin"); return [f.selectionStart, f.selectionEnd]; })()`); !slices.Equal(got, selection[:]) {
+			t.Errorf("%s: the selection is %v; want %v", step, got, selection)
+		}
+	}
+	tb.requests("nothing pasted", true)
+
+	if !eval[bool](tb, `window.stayed === true`) {
+		t.Errorf("the page reloaded")
+	}
+	if refused := eval[[]string](tb, `refused`); len(refused) > 0 {
+		t.Errorf("CSP refused %q", refused)
+	}
+	tb.mu.Lock()
+	defer tb.mu.Unlock()
+	if len(tb.thrown) > 0 {
+		t.Errorf("thrown: %q", tb.thrown)
+	}
 }

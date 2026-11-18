@@ -34,9 +34,10 @@ lists them).
 The same decode is reachable six ways: a CLI, an HTTP server, JSON lines
 over stdio, an MCP server for AI assistants, a Go module and a C library.
 [nitrovin.app](https://nitrovin.app) runs the latest release's server for
-anyone: one page that decodes a VIN and draws its translation as a map,
+anyone: one page that decodes a VIN as you type it and shows the
+vehicle's names in every vocabulary loaded,
 where your own vocabularies (or EPA's, in one click) load into your browser and translate
-there without being uploaded, and a one-click demo set shows fitment and stock there, the `/v1` API (CORS open) and MCP at
+there without being uploaded, and a one-click demo set loads there the same way, the `/v1` API (CORS open) and MCP at
 `https://nitrovin.app/mcp`, rate-limited per IP.
 
 **Status: v0.x prereleases.** v0 means the release pipeline is not yet
@@ -157,37 +158,31 @@ curl localhost:8080/v1/vocabularies
 curl 'localhost:8080/v1/vocabularies/vpic/entries?where.make=474&limit=5'
 ```
 
-Open the address in a browser: one page, with a box of controls at its top
-(Translate from), a tab for each thing to translate from: VIN · Year, make
-and model · one for each declared spine, named by what its vocabularies
-name (Part (parts spine)) · vPIC id. The first decodes a VIN (an optional
-model year, the shape and `full` behind Options) and translates it into
-the vocabularies loaded; the others translate a vocabulary's entry or a
-vPIC id ([Vocabularies](#vocabularies)). A refusal is said beside the
-field it names, on every tab. Before you ask, the page says how to
-install, configure MCP and verify this version, with links to its release
-and data month. The page is rendered on the server and every answer is a
+Open the address in a browser: one page, the VIN decoder, drawn as the
+VIN's diagram. Type a VIN on the plate, 17 cells under the six groups
+of a VIN (maker, vehicle, check digit, model year, plant, serial): each
+group's card fills as its characters are typed, a partial VIN included.
+A whole VIN gets the check digit's verdict, with its arithmetic behind a
+button, the decoder's error codes in NHTSA's words, and a suggested VIN
+as a link. Below the cards, "Also known as" shows the vehicle's names in
+every vocabulary loaded ([Vocabularies](#vocabularies)), a doubt drawn
+dashed. A refusal is said below the plate. The page is rendered on the
+server and every answer is a
 shareable URL (`/?from.vin=1HGCM82633A004352`; older `/?vin=`,
 `/ui/decode`, `/ui/translate`, `/vocab` and `/ui/vocabularies` links
-redirect to it). A decode shows the translation as a map: cards in three
-columns (stacked on a phone), each card's name on two lines (whole on
-hover or focus) and its text saying what its lines draw, each card a
-link, the From card to the answer itself; its key: a mapping, one
-matched by rule, dashed, a model under its make, a VIN to the model it
-decodes to. Its JSON and the decode's are behind a button,
-then its elements in vPIC's groups (empty values hidden
-in the `vpic` shape until asked), its error codes in NHTSA's words, a
-suggested VIN with the differing positions marked, a link to the same VIN
-on NHTSA's decoder, and the page's URL, `curl` and
-`nitrovin decode` equivalents to copy. `/ui/fit` reads a loaded catalog
-the same way: a vehicle's part types with their counts, a part type's
-candidates (how each application was reached, and what a decode could
-not confirm), a fitment's vehicles, related vehicles and stock, every
-list paged; its URL is `GET /v1/fit`'s query. The header leads to every
-page: Translate, Fit, the Vocabularies button, which lists what is
-loaded, and the API docs. Everything works without
-JavaScript; with it, [htmx](https://htmx.org) swaps each answer into the
-page, back and forward ask the server again, and copy buttons appear.
+redirect to it, with their VIN and nothing else). The page takes a VIN
+and nothing else: `model_year`,
+`shape`, `full` and `now` are the API's and the command line's, and the
+page ignores them. Three buttons in the header open the rest: VINs offers
+examples, the VINs you decoded lately and Surprise me;
+Vocabularies lists what is loaded; and Developers holds the page's URL,
+`curl` and `nitrovin decode` equivalents to copy, each the plain request
+for the VIN, the answer's JSON, a
+link to the same VIN on NHTSA's decoder, how to install,
+configure MCP and verify this version, and links to the API docs, its
+release and data month. Everything works without
+JavaScript; with it, the page answers as you type, the URL follows the
+plate, back and forward ask the server again, and copy buttons appear.
 The pages are not part of the API: they are
 not in the OpenAPI document and may change.
 
@@ -484,13 +479,12 @@ nitrovin --vocab testdata/vocab translate --to yard 1C6RR7LT5FS123456  # a VIN t
 nitrovin --vocab testdata/vocab serve                                 # /v1/translate, /v1/vocabularies
 ```
 
-`serve`'s page translates through vPIC and the server's own files with or
-without JavaScript, with an example to try from each vocabulary and each
-translation drawn as a map of the mappings it crossed. The Vocabularies
-button in its header opens a dialog that lists what is loaded, each file marked by where
+`serve`'s page shows a VIN's names in every vocabulary loaded on vPIC's
+spine, the server's own files with or without JavaScript. Its Vocabularies
+button opens a dialog that lists what is loaded, each file marked by where
 it is kept and with its drift; with JavaScript, the dialog loads your own files, picked or dropped on the
 page, into your browser, where they stay: a Service Worker keeps them in
-IndexedDB, with the targets you tick (each file you load ticked), and
+IndexedDB and
 translates with the same Go, built to WebAssembly, linking them with the
 server's files, which `serve` publishes with the data month's spine bundle
 under `/ui/r/<release>/` ([docs/vocabularies.md](docs/vocabularies.md)).
@@ -501,10 +495,10 @@ without them, and says so.
 The **demo set** in [`pkg/ui/demo`](pkg/ui/demo) is a small, invented
 catalog of popular vPIC models with its part and vehicle vocabularies, an
 extension set, a shelf and a yard, every number and stock row made up.
-With the worker, the dialog offers it as one **Load the demo**, which
-compiles its catalog in your browser, and the fit page then offers a
-request for each feature; `nitrovin --vocab pkg/ui/demo serve` serves the
-same files ([The demo set](docs/vocabularies.md#the-demo-set)).
+With the worker, the dialog offers it as one **Load demo**, which
+compiles its catalog in your browser; `nitrovin --vocab pkg/ui/demo
+serve` serves the same files
+([The demo set](docs/vocabularies.md#the-demo-set)).
 
 Each data release also carries `epa-vehicles.jsonl`, a vocabulary of the
 names EPA's fuel-economy data

@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
-	"slices"
 	"strings"
 	"testing"
 
@@ -16,11 +15,10 @@ import (
 // --vocab` serves as the browser loads it.
 var demoDir = abs("../../pkg/ui/demo")
 
-// demoVINs are the demo set's VINs, in its yard and its list of requests,
-// and the vPIC model, year and drive type each must decode to on the
-// embedded data month: the stories the list shows rest on them (a
-// four-wheel and a two-wheel drive F-150, a CR-V whose VIN gives no drive
-// type, a Ram of make Ram).
+// demoVINs are the demo set's VINs, its yard's, and the vPIC model, year
+// and drive type each must decode to on the embedded data month: the
+// stories of #278 rest on them (a four-wheel and a two-wheel drive F-150,
+// a CR-V whose VIN gives no drive type, a Ram of make Ram).
 var demoVINs = map[string]struct {
 	model int
 	year  string
@@ -86,18 +84,15 @@ func TestDemoCheck(t *testing.T) {
 
 // TestDemoHints: a server with the worker's module tells a visitor to load
 // the demo set only where it can load: on a server with no catalog and no
-// file of a demo name, a fit with no catalog, a link naming a demo file and
-// the dialog without JavaScript say how; beside a server's catalog, or a
-// file named like a demo file, which make the panel refuse the demo, none
-// of them does.
+// file of a demo name, a link naming a demo file says how; beside a
+// server's catalog, or a file named like a demo file, which make the panel
+// refuse the demo, it does not.
 func TestDemoHints(t *testing.T) {
 	fixtureData(t)
 	module := ui.Worker{Module: []byte("\x00asm"), Exec: []byte("// wasm_exec.js")}
 	const (
-		load   = "open Vocabularies and Load the demo"
-		noJS   = "The demo set loads into this browser in one click, so it needs JavaScript too."
-		noFit  = "/ui/fit?from.vin=1FTEW1EG7FFA12345"
-		byName = "/ui/fit?from.vocabulary=demo-vehicles&from.entry.make=Ford&from.entry.model=F150&model_year=2015"
+		load   = "open Vocabularies and Load demo"
+		byName = "/ui/vocabularies/demo-vehicles"
 	)
 	for _, c := range []struct {
 		name  string
@@ -108,27 +103,13 @@ func TestDemoHints(t *testing.T) {
 		{"a catalog on the server", []string{fitmentFixture}, false},
 		{"a file of a demo name on the server", []string{filepath.Join(demoDir, "demo-part-types.jsonl")}, false},
 	} {
-		h := vocabServer(t, &module, c.paths...)
-		page := func(target string, status int) string {
-			t.Helper()
-			w := httptest.NewRecorder()
-			h.ServeHTTP(w, httptest.NewRequest("GET", target, nil))
-			if w.Code != status {
-				t.Fatalf("%s, %s: HTTP %d; want %d\n%s", c.name, target, w.Code, status, w.Body)
-			}
-			return text(w.Body.String())
+		w := httptest.NewRecorder()
+		vocabServer(t, &module, c.paths...).ServeHTTP(w, httptest.NewRequest("GET", byName, nil))
+		if w.Code != http.StatusNotFound {
+			t.Fatalf("%s, %s: HTTP %d; want %d\n%s", c.name, byName, w.Code, http.StatusNotFound, w.Body)
 		}
-		says := map[string]bool{
-			"the dialog":           strings.Contains(page("/", http.StatusOK), noJS),
-			"a link naming a file": strings.Contains(page(byName, http.StatusNotFound), load),
-		}
-		if !slices.Contains(c.paths, fitmentFixture) {
-			says["a fit with no catalog"] = strings.Contains(page(noFit, http.StatusOK), load)
-		}
-		for where, said := range says {
-			if said != c.hints {
-				t.Errorf("%s: %s says how to load the demo: %v; want %v", c.name, where, said, c.hints)
-			}
+		if said := strings.Contains(text(w.Body.String()), load); said != c.hints {
+			t.Errorf("%s: a link naming a file says how to load the demo: %v; want %v", c.name, said, c.hints)
 		}
 	}
 }

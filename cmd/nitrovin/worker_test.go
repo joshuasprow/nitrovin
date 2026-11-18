@@ -15,6 +15,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"sort"
 	"strings"
@@ -154,7 +155,8 @@ func vocabServer(t *testing.T, w *ui.Worker, paths ...string) http.Handler {
 }
 
 // mainOf is the outer HTML of a page's main, from a server asked as the
-// browser at base asks: the page's own URL is in it.
+// browser at base asks: the page's own URL is in it. Its clock is left
+// out (timeless).
 func mainOf(t *testing.T, h http.Handler, base, target string, htmx bool) string {
 	t.Helper()
 	r := httptest.NewRequest("GET", base+target, nil)
@@ -168,24 +170,36 @@ func mainOf(t *testing.T, h http.Handler, base, target string, htmx bool) string
 	}
 	body := w.Body.String()
 	if htmx {
-		return body
+		return timeless(body)
 	}
 	start, end := strings.Index(body, `<main id="ui-main" hx-history-elt hx-history="false">`), strings.Index(body, "</main>")
 	if start < 0 || end < 0 {
 		t.Fatalf("%s: no main in %s", target, body)
 	}
-	return body[start : end+len("</main>")]
+	return timeless(body[start : end+len("</main>")])
 }
 
-// mainHTML is the outer HTML of the page's main as the server drew it:
-// without the copy buttons copy.js adds.
+// drawnMain is a function of a document, giving the outer HTML of its
+// main as the server drew it: without the copy buttons copy.js adds, and
+// without the plate's form and the VINs menu, which plate.js redraws.
+const drawnMain = `(doc => {
+	const main = doc.getElementById("ui-main").cloneNode(true);
+	main.querySelectorAll("button.copy, #vin-form, #vins").forEach(e => e.remove());
+	return main.outerHTML;
+})`
+
+// mainHTML is the page's main as the server drew it (drawnMain), its
+// clock left out (timeless).
 func mainHTML(tb *tab) string {
 	tb.t.Helper()
-	return eval[string](tb, `(() => {
-		const main = document.getElementById("ui-main").cloneNode(true);
-		main.querySelectorAll("button.copy").forEach(b => b.remove());
-		return main.outerHTML;
-	})()`)
+	return timeless(eval[string](tb, drawnMain+`(document)`))
+}
+
+// mainAs is the main in html, a page or its main alone, as this browser
+// parses it, as the page's own is (mainHTML).
+func mainAs(tb *tab, html string) string {
+	tb.t.Helper()
+	return timeless(eval[string](tb, drawnMain+`(new DOMParser().parseFromString(`+jsString(html)+`, "text/html"))`))
 }
 
 // vocabularies opens the page's Vocabularies dialog, where the browser's
@@ -207,9 +221,20 @@ func (tb *tab) closeVocabularies() {
 	tb.wait("#vocabularies:not(:popover-open)")
 }
 
-// pinned ends a page's query with a clock: its answer's JSON says when it
-// was asked, so two answers to compare are asked at one time.
+// pinned ends a /v1 query with a clock: its answer says when it was
+// asked, so two answers to compare are asked at one time.
 const pinned = "&now=2026-11-01T00:00:00Z"
+
+// nowValue is the value of a JSON object's now in a page, as the server
+// writes it and as a browser serializes it.
+var nowValue = regexp.MustCompile(`((?:&#34;|")now(?:&#34;|"): (?:&#34;|"))[0-9A-Z:.+-]+`)
+
+// timeless is a page's HTML without the instants its JSON was answered
+// at. The page takes no clock, so two answers to compare, the worker's
+// and a server's, are asked at different times and differ there alone.
+func timeless(html string) string {
+	return nowValue.ReplaceAllString(html, "${1}…")
+}
 
 // TestWorker runs the worker in a fresh profile against a server that has
 // loaded classics alone: the browser loads yard (which maps into the
@@ -233,7 +258,10 @@ func TestWorker(t *testing.T) {
 	module := buildWorker(t)
 	big := filepath.Join(t.TempDir(), "synthetic.jsonl")
 	const entries = 150_000
-	probe := "/?" + writeSynthetic(t, big, entries).Encode() + pinned
+	writeSynthetic(t, big, entries)
+	// The fixture's 2010 Ram, which the synthetic file and yard have names
+	// for.
+	probe := "/?from.vin=1D7RV1GT5AS123456"
 
 	wire := &wireLog{h: vocabServer(t, &module, filepath.Join(fixture, "classics.jsonl"))}
 	srv := httptest.NewServer(wire)
@@ -268,15 +296,10 @@ func TestWorker(t *testing.T) {
 	}
 
 	queries := []string{
-		"from.vocabulary=yard&from.entry.make=Packard&from.entry.model=Clipper&to=yard",
-		"from.vocabulary=yard&from.entry.make=Dodge&from.entry.model=Ram+1500&model_year=2010&to=yard",
-		"from.vocabulary=yard&from.entry.make=Dodge&from.entry.model=Ram+1500+4x4&vin=1C6RR7LT5FS123456&to=yard",
-		"from.vin=1D7RV1GT5AS123456&to=yard",
-		"from.vin=1GCVKREC6EZ123456&to=yard",
-		"from.ext=ext:classics/packard-clipper&to=yard",
-		"from.vocabulary=listing&from.entry.category=Brake+Pads&vin=JH2PC40066M200001&to=listing",
-		"from.spine=parts&from.id=brake-pads&to=listing",
-		"from.vocabulary=yard&from.entry.make=Nobody&from.entry.model=Nothing&to=yard",
+		"from.vin=1D7RV1GT5AS123456",
+		"from.vin=1GCVKREC6EZ123456",
+		"from.vin=" + ram2015,
+		"from.vin=JH2PC40066M200001",
 	}
 	same1 := func(step, target string) {
 		t.Helper()
@@ -284,7 +307,7 @@ func TestWorker(t *testing.T) {
 		tb.do(chromedp.Navigate(srv.URL + target))
 		tb.wait("#ui-main")
 		// The server's main as this browser parses it, as the worker's is.
-		want := eval[string](tb, `new DOMParser().parseFromString(`+jsString(mainOf(t, same, srv.URL, target, false))+`, "text/html").getElementById("ui-main").outerHTML`)
+		want := mainAs(tb, mainOf(t, same, srv.URL, target, false))
 		if got := mainHTML(tb); got != want {
 			t.Errorf("%s %s: the worker's page differs from the server's\nworker: %s\nserver: %s", step, target, got, want)
 		}
@@ -293,69 +316,34 @@ func TestWorker(t *testing.T) {
 		if got[0] != "200" || got[1] != ui.CSP || got[2] != "HX-Request" {
 			t.Errorf("%s %s fragment: status %s, CSP %q, Vary %q", step, target, got[0], got[1], got[2])
 		}
-		if want := mainOf(t, same, srv.URL, target, true); got[3] != want {
+		if want := mainOf(t, same, srv.URL, target, true); timeless(got[3]) != want {
 			t.Errorf("%s %s: the worker's fragment differs from the server's\nworker: %s\nserver: %s", step, target, got[3], want)
 		}
 	}
-	// Each of the page's tabs, its targets named (unnamed, the browser
-	// ticks the visitor's selection, which the server has none of), and
-	// each lookup: a VIN's with its decode, which is the server's.
-	for _, target := range []string{"/?to=yard", "/?tab=entry&to=yard", "/?tab=entry-parts&to=listing", "/?tab=id&to=yard"} {
-		same1("the page", target)
-	}
+	// The page, and each VIN's, with its decode, which is the server's.
+	same1("the page", "/")
 	for _, q := range queries {
-		same1("lookup", "/?"+q+pinned)
+		same1("lookup", "/?"+q)
 	}
 	same1("list", "/ui/vocabularies/yard")
 	same1("list", "/ui/vocabularies/listing?limit=1")
 
-	// One URL, one meaning: a lookup naming no target is the server's,
-	// files stored or not, and its targets are the server's default, as
-	// with JavaScript off; one naming a file the browser holds, its from
-	// alone included, is the worker's. The forms tick the visitor's
-	// selection before anything names a browser file.
+	// The page is the worker's once the browser holds a file, with a VIN
+	// on the plate or without: the server never draws it.
 	since := len(wire.all())
-	served := func(target string) bool {
-		return slices.ContainsFunc(wire.all()[since:], func(r wireRequest) bool { return r.target == target })
-	}
-	tb.do(chromedp.Navigate(srv.URL + "/"))
-	tb.until("the selection ticked", `document.querySelector('#controls input[name=to][value="yard"]').checked`)
-	if served("/") {
-		t.Error("the page without a lookup, files stored: the server answered it")
-	}
-	bare := "/?from.vin=1D7RV1GT5AS123456" + pinned
-	tb.do(chromedp.Navigate(srv.URL + bare))
-	tb.wait("#result")
-	if !served(bare) {
-		t.Errorf("%s, files stored: the worker answered it; want the server", bare)
-	}
-	// The answer is the server's: the forms above it tick the selection.
-	want := eval[string](tb, `new DOMParser().parseFromString(`+jsString(mainOf(t, wire.h, srv.URL, bare, false))+`, "text/html").getElementById("result").outerHTML`)
-	if got := eval[string](tb, `(() => {
-		const result = document.getElementById("result").cloneNode(true);
-		result.querySelectorAll("button.copy").forEach(b => b.remove());
-		return result.outerHTML;
-	})()`); got != want {
-		t.Errorf("%s: the answer differs from the server's\npage: %s\nserver: %s", bare, got, want)
-	}
-	if got := attributes(tb, `#result`); len(got) != 1 || got[0]["data-from"] != "vin" || got[0]["data-spine"] != "vpic" {
-		t.Errorf("%s: the answer's from %v; want vin on vpic", bare, got)
-	}
-	entry := "/?from.vocabulary=yard&from.entry.make=Packard&from.entry.model=Clipper" + pinned
-	tb.do(chromedp.Navigate(srv.URL + entry))
-	tb.wait("#result")
-	if served(entry) {
-		t.Errorf("%s: the server answered it; want the worker, yard is the browser's", entry)
-	}
-	if got, want := mainHTML(tb), eval[string](tb, `new DOMParser().parseFromString(`+jsString(mainOf(t, same, srv.URL, entry, false))+`, "text/html").getElementById("ui-main").outerHTML`); got != want {
-		t.Errorf("%s: the worker's page differs from the server's\nworker: %s\nserver: %s", entry, got, want)
+	for _, target := range []string{"/", "/?" + queries[1]} {
+		tb.do(chromedp.Navigate(srv.URL + target))
+		tb.wait("#vin-form.live")
+		if slices.ContainsFunc(wire.all()[since:], func(r wireRequest) bool { return r.target == target }) {
+			t.Errorf("%s, files stored: the server answered it; want the worker", target)
+		}
 	}
 
 	// A stopped worker starts again on the next request and answers the same.
 	tb.stopWorkers()
-	same1("after a stop", "/?"+queries[3]+pinned)
+	same1("after a stop", "/?"+queries[0])
 
-	// A hard reload bypasses the worker: the page says the files are paused.
+	// A hard reload bypasses the worker: the page is paused.
 	tb.do(chromedp.Navigate(srv.URL + "/"))
 	tb.waitState("ready")
 	tb.call(func(ctx context.Context) error {
@@ -363,9 +351,6 @@ func TestWorker(t *testing.T) {
 		return err
 	})
 	tb.waitState("paused")
-	if s := tb.html("#browser-status"); !strings.Contains(s, "paused for this load") {
-		t.Errorf("hard reload: %s", s)
-	}
 	if n := tb.count("#vocab-files"); n != 0 {
 		t.Errorf("hard reload: a file input with no worker to take the files")
 	}
@@ -383,8 +368,8 @@ func TestWorker(t *testing.T) {
 		t.Errorf("after a stalled load: stored files %q; want listing, parts, yard", got)
 	}
 
-	// 150,000 entries, then cold starts: the worker stopped, a translation
-	// naming the file. The worker reads every file's stored index.
+	// 150,000 entries, then cold starts: the worker stopped, a VIN the
+	// file has names for. The worker reads every file's stored index.
 	start = time.Now()
 	tb.do(chromedp.SetUploadFiles(chromedp.CSS("#vocab-files"), []string{big}))
 	tb.waitPrefix("#load-status", "Loaded ")
@@ -399,7 +384,7 @@ func TestWorker(t *testing.T) {
 		t.Logf("cold start: %.0f ms; worker: %s", f.MS, f.Timing)
 	}
 	sort.Float64s(cold)
-	t.Logf("translation naming the 150,000-entry file, worker stopped first: cold start %.0f ms median (each %v); warm %.1f ms", cold[len(cold)/2], round(cold), warm.MS)
+	t.Logf("a VIN's names from the 150,000-entry file, worker stopped first: cold start %.0f ms median (each %v); warm %.1f ms", cold[len(cold)/2], round(cold), warm.MS)
 	if b := os.Getenv("NITROVIN_COLD_START_BUDGET"); b != "" {
 		budget, err := time.ParseDuration(b)
 		if err != nil {
@@ -412,8 +397,8 @@ func TestWorker(t *testing.T) {
 	same1("cold, 150,000 entries", probe)
 
 	// A new worker (here, /sw.js with other bytes) installs beside the one
-	// in control and waits for this page to close; the page says so, and
-	// the old one keeps answering.
+	// in control and waits for this page to close, and the old one keeps
+	// answering.
 	tb.do(chromedp.Navigate(srv.URL + "/"))
 	tb.waitState("ready")
 	wire.mu.Lock()
@@ -429,13 +414,10 @@ func TestWorker(t *testing.T) {
 	})`); got != "waiting" {
 		t.Errorf("an update: data-update %q; want waiting", got)
 	}
-	if s := tb.html("#browser-status"); !strings.Contains(s, "starts once every nitrovin tab is closed") {
-		t.Errorf("an update: %s", s)
-	}
 	if eval[bool](tb, `navigator.serviceWorker.getRegistration().then(r => r.waiting === null || r.active === null)`) {
 		t.Error("an update: no worker waiting beside the active one")
 	}
-	same1("with an update waiting", "/?"+queries[0]+pinned)
+	same1("with an update waiting", "/?"+queries[0])
 
 	// The files never reached the server: every request it got was a GET
 	// or HEAD with no body, and none but for a release's asset named a
@@ -554,9 +536,10 @@ func (tb *tab) timeFetch(target string) fetched {
 // writeSynthetic writes a vehicle vocabulary of n entries at the scale of
 // eBay's (make, model, trim, year: one entry per year), over the vPIC
 // models of the embedded month, each mapped to its model for its year and
-// every third with a Drive Type qualifier. The trims are made up. It
-// returns the query naming one entry from the middle of the file.
-func writeSynthetic(t *testing.T, path string, n int) url.Values {
+// every third with a Drive Type qualifier. The trims are made up, and the
+// years run back from 2010, the fixture's Ram's, so its VIN reaches its
+// model's entries.
+func writeSynthetic(t *testing.T, path string, n int) {
 	t.Helper()
 	d, err := nitrovin.Embedded()
 	if err != nil {
@@ -588,10 +571,9 @@ func writeSynthetic(t *testing.T, path string, n int) url.Values {
 	slices.SortFunc(all, func(a, b model) int { return int(a.id) - int(b.id) })
 	per := n/len(all) + 1
 	written := 0
-	var probe url.Values
-	for i, x := range all {
+	for _, x := range all {
 		for j := 0; j < per && written < n; j++ {
-			trim, year := fmt.Sprintf("Trim %d", j%8), fmt.Sprint(1981+j/8)
+			trim, year := fmt.Sprintf("Trim %d", j%8), fmt.Sprint(2010-j/8)
 			entry, _ := json.Marshal(map[string]string{"make": x.make, "model": x.name, "trim": trim, "year": year})
 			qualifiers := ""
 			if written%3 == 0 {
@@ -599,10 +581,6 @@ func writeSynthetic(t *testing.T, path string, n int) url.Values {
 			}
 			fmt.Fprintf(w, `{"entry":%s,"mappings":[{"model":%d,"first":%s,"last":%s%s,"origin":"derived"}]}`+"\n", entry, x.id, year, year, qualifiers)
 			written++
-			if i == len(all)/2 && j == 0 {
-				probe = url.Values{"from.vocabulary": {"synthetic"}, "from.entry.make": {x.make}, "from.entry.model": {x.name},
-					"from.entry.trim": {trim}, "from.entry.year": {year}, "to": {"synthetic", "yard"}}
-			}
 		}
 	}
 	if err := w.Flush(); err != nil {
@@ -611,8 +589,7 @@ func writeSynthetic(t *testing.T, path string, n int) url.Values {
 	if err := f.Close(); err != nil {
 		t.Fatal(err)
 	}
-	if written != n || probe == nil {
-		t.Fatalf("wrote %d entries, probe %v", written, probe)
+	if written != n {
+		t.Fatalf("wrote %d entries", written)
 	}
-	return probe
 }

@@ -5,16 +5,14 @@
 // server's pages) over the files this browser holds in IndexedDB and the
 // server's, which it links from their release URLs.
 //
-// - It answers a lookup on the page (/) only when it names a file this
-//   browser holds (its from or a target: named), the page without a
-//   lookup once it holds one (its forms over the browser's files too), an
-//   entry list (/ui/vocabularies/<name>) of a file it holds, and
-//   /ui/files, the fit page (/ui/fit) while it holds the catalog and the
-//   server has none (ADR 0023), or when it names a file this browser
-//   holds, and that catalog's download (/ui/files/catalog);
-//   everything else goes to the server unchanged, a lookup
-//   naming no target included, so one URL means one thing with
-//   JavaScript on or off, and in every browser.
+// - It answers the page (/) once this browser holds a file: the page's
+//   "Also known as" is then over the browser's vocabularies and the
+//   server's. It answers an old link to /ui/translate the same way, by
+//   moving it to the page as the server does, an entry list
+//   (/ui/vocabularies/<name>) of a file it holds, /ui/files, and the
+//   browser's compiled catalog's download (/ui/files/catalog);
+//   everything else goes to the server unchanged, and so does the page
+//   of a browser that holds no file.
 // - A file reaches it by postMessage from the page, never by a request: no
 //   file's bytes are ever sent to the server. A yard stock file's VINs
 //   alone go to the server's POST /v1/decode, once, as it loads.
@@ -34,19 +32,12 @@
 //   controls hear {op: "outdated"}, so they say so and offer Update now,
 //   until a newer worker replaces it. A server it cannot reach leaves it
 //   answering, as offline.
-// - It keeps the visitor's selection of targets beside the files, by the
-//   spine they are on, which vocab.js ticks in the page's forms: each
-//   file loaded joins it, each removed leaves it, a target ticked or
-//   cleared changes it, and a lookup naming its targets sets it on its
-//   spine to them (the module's pages do, for the ones they answer; this
-//   script, for the ones the server answers, by the answer's data-from
-//   and data-spine).
 'use strict';
 
 const config = self.nitrovinConfig;
 const CACHE = 'nitrovin ' + config.release;
 // The assets a page or the module needs, kept per release.
-const ASSETS = ['htmx.min.js', 'ui.css', 'copy.js', 'map.js', 'vocab.js', 'disk.js', 'worker.js', 'compile.js', 'wasm_exec.js', 'sw.wasm', 'spine.json']
+const ASSETS = ['htmx.min.js', 'ui.css', 'copy.js', 'plate.js', 'vocab.js', 'disk.js', 'worker.js', 'compile.js', 'wasm_exec.js', 'sw.wasm', 'spine.json']
   .map((name) => config.assets + '/' + name);
 // The header the server names its release in (pkg/ui's ReleaseHeader).
 const RELEASE = 'Nitrovin-Release';
@@ -204,10 +195,9 @@ function boot() {
 }
 
 // The page, and the page that translated before it, whose old links move
-// to it; the fit page; and the browser's compiled catalog, as a download.
+// to it; and the browser's compiled catalog, as a download.
 const PAGE = '/';
 const MOVED = '/ui/translate';
-const FIT = '/ui/fit';
 const DOWNLOAD = '/ui/files/catalog';
 
 // fileName is the name a downloaded catalog is saved as.
@@ -231,24 +221,6 @@ async function download() {
   });
 }
 
-// named is what a lookup on the page names, as the module's pages read
-// it (pkg/ui, named): the from's vocabulary, spine or extension set, and
-// the targets.
-function named(q) {
-  const out = [q.get('from.vocabulary'), q.get('from.spine'), ...q.getAll('to')];
-  const ext = q.get('from.ext');
-  if (ext && ext.startsWith('ext:')) out.push(ext.slice(4).split('/')[0]);
-  return out.filter(Boolean);
-}
-
-// fitNamed is what a fit names (pkg/ui, fitNamed): named, and the part's
-// vocabulary and spine.
-const fitNamed = (q) => named(q).concat([q.get('part.vocabulary'), q.get('part.spine')].filter(Boolean));
-
-// asks reports whether q asks a lookup: a from beside a vocabulary's
-// name, a form's choice.
-const asks = (q) => [...q].some(([k, v]) => k.startsWith('from.') && k !== 'from.vocabulary' && v.trim() !== '');
-
 // The worker answers a request only while it is not outdated, and what it
 // draws itself (own) only while the server runs its release.
 self.addEventListener('fetch', (e) => {
@@ -266,35 +238,18 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(own(e.request, download));
     return;
   }
-  // The fit page is the module's while this browser holds the catalog and
-  // the server has none, else the server's (ADR 0023): one catalog per
-  // nitrovin. A fit naming a file of this browser's never goes to the
-  // server: the module answers it, or refuses it in words.
-  if (url.pathname === FIT) {
-    const q = url.searchParams;
-    e.respondWith(Promise.all([heldCatalog(), storedNames()]).then(([name, stored]) => {
-      const mine = name && !config.catalog;
-      const names = fitNamed(q);
-      if (mine || names.some((n) => stored.has(n) || n === name)) return own(e.request, () => serve(e.request));
-      return network(e.request);
-    }));
-    return;
-  }
-  // An old link may name a file of this browser's: it moves here, as the
-  // server moves it, and the server never sees it.
+  // An old link moves here as the server moves it (pkg/ui's moved), with
+  // the VIN it named and nothing else, and the server never sees it.
   if (url.pathname === MOVED) {
-    e.respondWith(own(e.request, async () => Response.redirect(new URL(PAGE + url.search, location.origin).href, 301)));
+    const vin = url.searchParams.get('from.vin') || url.searchParams.get('vin');
+    const to = PAGE + (vin ? '?' + new URLSearchParams({ 'from.vin': vin }) : '');
+    e.respondWith(own(e.request, async () => Response.redirect(new URL(to, location.origin).href, 301)));
     return;
   }
+  // The page is the module's once this browser holds a file: its "Also
+  // known as" is over the browser's vocabularies and the server's.
   if (url.pathname === PAGE) {
-    const q = url.searchParams;
-    e.respondWith(storedNames().then((stored) => {
-      if (named(q).some((n) => stored.has(n)) || (stored.size > 0 && !asks(q))) return own(e.request, () => serve(e.request));
-      return network(e.request).then((r) => {
-        e.waitUntil(remember(q, e.request, r.clone()).catch(() => {}));
-        return r;
-      });
-    }));
+    e.respondWith(storedNames().then((stored) => (stored.size > 0 ? own(e.request, () => serve(e.request)) : network(e.request))));
     return;
   }
   // An entry list is the module's when the file is this browser's.
@@ -303,20 +258,6 @@ self.addEventListener('fetch', (e) => {
   const name = decodeURIComponent(url.pathname.slice(list.length));
   e.respondWith(storedNames().then((stored) => (stored.has(name) ? own(e.request, () => serve(e.request)) : network(e.request))));
 });
-
-// remember makes the targets of a lookup the server answered, a link's
-// own included, the visitor's selection on their spine, as the module's
-// pages do for the ones they answer (ui's remember): the answer says
-// which from it is of and its spine (data-from, data-spine). A lookup
-// naming no target, a refusal, and history going back to an older page
-// change nothing.
-async function remember(q, req, res) {
-  if (!res.ok || !q.has('to') || req.headers.get('HX-History-Restore-Request')) return;
-  const m = /<section id="result"[^>]* data-from="([^"]+)" data-spine="([^"]+)"/.exec(await res.text());
-  if (!m) return;
-  const to = q.getAll('to');
-  await select(m[2], () => to);
-}
 
 // serve answers req from the module's pages.
 async function serve(req) {
@@ -340,12 +281,9 @@ async function serve(req) {
 // A load: {op: "load", files: [{name, data: ArrayBuffer}]} on a
 // MessageChannel. The page hears {progress} at each step, then {done, ok,
 // message}; it gives up after a minute without either. An outdated worker
-// refuses it in words. A tick: {op: "select", name, spine, checked}, a
-// target the visitor ticked in the page's form or cleared, kept in the
-// selection on its spine or dropped from it. Questions on a
-// MessageChannel: {op: "selection"}, answered with the selection ({spine:
-// [name]}), which vocab.js ticks; {op: "release"}, answered with {release,
-// server}, this worker's release and, once it is outdated, the server's.
+// refuses it in words. A question on a MessageChannel: {op: "release"},
+// answered with {release, server}, this worker's release and, once it is
+// outdated, the server's.
 // {op: "skipWaiting"} is Update now: a waiting worker takes over at once.
 // A catalog compiles in a dedicated worker the page starts (compile.js),
 // not here: a browser may stop a Service Worker that spends minutes on one
@@ -376,7 +314,6 @@ self.addEventListener('message', (e) => {
     return;
   }
   if (op === 'catalog') {
-    forget();
     if (self.nitrovin) self.nitrovin.reset();
     if (e.ports[0]) e.ports[0].postMessage({ done: true });
     return;
@@ -385,19 +322,9 @@ self.addEventListener('message', (e) => {
     e.waitUntil(self.skipWaiting());
     return;
   }
-  if (op === 'select' && typeof e.data.name === 'string' && typeof e.data.spine === 'string') {
-    const { name, spine, checked } = e.data;
-    e.waitUntil(select(spine, (s) => s.filter((n) => n !== name).concat(checked ? [name] : [])));
-    return;
-  }
   const port = e.ports[0];
   if (port && op === 'release') {
     port.postMessage({ release: config.release, server: outdated });
-    return;
-  }
-  if (port && op === 'selection') {
-    e.waitUntil(tx(['state'], 'readonly', (t) => request(t.objectStore('state').get('selection')), stateDB)
-      .then((s) => port.postMessage(s || {}), () => port.postMessage({})));
     return;
   }
   if (!port || op !== 'load') return;

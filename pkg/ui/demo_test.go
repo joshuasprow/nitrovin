@@ -2,14 +2,11 @@ package ui
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
-	"errors"
 	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -23,7 +20,7 @@ import (
 )
 
 // epaSample is cmd/nitrovin-epa's sample of EPA's vocabulary, which the
-// demo's translation into EPA's names (story 23) is asked beside.
+// demo's translation into EPA's names is asked beside.
 var epaSample = filepath.Join("..", "..", "cmd", "nitrovin-epa", "testdata", "vehicles.jsonl")
 
 // demoPicked are the demo set's files of the kinds given, as vocab.js
@@ -70,36 +67,11 @@ func demoServer(t *testing.T, d *nitrovin.Decoder) *nitrovin.Translator {
 	return tr
 }
 
-// demoPromises is what each user story of #278 that a request shows
-// promises, in the answer's JSON: text it holds, and text it must not.
-var demoPromises = map[int]struct{ has, lacks []string }{
-	5:  {has: []string{`"status":"found"`, `"part_types":[{"type":"alternator","name":"Alternator","count":3`}},
-	6:  {has: []string{`"number":"DEMO-1001"`, `"number":"DEMO-1002"`, `"number":"DEMO-1003"`}},
-	7:  {has: []string{`"number":"DEMO-4301"`, `"unconfirmed":[15]`}},
-	8:  {has: []string{`"options":"3.5L V6 EcoBoost (VIN G, 8th digit)"`}},
-	9:  {has: []string{`"number":"DEMO-1101"`}, lacks: []string{`DEMO-1102`}},
-	10: {has: []string{`"number":"DEMO-5301","side":"both"`, `"number":"DEMO-5302","side":"left"`}, lacks: []string{`"side":"right"`}},
-	11: {has: []string{`"reached":"redirect"`, `"number":"DEMO-2101"`}},
-	12: {has: []string{`"reached":"retired"`, `"number":"DEMO-1001"`}},
-	13: {has: []string{`"model":"Camry"`, `"model":"RAV4"`}},
-	14: {has: []string{`"model":"CR-V"`, `"shared":2`}},
-	15: {has: []string{`"type":"brake-rotor-front","number":"DEMO-4103"`, `"type":"brake-rotor-rear","number":"DEMO-4111"`}},
-	16: {has: []string{`"id":"DEMO-S-01","location":"demo-north"`}},
-	17: {has: []string{`"id":"DEMO-Y-07"`, `"id":"DEMO-Y-08"`, `"matched":"vin"`}},
-	18: {has: []string{`"id":"DEMO-S-02","location":"demo-south","matched":"fitment","fitment":{"type":"alternator","number":"DEMO-0901"},"reached":"retired"`}},
-	19: {has: []string{`"catalog_mismatch":true`}},
-	20: {has: []string{`"location":"demo-north"`}, lacks: []string{`"location":"demo-south"`}},
-	21: {has: []string{`"status":"found"`, `"type":"brake-rotor-front"`, `"type":"mirror"`}},
-	22: {has: []string{`"vehicle":{"make":"Dodge","model":"Ram 1500"}`, `"model":13620`}},
-	23: {has: []string{`"vocabulary":"epa-vehicles"`, `"entry":{"make":"Chevrolet","model":"Silverado C15 2WD"}`}},
-}
-
-// TestLibraryDemoFit: the demo set, loaded into the browser as Load the
-// demo loads it (its catalog compiled there), answers byte for byte as
-// `nitrovin serve --vocab` does with the same files, every request of its
-// list and a sweep over its vehicles, VINs, part types, part codes,
-// fitments, sides and stock; each request of its list shows what the user
-// stories it names promise; and only the yard's VINs went to the server.
+// TestLibraryDemoFit: the demo set, loaded into the browser as Load demo
+// loads it (its catalog compiled there), answers byte for byte as
+// `nitrovin serve --vocab` does with the same files, a sweep over its
+// vehicles, VINs, part types, part codes, fitments, sides and stock; and
+// only the yard's VINs went to the server.
 func TestLibraryDemoFit(t *testing.T) {
 	d := embedded(t)
 	srv := demoServer(t, d)
@@ -141,66 +113,6 @@ func TestLibraryDemoFit(t *testing.T) {
 	for _, field := range []string{"DEMO-Y-", "DEMO-S-", "stock_number", "demo-north"} {
 		if strings.Contains(string(bytes.Join(s.posts, nil))+strings.Join(s.gets, " "), field) {
 			t.Errorf("%q went to the server", field)
-		}
-	}
-
-	// Every request of the list answers as the server does, and shows
-	// what its stories promise.
-	covered := map[int]bool{}
-	for _, e := range theDemo().examples {
-		u, err := url.Parse(e.Href)
-		if err != nil {
-			t.Fatal(err)
-		}
-		var got []byte
-		if u.Path == fitPath {
-			req, err := contract.ParseFitQuery(u.Query())
-			if err != nil {
-				t.Fatalf("%s: %v", e.Href, err)
-			}
-			if sameFit(t, srv, l, req) == 0 {
-				t.Errorf("%s: not found", e.Href)
-			}
-			req.Now = fitNow
-			fit, err := l.Fit(context.Background(), req)
-			if err != nil {
-				t.Fatal(err)
-			}
-			got, _ = json.Marshal(fit)
-		} else {
-			req, err := contract.ParseTranslateQuery(u.Query())
-			if err != nil {
-				t.Fatalf("%s: %v", e.Href, err)
-			}
-			want, werr := srv.Translate(req)
-			tr, gerr := l.Translate(req)
-			wb, _ := json.Marshal(want)
-			got, _ = json.Marshal(tr)
-			if werr != nil || gerr != nil || !bytes.Equal(wb, got) {
-				t.Errorf("%s:\nbrowser %s (%v)\nserver %s (%v)", e.Href, got, gerr, wb, werr)
-			}
-		}
-		for _, story := range e.Stories {
-			covered[story] = true
-			p, ok := demoPromises[story]
-			if !ok {
-				t.Errorf("%s names story %d, which no promise checks", e.Href, story)
-			}
-			for _, s := range p.has {
-				if !bytes.Contains(got, []byte(s)) {
-					t.Errorf("story %d, %s: the answer lacks %s:\n%s", story, e.Href, s, got)
-				}
-			}
-			for _, s := range p.lacks {
-				if bytes.Contains(got, []byte(s)) {
-					t.Errorf("story %d, %s: the answer has %s:\n%s", story, e.Href, s, got)
-				}
-			}
-		}
-	}
-	for story := range demoPromises {
-		if !covered[story] {
-			t.Errorf("story %d: no request of the demo's list shows it", story)
 		}
 	}
 
@@ -321,7 +233,7 @@ func demoPanelOf(t *testing.T, l *Library) string {
 }
 
 // TestDemoPanel: the worker's panel offers the demo set as one click, its
-// files at the release's URLs; holds it once loaded, with Remove the demo
+// files at the release's URLs; holds it once loaded, with Remove demo
 // naming every file; offers a refresh, replacing what it holds, once one
 // file is another; and refuses it in words while the server or the
 // browser holds another catalog, or the server a file of a demo name.
@@ -330,9 +242,9 @@ func TestDemoPanel(t *testing.T) {
 	s, disk := newDecoderServer(t, d), newDisk()
 	l := openWith(t, s, disk)
 	panel := demoPanelOf(t, l)
-	m := regexp.MustCompile(`<button type="button" id="load-demo" data-demo="([^"]*)"[^>]*>Load the demo</button>`).FindStringSubmatch(panel)
+	m := regexp.MustCompile(`<button type="button" id="load-demo" data-demo="([^"]*)"[^>]*>Load demo</button>`).FindStringSubmatch(panel)
 	if m == nil {
-		t.Fatalf("no Load the demo in the panel:\n%s", panel)
+		t.Fatalf("no Load demo in the panel:\n%s", panel)
 	}
 	var load demoLoad
 	if err := json.Unmarshal([]byte(htmlUnescape(m[1])), &load); err != nil {
@@ -349,7 +261,7 @@ func TestDemoPanel(t *testing.T) {
 
 	loadDemo(t, l)
 	panel = demoPanelOf(t, l)
-	if !strings.Contains(panel, "is kept in this browser") || !strings.Contains(panel, `id="remove-demo"`) || strings.Contains(panel, `id="load-demo"`) {
+	if !strings.Contains(panel, `id="remove-demo"`) || strings.Contains(panel, `id="load-demo"`) {
 		t.Errorf("with the demo held, the panel:\n%s", panel)
 	}
 	for _, f := range theDemo().files {
@@ -379,9 +291,9 @@ func TestDemoPanel(t *testing.T) {
 		t.Fatal(err)
 	}
 	panel = demoPanelOf(t, l)
-	m = regexp.MustCompile(`<button type="button" id="load-demo" data-demo="([^"]*)"[^>]*>Refresh the demo</button>`).FindStringSubmatch(panel)
+	m = regexp.MustCompile(`<button type="button" id="load-demo" data-demo="([^"]*)"[^>]*>Refresh demo</button>`).FindStringSubmatch(panel)
 	if m == nil {
-		t.Fatalf("no Refresh the demo in the panel:\n%s", panel)
+		t.Fatalf("no Refresh demo in the panel:\n%s", panel)
 	}
 	if err := json.Unmarshal([]byte(htmlUnescape(m[1])), &load); err != nil {
 		t.Fatal(err)
@@ -415,155 +327,9 @@ func TestDemoPanel(t *testing.T) {
 		if h.demoLoadable() {
 			t.Errorf("a refused demo is loadable beside %v", refused.info.Vocabularies)
 		}
-		w := httptest.NewRecorder()
-		h.ServeHTTP(w, httptest.NewRequest("GET", "/ui/fit?from.model=1938&model_year=2010", nil))
-		if body := w.Body.String(); w.Code != http.StatusOK || strings.Contains(body, demoLoadText) {
-			t.Errorf("beside %v, a fit page says how to load the demo:\n%s", refused.info.Vocabularies, body)
-		}
-	}
-}
-
-// demoPages is `nitrovin serve --vocab pkg/ui/demo` as its pages answer
-// from it: the fit page asks no decode, spine bundle or file of it.
-type demoPages struct{ *nitrovin.Translator }
-
-func (demoPages) Decode(contract.Request) (contract.Decode, error) {
-	return contract.Decode{}, errors.New("the fit page decodes through fit")
-}
-func (demoPages) ErrorTexts() map[int]string { return nil }
-func (demoPages) SpineBundle() ([]byte, error) {
-	return nil, errors.New("the fit page publishes no spine")
-}
-func (demoPages) File(string) ([]byte, error) {
-	return nil, errors.New("the fit page publishes no file")
-}
-
-// fitTabAsks are the from parameters each tab of the fit page asks for
-// in its form, a name ending in "." standing for every parameter under
-// it, and the one each request of the tab must name, "" for any.
-var fitTabAsks = map[string]struct {
-	asks []string
-	must string
-}{
-	"vin":     {asks: []string{"from.vin"}, must: "from.vin"},
-	"entry":   {asks: []string{"from.vocabulary", "from.entry."}, must: "from.vocabulary"},
-	"id":      {asks: []string{"from.make", "from.model", "from.ext"}},
-	"fitment": {asks: []string{"from.fitment.type", "from.fitment.number", "from.fitment.side"}},
-}
-
-// asksOnly reports whether q, a request's query, names a from and only
-// what tab's form asks for.
-func asksOnly(q url.Values, tab string) bool {
-	a := fitTabAsks[tab]
-	if a.must != "" && !q.Has(a.must) {
-		return false
-	}
-	from := 0
-	for k := range q {
-		if !strings.HasPrefix(k, "from.") {
-			continue
-		}
-		from++
-		if !slices.ContainsFunc(a.asks, func(p string) bool { return k == p || strings.HasSuffix(p, ".") && strings.HasPrefix(k, p) }) {
-			return false
-		}
-	}
-	return from > 0
-}
-
-// TestDemoFitTabs: with the demo loaded, on the server (`serve --vocab
-// pkg/ui/demo`) and in the browser (Load the demo), each tab of the fit
-// page offers the requests its own form asks, a VIN's on the VIN tab, an
-// entry's on the entry tab, a vPIC id's or an extension's on the id tab
-// and a fitment's on the fitment tab, each with its part, related and
-// stock, and the translation into EPA's names with the entries; every
-// tab at least one, and every request of the demo's list on one tab. The
-// entry tab with a vocabulary selected offers that vocabulary's alone.
-func TestDemoFitTabs(t *testing.T) {
-	d := embedded(t)
-	l := openWith(t, newDecoderServer(t, d), newDisk())
-	if _, err := l.Load([]Picked{{FileName: "epa-vehicles.jsonl", Data: mustRead(t, epaSample)}}, quiet); err != nil {
-		t.Fatal(err)
-	}
-	loadDemo(t, l)
-	quietLog := log.New(io.Discard, "", 0)
-	for _, c := range []struct {
-		name string
-		h    *Handler
-	}{
-		{"server", New(demoPages{demoServer(t, d)}, quietLog)},
-		{"browser", NewInBrowser(l, BrowserConfig{Info: l.Info()}, quietLog)},
-	} {
-		examplesOf := func(target string) []string {
-			status, _, body := response(t, c.h, "GET", target, nil)
-			if status != http.StatusOK {
-				t.Fatalf("%s, GET %s: %d\n%s", c.name, target, status, body)
-			}
-			if !strings.Contains(body, `id="fit-demo"`) {
-				t.Errorf("%s, %s: the page does not say the demo is loaded", c.name, target)
-			}
-			if !strings.Contains(body, `<ul class="examples"`) {
-				return nil
-			}
-			return hrefs(section(t, body, `<ul class="examples"`, "</ul>"))
-		}
-		on := map[string]string{}
-		for _, tab := range []string{"vin", "entry", "id", "fitment"} {
-			examples := examplesOf("/ui/fit?tab=" + tab)
-			if len(examples) == 0 {
-				t.Errorf("%s, the %s tab: no example", c.name, tab)
-			}
-			for _, e := range examples {
-				if !asksOnly(query(t, e), tab) {
-					t.Errorf("%s, the %s tab offers %s", c.name, tab, e)
-				}
-				if other, ok := on[e]; ok {
-					t.Errorf("%s: %s is on the %s tab and the %s", c.name, e, other, tab)
-				}
-				on[e] = tab
-			}
-			t.Logf("%s, the %s tab: %q", c.name, tab, examples)
-		}
-		for _, e := range theDemo().examples {
-			if on[e.Href] == "" {
-				t.Errorf("%s: %s, of stories %v, is on no tab", c.name, e.Href, e.Stories)
-			}
-		}
-		entries := examplesOf("/ui/fit?tab=entry")
-		if got := examplesOf("/ui/fit?from.vocabulary=demo-vehicles"); !slices.Equal(got, entries) {
-			t.Errorf("%s, demo-vehicles selected: %q; want the entry tab's %q", c.name, got, entries)
-		}
-		if got := examplesOf("/ui/fit?from.vocabulary=epa-vehicles"); len(got) != 0 {
-			t.Errorf("%s, epa-vehicles selected: %q; want none, the demo's entries being demo-vehicles'", c.name, got)
-		}
 	}
 }
 
 func htmlUnescape(s string) string {
 	return strings.NewReplacer("&#34;", `"`, "&quot;", `"`, "&amp;", "&", "&lt;", "<", "&gt;", ">", "&#39;", "'").Replace(s)
-}
-
-// TestDemoWalkthrough: docs/vocabularies.md walks through the demo set's
-// list of requests, every one in the list's order, and no other.
-func TestDemoWalkthrough(t *testing.T) {
-	doc := string(mustRead(t, filepath.Join("..", "..", "docs", "vocabularies.md")))
-	start := strings.Index(doc, "\n## The demo set\n")
-	if start < 0 {
-		t.Fatal("docs/vocabularies.md has no section The demo set")
-	}
-	section := doc[start+1:]
-	if end := strings.Index(section, "\n## "); end >= 0 {
-		section = section[:end]
-	}
-	var got []string
-	for _, m := range regexp.MustCompile("`(/(?:ui/fit)?\\?[^`\\s]+)`").FindAllStringSubmatch(section, -1) {
-		got = append(got, m[1])
-	}
-	var want []string
-	for _, e := range theDemo().examples {
-		want = append(want, e.Href)
-	}
-	if !slices.Equal(got, want) {
-		t.Errorf("the walkthrough's requests:\n%s\nthe demo's list:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
-	}
 }

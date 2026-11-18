@@ -335,8 +335,7 @@ _Avoid_: binary catalog, catalog database, index (an index is one of its tables)
 **Browser's catalog**:
 The one compiled catalog a visitor's browser holds, compiled there from JSON
 Lines they picked, in a dedicated worker the page starts, and kept in
-IndexedDB (ADR 0023). The Service Worker answers the fit page from it; a
-browser holds none while its server has a catalog.
+IndexedDB (ADR 0023). A browser holds none while its server has a catalog.
 _Avoid_: uploaded catalog (nothing is uploaded), local catalog
 
 **Scratch storage**:
@@ -487,8 +486,7 @@ _Avoid_: inventory file, stock feed
 The stock files a visitor's browser holds, loaded in the Vocabularies dialog and
 kept in IndexedDB with their index (ADR 0023): a shelf beside the browser's
 catalog, never the server's, and a yard, its VINs decoded once by the server as
-it loads and the decodes kept with the file. The fit page the Service Worker
-answers lists it as a server lists the same files; its fields never leave the
+it loads and the decodes kept with the file. Its fields never leave the
 browser. A connector never loads in a browser.
 _Avoid_: uploaded stock (nothing is uploaded), local stock
 
@@ -513,8 +511,8 @@ _Avoid_: PII detection (nitrovin cannot see what a field holds)
 **Demo set**:
 The invented catalog and the files around it that `pkg/ui/demo` holds, each
 named `demo-*` (a part spine, a part vocabulary, a vehicle vocabulary of popular
-vPIC models, an extension set, a shelf and a yard), with its list of requests
-that show each feature. The Vocabularies dialog loads it into a browser in one
-click ("Load the demo"), and `serve --vocab pkg/ui/demo` serves it. It is not a
+vPIC models, an extension set, a shelf and a yard). The Vocabularies dialog
+loads it into a browser in one
+click ("Load demo"), and `serve --vocab pkg/ui/demo` serves it. It is not a
 fixture: no test but its own reads it.
 _Avoid_: sample data, fixture, example catalog

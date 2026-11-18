@@ -46,10 +46,8 @@ on:
       - .github/workflows/contract.yml
       - "!**/*.md"
       # Re-included after the exclusion (order matters): TestFormREADME
-      # holds the README's install, MCP and verify text to the form's, and
-      # TestDemoWalkthrough the demo set's walkthrough to its list.
+      # holds the README's install, MCP and verify text to the form's.
       - README.md
-      - docs/vocabularies.md
 
 permissions:
   contents: read
@@ -99,9 +97,9 @@ jobs:
             "pkg/nitrovin "{TestTranslateBatch,TestTranslateDrift,TestTranslateWithoutFiles,TestList,TestListPaging,TestSpineBundleTranslates}
             "pkg/nitrovin "{TestCatalogLoads,TestCatalogDrift}
             "cmd/nitrovin "{TestVocabCheck,TestVocabLoad,TestServeVocabularies,TestVocabCheckCatalog,TestTranslate,TestTranslateRefused,TestList,TestListRefused}
-            "cmd/nitrovin "{TestStdioOps,TestMCPVocabSession,TestWorker,TestWorkerCatalog,TestWorkerCatalogParts,TestWorkerStock,TestVocabPage,TestVocabTranslate,TestVocabPartTargets}
+            "cmd/nitrovin "{TestStdioOps,TestMCPVocabSession,TestWorker,TestWorkerCatalog,TestWorkerCatalogParts,TestWorkerStock,TestVocabPage,TestVocabTranslate}
             "cmd/nitrovin "{TestDemoCheck,TestDemoHints,TestWorkerDemo}
-            "pkg/ui "{TestLibraryDemoFit,TestDemoPanel,TestDemoWalkthrough}
+            "pkg/ui "{TestLibraryDemoFit,TestDemoPanel}
             "cmd/nitrovin-epa "{TestBuild,TestEntry,TestCuratedLoadsClean}
           )
           status=0

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"maps"
 	"net/http"
 	"net/url"
 	"slices"
@@ -67,12 +66,10 @@ const workerCSP = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; con
 const needsBrowser = "Files you load are kept in your browser (IndexedDB) and read there by WebAssembly in a Service Worker, so they are never uploaded: " +
 	"this page needs JavaScript, and a page the Service Worker controls. This server holds none of them. Open / and its Vocabularies to load files."
 
-// pageRoutes are the routes: the page, the fit page, the worker's panel
-// and its remove, and the pages that moved to the page. The entry lists
-// are ServeHTTP's.
+// pageRoutes are the routes: the page, the worker's panel and its remove,
+// and the pages that moved to the page. The entry lists are ServeHTTP's.
 func (h *Handler) pageRoutes() {
 	h.routes[homePath] = h.home
-	h.routes[fitPath] = h.fit
 	h.routes[filesPath] = h.files
 	h.routes[catalogPath] = h.download
 	h.posts[removePath] = h.remove
@@ -112,24 +109,6 @@ func (h *Handler) notHere(names []string, catalog []contract.CatalogEntry) error
 		}
 	}
 	return nil
-}
-
-// named is what a lookup on the page names: the from's vocabulary, spine
-// or extension set, and the targets. worker.js reads the same parameters
-// (its named): it answers a lookup naming a file the browser holds and
-// sends every other to the server, a lookup naming no target included.
-func named(q url.Values) []string {
-	var out []string
-	for _, k := range []string{"from.vocabulary", "from.spine"} {
-		if v := q.Get(k); v != "" {
-			out = append(out, v)
-		}
-	}
-	if ext, ok := strings.CutPrefix(q.Get("from.ext"), "ext:"); ok {
-		set, _, _ := strings.Cut(ext, "/")
-		out = append(out, set)
-	}
-	return append(out, q["to"]...)
 }
 
 // catalogTable is the catalog as the dialog shows it; Manage adds the
@@ -250,67 +229,6 @@ func (h *Handler) rows(cat []contract.CatalogEntry) []catalogRow {
 	add("server", h.lib.Server())
 	add("browser", h.lib.Files())
 	return out
-}
-
-// remember makes the targets q names, in the browser, the visitor's
-// selection on their spine: a link's own to= wins over the selection,
-// which vocab.js ticks in the forms. History going back to an older page
-// changes nothing. worker.js does the same for a lookup it sends to the
-// server, by the answer's data-from and data-spine.
-func (h *Handler) remember(r *http.Request, q url.Values, cat []contract.CatalogEntry) {
-	if h.lib == nil || !q.Has("to") || r.Header.Get("HX-History-Restore-Request") == "true" {
-		return
-	}
-	spine, ok := spineOf(queryFrom(q), q, cat)
-	if !ok {
-		return // nothing loaded by its name: the translation is refused
-	}
-	if err := h.lib.Select(spine, q["to"]); err != nil {
-		h.log.Printf("ui: %v", err)
-	}
-}
-
-// defaultTargets are a lookup's targets when q names none, the same on
-// the server and in the browser: every vocabulary loaded where it is
-// answered on the from's spine but the from's own. Before a lookup is
-// asked there are none: the forms tick none, and vocab.js ticks the
-// visitor's selection. A link naming no target is always the server's
-// (worker.js), so it means the same in every browser.
-func (h *Handler) defaultTargets(q url.Values, cat []contract.CatalogEntry) []string {
-	if !slices.ContainsFunc(slices.Collect(maps.Keys(q)), func(k string) bool { return strings.HasPrefix(k, "from.") && k != "from.vocabulary" }) {
-		return nil
-	}
-	spine, ok := spineOf(queryFrom(q), q, cat)
-	if !ok {
-		return nil
-	}
-	from := q.Get("from.vocabulary")
-	var out []string
-	for _, c := range cat {
-		if c.Kind == "vocabulary" && c.Spine == spine && c.Name != from {
-			out = append(out, c.Name)
-		}
-	}
-	return out
-}
-
-// entryText is an entry of vocabulary name in words, its fields' values in
-// the vocabulary's order: "Dodge Ram 1500".
-func entryText(cat []contract.CatalogEntry, name string, entry map[string]string) string {
-	i := slices.IndexFunc(cat, func(c contract.CatalogEntry) bool { return c.Name == name })
-	var order []string
-	if i >= 0 {
-		order = cat[i].Fields
-	} else {
-		order = slices.Sorted(maps.Keys(entry))
-	}
-	var vs []string
-	for _, f := range order {
-		if entry[f] != "" {
-			vs = append(vs, entry[f])
-		}
-	}
-	return strings.Join(vs, " ")
 }
 
 // refText is a spine entry's reference in words: "vPIC model 1938".
