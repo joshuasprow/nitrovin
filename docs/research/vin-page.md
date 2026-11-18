@@ -1777,18 +1777,30 @@ image.
 ## 9. What the page took
 
 The spec in the PR's description records the decisions; this section sets them
-and the prototype's code (`pkg/ui/page.html`, `pkg/ui/diagram.go`,
+and the page's code (`pkg/ui/page.html`, `pkg/ui/diagram.go`,
 `pkg/ui/static/ui.css`, `pkg/ui/static/plate.js`) against the findings in §7.
-It describes the prototype on 2026-11-17, a draft whose tests are not yet
-repaired.
+It describes the page on 2026-11-17, in draft PR
+[#303](https://github.com/joshuasprow/nitrovin/pull/303). Its tests are
+repaired: `pkg/ui`'s tests and the browser runs in `cmd/nitrovin` describe this
+page, the typing on the plate included.
 
 ### The plate and its six groups
 
-- **One real input under 17 drawn cells** (finding 3; input-otp). The form is
-  the plate. With JavaScript the input lies over the cells, its text and caret
-  transparent, and the cells show what is typed and mark the next cell.
-  Without JavaScript the input sits below the cells and a Decode button sends
-  it. Either way it is one field and one tab stop.
+- **One real field under 17 drawn cells** (finding 3; input-otp). The form is
+  the plate. Without JavaScript the field is an input below the cells and a
+  Decode button sends it. With JavaScript it is a textarea in the input's
+  place, laid over the cells, its own text, caret and selection not shown: the
+  cells show what is typed. Either way it is one field and one tab stop.
+- **The plate edits as a text field, because it is one.** The field's
+  characters are spaced a cell apart and its line is a cell high, so the
+  browser's own caret and selection, by click, drag, touch or key, fall on the
+  cells, and the cells draw them: a bar in the gap between two cells for the
+  caret, the selected cells inked, the next empty cell marked. Under a mouse a
+  faint caret shows the gap a click would pick. A whole VIN takes no more: a
+  character typed into it is refused and nothing is pushed off its end. A
+  phone places the caret of a tap at an end of the word, and a VIN is one
+  word, so for a finger the script works the gap out from the pointer and
+  holds the caret there; double taps, drags and handles stay the phone's own.
 - **Pasted input is cleaned first** (finding 4). Only letters and digits are
   kept, upper-cased, and cut at 17, by the same rule on the server and in the
   browser. Letters are never swapped: an O stays an O, and a character no VIN
@@ -1801,24 +1813,32 @@ repaired.
   eight (1, 1, 1, 5, 1, 1, 1, 6). GetVIN, vindecode.app and DRiV have the
   page's six (3, 5, 1, 1, 1, 6). Each group's label sits on a short bracket
   above the plate and a bracket closes under it.
-- **A fixed grid, nothing measured** (finding 8). One CSS grid of 17 columns
-  holds labels, cells and brackets; the cards are six equal columns. The cells
-  scale with the plate's width, so the row never wraps. No script reads a
-  position, so the page with and without JavaScript is the same drawing, and
+- **A fixed grid, nothing measured to draw** (finding 8). One CSS grid of 17
+  columns holds labels, cells and brackets; the cards are six equal columns.
+  The cells scale with the plate's width. No script reads a position to draw
+  anything, so the page with and without JavaScript is the same drawing, and
   there is nothing to redraw on scroll or resize (explainshell redraws on
-  both).
+  both). The script reads the cells' places for one thing: the gap nearest a
+  tap or the mouse.
+- **On a phone the plate is two rows** (below 34rem), so a cell is wide enough
+  for a finger. It splits where a VIN does, after the check digit: nine cells
+  above (maker, vehicle, check digit) under their labels, and eight below
+  (year, plant, serial) over theirs. The grid becomes nine columns and the
+  field's text wraps with the cells, nine characters to a line, which is why
+  the field is a textarea.
 - **Shown where it is wrong.** At 17 characters the check-digit card says
   "Checks out" or "Should be N" and opens the arithmetic (each character's
   value, weight and product, the sum, the remainder). The decoder's suggested
   correction is one link. This follows the verdict lines of jwt.io and Crew
   Chief; The Password Game's rule cards were not taken.
 - **Not taken:** a decoded sentence above the field (crontab.guru: the spec
-  rules out a one-line summary); selection by caret or hover with the rest
-  dimmed (finding 7: the page shows all six cards at once and has no hover
-  state); ghost text or a suggestion list (typeahead.js, Bundlephobia,
-  what3words: the spec defines typeahead as naming the manufacturer as soon as
-  three characters match, and recent VINs); a character counter in the field;
-  odometer drums for the serial; any sound.
+  rules out a one-line summary); a group picked out by the caret or by hover
+  with the rest dimmed (finding 7: the page shows all six cards at once, and
+  its one hover mark is the faint caret); ghost text or a suggestion list
+  (typeahead.js, Bundlephobia, what3words: the spec defines typeahead as
+  naming the manufacturer as soon as three characters match, and recent
+  VINs); a character counter in the field; odometer drums for the serial; any
+  sound.
 - **In the spec, not yet built:** the model-year hint on the year bracket, the
   maker's country on the maker card, and announcing each completed group to
   screen readers. Today the answer is tied to the input with
@@ -1837,7 +1857,7 @@ repaired.
 - **Below 46rem the lines go** and the brackets and colours stay; the cards
   stack under the plate in bracket order (finding 1; Crew Chief, cidr.xyz,
   iFixit). The labels of the three one-cell groups are hidden there and their
-  cards name them.
+  cards name them, until the plate is two rows and has room for them again.
 - **A card is present but empty until its characters are typed**, faint and
   dashed (finding 6). The server decodes whatever is typed so far: the make at
   3 characters, model, trim, body and engine at 8, year and plant at 11 (as the
@@ -1855,10 +1875,17 @@ repaired.
   swaps in the same server-drawn diagram. The URL follows what is typed in
   place; only a whole VIN adds a history entry, so Back steps through VINs and
   not keystrokes.
-- **Chips:** whole VINs that decoded are kept in the browser (the last eight)
-  and offered in the examples' place, and "Surprise me" draws from 24 curated
-  VINs (crontab.guru's "random", jwt.io's "Generate example"). The chips are
-  built and, for now, hidden by a temporary rule in the stylesheet.
+- **VINs to try are a menu in the header,** not chips on the page. The VINs
+  button opens it, a popover, so it opens without a script: the examples, five
+  VINs that each have a name in the demo set's vehicle vocabulary and in
+  EPA's; in their place, once there are any, the whole VINs that decoded in
+  this browser (the last eight, kept in the browser), with "Clear recent"; and
+  "Surprise me", which draws from 24 curated VINs (crontab.guru's "random",
+  jwt.io's "Generate example").
+- **Vocabularies and Developers are header buttons too,** beside VINs, each
+  opening a popover dialog. Nothing floats over the page. Developers holds the
+  answer's own request (its URL, `curl`, the CLI) and its JSON, then install,
+  MCP, verify and links.
 
 ### The stamped-metal look
 
@@ -1866,11 +1893,12 @@ repaired.
   switchable treatments of the plate, picked in the browser. A road-sign
   variant and a label-maker variant were built and dropped (compare Overpass
   and the embossed label effect in §5), and the code now carries one look.
+  The label-maker tape came back for the names alone (below).
 - **Where it comes from:** the UAW diagram (a pale blue ground, heavy black
   capitals, boxes on bracket lines) and Tactile UI's odometer (a brushed plate
   with a screw at each end). Everything pressed or read as a heading is the
-  same metal: the plate, the buttons, the chips, the brand and the dialogs'
-  heads. The cards are tags hung from their lines by an eyelet.
+  same metal: the plate, the buttons, the VINs in the menu, the brand and the
+  dialogs' heads. The cards are tags hung from their lines by an eyelet.
 - **How it is made:** gradients and shadows for the metal's body, one small
   SVG of stretched noise for the brushed grain (as light streaks, and as a
   mask that cuts dark ones), characters struck with a light and a dark text
@@ -1881,40 +1909,53 @@ repaired.
 - **Voice:** short and a little wry, never jokey ("Type a VIN.", "No name for
   this one yet."), one device held consistently (finding 14).
 
-### Names as stacked plates, doubt drawn dashed
+### Names as stacked strips of tape, doubt drawn dashed
 
 - **"Also known as" is the first derived card**, joined from the maker, the
   vehicle and the year. It has no box: those three groups' lines run on down
   through it. The old three-column map with drawn lines is deleted.
-- **One stack per loaded vocabulary, always** (finding 6). A name is a small
-  plate of the same metal: the vocabulary stamped at the left, then the make
-  under the maker's line, the rest of the entry under the vehicle's, and the
-  years the mapping holds for under the year's, each word over its group's
+- **Every vocabulary loaded, with no choosing.** The card shows the vehicle's
+  names in every vocabulary loaded on vPIC's spine. The old page's "Translate
+  to" checkboxes and the visitor's kept selection of targets are gone: what is
+  loaded is what is shown.
+- **A name is a strip of black label-maker tape** ([textures.md](textures.md),
+  candidate 1), the one thing on the page that is not metal, as a parts bin's
+  label is not: the vocabulary stamped at the left, then the make under the
+  maker's line, the rest of the entry under the vehicle's, and the years the
+  mapping holds for under the year's, each word raised white over its group's
   colour (finding 9: a parallel row sharing the group's colour, as in
-  rvcodec.js and Polypane, not Node.js's above-and-below). A vocabulary with
-  no name keeps a blank dashed plate, "No name for this one yet."; before the
-  model is known the card reads "Names turn up once the model is known."; with
-  no vocabulary loaded it offers "Add a vocabulary".
+  rvcodec.js and Polypane, not Node.js's above-and-below). The tape is black
+  in both colour schemes, and the card's caption is a strip of it too. The
+  words keep their case, where real tape is capitals only, because a
+  vocabulary's entry is case-exact.
+- **One stack per loaded vocabulary, always** (finding 6), a vocabulary with a
+  name listed before one without. A vocabulary with no name keeps a blank
+  dashed strip, "No name for this one yet."; before the model is known the
+  card reads "Names turn up once the model is known."; with no vocabulary
+  loaded it offers "Add a vocabulary".
+- **No line is drawn to a blank name.** When the first stack is blank (no
+  vocabulary, no model yet, or no vocabulary with a name), the three lines to
+  the card are not drawn.
 - **Several names are a stack, and the count is its switch** (finding 5). The
   first name lies on top with the edges of up to three more showing under it.
-  The vocabulary's stamp on the top plate carries the count and opens the
-  stack into one plate, a row to a name, with no script. Which name leads is a
+  The vocabulary's stamp on the top strip carries the count and opens the
+  stack into one strip, a row to a name, with no script. Which name leads is a
   stated first judgment: the decoded make before another make, nothing
   unchecked before a doubt, a listed mapping before one matched by rule, the
   shorter model name before the longer. The spec's wording was five names
-  visible and then "+N more"; the prototype shows one and a count.
+  visible and then "+N more"; the page shows one and a count.
 - **Doubt is drawn as dashes, against finding 2.** The mapping survey found
   quality written in a word, tag or glyph at the value, and line style
   carrying quality nowhere; the spec accordingly said "quality written as tags
-  in words". The prototype instead dashes the lines into the make and the
+  in words". The page instead dashes the lines into the make and the
   model, and the marks under them, when the mapping was matched by rule, and
   dashes the bracket and mark of the model or the year when a qualifier or the
   model year could not be checked. The words exist but are one step away: each
   segment's hover title says "Matched by rule" or "Model year not checked",
-  and a small button on the plate opens how the name was reached. On a narrow
-  screen the lines and brackets of the plates go, and only the dashed
+  and a small button on the strip opens how the name was reached. On a narrow
+  screen the lines and brackets of the strips go, and only the dashed
   underline under the word, and those words behind it, still carry the doubt.
-- **The lines stay few.** Three lines enter the top plate of each stack, from
+- **The lines stay few.** Three lines enter the top strip of each stack, from
   three groups, which is within what finding 2 saw drawn connectors survive: a
   short source and few targets.
 

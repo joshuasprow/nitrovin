@@ -936,27 +936,28 @@ file again when it is asked for, and refuses with a 500 a file that
 changed on disk since it was loaded: restart `serve` to publish the new
 one.
 
-**In a browser**: `serve`'s page at `/` decodes a VIN and translates it,
-through the server's files, with JavaScript or without. Its form shows
-what the page's URL asks, and a
-refusal is said beside the field holding the value it names, else above
-the form. Older links (`/?vin=…`, `/ui/decode`, `/ui/translate`, `/vocab`,
-`/ui/vocabularies`) redirect to it (`301`). Below the form the answer
-is the decode and, when it has targets, the translation drawn as a
-map: what it is from, the spine entries it crosses and the
-entries it reaches as cards in three columns, each mapping a line. Its
-key: a mapping; a mapping matched by rule, dashed; a model under its
-make; a VIN to the model it decodes to; and a card marked when not every
-qualifier or the model year was checked. Each card's text says what its
-lines draw (its make, what it was reached through and how), so a screen
-reader reads it with the card's name; a name shows on two lines, and
-whole while its card is under the pointer or focused. On a phone the
-columns stack, the lines and their key are hidden, and each card shows
-that text instead. The From card is a link to the answer's own URL; with
-JavaScript the card under the
-pointer or focus lights the routes through it. A button shows the
-answer's JSON. Back and forward ask the server for each page again,
-never a copy the browser kept. The page's floating Vocabularies button
+**In a browser**: `serve`'s page at `/` decodes a VIN, as a diagram of
+its six groups, and shows the vehicle's names in every vocabulary loaded
+on vPIC's spine, with JavaScript or without. Its form is a plate that
+takes a VIN and nothing else, so the page's URL is `/?from.vin=…` and
+names no vocabulary: there are no targets to pick, and what is loaded is
+what is shown. A refusal is said below the plate. Older links
+(`/?vin=…`, `/ui/decode`, `/ui/translate`, `/vocab`,
+`/ui/vocabularies`) redirect to it (`301`). Below the plate the answer
+is a card for each group and, under them, "Also known as": a stack for
+each vocabulary, one with a name before one without. A name reads the
+vocabulary, then the make, the rest of the entry and the years its
+mapping holds for. A vocabulary with several names shows its first, with
+their count, and all of them at a click on its name, which needs no
+script. A dashed line or mark is a doubt: a mapping matched by rule, or
+a qualifier or the model year that was not checked; each part's title
+says which, and a small button on the name opens how it was reached.
+A vocabulary with no name for the vehicle
+keeps a blank place that says so. On a phone the lines are hidden and
+the dashed underlines stay. The Developers button in the page's header
+shows the answer's JSON, the decode's and the translation's. Back and
+forward ask the server for each page again,
+never a copy the browser kept. The header's Vocabularies button
 opens a dialog that
 lists what is loaded, each file marked by where it is kept, with its
 drift counted by kind as `/v1/info` counts it (the first examples behind
@@ -978,21 +979,20 @@ a stored one replaces it; a file named like one of the server's is
 refused, and so is a file with a fault, naming the file and line. Removing
 a file others link to is refused, naming them, with an offer to remove
 them all. A stored file that this release can no longer read, or that no
-longer links, is listed with its fault and can be removed. The worker
-answers only a request naming a file the browser holds (what it is from,
-or a target `to=`), and the entry lists of those files, and leaves
-every other request to the server (for a VIN it answers itself, the
-decode is `/v1/decode`'s), so a bare link such as `/?from.vin=…` is the
-server's answer and means the same with JavaScript on or off and in every
-browser; opened in another browser, a link naming your file
-says where it lives. The targets you tick are your selection, kept beside
-your files and ticked into the form, so what you ask next names them as
-an explicit `to=`. Answers carry the `decoder_version` and `data_month`
+longer links, is listed with its fault and can be removed. Once the
+browser holds a file, the worker answers the page, over the server's
+files and yours, and the entry lists of your files, and leaves
+every other request to the server (for a VIN, the
+decode is `/v1/decode`'s). The page's link names no file, so it opens in
+every browser and with JavaScript off: it shows the server's
+vocabularies everywhere, and yours beside them only in the browser that
+holds them. A link to the entries of your file, opened in another
+browser, says where it lives. Answers carry the `decoder_version` and `data_month`
 of the decode they used. When the server moves to a new release, the
 worker steps aside: every page comes from the server, your files are
 paused, and Vocabularies says so. Once the new release's worker is ready,
-**Update now** hands the page to it and reloads, and your files and
-selection stay; without the click, the new worker takes over once every
+**Update now** hands the page to it and reloads, and your files
+stay; without the click, the new worker takes over once every
 tab of the site is closed. Every page's header names the release that
 drew it. A page loaded with
 a hard reload is not the worker's, and says your files are paused for
