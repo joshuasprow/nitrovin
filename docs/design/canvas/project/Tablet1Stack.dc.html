@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tablet: one scrolling page</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.w{width:768px;box-sizing:border-box;background:#fff;color:#1f2933;font:14px/1.4 system-ui,sans-serif}
+.w .hd{padding:16px 20px 0;height:70px;box-sizing:border-box}
+.w h1{margin:0;font:700 18px/1.2 system-ui,sans-serif}
+.w .sub{margin:4px 0 0;color:#3e4c59}
+.scr{position:relative;box-sizing:border-box;border:2px solid #1f2933;border-radius:8px;padding:20px 24px;display:flex;flex-direction:column;gap:16px}
+.b{box-sizing:border-box;min-width:0;border:1.5px solid #52606d;border-radius:3px;background:#eef1f4;padding:9px 12px;overflow:hidden;flex:none}
+.b.dk{background:#cbd2d9}
+.b.hi{background:#fff3c4;border-color:#8a6a22}
+.b.on{border-width:3px}
+.b b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.row{display:flex;gap:10px;min-width:0;flex:none}
+.g17{display:grid;grid-template-columns:repeat(17,minmax(0,1fr));gap:4px}
+.cap span{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;text-align:center;border-top:2px solid #52606d;padding-top:2px;overflow:hidden}
+.cells{margin-top:8px}
+.cells span{height:52px;box-sizing:border-box;border:1.5px solid #52606d;border-radius:2px;background:#eef1f4;display:flex;align-items:center;justify-content:center;font:700 24px ui-monospace,monospace}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.hs{box-sizing:border-box;flex:none;overflow:hidden;border:1.5px dashed #52606d;border-right:0;border-radius:3px 0 0 3px;padding:7px 0 8px 8px;margin-right:-24px}
+.hs .hint{margin:0 0 7px;font-size:12px;font-weight:700;color:#3e4c59}
+.hs .in{width:1250px;display:grid;grid-template-columns:repeat(6,200px);gap:8px 10px}
+.hs .voc{grid-column:1/-1;margin-top:2px;font:700 10px ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:#3e4c59}
+.hs .seg{height:36px;box-sizing:border-box;border:1.5px solid #52606d;border-radius:2px;background:#cbd2d9;padding:0 10px;font:700 14px/33px ui-monospace,monospace}
+.hs .seg.no{border-style:dashed;background:none}
+.hs .voc{position:relative;z-index:2}
+.hs .voc i{font-style:normal;background:#fff;padding-right:6px}
+.hs .seg{position:relative}
+.hs .seg:not(.no)::before{content:"";position:absolute;left:50%;bottom:100%;height:31px;border-left:2px solid #52606d}
+.hs .seg.far::before{height:49px}
+.hs .seg.near::before{height:9px}
+.hs .seg.unsure{border-style:dashed;border-color:#8a4b00}
+.sw{margin-left:4px;padding:5px 9px;border:1.5px solid #52606d;border-radius:10px;background:#fff;font:700 11px ui-monospace,monospace;color:inherit;cursor:pointer;vertical-align:middle}
+.morev{grid-column:1/-1;justify-self:start;padding:6px 10px;border:1.5px solid #52606d;border-radius:3px;background:#fff;font:700 12px system-ui,sans-serif;text-decoration:underline;color:inherit;cursor:pointer}
+.warn{display:inline-flex;align-items:center;gap:5px;margin-left:4px;padding:6px 10px;border:1.5px solid #8a4b00;border-radius:3px;background:#ffe9c7;color:#5c3200;font:700 11px system-ui,sans-serif;letter-spacing:0;text-transform:none;cursor:pointer;vertical-align:middle}
+.warn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2}
+.tag{height:140px}
+.tag dl{margin:6px 0 0}
+.tag dl div{line-height:19px}
+.tag dt{display:inline;margin-right:6px;font-size:10px;text-transform:uppercase;color:#3e4c59}
+.tag dd{display:inline;margin:0;font-weight:600}
+.tag .big{font:700 20px/24px ui-monospace,monospace}
+.tag .codes{font-size:12px;line-height:17px;color:#3e4c59}
+.tag .more{font-size:12px;text-decoration:underline;color:#3e4c59}
+.aka{display:grid;grid-template-columns:130fr 170fr 380fr 200fr;gap:8px 10px;align-items:center;margin-top:8px}
+.aka .voc{font:700 10px ui-monospace,monospace;letter-spacing:.04em;text-transform:uppercase;overflow-wrap:anywhere}
+.aka .seg{height:40px;box-sizing:border-box;border:1.5px solid #52606d;border-radius:2px;background:#cbd2d9;padding:0 12px;font:700 15px/37px ui-monospace,monospace;text-align:center}
+.st{display:inline-flex;align-items:center;gap:5px;margin:3px 0 4px;padding:1px 7px;border-radius:2px;font:700 11px/1.5 system-ui,sans-serif}
+.st.txt{border:1.5px dashed #6b5a2a;color:#5c4614}
+.num{font:700 16px ui-monospace,monospace}
+.chip{display:inline-block;margin:8px 6px 0 0;padding:2px 6px;border:1.5px solid #8a6a22;border-radius:2px;font:11px ui-monospace,monospace}
+.cnt{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.cnt span{display:flex;justify-content:space-between;align-items:baseline;border:1.5px solid #8a6a22;border-radius:2px;padding:3px 6px;font:11px ui-monospace,monospace;text-transform:uppercase}
+.cnt strong{font-size:14px}
+.cnt .zero{border-style:dashed;color:#6b5a2a}
+.cand{display:flex;flex-direction:column;padding-bottom:0}
+.strip{display:flex;justify-content:space-between;align-items:center;margin:auto -12px 0;padding:8px 12px;border:0;border-top:1.5px solid #8a6a22;background:#fffbe6;font:12px ui-monospace,monospace;text-transform:uppercase;color:inherit;cursor:pointer}
+.strip.sel{background:#5c4614;color:#fff;border-top-color:#5c4614}
+.strip svg{flex:none;width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.5}
+.band{position:relative;overflow:visible;border-width:3px}
+.ptr{position:absolute;top:-11px;width:16px;height:16px;background:#fff3c4;border-left:3px solid #8a6a22;border-top:3px solid #8a6a22;transform:rotate(45deg)}
+.note{margin:10px 0 0;font-size:12px;color:#6b5a2a}
+.lines{margin:6px 0 0;padding:0;list-style:none;font:12px/1.5 ui-monospace,monospace}
+.lines li{margin-bottom:6px}
+.fold{position:absolute;left:-2px;right:-2px;border-top:2px dashed #c8102e}
+.fold span{position:absolute;right:12px;top:4px;font-size:12px;font-weight:700;color:#a01414;background:#fff;padding:0 4px}
+</style>
+</helmet>
+<div class="w" style="height: 1284px">
+<div class="hd">
+<h1>1. One scrolling page: tablet</h1>
+<p class="sub">768 × 1024. The six tags sit in one row that scrolls sideways, as on the phone. A 2015 Ford F150 from the demo set.</p>
+</div>
+<div class="scr" style="height: 1198px">
+<div class="row" style="height: 56px; align-items: center"><div class="b" style="width: 130px"><b>nitrovin</b></div><span style="flex: 1; font: 12px ui-monospace, monospace">v0.4.2 · data 2026_11</span><div class="b" style="width: 70px"><b>VINs</b></div><div class="b" style="width: 130px"><b>Vocabularies</b></div><div class="b" style="width: 116px"><b>Developers</b></div></div>
+<div class="b dk" style="height: 120px">
+<div class="g17 cap"><span style="grid-column: span 3">Maker</span><span style="grid-column: span 5">Vehicle</span><span>Chk</span><span>Yr</span><span>Plt</span><span style="grid-column: span 6">Serial</span></div>
+<div class="g17 cells"><span>1</span><span>F</span><span>T</span><span>E</span><span>W</span><span>1</span><span>E</span><span>G</span><span>7</span><span>F</span><span>F</span><span>A</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+</div>
+<div class="hs" style="height: 434px">
+<p class="hint">Swipe sideways: tags and names move together. Labels and "Check years" stay put ›</p>
+<div class="in">
+<div class="b tag"><b>Maker · 1–3</b><dl><div><dt>Make</dt><dd>FORD</dd></div><div><dt>Manufacturer</dt><dd>FORD MOTOR COMPANY</dd></div><div><dt>Type</dt><dd>TRUCK</dd></div></dl></div>
+<div class="b tag"><b>Vehicle · 4–8</b><dl><div><dt>Model</dt><dd>F-150</dd></div><div><dt>Body</dt><dd>Pickup</dd></div><div><dt>Engine</dt><dd>3.5 L · 6 cyl · Gasoline</dd></div></dl></div>
+<div class="b tag"><b>Check digit · 9</b><dl><div><dd>Checks out</dd></div></dl><span class="more">Show the sum</span></div>
+<div class="b tag"><b>Model year · 10</b><dl><div class="big">2015</div><div class="codes">C 2012 · D 2013 · E 2014 · <strong>F 2015</strong> · G 2016 · H 2017 · J 2018</div></dl></div>
+<div class="b tag"><b>Plant · 11</b><dl><div><dt>City</dt><dd>DEARBORN, MICHIGAN</dd></div><div><dt>Country</dt><dd>UNITED STATES (USA)</dd></div></dl></div>
+<div class="b tag"><b>Serial · 12–17</b><dl><div class="big">A12345</div></dl></div>
+<span class="voc"><i>Also known as · demo-vehicles</i></span>
+<span class="seg">Ford</span><span class="seg">F150</span><span class="seg no"></span><span class="seg">any year</span><span class="seg no"></span><span class="seg no"></span>
+<span class="voc"><i>[second vocabulary] <button type="button" class="sw" aria-label="Show both names">2 names</button> <button type="button" class="warn"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"></path></svg>Check years ›</button></i></span>
+<span class="seg far">[make]</span><span class="seg far">[model]</span><span class="seg no"></span><span class="seg far unsure">[years, unsure]</span><span class="seg no"></span><span class="seg no"></span>
+<span class="voc"><i>[third vocabulary]</i></span>
+<span class="seg">[make]</span><span class="seg">[model]</span><span class="seg no"></span><span class="seg">[years]</span><span class="seg no"></span><span class="seg no"></span>
+<button type="button" class="morev">[N] more vocabularies</button>
+</div>
+</div>
+<div style="flex: none; display: flex; flex-direction: column; gap: 8px">
+<div class="row" style="height: 48px"><input type="search" aria-label="Filter part types" placeholder="Filter part types" style="flex: none; width: 160px; box-sizing: border-box; padding: 0 10px; border: 1.5px solid #52606d; border-radius: 3px; background: #fff; font: 14px system-ui, sans-serif"><div class="b hi on" style="width: 140px"><b>Alternator 3</b></div><div class="b hi" style="width: 185px"><b>Brake rotor, front 1</b></div><div class="b hi" style="width: 185px"><b>Brake rotor, rear 1</b></div></div>
+<div class="row" style="height: 48px"><div class="b hi" style="width: 170px; border-style: dashed"><b>[part type]</b></div><div class="b hi" style="width: 170px; border-style: dashed"><b>[part type]</b></div><div class="b hi" style="width: 170px; border-style: dashed"><b>[part type]</b></div><button type="button" class="b hi" style="width: 130px; font: 700 13px system-ui, sans-serif; text-decoration: underline; cursor: pointer">[N] more</button></div>
+</div>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 16px; min-height: 0">
+<div class="g3" style="height: 194px; flex: none">
+<div class="b hi cand"><div class="row" style="justify-content: space-between"><span class="num">DEMO-1001</span><span>2015–2017</span></div><span class="st txt">Catalog text only</span><br>3.5L V6 EcoBoost (VIN G, 8th digit)<br>demo: 200 A<button type="button" class="strip sel" aria-expanded="true"><span>Stock · 2 shelf · 2 yard</span><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 10l5-5 5 5"></path></svg></button></div>
+<div class="b hi cand"><div class="row" style="justify-content: space-between"><span class="num">DEMO-1002</span><span>2015–2020</span></div><span class="st txt">Catalog text only</span><br>5.0L V8 (VIN F, 8th digit)<br>demo: 200 A<button type="button" class="strip" aria-expanded="false"><span>Stock · 0 shelf · 2 yard</span><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 4l5 5 5-5"></path></svg></button></div>
+<div class="b hi cand"><div class="row" style="justify-content: space-between"><span class="num">DEMO-1003</span><span>2015–2020</span></div><span class="st txt">Catalog text only</span><br>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop<br>demo: 240 A<button type="button" class="strip" aria-expanded="false"><span>Stock · 0 shelf · 2 yard</span><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 4l5 5 5-5"></path></svg></button></div>
+</div>
+<div class="b hi band" style="flex: 1">
+<span class="ptr" style="left: 107px"></span>
+<div class="g3" style="grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px">
+<div><b>DEMO-1001 · on the shelf · 2 · as of 2026-11-12</b><ul class="lines"><li>DEMO-S-01 · demo-north · demo: used, grade A</li><li>DEMO-S-02 · demo-south · demo: used, grade B; tagged with its old number, DEMO-0901</li></ul></div>
+<div><b>DEMO-1001 · in the yard · 2 · as of 2026-11-12</b><ul class="lines"><li>DEMO-Y-01 · demo-north · row D-1 · demo: white · this VIN</li><li>DEMO-Y-02 · demo-south · row D-1 · demo: blue</li></ul></div>
+</div>
+<p class="note">Each list shows its first 10 rows, then a "Show all" that loads the rest in place.</p>
+</div>
+</div>
+<div class="fold" style="top: 1022px"><span>bottom of the screen</span></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":768,"height":1284}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

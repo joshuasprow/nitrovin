@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dialogs, forms and inputs</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.root{--steel:#6f7b86;--steel-dark:#58626c;--on-metal:#232930;
+  --label-font:"Arial Black","Helvetica Neue",system-ui,sans-serif;--cell-font:ui-monospace,monospace;
+  --metal:url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0/600px 120px,linear-gradient(#eef1f4,#b4bec7 55%,#cdd5dc);
+  --raised:inset 0 1px 0 #fff,0 2px 0 var(--steel);
+  --emboss:0 1px 0 rgb(255 255 255/.9),0 -1px 1px rgb(0 0 0/.45)}
+.root{--bg:#dcecf7;--fg:#14181d;--muted:#47515c;--line:#9fb3c2;--faint:#a9bccb;--card-bg:#ffffff;--link:#0b4fa8;--bad:#b91c1c;--blue:#0b4fa8;--recess:#f0f1f1}
+.root[data-scheme="dark"]{--bg:#16222d;--fg:#eef2f5;--muted:#a9b6c2;--line:#45566a;--faint:#3a4a5c;--card-bg:#1f2d3a;--link:#8ec5ff;--bad:#ff8a8a;--blue:#7db4ff;--recess:#2b3945}
+.root a{color:var(--link)}
+.btn{font:900 11px var(--label-font);letter-spacing:.08em;text-transform:uppercase;padding:.45rem .9rem;cursor:pointer;color:var(--on-metal);text-shadow:0 1px 0 rgb(255 255 255/.8);background:var(--metal);border:1px solid var(--steel);border-radius:3px;box-shadow:var(--raised)}
+.btn.pressed{transform:translateY(2px);box-shadow:inset 0 1px 0 #fff}
+.btn.tag{padding:.35rem .8rem .35rem 1.4rem;background:radial-gradient(circle at .7rem 50%,var(--steel-dark) 0 2.5px,#e6ebef 3px 4px,transparent 4.5px),var(--metal)}
+.btn.focus{outline:3px solid var(--link);outline-offset:2px}
+.linkish{border:0;background:none;padding:0 .25rem;color:var(--link);text-decoration:underline;font:13px system-ui,sans-serif;cursor:pointer}
+.field{font:15px/1.5 system-ui,sans-serif;padding:.35rem .5rem;box-sizing:border-box;color:var(--fg);background:var(--card-bg);border:1px solid var(--steel);border-radius:2px;box-shadow:inset 0 2px 3px rgb(0 0 0/.18)}
+.field.focus{outline:3px solid var(--link);outline-offset:2px}
+.lbl{font-weight:600}
+.hint{color:var(--muted);font-weight:400;font-size:13px;margin:0}
+.pre{margin:0;padding:.5rem .75rem;border:1px solid var(--line);border-radius:2px;font:13px/1.5 var(--cell-font);background:var(--recess);box-shadow:inset 0 2px 3px rgb(0 0 0/.18);flex:1;min-width:0;overflow-x:auto}
+.panel{border:2px solid var(--steel);border-radius:6px;color:var(--fg);background:var(--card-bg);box-shadow:0 3px 0 var(--steel-dark),0 18px 40px rgb(0 0 0/.3);overflow:hidden}
+.dialog-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.55rem 2.1rem;border-bottom:2px solid var(--steel);box-shadow:inset 0 1px 0 #fff,0 2px 4px rgb(0 0 0/.2);
+  background:linear-gradient(var(--steel-dark),var(--steel-dark)) .65rem 50%/9px 2px no-repeat,linear-gradient(var(--steel-dark),var(--steel-dark)) calc(100% - .65rem) 50%/9px 2px no-repeat,
+    radial-gradient(circle at calc(.65rem + 4.5px) 50%,#f4f6f8 0 5px,var(--steel) 5.5px 6.5px,transparent 7px),radial-gradient(circle at calc(100% - .65rem - 4.5px) 50%,#f4f6f8 0 5px,var(--steel) 5.5px 6.5px,transparent 7px),var(--metal)}
+.dialog-head h3{margin:0;font:900 13px var(--label-font);letter-spacing:.14em;text-transform:uppercase;color:var(--on-metal);text-shadow:var(--emboss)}
+.sect{font:900 12px var(--label-font);letter-spacing:.08em;text-transform:uppercase;margin:0 0 .5rem;padding-bottom:.2rem;border-bottom:3px solid var(--blue)}
+.snip{display:grid;grid-template-columns:8rem minmax(0,1fr);gap:.4rem .75rem;margin:0;align-items:start}
+.snip dt{font:800 11px var(--label-font);letter-spacing:.06em;text-transform:uppercase;padding-top:.6rem}
+.snip dd{margin:0;display:flex;gap:.5rem;align-items:flex-start;min-width:0}
+.note{box-sizing:border-box;padding:.75rem 1rem;border:2px solid var(--steel);border-radius:4px;color:var(--fg);background:var(--card-bg);box-shadow:0 3px 0 var(--steel-dark),0 12px 28px rgb(0 0 0/.3)}
+.menu{box-sizing:border-box;width:19rem;padding:.75rem;border:2px solid var(--steel);border-radius:4px;color:var(--fg);background:var(--card-bg);box-shadow:0 3px 0 var(--steel-dark),0 12px 28px rgb(0 0 0/.3);display:grid;gap:.4rem}
+.menu .mh{font:900 10px var(--label-font);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.example{display:block;padding:.35rem .8rem .35rem 1.4rem;font:700 12px var(--cell-font);letter-spacing:.04em;text-decoration:none;color:var(--on-metal) !important;text-shadow:0 1px 0 rgb(255 255 255/.8);border:1px solid var(--steel);border-radius:3px;box-shadow:var(--raised);
+  background:radial-gradient(circle at .7rem 50%,var(--steel-dark) 0 2.5px,#e6ebef 3px 4px,transparent 4.5px),var(--metal)}
+.example.word{font:900 11px var(--label-font);letter-spacing:.06em;text-transform:uppercase}
+.drop{border:2px dashed var(--steel);border-radius:2px;padding:1rem;display:grid;gap:.4rem;justify-items:start}
+.offer{border:2px solid var(--line);border-radius:2px;padding:1rem;display:grid;gap:.4rem;justify-items:start;align-content:start}
+.disc{border:1px solid var(--line);border-radius:2px;padding:.25rem .75rem}
+.disc summary{cursor:pointer;font-weight:600;padding:.25rem 0}
+.tbl{border-collapse:collapse;width:100%;font-size:13px}
+.tbl th,.tbl td{text-align:left;padding:.3rem .75rem .3rem 0;border-bottom:1px solid var(--line)}
+.tbl thead th{font:900 11px var(--label-font);letter-spacing:.08em;text-transform:uppercase;border-bottom:3px solid var(--steel)}
+.err{color:var(--bad);margin:0}
+.refusal{border-left:4px solid var(--bad);padding-left:.6rem;color:var(--bad)}
+.cap{margin:0 0 10px;font:900 11px/1.3 var(--label-font);letter-spacing:.08em;text-transform:uppercase;color:var(--fg)}
+.cap span{font:400 13px/1.3 system-ui,sans-serif;letter-spacing:0;text-transform:none;color:var(--muted);margin-left:10px}
+.h2{margin:0;padding-bottom:4px;font:900 14px/1.2 var(--label-font);letter-spacing:.08em;text-transform:uppercase;border-bottom:3px solid var(--steel)}
+</style>
+</helmet>
+<div class="root" data-scheme="{{scheme}}" style="width: 1100px; height: 1300px; box-sizing: border-box; padding: 40px; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; display: flex; flex-direction: column; gap: 22px">
+
+<div>
+<h1 style="margin: 0; font: 900 21px/1.2 'Arial Black', 'Helvetica Neue', system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase">Dialogs, forms and inputs</h1>
+<p style="margin: 6px 0 0; color: var(--muted); max-width: 800px">Good enough, kept as the page draws them today. Everything behind a button is a popover; every control other than the plate is plain and small.</p>
+</div>
+
+<h2 class="h2">Dialogs</h2>
+
+<section>
+<p class="cap">Dialog <span>A panel under a head of metal: a slotted screw at each end, the title struck in, Close at the far end. Sections sit over a blue rule.</span></p>
+<div class="panel">
+<div class="dialog-head">
+<h3>Developers</h3>
+<button type="button" class="btn">Close</button>
+</div>
+<div style="padding: 16px 20px 20px">
+<h4 class="sect">Install</h4>
+<dl class="snip">
+<dt>Homebrew</dt>
+<dd><pre class="pre">brew install joshuasprow/tap/nitrovin</pre><button type="button" class="btn">Copy</button></dd>
+<dt>Docker</dt>
+<dd><pre class="pre">docker run --rm -p 8080:8080 ghcr.io/joshuasprow/nitrovin</pre><button type="button" class="btn">Copy</button></dd>
+</dl>
+</div>
+</div>
+</section>
+
+<section>
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 19rem; gap: 28px; align-items: start">
+<div>
+<p class="cap">Note <span>How a name on the tape was reached. No head, a lighter backdrop.</span></p>
+<div class="note">Matched through vPIC model 1801 (F-150): demo: vPIC spells it F-150.</div>
+</div>
+<div>
+<p class="cap">Menu <span>Hangs from its button.</span></p>
+<div class="menu">
+<span class="mh">Examples</span>
+<a class="example" href="#">1FTEW1EG7FFA12345</a>
+<a class="example" href="#">2HKRW2H53KH612345</a>
+<a class="example" href="#">4T1B11HK7JU512345</a>
+<a class="example word" href="#">Surprise me</a>
+<button type="button" class="linkish" style="justify-self: center">Clear recent</button>
+</div>
+</div>
+</div>
+</section>
+
+<h2 class="h2" style="margin-top: 8px">Forms and inputs</h2>
+
+<section>
+<p class="cap">Buttons <span>A key of the plate's metal; pressed; a header tag with its rivet; focused; and the link-like button.</span></p>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 14px">
+<button type="button" class="btn">Filter</button>
+<button type="button" class="btn pressed">Filter</button>
+<button type="button" class="btn tag">Vocabularies</button>
+<button type="button" class="btn focus">Close</button>
+<button type="button" class="linkish">Clear recent</button>
+</div>
+</section>
+
+<section>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; align-items: start">
+<div>
+<p class="cap">Filter <span>A label on its own line, then a recessed field.</span></p>
+<div style="display: flex; flex-wrap: wrap; gap: .5rem; align-items: end">
+<label class="lbl" for="dc-filter" style="flex-basis: 100%">Show only this make</label>
+<input class="field" type="search" id="dc-filter" value="Ford">
+<button type="button" class="btn">Filter</button>
+<a href="#">Show all</a>
+</div>
+</div>
+<div>
+<p class="cap">Focus <span>A 3px outline in the link colour, 2px off.</span></p>
+<div style="display: flex; flex-wrap: wrap; gap: .5rem; align-items: end">
+<label class="lbl" for="dc-focus" style="flex-basis: 100%">Show only this make</label>
+<input class="field focus" type="search" id="dc-focus" value="">
+</div>
+</div>
+</div>
+</section>
+
+<section>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; align-items: stretch">
+<div style="display: flex; flex-direction: column">
+<p class="cap">File loader <span>A dashed box around a native file input.</span></p>
+<div class="drop" style="flex: 1">
+<label class="lbl" for="dc-files">Drop or choose .jsonl files</label>
+<input type="file" id="dc-files" multiple style="max-width: 100%; color: var(--fg)">
+<p class="hint">Kept in this browser · same name replaces · a catalog alone compiles here · no personal data in stock</p>
+</div>
+</div>
+<div style="display: flex; flex-direction: column">
+<p class="cap">Offer <span>One button and a hint.</span></p>
+<div class="offer" style="flex: 1">
+<button type="button" class="btn">Load demo</button>
+<p class="hint">2026.11-demo · invented data</p>
+</div>
+</div>
+</div>
+</section>
+
+<section>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; align-items: start">
+<div>
+<p class="cap">Table and disclosure <span>Label-face headers over a steel rule.</span></p>
+<table class="tbl">
+<thead><tr><th scope="col">make</th><th scope="col">model</th></tr></thead>
+<tbody>
+<tr><td><a href="#">Ford</a></td><td>F150</td></tr>
+<tr><td><a href="#">Honda</a></td><td>Civic</td></tr>
+</tbody>
+</table>
+<details class="disc" style="margin-top: 12px"><summary>Details</summary><p class="hint" style="padding-bottom: .4rem">Release and storage figures sit here.</p></details>
+</div>
+<div>
+<p class="cap">Errors <span>Error-colour text; a refusal adds a rule down the left.</span></p>
+<p class="err">1 - Check Digit (9th position) does not calculate properly</p>
+<div class="refusal" style="margin-top: 12px">
+<p style="margin: 0 0 .4rem">[REFUSAL MESSAGE]</p>
+<button type="button" class="btn">Remove all</button>
+</div>
+</div>
+</div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1100,"height":1300}}'>
+class Component extends DCLogic {
+renderVals() {
+let d = this.props.dark;
+if (d === undefined) {
+try { d = JSON.parse(document.querySelector('script[data-dc-script]').getAttribute('data-props')).dark.default; } catch (e) {}
+}
+return { scheme: (d === true || d === 'true') ? 'dark' : 'light' };
+}
+}
+</script>
+</body>
+</html>

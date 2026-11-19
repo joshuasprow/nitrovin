@@ -136,6 +136,26 @@ uvx openapi-spec-validator docs/api/openapi.yaml
     `Release` takes about 18 minutes. Tags are never moved or reused, and every v0 tag is a prerelease (ADR 0007). The monthly refresh cuts its own patch tags. If a release goes red, follow CONTRIBUTING's "When a release is red".
   - **Downstream contract:** deployers run `cosign verify` against `release.yml@refs/tags/vX`, and require `/v1/info`'s `decoder_version` to equal the tag exactly. The version comes from Go's VCS stamp, so a dirty tree reports `+dirty`. Each of these breaks every pinned deploy: renaming `release.yml`, changing the signing identity or the tag format, or shipping a `+dirty` or `+meta` version.
 
+## Design Canvas
+
+UI that is not built yet is drawn on a Claude Design canvas before it is specified. The canvas is private to the maintainer. **The canvas is the source of truth; the repo holds snapshots of it.**
+
+- **Three records, one job each:**
+  - [DESIGN.md](DESIGN.md) describes the page that exists. It changes in the PR that changes the stylesheet, never ahead of it.
+  - The canvas holds what is proposed: wireframes first, then textures.
+  - An issue is the public record of a decision. It states the layout in words and never links the canvas, which only its owner can open.
+- **Snapshots** go in `docs/design/canvas/`: the canvas's `project/` files exactly as read down, `canvas.json` and one `.dc.html` per frame. Cite a frame by commit and path.
+- **The loop**, with the Artifact tool:
+  1. Read the canvas's files down into the snapshot folder before any edit. The page saves hand edits as new versions and sends no notice, so `git diff` after the read is the drift check.
+  2. Commit what the read changed, as the canvas's own edits.
+  3. Edit, publish, then commit the published state.
+- **Never force a publish.** A refused publish means the page is newer: read again and merge.
+- **Snapshot when an issue is filed against a frame**, so the issue's wording has something fixed behind it.
+- **Uploaded images belong to one canvas.** A frame references them by an address that resolves only there. A canvas rebuilt from a snapshot needs them copied across and each reference rewritten. Their originals are `pkg/ui/static/brushed.svg` and `pkg/ui/static/paper.svg`.
+- **Frames follow the public-text rule:** the demo set's data only.
+- **A session that cannot reach the canvas works from the issue.** Only a session with the maintainer's login can read it.
+- **`/design-sync` is not this.** It pushes a component library up to a design system and does not read or write a canvas's frames.
+
 ## Runtime/Tooling Preferences
 
 - **Go 1.27.4** from mise. `go.mod`'s `go 1.27` is only the floor for `go install`. Use the real `jq`, not jaq.
