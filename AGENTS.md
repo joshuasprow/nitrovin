@@ -115,6 +115,7 @@ uvx openapi-spec-validator docs/api/openapi.yaml
 - **ADRs:** one for each hard-to-reverse choice, at `docs/adr/NNNN-kebab-title.md` with the next number. The H1 is a declarative claim. The sections are `## Considered options`, then `## Consequences`. A later change is appended as `## Amendment (YYYY-MM-DD): …`.
 - **ultravin** is a reference, never a source. Cite it and credit it in `NOTICE`; never copy its code.
 - **Public text and committed data stay generic.** Issues, PRs, commits, docs, testdata, fixtures and corpora never name a deployer's vendors, products, tables, data or infrastructure. Write counts and roles instead ("the first user", "a commercial parts catalog", "a yard system"). Fixtures are synthetic or publicly sourced, with the source credited in the file header.
+  - **Cross-links run one way: private to public.** A private repo's issue, PR or commit mentions `joshuasprow/nitrovin#N`. nitrovin's text never names a private repo or its issues. GitHub adds the backlink to nitrovin's timeline, and only readers with access to the private repo can see it. For the reverse direction, open the nitrovin issue's timeline.
 - **Commits:** PRs are squash-merged to `main`; there is no dev branch. The subject is `<area>: <lower-case declarative summary> (#issue)`, and the squash merge appends the PR number: `stock: a connector's column check reads only its relation's columns (#310) (#311)`.
 
 ## Important Files
