@@ -16,7 +16,7 @@ held in the browser, a Service Worker runs the same handlers, built from the
 same Go code to WebAssembly with Go's toolchain, over an IndexedDB store. A
 reader might expect a JavaScript single-page app here, or a server that takes
 uploads. The first would mean a second translator to keep in step with
-`pkg/vocab`. The second would put private or licensed files (Snyder's
+`pkg/vocab`. The second would put private or licensed files (a deployer's
 mappings, a user's eBay data) on a public server. TinyGo was measured and
 cannot run either template engine: they need reflection it lacks at run time.
 

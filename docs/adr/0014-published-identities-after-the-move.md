@@ -1,7 +1,7 @@
 # Published identities name the domain where they can, the owner where they must
 
 nitrovin, nitrovin-data, the Homebrew tap and the Scoop bucket move from
-`joshuasprow` to the `marcy-cloud` organization
+`joshuasprow` to an organization, written `<org>` below
 ([Published identities after the move](https://github.com/joshuasprow/nitrovin/issues/185),
 on [the migration map](https://github.com/joshuasprow/nitrovin/issues/179)).
 Every identity a user or tool holds onto names its owner somewhere, and a move
@@ -14,9 +14,9 @@ renames nothing a user typed.
 | --- | --- | --- | --- |
 | Go modules | `github.com/joshuasprow/nitrovin`, `github.com/joshuasprow/nitrovin-data` | `nitrovin.app/nitrovin`, `nitrovin.app/data` | Vanity paths: the Worker answers `?go-get=1` under `/nitrovin` and `/data` with `go-import` tags pointing at the repos; `/` and the site's routes are untouched. |
 | MCP Registry name | `io.github.joshuasprow/nitrovin` | `app.nitrovin/nitrovin` | Domain namespace, authenticated by an Ed25519 key in a DNS TXT record on `nitrovin.app`; the private key is a release-only environment secret. |
-| Container image | `ghcr.io/joshuasprow/nitrovin` | `ghcr.io/marcy-cloud/nitrovin` | ghcr packages belong to the account and can't be transferred. The first release from the org creates it, linked by its `org.opencontainers.image.source` label, public. |
-| Signing identity | `joshuasprow/nitrovin`'s `release.yml` | `marcy-cloud/nitrovin`'s `release.yml` | Fulcio certifies the workflow that signs; it follows the repo. |
-| Homebrew, Scoop | `joshuasprow/tap`, `joshuasprow/scoop-bucket` | `marcy-cloud/tap`, `marcy-cloud/scoop-bucket` | The repos move with their names. |
+| Container image | `ghcr.io/joshuasprow/nitrovin` | `ghcr.io/<org>/nitrovin` | ghcr packages belong to the account and can't be transferred. The first release from the org creates it, linked by its `org.opencontainers.image.source` label, public. |
+| Signing identity | `joshuasprow/nitrovin`'s `release.yml` | `<org>/nitrovin`'s `release.yml` | Fulcio certifies the workflow that signs; it follows the repo. |
+| Homebrew, Scoop | `joshuasprow/tap`, `joshuasprow/scoop-bucket` | `<org>/tap`, `<org>/scoop-bucket` | The repos move with their names. |
 | Winget | `JoshuaSprow.Nitrovin` | unchanged | It names the publisher, not the repo owner. Only its homepage, support, licence and release-notes URLs move. |
 
 Nothing old is kept alive (the map's clean cutover; nitrovin's only consumer
@@ -35,8 +35,8 @@ there would never be read, so none is made.
 
 ## Considered options
 
-- Everything follows the owner (`github.com/marcy-cloud/…`,
-  `io.github.marcy-cloud/nitrovin`): no DNS key and no Worker route, and
+- Everything follows the owner (`github.com/<org>/…`,
+  `io.github.<org>/nitrovin`): no DNS key and no Worker route, and
   every identity renamed again on the next move.
 - The root module path `nitrovin.app`: a shorter `go install`, but the Worker
   would answer `?go-get=1` on every path, `/` included, and the module's

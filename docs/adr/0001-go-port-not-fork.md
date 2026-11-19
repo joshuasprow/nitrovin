@@ -17,6 +17,6 @@ than rediscovered.
 
 - Fork ultravin: fastest to a correct release; Rust toolchain and someone
   else's architecture for the life of the project.
-- Port to TypeScript from the partial port in snydersalvage/agent-tools #41:
+- Port to TypeScript from the first user's partial port:
   runs in browsers and Workers, but no static binary and no C ABI.
 - Port to Go: chosen.

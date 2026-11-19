@@ -16,9 +16,9 @@ values it holds for, attribute ids for lookup elements (Drive Type, Body
 Class) and the exact string for text elements (Series, Trim). A mapping holds
 when every qualifier holds, any listed value satisfying its element. A reader
 might expect a canonical class instead, such as the tonnage class (1500, 2500,
-3500) Snyder's private mapping tables carry. We rejected it because nitrovin
-matches exactly and runs no rules, and a class means reading vPIC's Series
-text (`DS (1500)`, `3500W`, `1/2 Ton`) through one. The cost falls on authors,
+3500) the first user's private mapping tables carry. We rejected it because
+nitrovin matches exactly and runs no rules, and a class means reading vPIC's
+Series text (`DS (1500)`, `3500W`, `1/2 Ton`) through one. The cost falls on authors,
 who list every spelling a decode produces. EPA's `Silverado 1500 4WD` becomes
 model `Silverado` with Drive Type 4WD and the Series values the author lists.
 
@@ -34,7 +34,7 @@ Vehicles vPIC lacks (pre-1981 cars, marques it has no models for) get
 file loaded beside vocabularies and shared by them, so two vocabularies'
 Corvairs meet in a translation. An extension is a make, or a model under a
 vPIC make or an extension make, with an id prefixed by its set
-(`ext:snyder/42`). It carries no pointer to a vPIC entry that later replaces
+(`ext:classics/corvair`). It carries no pointer to a vPIC entry that later replaces
 it; the author re-points the mappings and drops it. Extension mappings take no
 qualifiers, since no decode lands on an extension.
 
@@ -54,8 +54,8 @@ with the author.
 - One opaque string per entry: simpler, but composite keys (a parts catalog's
   two fields, eBay's four) get an invented delimiter.
 - A fixed make and model pair: doesn't fit a catalog keyed by its own code.
-- Model ids only, as in Snyder's tables: a make vocabulary (NHTSA's recall
-  file spells Mercedes-Benz three ways) could not be mapped.
+- Model ids only, as in the first user's tables: a make vocabulary (NHTSA's
+  recall file spells Mercedes-Benz three ways) could not be mapped.
 - A tonnage class, or no qualifiers at all: the first is a rule inside
   nitrovin; the second leaves every Silverado on one union.
 - Unknown drops the mapping: precise, but silent when vPIC's data is thin.
