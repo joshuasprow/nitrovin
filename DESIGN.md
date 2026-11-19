@@ -164,7 +164,8 @@ tape. A bracket or a leader line is pinstripe tape in its group's colour.
 - **Four columns at fixed fractions** (130, 170, 465 and 255 of 1020): the
   vocabulary's stamp, then make, model and years. Each word sits over a 3 px
   underline in its group's mark, under a bracket in its group's colour, on the
-  line that runs down from its card.
+  line that runs down from its card. On a narrow page the strip lies under the
+  first four of the cards' six columns, and the stamp is a label above it.
 - **A dashed line, bracket or underline is a doubt.** The strip's note, behind
   its round "i" button, says the doubt in words.
 - **Several names stack.** The first strip is on top, with the edges of up to
@@ -214,29 +215,57 @@ A decoded card is a manila parts tag, hung by its eyelet from its leader line.
 
 ## Good enough: what a card holds
 
-Each group has a card under its bracket, six in a row on the same width as the
-plate.
+Each group has a card under its bracket, six in one row. The page has one
+width where the row changes, 64 rem: at 64 rem and up it is wide, and below
+that it is narrow.
 
 - The band reads the group's title and its positions ("Vehicle 4–8").
 - The body is either label and value rows, or one large value in the monospace
-  face. The check digit's card opens its arithmetic in a dialog. The year's
-  card lists the codes around its own.
+  face. A row is its label and its value on one line; a long value wraps
+  under that line. The check digit's card opens its arithmetic in a dialog.
+  The year's card shows the year, then the codes around its own as one run of
+  small text with its own in bold.
+- The six cards share one grid row, as tall as its tallest card. Four or five
+  lines is usual and is not a limit. No card cuts text off or keeps it behind
+  a control.
 - A newly finished group pops its card in (0.3 s).
-- Under 46 rem the cards stack in the brackets' order.
+- **Wide**, the six cards span the plate's width, each under its leader line.
+- **Narrow**, the six cards are one row that scrolls sideways, in the VIN's
+  order, six columns of one width (12.5 rem, and 9.5 rem under 34 rem). The
+  names of "Also known as" are in the same region and the same columns, so a
+  swipe moves them with the cards. The region reaches both edges of the
+  window, is named, and takes focus, so a keyboard scrolls it.
 
 ## Good enough: where the brackets and lines run
 
 - A label sits over its cells with a bracket opening downward. A second
   bracket under the plate opens upward. Both are borders, not images.
-- A leader line runs from each lower bracket to its card, with square turns
-  and one elbow. A second set of lines joins the maker's, the vehicle's and
-  the year's cards to the label tape's columns.
-- The lines are SVG paths in a 1020-unit box (60 a cell, 170 a card),
+- **Wide**, a leader line runs from each lower bracket to its card, with
+  square turns and one elbow. A second set of lines joins the maker's, the
+  vehicle's and the year's cards to the label tape's columns.
+- Those lines are SVG paths in a 1020-unit box (60 a cell, 170 a card),
   stretched to the stage with `vector-effect="non-scaling-stroke"`. Positions
   come from arithmetic on the grid, and nothing is measured at run time.
+- **Narrow**, a name's make is under Maker, its model under Vehicle and its
+  years under Model year; nothing of a name is under Check digit, Plant or
+  Serial. A straight line runs down from each of those three cards to the
+  part under it, and on from name to name, behind each vocabulary's label.
+  The stepped lines are not drawn. Neither are the leader lines: the cards
+  they would end on move.
+- A vocabulary's label is the plate's first column on a wide page. On a narrow
+  one it is a line of its own above the strip, a piece of label tape, and it
+  stays at the region's leading edge while the row scrolls. The first label
+  carries the heading's words, "Also known as".
+- **"Check years"** is on a vocabulary's label exactly when one of its names'
+  years is unsure. It is a strip of tape in the year's colour and an in-page
+  link to the first of those years. Following it scrolls them into view, rings
+  them, and fans their stack out if they are under its top strip. The scroll
+  is smooth only where motion is welcome.
+- **The names block shows three vocabularies**, two under 34 rem, in loaded
+  order. A piece of tape after them reads "N more vocabularies" and shows the
+  rest in place. It is a switch without a script, as a stack's is.
 - A newly finished group draws its bracket and line in.
 - No line runs to a blank strip.
-- Under 46 rem the lines go, and the brackets and colours stay.
 
 ## Good enough: dialogs
 
@@ -248,7 +277,7 @@ script. There are three sizes.
 | Dialog (`dialog[popover]`) | Vocabularies, Developers, JSON, the check digit's sum | `min(56rem, 100vw - 2rem)` | `rgb(10 18 26 / .55)` |
 | Note (`.note[popover]`) | How a name on the tape was reached | up to `30rem` | `rgb(10 18 26 / .35)` |
 | Menu (`.menu[popover]`) | The VINs to try | `19rem` | none |
-| Header menu (`nav.top[popover]`) | The header's buttons and the release, under 46 rem | `16rem` | none |
+| Header menu (`nav.top[popover]`) | The header's buttons and the release, at 46 rem and under | `16rem` | none |
 
 - **Panel:** panel ground and `--fg`, a 2 px `--steel` edge, on 3 px of
   `--steel-dark` and a deep soft shadow. Corners are 6 px on a dialog and 4 px
@@ -261,7 +290,8 @@ script. There are three sizes.
   browser knows it) and scrolls inside itself.
 - **The menu hangs from its button** by CSS anchor positioning, and from the
   header's end where the browser has none. Its rows are small metal tags.
-- **The header collapses where its buttons would wrap** (46 rem). The
+- **The header collapses where its buttons would wrap** (46 rem, its own
+  width: the cards change at 64 rem). The
   header's nav is itself a popover. In a wide window it has no box: the
   release sits beside the brand and the buttons at the far end. In a narrow
   one the Menu button, a key of metal with three bars, opens it as a panel
@@ -325,5 +355,5 @@ Every other control is plain and small.
   sticks or bolts on that the three cannot be.
 - A seventh colour needs a reason. The six group colours are the only hues
   besides `--link` and `--bad`.
-- Check both colour schemes, a 390 px window, and the page with JavaScript
-  off.
+- Check both colour schemes, a wide window (1280 px), a narrow one (768 px), a
+  390 px one, and the page with JavaScript off.
