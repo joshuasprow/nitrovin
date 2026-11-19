@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Part-number mode: phone</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.w{width:430px;box-sizing:border-box;padding:20px;background:#fff;color:#1f2933;font:13px/1.35 system-ui,sans-serif}
+.w h1{margin:0;font:700 16px/1.2 system-ui,sans-serif}
+.w .sub{margin:4px 0 10px;height:36px;color:#3e4c59}
+.scr{position:relative;box-sizing:border-box;border:2px solid #1f2933;border-radius:22px;padding:10px;display:flex;flex-direction:column;gap:10px}
+.b{box-sizing:border-box;min-width:0;border:1.5px solid #52606d;border-radius:3px;background:#eef1f4;padding:7px 9px;overflow:hidden;flex:none}
+.b.dk{background:#cbd2d9}
+.b.hi{background:#fff3c4;border-color:#8a6a22}
+.b b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.row{display:flex;gap:8px;min-width:0;flex:none}
+.tog{display:flex;border:1.5px solid #8a6a22;border-radius:3px;overflow:hidden}
+.tog button{flex:1;min-height:44px;border:0;background:#fff3c4;font:700 11px system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:inherit;cursor:pointer}
+.tog button[aria-pressed="true"]{background:#5c4614;color:#fff}
+.fld{display:flex;flex-direction:column;justify-content:center;box-sizing:border-box;height:58px;border:1.5px solid #8a6a22;border-radius:2px;background:#fff3c4;padding:0 10px;text-align:left;font:inherit;color:inherit}
+.fld small{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.fld span{font:700 22px ui-monospace,monospace}
+.num{font:700 15px ui-monospace,monospace}
+.strip{display:flex;justify-content:space-between;align-items:center;margin:auto -9px 0;padding:7px 9px;border:0;border-top:1.5px solid #8a6a22;background:#fffbe6;font:12px ui-monospace,monospace;text-transform:uppercase;color:inherit;cursor:pointer}
+.strip svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.5}
+.veh small{display:block;color:#5c4614}
+.fold{position:absolute;left:-2px;right:-2px;border-top:2px dashed #c8102e}
+.fold span{position:absolute;right:10px;bottom:3px;font-size:11px;font-weight:700;color:#a01414;background:#fff;padding:0 3px}
+</style>
+</helmet>
+<div class="w" style="height: 950px">
+<h1>Part-number mode: phone</h1>
+<p class="sub">390 × 844. The two fields stack on the plate; the vehicles are one to a row.</p>
+<div class="scr" style="height: 848px">
+<div class="row" style="height: 40px; justify-content: space-between"><div class="b" style="width: 110px"><b>nitrovin</b></div><div class="b" style="width: 70px"><b>Menu</b></div></div>
+<div class="tog"><button type="button" aria-pressed="false">VIN</button><button type="button" aria-pressed="true">Part number</button></div>
+<div class="b dk" style="display: flex; flex-direction: column; gap: 8px">
+<button type="button" class="fld" style="cursor: pointer"><small>Part type · press to choose</small><span>Alternator</span></button>
+<div class="fld"><small>Part number</small><span>DEMO-4001</span></div>
+</div>
+<div class="b hi" style="display: flex; flex-direction: column; padding-bottom: 0; height: 118px">
+<div class="row" style="justify-content: space-between"><span class="num">DEMO-4001</span><span>Alternator</span></div>
+<span style="color: #5c4614">Fits 2 vehicles in demo-catalog</span>
+<button type="button" class="strip"><span>Stock · [n] shelf · [n] yard</span><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 4l5 5 5-5"></path></svg></button>
+</div>
+<div class="b hi"><b>Fits · 2 vehicles</b></div>
+<div class="b hi veh"><div class="row" style="justify-content: space-between"><strong>Honda Civic</strong><span>2016–2021</span></div>1.5L turbo<small>[names in the loaded vocabularies]</small></div>
+<div class="b hi veh"><div class="row" style="justify-content: space-between"><strong>Honda CR-V</strong><span>2017–2022</span></div>1.5L turbo<small>[names in the loaded vocabularies]</small></div>
+<div class="fold" style="top: 842px"><span>bottom of the screen</span></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":430,"height":950}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

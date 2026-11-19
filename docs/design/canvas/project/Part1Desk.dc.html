@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Part-number mode: desktop</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.w{width:1280px;box-sizing:border-box;background:#fff;color:#1f2933;font:14px/1.4 system-ui,sans-serif}
+.w .hd{padding:16px 20px 0;height:70px;box-sizing:border-box}
+.w h1{margin:0;font:700 18px/1.2 system-ui,sans-serif}
+.w .sub{margin:4px 0 0;color:#3e4c59}
+.scr{position:relative;box-sizing:border-box;border:2px solid #1f2933;border-radius:8px;padding:20px 40px;display:flex;flex-direction:column;gap:16px}
+.b{box-sizing:border-box;min-width:0;border:1.5px solid #52606d;border-radius:3px;background:#eef1f4;padding:9px 12px;overflow:hidden;flex:none}
+.b.dk{background:#cbd2d9}
+.b.hi{background:#fff3c4;border-color:#8a6a22}
+.b.on{border-width:3px}
+.b b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.row{display:flex;gap:10px;min-width:0;flex:none}
+.tog{display:inline-flex;border:1.5px solid #8a6a22;border-radius:3px;overflow:hidden}
+.tog button{padding:6px 14px;border:0;background:#fff3c4;font:700 11px system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:inherit;cursor:pointer}
+.tog button[aria-pressed="true"]{background:#5c4614;color:#fff}
+.fld{display:flex;flex-direction:column;justify-content:center;box-sizing:border-box;height:64px;border:1.5px solid #8a6a22;border-radius:2px;background:#fff3c4;padding:0 14px}
+.fld small{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.fld span{font:700 26px ui-monospace,monospace}
+.num{font:700 17px ui-monospace,monospace}
+.st{display:inline-flex;margin:3px 0 4px;padding:1px 7px;border:1.5px dashed #6b5a2a;border-radius:2px;font:700 11px/1.5 system-ui,sans-serif;color:#5c4614}
+.strip{display:flex;justify-content:space-between;align-items:center;margin:auto -12px 0;padding:8px 12px;border:0;border-top:1.5px solid #8a6a22;background:#fffbe6;font:12px ui-monospace,monospace;text-transform:uppercase;color:inherit;cursor:pointer}
+.strip svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.5}
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;text-align:left;padding:0 10px 6px 0;border-bottom:1.5px solid #8a6a22}
+td{padding:8px 10px 8px 0;border-bottom:1px solid #d9c98a;vertical-align:top}
+td small{display:block;color:#5c4614}
+.fold{position:absolute;left:-2px;right:-2px;border-top:2px dashed #c8102e}
+.fold span{position:absolute;right:12px;bottom:4px;font-size:12px;font-weight:700;color:#a01414;background:#fff;padding:0 4px}
+</style>
+</helmet>
+<div class="w" style="height: 890px">
+<div class="hd">
+<h1>Part-number mode: desktop</h1>
+<p class="sub">1280 × 800. The plate asks for a part type and a number, and the page answers with the part and every vehicle it fits. Data is the demo set's.</p>
+</div>
+<div class="scr" style="height: 802px">
+<div class="row" style="height: 56px; align-items: center"><div class="b" style="width: 150px"><b>nitrovin</b></div><span style="flex: 1; font: 12px ui-monospace, monospace">v0.4.2 · data 2026_11</span><div class="b" style="width: 90px"><b>VINs</b></div><div class="b" style="width: 150px"><b>Vocabularies</b></div><div class="b" style="width: 130px"><b>Developers</b></div></div>
+<div class="row" style="align-items: center"><span class="tog"><button type="button" aria-pressed="false">VIN</button><button type="button" aria-pressed="true">Part number</button></span><span style="color: #3e4c59">A switch on the plate. The page opens on VIN; the mode is in the URL.</span></div>
+<div class="b dk" style="height: 104px; display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 12px; align-items: center">
+<button type="button" class="fld" style="text-align: left; cursor: pointer; font: inherit; color: inherit"><small>Part type · press to choose</small><span>Alternator</span></button>
+<div class="fld"><small>Part number</small><span>DEMO-4001</span></div>
+</div>
+<div style="flex: 1; display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 16px; min-height: 0">
+<div class="b hi" style="display: flex; flex-direction: column; padding-bottom: 0; height: 190px">
+<div class="row" style="justify-content: space-between"><span class="num">DEMO-4001</span><span>Alternator</span></div>
+<span class="st">No note in the catalog</span>
+<span style="color: #5c4614">Fits 2 vehicles in demo-catalog</span>
+<button type="button" class="strip"><span>Stock · [n] shelf · [n] yard</span><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 4l5 5 5-5"></path></svg></button>
+</div>
+<div class="b hi">
+<b>Fits · 2 vehicles</b>
+<table style="margin-top: 8px"><thead><tr><th>Vehicle</th><th>Years</th><th>Options</th><th>Also known as</th></tr></thead>
+<tbody>
+<tr><td><strong>Honda Civic</strong><small>as demo-catalog names it</small></td><td>2016–2021</td><td>1.5L turbo</td><td>[names in the loaded vocabularies]</td></tr>
+<tr><td><strong>Honda CR-V</strong></td><td>2017–2022</td><td>1.5L turbo</td><td>[names in the loaded vocabularies]</td></tr>
+</tbody></table>
+<p style="margin: 12px 0 0; color: #5c4614">Pressing the part's stock strip opens its shelf rows and the yard vehicles among these, as on the VIN side.</p>
+</div>
+</div>
+<div class="fold" style="top: 796px"><span>bottom of the window</span></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":890}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

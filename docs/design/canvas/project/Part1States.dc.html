@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Part-number mode: its other states</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.w{width:1280px;box-sizing:border-box;background:#fff;color:#1f2933;font:14px/1.4 system-ui,sans-serif}
+.w .hd{padding:16px 20px 0;height:70px;box-sizing:border-box}
+.w h1{margin:0;font:700 18px/1.2 system-ui,sans-serif}
+.w .sub{margin:4px 0 0;color:#3e4c59}
+.scr{box-sizing:border-box;border:2px solid #1f2933;border-radius:8px;padding:20px 40px;display:flex;flex-direction:column;gap:16px}
+.st8{display:grid;grid-template-columns:250px minmax(0,1fr);gap:20px;align-items:center}
+.st8 .cap{margin:0;font-size:13px;color:#3e4c59}
+.st8 .cap b{display:block;font:700 11px ui-monospace,monospace;letter-spacing:.04em;text-transform:uppercase;color:#1f2933}
+.ph{box-sizing:border-box;min-height:56px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;border:1.5px dashed #8a6a22;border-radius:3px;padding:10px 14px;color:#5c4614}
+.ph button{padding:6px 12px;border:1.5px solid #8a6a22;border-radius:3px;background:#fff3c4;font:700 13px system-ui,sans-serif;color:#1f2933;text-decoration:underline;cursor:pointer}
+.b{box-sizing:border-box;min-width:0;border:1.5px solid #8a6a22;border-radius:3px;background:#fff3c4;padding:9px 12px}
+.row{display:flex;gap:10px;min-width:0}
+.num{font:700 17px ui-monospace,monospace}
+.mk{display:inline-flex;margin-top:4px;padding:1px 7px;border:1.5px solid #1f2933;border-radius:2px;background:#fff;font:700 11px/1.5 system-ui,sans-serif}
+</style>
+</helmet>
+<div class="w" style="height: 560px">
+<div class="hd">
+<h1>Part-number mode: its other states</h1>
+<p class="sub">Desktop. What sits under the plate when there is not a plain answer. Each takes the place of the part and its vehicles.</p>
+</div>
+<div class="scr" style="height: 474px">
+<div class="st8"><p class="cap"><b>Nothing typed yet</b>The mode was just switched on.</p><div class="ph"><span>Choose a part type and type its number.</span></div></div>
+<div class="st8"><p class="cap"><b>No catalog loaded</b>The same invitation as on the VIN side.</p><div class="ph"><span>No catalog loaded.</span><button type="button">Add a catalog</button></div></div>
+<div class="st8"><p class="cap"><b>No such part</b>Fit status unknown: the number is neither a part nor a retired number of this part type.</p><div class="ph"><span>demo-catalog has no Alternator numbered DEMO-9999.</span></div></div>
+<div class="st8"><p class="cap"><b>A retired number</b>The number asked for was replaced. The page answers with the part that replaced it and says so.</p>
+<div class="b" style="width: 340px"><div class="row" style="justify-content: space-between"><span class="num">DEMO-1001</span><span>Alternator</span></div><span class="mk">Replaces DEMO-0901</span><div style="color: #5c4614; margin-top: 4px">demo: DEMO-1 → DEMO-2</div></div></div>
+<div class="st8"><p class="cap"><b>The part fits nothing left</b>Fit status no-fitment: the part exists and no vehicle remains for it.</p><div class="ph"><span>demo-catalog has Alternator DEMO-4001, and lists no vehicle for it.</span></div></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":560}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
