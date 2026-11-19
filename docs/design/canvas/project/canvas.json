@@ -62,6 +62,14 @@
       "x": 1180,
       "y": 0
     },
+    "Slice1Textures.dc.html": {
+      "h": 1270,
+      "page": "catalog-fitment",
+      "title": "Slice 1 textures: part types and candidates",
+      "w": 1100,
+      "x": 420,
+      "y": 0
+    },
     "Types1Dialog.dc.html": {
       "h": 730,
       "page": "wireframes",
@@ -129,7 +137,8 @@
     "Detail1Stack.dc.html",
     "First1Stack.dc.html",
     "Empty1Stack.dc.html",
-    "Types1Dialog.dc.html"
+    "Types1Dialog.dc.html",
+    "Slice1Textures.dc.html"
   ],
   "pages": [
     {
