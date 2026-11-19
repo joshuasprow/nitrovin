@@ -173,7 +173,7 @@ jobs:
         run: |
           go test -count=1 -v -timeout 10m ./pkg/... ./cmd/nitrovin/ ./cmd/nitrovin-import/ | tee "$RUNNER_TEMP/test.log"
           for t in TestParity TestEngineAnswerKey TestDecodeAnswerKey TestText TestStdio TestRefusedLine \
-                   TestDataPrecedence TestMCPSession TestServeContract TestForm TestVinsCoversTheMonth; do
+                   TestDataPrecedence TestMCPSession TestServeContract TestForm TestVinsCoversTheMonth TestInfo; do
             grep -q -- "--- PASS: $t " "$RUNNER_TEMP/test.log" || { echo "artifact: $t did not pass" >&2; exit 1; }
           done
 

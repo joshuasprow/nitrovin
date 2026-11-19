@@ -107,13 +107,16 @@ release [`v1.202610.1`](https://github.com/joshuasprow/nitrovin-data/releases/ta
 ## Check a release yourself
 
 The frozen key is enough to re-run the offline gate on a release with no
-Postgres, in well under a second:
+Postgres, in well under a second. The release's `go.mod` pins its data
+month, and `go mod download` fetches that month's artifact:
 
 ```sh
-git clone --depth 1 --branch v0.1.2 https://github.com/joshuasprow/nitrovin && cd nitrovin
-gh release download v1.202610.1 -R joshuasprow/nitrovin-data -p nitrovin-2026_10.artifact
-NITROVIN_ARTIFACT=$PWD/nitrovin-2026_10.artifact go test ./pkg/decoder -run 'TestParity$' -v
+git clone --depth 1 --branch <release> https://github.com/joshuasprow/nitrovin && cd nitrovin
+NITROVIN_ARTIFACT=$(go mod download -json github.com/joshuasprow/nitrovin-data | jq -r .Dir)/pkg/embedded/nitrovin.artifact \
+  go test ./pkg/decoder -run 'TestParity$' -v
 ```
+
+On v0.1.2, whose month is 2026_10:
 
 ```text
 === RUN   TestParity
@@ -121,7 +124,7 @@ NITROVIN_ARTIFACT=$PWD/nitrovin-2026_10.artifact go test ./pkg/decoder -run 'Tes
 --- PASS: TestParity (0.09s)
 ```
 
-`parity-2026_10.tar.gz` holds the same three files as the tag's
-`testdata/parity/2026_10/`. To produce the oracle's answers yourself, from
+A month's `parity-<month>.tar.gz` holds the same three files as the tag's
+`testdata/parity/<month>/`. To produce the oracle's answers yourself, from
 the dump on the same release, see
 [the Postgres oracle](../CONTRIBUTING.md#the-postgres-oracle).
