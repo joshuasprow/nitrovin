@@ -15,7 +15,7 @@ Each part has one of two standings.
 | Standing | Parts | What it means for a change |
 | --- | --- | --- |
 | **Signature** | The VIN input, and the three materials: aluminum plates, vinyl tape, manila tags | These are the page's identity. New UI is built from them, and a change keeps every rule below. |
-| **Good enough** | What a decoded card holds, and where the brackets and leader lines run | These work and stay as they are. A change fixes a bug or follows a signature part; it does not rearrange them. |
+| **Good enough** | What a decoded card holds, where the brackets and leader lines run, the dialogs, and the forms and inputs | These work and stay as they are. A change fixes a bug or follows a signature part; it does not rearrange them. |
 
 ## Ground rules
 
@@ -223,6 +223,70 @@ plate.
 - A newly finished group draws its bracket and line in.
 - No line runs to a blank strip.
 - Under 46 rem the lines go, and the brackets and colours stay.
+
+## Good enough: dialogs
+
+Everything behind a button is a `popover`, opened by `popovertarget` with no
+script. There are three sizes.
+
+| Kind | Used for | Width | Backdrop |
+| --- | --- | --- | --- |
+| Dialog (`dialog[popover]`) | Vocabularies, Developers, JSON, the check digit's sum | `min(56rem, 100vw - 2rem)` | `rgb(10 18 26 / .55)` |
+| Note (`.note[popover]`) | How a name on the tape was reached | up to `30rem` | `rgb(10 18 26 / .35)` |
+| Menu (`.menu[popover]`) | The VINs to try | `19rem` | none |
+
+- **Panel:** panel ground and `--fg`, a 2 px `--steel` edge, on 3 px of
+  `--steel-dark` and a deep soft shadow. Corners are 6 px on a dialog and 4 px
+  on a note or a menu.
+- **Head** (dialogs only): a bar of metal across the top with a slotted screw
+  at each end, the title struck in the label face at 13 px, and a Close button
+  at its far end. It is sticky, so Close stays in reach while the panel
+  scrolls.
+- **Height:** a dialog keeps inside the window (`100dvh - 2rem` where the
+  browser knows it) and scrolls inside itself.
+- **The menu hangs from its button** by CSS anchor positioning, and from the
+  header's end where the browser has none. Its rows are small metal tags.
+- **Sections** inside a dialog are `h3`: the label face at 12 px over a 3 px
+  rule in the vehicle group's blue.
+- **A dialog inside a card** (the check digit's sum) takes the panel's colours,
+  not the manila's.
+
+## Good enough: forms and inputs
+
+The page has one form that matters, the plate, and it is described above.
+Every other control is plain and small.
+
+- **Button:** a key of the plate's metal. The label face at 11 px, upper case,
+  `--on-metal`, a 1 px `--steel` edge, `--raised`. Pressed, it moves down
+  2 px. A button in the header or a row in the menu adds a rivet.
+- **Link-like button** (`.linkish`, "Clear recent"): no metal. `--link`,
+  underlined, in the body face.
+- **Text and search fields:** a recess. Panel ground, a 1 px `--steel` edge,
+  2 px corners, and an inset shadow at the top. The text is the body face.
+- **Label:** weight 600, above its field. A hint beside or under it is
+  `--muted` at weight 400.
+- **Text to copy** (`pre`): the same recess on a slightly darkened ground, in
+  the monospace face at 13 px. `copy.js` adds a Copy button after each; without
+  the script the text stays to select.
+- **File loader** (the Vocabularies dialog): a 2 px dashed `--steel` box
+  holding a native file input, its label and a hint. While files are dragged
+  over the dialog the dashes turn `--link`.
+- **Offer** (Load demo, Load EPA): a 2 px `--line` box holding one button and
+  a hint.
+- **Filter** (a vocabulary's entries): a label on its own line, then a search
+  field, a Filter button and a "Show all" link in a wrapping row.
+- **Inline form** (Remove, in a table row): a form that is only its button.
+- **Switch without a script:** a visually hidden checkbox whose label is the
+  control, as on a stack of label tape.
+- **Disclosure:** `details` with a weight-600 `summary`, in a 1 px `--line`
+  box. In a table row it has no box.
+- **Table:** rows ruled 1 px in `--line`. The header row is the label face at
+  11 px over a 3 px `--steel` rule.
+- **Focus:** every link, button, summary, field and `pre` takes a 3 px
+  `--link` outline, 2 px off. The plate takes it 3 px off.
+- **Errors:** `--bad` text. A refusal and the page's error slot add a 4 px
+  `--bad` rule down the left.
+- **Targets:** a link or a button in a table row is at least 24 px high.
 
 ## Building something new
 
