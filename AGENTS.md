@@ -7,6 +7,7 @@ nitrovin is a Go port of NHTSA vPIC's Postgres procedure `vpic.spvindecode`: an 
 This file holds only what an agent can't find with one lookup. Pointers to the rest:
 - [CONTRIBUTING.md](CONTRIBUTING.md): ground rules, the oracle, the refresh, releases, CI paths.
 - [README.md](README.md): usage and data precedence.
+- [DESIGN.md](DESIGN.md): the page's look, and which parts of it are settled.
 - [mise.toml](mise.toml)'s header: tool pins, how to bump them, and what is pinned outside mise.
 
 ## Architecture & Data Flow
