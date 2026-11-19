@@ -2,145 +2,131 @@
   "v": 3,
   "attachments": {},
   "boards": {
-    "Controls.dc.html": {
-      "h": 1300,
-      "title": "Dialogs, forms and inputs",
-      "w": 1100,
-      "x": 3540,
-      "y": 0
-    },
-    "Desk1Stack.dc.html": {
-      "h": 1382,
-      "page": "wireframes",
-      "title": "1. Desktop, 1280 × 800",
-      "w": 1280,
-      "x": 0,
-      "y": 0
-    },
-    "Detail1Stack.dc.html": {
-      "h": 1506,
-      "page": "wireframes",
-      "title": "1. Phone, 390 × 844",
-      "w": 430,
-      "x": 2208,
-      "y": 0
-    },
-    "Diagram.dc.html": {
-      "h": 920,
-      "title": "Decoded cards, brackets and lines",
-      "w": 1100,
-      "x": 2360,
-      "y": 0
-    },
-    "Empty1Stack.dc.html": {
-      "h": 650,
-      "page": "wireframes",
-      "title": "1. Empty states",
-      "w": 1280,
-      "x": 1360,
-      "y": 1590
-    },
-    "First1Stack.dc.html": {
-      "h": 400,
-      "page": "wireframes",
-      "title": "1. First view, no part type open",
-      "w": 1280,
-      "x": 0,
-      "y": 1590
-    },
     "Main.dc.html": {
       "h": 980,
-      "title": "VIN input",
+      "title": "1.1 Today: the VIN input",
       "w": 1100,
       "x": 0,
       "y": 0
     },
     "Materials.dc.html": {
       "h": 1340,
-      "title": "Aluminum, vinyl and manila",
+      "title": "1.2 Today: aluminum, vinyl and manila",
       "w": 1100,
       "x": 1180,
       "y": 0
     },
-    "Part1Desk.dc.html": {
-      "h": 890,
-      "page": "wireframes",
-      "title": "4. Part-number mode, desktop",
+    "Diagram.dc.html": {
+      "h": 920,
+      "title": "1.3 Today: cards, brackets and lines",
+      "w": 1100,
+      "x": 2360,
+      "y": 0
+    },
+    "Controls.dc.html": {
+      "h": 1300,
+      "title": "1.4 Today: dialogs, forms and inputs",
+      "w": 1100,
+      "x": 3540,
+      "y": 0
+    },
+    "Wire-Vin-Desktop.dc.html": {
+      "h": 1382,
+      "title": "2.1 Wireframe, VIN mode: desktop 1280 × 800",
       "w": 1280,
       "x": 0,
-      "y": 2440
+      "y": 1760
     },
-    "Part1Phone.dc.html": {
-      "h": 950,
-      "page": "wireframes",
-      "title": "4. Part-number mode, phone",
-      "w": 430,
-      "x": 1360,
-      "y": 2440
-    },
-    "Part1States.dc.html": {
-      "h": 560,
-      "page": "wireframes",
-      "title": "4. Part-number mode, other states",
-      "w": 1280,
-      "x": 1870,
-      "y": 2440
-    },
-    "SecondTape.dc.html": {
-      "h": 640,
-      "page": "catalog-fitment",
-      "title": "The second tape: aluminum embossing tape",
-      "w": 1100,
-      "x": 3960,
-      "y": 0
-    },
-    "Slice1Textures.dc.html": {
-      "h": 1270,
-      "page": "catalog-fitment",
-      "title": "Slice 1 textures: part types and candidates",
-      "w": 1100,
-      "x": 420,
-      "y": 0
-    },
-    "Slice2Textures.dc.html": {
-      "h": 1180,
-      "page": "catalog-fitment",
-      "title": "Slice 2 textures: the stock strip and its rows",
-      "w": 1100,
-      "x": 1600,
-      "y": 0
-    },
-    "Slice3Textures.dc.html": {
-      "h": 1120,
-      "page": "catalog-fitment",
-      "title": "Slice 3 textures: the capped strip, the filter and the dialog",
-      "w": 1100,
-      "x": 2780,
-      "y": 0
-    },
-    "Slice4Textures.dc.html": {
-      "h": 1040,
-      "page": "catalog-fitment",
-      "title": "Slice 4 textures: part-number mode",
-      "w": 1100,
-      "x": 5140,
-      "y": 0
-    },
-    "Types1Dialog.dc.html": {
-      "h": 730,
-      "page": "wireframes",
-      "title": "1. Part types dialog",
-      "w": 936,
-      "x": 2720,
-      "y": 1590
-    },
-    "Tablet1Stack.dc.html": {
+    "Wire-Vin-Tablet.dc.html": {
       "h": 1284,
-      "page": "wireframes",
-      "title": "1. Tablet, 768 × 1024",
+      "title": "2.2 Wireframe, VIN mode: tablet 768 × 1024",
       "w": 768,
       "x": 1360,
-      "y": 0
+      "y": 1760
+    },
+    "Wire-Vin-Phone.dc.html": {
+      "h": 1506,
+      "title": "2.3 Wireframe, VIN mode: phone 390 × 844",
+      "w": 430,
+      "x": 2208,
+      "y": 1760
+    },
+    "Wire-Vin-FirstView.dc.html": {
+      "h": 400,
+      "title": "2.4 Wireframe, VIN mode: first view",
+      "w": 1280,
+      "x": 2718,
+      "y": 1760
+    },
+    "Wire-Vin-Empty.dc.html": {
+      "h": 650,
+      "title": "2.5 Wireframe, VIN mode: empty states",
+      "w": 1280,
+      "x": 4078,
+      "y": 1760
+    },
+    "Wire-Vin-TypesDialog.dc.html": {
+      "h": 730,
+      "title": "2.6 Wireframe, VIN mode: part types dialog",
+      "w": 936,
+      "x": 5438,
+      "y": 1760
+    },
+    "Wire-Part-Desktop.dc.html": {
+      "h": 890,
+      "title": "3.1 Wireframe, part-number mode: desktop 1280 × 800",
+      "w": 1280,
+      "x": 0,
+      "y": 3686
+    },
+    "Wire-Part-Phone.dc.html": {
+      "h": 950,
+      "title": "3.2 Wireframe, part-number mode: phone 390 × 844",
+      "w": 430,
+      "x": 1360,
+      "y": 3686
+    },
+    "Wire-Part-States.dc.html": {
+      "h": 560,
+      "title": "3.3 Wireframe, part-number mode: other states",
+      "w": 1280,
+      "x": 1870,
+      "y": 3686
+    },
+    "Texture-SecondTape.dc.html": {
+      "h": 640,
+      "title": "4.1 Texture: the second tape and elevation",
+      "w": 1100,
+      "x": 0,
+      "y": 5056
+    },
+    "Texture-Slice1.dc.html": {
+      "h": 1270,
+      "title": "4.2 Texture, slice 1: part types and candidates (#322)",
+      "w": 1100,
+      "x": 1180,
+      "y": 5056
+    },
+    "Texture-Slice2.dc.html": {
+      "h": 1180,
+      "title": "4.3 Texture, slice 2: the stock strip and its rows (#323)",
+      "w": 1100,
+      "x": 2360,
+      "y": 5056
+    },
+    "Texture-Slice3.dc.html": {
+      "h": 1120,
+      "title": "4.4 Texture, slice 3: the capped strip, filter and dialog (#324)",
+      "w": 1100,
+      "x": 3540,
+      "y": 5056
+    },
+    "Texture-Slice4.dc.html": {
+      "h": 1040,
+      "title": "4.5 Texture, slice 4: part-number mode (#325)",
+      "w": 1100,
+      "x": 4720,
+      "y": 5056
     }
   },
   "createdOnFiles": {
@@ -153,34 +139,42 @@
   },
   "noteOrder": [
     "heading",
-    "wire-heading",
-    "texture-next"
+    "row-wire-vin",
+    "row-wire-part",
+    "row-texture"
   ],
   "notes": {
-    "texture-next": {
-      "fill": "gray",
-      "page": "catalog-fitment",
-      "text": "Texture pass goes here\n\nThe layout is settled on the Wireframes page. Slices 1 to 4 each get their textures decided on this page before their issue is written: part types and candidates, then stock, then the dialog, then part-number mode.",
-      "w": 340,
-      "x": 0,
-      "y": 0
-    },
     "heading": {
       "kind": "title1",
       "maxW": 4640,
-      "text": "nitrovin UI: what DESIGN.md keeps",
+      "text": "1. Today: what DESIGN.md keeps",
       "w": 240,
       "x": 0,
       "y": -300
     },
-    "wire-heading": {
+    "row-wire-vin": {
       "kind": "title1",
-      "maxW": 2800,
-      "page": "wireframes",
-      "text": "Where catalog items sit on the page",
+      "maxW": 6374,
+      "text": "2. Wireframes: VIN mode (#320 to #324)",
       "w": 240,
       "x": 0,
-      "y": -300
+      "y": 1460
+    },
+    "row-wire-part": {
+      "kind": "title1",
+      "maxW": 3150,
+      "text": "3. Wireframes: part-number mode (#325)",
+      "w": 240,
+      "x": 0,
+      "y": 3386
+    },
+    "row-texture": {
+      "kind": "title1",
+      "maxW": 5820,
+      "text": "4. Textures (#322 to #325)",
+      "w": 240,
+      "x": 0,
+      "y": 4756
     }
   },
   "order": [
@@ -188,33 +182,25 @@
     "Materials.dc.html",
     "Diagram.dc.html",
     "Controls.dc.html",
-    "Desk1Stack.dc.html",
-    "Tablet1Stack.dc.html",
-    "Detail1Stack.dc.html",
-    "First1Stack.dc.html",
-    "Empty1Stack.dc.html",
-    "Types1Dialog.dc.html",
-    "Slice1Textures.dc.html",
-    "Slice2Textures.dc.html",
-    "Slice3Textures.dc.html",
-    "SecondTape.dc.html",
-    "Part1Desk.dc.html",
-    "Part1Phone.dc.html",
-    "Part1States.dc.html",
-    "Slice4Textures.dc.html"
+    "Wire-Vin-Desktop.dc.html",
+    "Wire-Vin-Tablet.dc.html",
+    "Wire-Vin-Phone.dc.html",
+    "Wire-Vin-FirstView.dc.html",
+    "Wire-Vin-Empty.dc.html",
+    "Wire-Vin-TypesDialog.dc.html",
+    "Wire-Part-Desktop.dc.html",
+    "Wire-Part-Phone.dc.html",
+    "Wire-Part-States.dc.html",
+    "Texture-SecondTape.dc.html",
+    "Texture-Slice1.dc.html",
+    "Texture-Slice2.dc.html",
+    "Texture-Slice3.dc.html",
+    "Texture-Slice4.dc.html"
   ],
   "pages": [
     {
       "id": "page-1",
-      "name": "Page 1"
-    },
-    {
-      "id": "catalog-fitment",
-      "name": "Catalog and fitment"
-    },
-    {
-      "id": "wireframes",
-      "name": "Wireframes"
+      "name": "nitrovin UI"
     }
   ],
   "title": "nitrovin UI Design"
