@@ -11,13 +11,11 @@ import (
 	"github.com/joshuasprow/nitrovin/pkg/vocab"
 )
 
-// TestModelYearsCounts: the embedded month's model years are ADR 0022's
-// measure of 2026_10.
+// TestModelYearsCounts: the embedded month's model years, measured as ADR
+// 0022 measured 2026_10's. The counts are the pinned month's; a bump that
+// changes them fails here, naming the month, and the bump updates them.
 func TestModelYearsCounts(t *testing.T) {
 	d := embeddedDecoder(t)
-	if embedded.Month != "2026_10" {
-		t.Skipf("ADR 0022 measured 2026_10, not %s", embedded.Month)
-	}
 	known, unknown, gaps := 0, 0, 0
 	for id := range d.month.ModelIDs() {
 		switch ys := d.month.ModelYears(id); {
@@ -37,10 +35,8 @@ func TestModelYearsCounts(t *testing.T) {
 			open++
 		}
 	}
-	// ADR 0022 says 540 unknown: 533 models have no Model pattern, and 8
-	// have one whose schemas have no year band.
-	if known != 31529 || unknown != 541 || gaps != 920 || open != 12186 || bands != 41810 {
-		t.Errorf("%d models with years, %d unknown, %d with gaps, %d of %d bands open; want 31529, 541, 920, 12186 of 41810", known, unknown, gaps, open, bands)
+	if known != 31893 || unknown != 551 || gaps != 932 || open != 12111 || bands != 41885 {
+		t.Errorf("data month %s: %d models with years, %d unknown, %d with gaps, %d of %d bands open; want 31893, 551, 932, 12111 of 41885", embedded.Month, known, unknown, gaps, open, bands)
 	}
 }
 

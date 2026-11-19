@@ -24,7 +24,7 @@
 //
 //	go run ./cmd/nitrovin-import sql |
 //	  docker exec -i nhtsa-oracle psql -X -q -U postgres -d vpic |
-//	  go run ./cmd/nitrovin-import build -month 2026_10
+//	  go run ./cmd/nitrovin-import build -month <month>   # the dump's, YYYY_MM
 //
 // The format is github.com/joshuasprow/nitrovin-data/pkg/artifact (ADR 0003).
 package main

@@ -4,8 +4,9 @@
 # wasm_exec.js of the same Go. `nitrovin serve` embeds them from
 # cmd/nitrovin/sw (the default <dir>) and publishes them under
 # /ui/r/<release>/; a build without them serves its page without the
-# visitor's own files. goreleaser's before hook (.goreleaser.yaml) and
-# contract.yml run it before building or testing cmd/nitrovin.
+# visitor's own files. goreleaser's before hook (.goreleaser.yaml) runs it
+# before building cmd/nitrovin; cmd/nitrovin's worker_test.go builds the
+# module the same way, into a temporary directory, for its tests.
 #
 #   scripts/sw.sh [<dir>]
 #
