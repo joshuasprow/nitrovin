@@ -70,6 +70,14 @@ body{margin:0}
 .blank{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;min-height:46px;box-sizing:border-box;margin:0 0 10px;padding:.5rem .75rem;border:3px dashed var(--faint);border-radius:2px;color:var(--muted)}
 .blank a{color:var(--link)}
 .mbtn{padding:.45rem .9rem;font:900 11px var(--label-font);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;color:var(--on-metal);text-shadow:0 1px 0 rgb(255 255 255/.8);background:var(--metal);border:1px solid var(--steel);border-radius:3px;box-shadow:var(--raised)}
+/* the second tape: aluminum embossing tape, a name that presses */
+.root{--emboss:0 1px 0 rgb(255 255 255/.9),0 -1px 1px rgb(0 0 0/.45);--on-metal:#232930;--metal:url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0/600px 120px,linear-gradient(#eef1f4,#b4bec7 55%,#cdd5dc);
+  --alu:repeating-linear-gradient(0deg,transparent 0 2px,rgb(8 7 15/.07) 2px 3px),var(--metal);--alu-in:repeating-linear-gradient(0deg,transparent 0 2px,rgb(8 7 15/.1) 2px 3px),linear-gradient(#aab4bd,#c9d1d8)}
+.pt,.rec .tab{color:var(--on-metal);text-shadow:var(--emboss);background:var(--alu);border-color:var(--steel);border-top-color:#fff;border-bottom-color:var(--steel-dark)}
+.pt .n{border-color:rgb(35 41 48/.55)}
+.pt[aria-pressed="true"]{background:var(--alu-in)}
+.pt.ph{color:rgb(35 41 48/.5);text-shadow:none}
+.rec .tab{border-right-color:rgb(35 41 48/.3)}
 </style>
 </helmet>
 <div class="root" data-scheme="{{scheme}}" style="width: 1100px; height: 1270px; box-sizing: border-box; padding: 40px; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; display: flex; flex-direction: column; gap: 30px">
@@ -80,7 +88,7 @@ body{margin:0}
 </div>
 
 <section>
-<p class="cap">Part types, as label tape <span>Settled. A part type is a name from a spine, so it is tape, in its own case. The lines from Vehicle and Model year run on down from the names to a strip saying what was asked.</span></p>
+<p class="cap">Part types, as aluminum tape <span>Settled. A part type is a name you press, so it is the second tape: embossing tape in the plate's metal, in its own case. The strip above it is a name that does nothing, and stays black. The lines from Vehicle and Model year run on down from the names to a strip saying what was asked.</span></p>
 <div class="strip names"><span class="stamp">demo-vehicles</span><span class="seg g-wmi"><span class="w">Ford</span></span><span class="seg g-vds"><span class="w">F150</span></span><span class="seg g-year"><span class="w">any year</span></span></div>
 <div class="strip fits"><span class="stamp">Parts that fit · demo-catalog</span><span class="seg g-vds"><span class="w">F150</span></span><span class="seg g-year"><span class="w">2015</span></span></div>
 <div class="types">
