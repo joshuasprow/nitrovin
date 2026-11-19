@@ -172,6 +172,10 @@ tape. A bracket or a leader line is pinstripe tape in its group's colour.
   the stack is one strip with a row to a name.
 - **An empty place stays.** A vocabulary with no name, or none loaded, keeps a
   blank strip: a 3 px dashed `--faint` outline with a sentence in it.
+- **On a tag the tape takes the tag's colour.** A control on a manila tag is
+  the same ridged tape with the group's mark as its body, edges mixed lighter
+  and darker from that colour, and a faint white halo on its letters, as
+  vinyl whitens where it is struck.
 
 ### Pinstripe tape
 
@@ -201,6 +205,10 @@ A decoded card is a manila parts tag, hung by its eyelet from its leader line.
   does.
 - **Wrong:** a card whose group is wrong prints its band and its large value
   in `--manila-bad` (`#a01414`).
+- **A control on a tag is label tape, not metal.** The check digit's "Show
+  the sum" is a short strip of ridged tape in the tag's own colour, `--cm`,
+  with raised white letters. Aluminum clashed with the paper, and nothing
+  bolts metal to a tag.
 - **Not yet typed**, a card keeps its place as a 2 px dashed `--faint` outline
   with its muted title, and no stock.
 
@@ -271,7 +279,9 @@ Every other control is plain and small.
 
 - **Button:** a key of the plate's metal. The label face at 11 px, upper case,
   `--on-metal`, a 1 px `--steel` edge, `--raised`. Pressed, it moves down
-  2 px. A button in the header or a row in the menu adds a rivet.
+  2 px. A button in the header or a row in the menu adds a rivet. The one
+  exception is a button on a manila tag, which is label tape in the tag's
+  colour.
 - **Link-like button** (`.linkish`, "Clear recent"): no metal. `--link`,
   underlined, in the body face.
 - **Text and search fields:** a recess. Panel ground, a 1 px `--steel` edge,
@@ -306,7 +316,8 @@ Every other control is plain and small.
 ## Building something new
 
 - A new control is a piece of metal. Reuse `--metal`, `--raised` and
-  `--emboss`, and pick its fastener from the table above.
+  `--emboss`, and pick its fastener from the table above. On a manila tag it
+  is a strip of label tape in the tag's colour.
 - A new name from a vocabulary is a strip of label tape.
 - A new fact about the VIN itself is a row on a tag, under its group's band.
 - A new connection between two things is a line of pinstripe tape.
