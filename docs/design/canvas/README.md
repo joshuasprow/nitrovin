@@ -12,23 +12,25 @@ kept together.
 - `canvas.json`: the index. Each frame's place and size, the pages, the notes.
 - One `.dc.html` per frame.
 
-| Page | Frames |
-| --- | --- |
-| Page 1, what `DESIGN.md` keeps | `Main`, `Materials`, `Diagram`, `Controls` |
-| Catalog and fitment, the texture passes | `Slice1Textures`: part types, candidates, marks and empty places, the textures behind #322. `Slice2Textures`: the stock strip and its rows, the textures behind #323. `Slice3Textures`: the capped strip, the filter and the part types dialog, the textures behind #324. `SecondTape`: aluminum embossing tape, the texture for a name that can be pressed. `Slice4Textures`: part-number mode, the textures behind #325 |
-| Wireframes | `Desk1Stack`, `Tablet1Stack`, `Detail1Stack` (the page at 1280, 768 and 390 wide), `First1Stack`, `Empty1Stack`, `Types1Dialog`; and part-number mode: `Part1Desk`, `Part1Phone`, `Part1States` |
+The canvas is one page of four rows. A frame's title starts with its row and
+its place in it.
 
-The wireframes are the layout behind issues #320 to #325.
+| Row | Frames |
+| --- | --- |
+| 1. Today, what `DESIGN.md` keeps | `Main`, `Materials`, `Diagram`, `Controls` |
+| 2. Wireframes, VIN mode (#320 to #324) | `Wire-Vin-Desktop`, `Wire-Vin-Tablet`, `Wire-Vin-Phone` (the page at 1280, 768 and 390 wide), `Wire-Vin-FirstView`, `Wire-Vin-Empty`, `Wire-Vin-TypesDialog` |
+| 3. Wireframes, part-number mode (#325) | `Wire-Part-Desktop`, `Wire-Part-Phone`, `Wire-Part-States` |
+| 4. Textures (#322 to #325) | `Texture-SecondTape` (the second tape and the elevation rule), then one frame a slice: `Texture-Slice1` to `Texture-Slice4` |
 
 ## This snapshot
 
-Canvas version `1795121451-7ccb`, read on 2026-11-19.
+Canvas version `1795121667-f3d3`, read on 2026-11-19.
 
 ## Rebuilding a canvas from a snapshot
 
 Publish this folder as the root of a new Design canvas. Nine frames
-(`Main`, `Materials`, `Diagram`, `Controls`, `Slice1Textures`,
-`Slice2Textures`, `Slice3Textures`, `Slice4Textures`, `SecondTape`) draw their textures from two
+(`Main`, `Materials`, `Diagram`, `Controls` and the five `Texture-` frames)
+draw their textures from two
 images uploaded to the original canvas, at addresses that resolve only there:
 
 | Address in the frames | Original |
