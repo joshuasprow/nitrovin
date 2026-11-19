@@ -12,6 +12,9 @@ kept together.
 - `canvas.json`: the index. Each frame's place and size, the pages, the notes.
 - One `.dc.html` per frame.
 
+`_blob/` is not the canvas's: it links each uploaded image's address to its
+original in `pkg/ui/static/` (see "Rebuilding a canvas from a snapshot").
+
 The canvas is one page of four rows. A frame's title starts with its row and
 its place in it.
 
@@ -44,6 +47,10 @@ images uploaded to the original canvas, at addresses that resolve only there:
 
 Upload both to the new canvas and replace each address with the one the
 upload returns. Without that, those eighteen frames draw with no texture.
+
+`_blob/` holds one link per upload, named for its address and pointing at
+its original. A reader that draws the frames off the canvas, from this
+folder, can take each `/_blob/<id>` from `_blob/<id>`.
 
 ## Data
 
