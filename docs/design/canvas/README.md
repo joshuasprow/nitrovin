@@ -28,7 +28,7 @@ a switch. The wireframes in rows 2 and 3 have no colour and no twin.
 
 ## This snapshot
 
-Canvas version `1795122344-2681`, read on 2026-11-19.
+Canvas version `1795122686-91e5`, read on 2026-11-19.
 
 ## Rebuilding a canvas from a snapshot
 
