@@ -245,8 +245,13 @@ func TestFitCompiled(t *testing.T) {
 			}
 			t.Logf("%d pages answered found", found)
 
-			// list of the catalog, a page at a time and by part type.
-			for _, where := range []map[string]string{nil, {"type": "mirror"}, {"type": "none"}} {
+			// list of the catalog, a page at a time, by part type and by
+			// vehicle.
+			for _, where := range []map[string]string{
+				nil, {"type": "mirror"}, {"type": "none"},
+				{"make": "Dodge", "model": "Ram 1500"}, {"model": "silverado 1500", "type": "brake-rotor-front"},
+				{"model": "Ram A"}, {"model": "other", "type": "mirror"}, {"model": "Dakota"},
+			} {
 				req := contract.ListRequest{Of: cat.Info().Name, Where: where, Limit: 1}
 				for page := 1; ; page++ {
 					want, werr := s.tr.List(req)

@@ -204,7 +204,9 @@ contract, not in `openapi.yaml`, and may change.
   name (`vpic` included, and the loaded catalog's, which pages its
   fitments): `where.<field>` per field (`where.make=476`;
   `where.model=1850&where.element=34` for a model's values;
-  `where.type=mirror` for a catalog's part type), `limit`, `after`.
+  `where.type=mirror` for a catalog's part type,
+  `where.make=Dodge&where.model=Ram%201500` for its lines for a vehicle),
+  `limit`, `after`.
 - Every parameter but `to` is given at most once, and an unknown one is
   refused, as on `GET /v1/decode/{vin}`.
 
@@ -729,8 +731,13 @@ MCP and C surfaces carry the same object.
   pages through its fitments in key order (part type, side, number), each a
   `FitmentLine`, the fitment line as the file has it (`fitment`, `note`,
   `applications` with `vehicle`, `first`, `last`, `options`,
-  `qualifiers`), 1,000 at most a page. `where.type` keeps one part type;
-  any other `where` field is `#invalid-request`. `vocabularies` is the
+  `qualifiers`), 1,000 at most a page. `where.type` keeps one part type.
+  The catalog's vehicle fields keep a vehicle's lines: its vehicle
+  vocabulary's fields, matched after that vocabulary's normalization, or,
+  when its vehicles are vPIC's, `make` and `model` (ids) and `ext` (an
+  extension id), matched exactly. Every one given holds; each line keeps
+  only the matching vehicles' applications, in file order; no matching
+  vehicle is an empty page. Any other `where` field is `#invalid-request`. `vocabularies` is the
   catalog's name and version.
 - **Entries.** A vocabulary's are `VocabularyEntry` values, its entries
   with their mappings as the file has them, ordered by normalized fields.

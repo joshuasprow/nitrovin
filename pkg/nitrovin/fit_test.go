@@ -675,6 +675,65 @@ func TestListCatalog(t *testing.T) {
 	}
 }
 
+// TestListCatalogVehicle: list with of the catalog and its vehicle fields
+// in where pages the fitments of the vehicles holding every one, each
+// line with only their applications, by part type too, matching as the
+// vocabulary folds case; no such vehicle is an empty page, and a field
+// neither type nor a vehicle field is refused.
+func TestListCatalogVehicle(t *testing.T) {
+	tr := catalogTranslator(t)
+	ram := "Dodge/Ram 1500"
+	silverado := "Chevrolet/Silverado 1500"
+	for _, c := range []struct {
+		name  string
+		where map[string]string
+		want  []string
+	}{
+		{"make and model", map[string]string{"make": "Dodge", "model": "Ram 1500"}, []string{
+			"brake-rotor-front BR-2001  " + ram, "brake-rotor-front BR-2002  " + ram, "engine EN-57  " + ram,
+			"mirror MR-1001 left " + ram + "," + ram, "mirror MR-1001 right " + ram,
+		}},
+		{"model alone", map[string]string{"model": "Silverado 1500"}, []string{"brake-rotor-front BR-2001  " + silverado}},
+		{"with type", map[string]string{"make": "Dodge", "model": "Ram 1500", "type": "mirror"}, []string{
+			"mirror MR-1001 left " + ram + "," + ram, "mirror MR-1001 right " + ram,
+		}},
+		{"case folded", map[string]string{"make": " CHEVROLET", "model": "silverado   1500"}, []string{"brake-rotor-front BR-2001  " + silverado}},
+		{"no such vehicle", map[string]string{"make": "Dodge", "model": "Dakota"}, nil},
+		{"no such type", map[string]string{"make": "Chevrolet", "type": "engine"}, nil},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			var got []string
+			req := contract.ListRequest{Of: "parts-catalog", Where: c.where, Limit: 1}
+			for {
+				l, err := tr.List(req)
+				if err != nil {
+					t.Fatal(err)
+				}
+				conforms(t, "List", l)
+				for _, e := range l.Entries {
+					line := e.(contract.FitmentLine)
+					var vs []string
+					for _, a := range line.Applications {
+						vs = append(vs, vehicleText(a.Vehicle))
+					}
+					got = append(got, fmt.Sprintf("%s %s %s %s", line.Fitment.Type, line.Fitment.Number, line.Fitment.Side, strings.Join(vs, ",")))
+				}
+				if l.Next == "" {
+					break
+				}
+				req.After = l.Next
+			}
+			if !slices.Equal(got, c.want) {
+				t.Errorf("paged %q; want %q", got, c.want)
+			}
+		})
+	}
+	_, err := tr.List(contract.ListRequest{Of: "parts-catalog", Where: map[string]string{"make": "Dodge", "number": "MR-1001"}})
+	if p := contract.AsProblem(err); p == nil || p.Pointer != "/where/number" || !strings.Contains(p.Detail, "make, model") {
+		t.Errorf("where.number beside where.make: %v; want a refusal at /where/number naming make, model", err)
+	}
+}
+
 // modelsTranslator loads a catalog whose vehicle vocabulary maps two
 // entries, Ram A and Ram B, to one vPIC model (1938), and Other to 1850:
 // a vehicle reaching two catalog models; a rear rotor listed directly for

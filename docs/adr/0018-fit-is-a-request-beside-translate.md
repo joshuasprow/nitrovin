@@ -214,3 +214,20 @@ fit.
   `unconfirmed` are as they were. A failed condition still drops the application.
 - **Fit's applications only.** A translation's entries and a mapping's route keep
   `unconfirmed` alone.
+
+## Amendment (2026-11-19): a catalog's fitments for a vehicle
+
+`list` of the catalog took only `where.type`, so a reader showing a person a
+vehicle's lines in the catalog had to fit the vehicle and could not page the file
+as it is ([#322](https://github.com/joshuasprow/nitrovin/issues/322)). Beside
+`where.type`, `list` of the catalog takes the catalog's vehicle fields: its vehicle
+vocabulary's fields, matched after that vocabulary's normalization, or, when its
+vehicles are vPIC's, `make` and `model` ids and `ext`, matched exactly. Every field
+given holds. The lines are those `fitment.Reader.ByVehicle` gives for the matching
+vehicles, in key order with the same cursor, each holding only those vehicles'
+applications in file order; no matching vehicle is an empty page.
+
+- **Additive.** Without a vehicle field `list` of the catalog is as it was; any other
+  field is still refused.
+- **No years, no translation.** The fields name the catalog's own vehicles, as its
+  lines do; reaching them from a VIN or another vocabulary stays `fit`'s work.
