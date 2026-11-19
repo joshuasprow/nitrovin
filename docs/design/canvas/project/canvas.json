@@ -62,6 +62,30 @@
       "x": 1180,
       "y": 0
     },
+    "Part1Desk.dc.html": {
+      "h": 890,
+      "page": "wireframes",
+      "title": "4. Part-number mode, desktop",
+      "w": 1280,
+      "x": 0,
+      "y": 2440
+    },
+    "Part1Phone.dc.html": {
+      "h": 950,
+      "page": "wireframes",
+      "title": "4. Part-number mode, phone",
+      "w": 430,
+      "x": 1360,
+      "y": 2440
+    },
+    "Part1States.dc.html": {
+      "h": 560,
+      "page": "wireframes",
+      "title": "4. Part-number mode, other states",
+      "w": 1280,
+      "x": 1870,
+      "y": 2440
+    },
     "SecondTape.dc.html": {
       "h": 640,
       "page": "catalog-fitment",
@@ -92,6 +116,14 @@
       "title": "Slice 3 textures: the capped strip, the filter and the dialog",
       "w": 1100,
       "x": 2780,
+      "y": 0
+    },
+    "Slice4Textures.dc.html": {
+      "h": 1040,
+      "page": "catalog-fitment",
+      "title": "Slice 4 textures: part-number mode",
+      "w": 1100,
+      "x": 5140,
       "y": 0
     },
     "Types1Dialog.dc.html": {
@@ -165,7 +197,11 @@
     "Slice1Textures.dc.html",
     "Slice2Textures.dc.html",
     "Slice3Textures.dc.html",
-    "SecondTape.dc.html"
+    "SecondTape.dc.html",
+    "Part1Desk.dc.html",
+    "Part1Phone.dc.html",
+    "Part1States.dc.html",
+    "Slice4Textures.dc.html"
   ],
   "pages": [
     {
