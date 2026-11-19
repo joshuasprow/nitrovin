@@ -7,13 +7,15 @@
    on bracket lines) and Tactile UI's odometer (a brushed plate with a
    screw at each end). Everything a visitor presses or reads a heading
    from is the same metal: the plate, the buttons, the chips, the brand
-   and the dialogs' heads. The cards are tags hung from their lines.
+   and the dialogs' heads. The cards are manila parts tags, hung by their
+   eyelets from lines of pinstripe tape.
 
    The texture is two things. Gradients and shadows give the metal its
    body and depth. brushed.svg, noise stretched along the brush
    (feTurbulence), is laid over it as light streaks and, as a mask-image
-   on a dark layer, cuts the dark ones between them. A radial mask punches
-   the eyelet each tag hangs by. */
+   on a dark layer, cuts the dark ones between them. paper.svg, finer
+   noise, is the tooth of a tag's manila. A radial mask punches the eyelet
+   each tag hangs by. */
 
 /* ---- Shared ---------------------------------------------------------- */
 :root { color-scheme: light dark; }
@@ -32,6 +34,13 @@ body { --bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint:
   --tape-edge: #050607; --tape-lit: #69727c; --on-tape: #f6f8fa;
   --tape-emboss: -1px -1px 0 rgb(8 7 15 / .67), 1px 1px 0 rgb(255 255 255 / .33), 0 2px 2px rgb(8 7 15 / .53);
   --tape-lift: 0 5px 7px rgb(8 7 15 / .4);
+  /* A line of pinstripe tape, the brackets' and the leader lines': a lit
+     edge up and left of it, and its shadow on the ground. */
+  --stripe-lift: drop-shadow(-1px -1px 0 rgb(255 255 255 / .4)) drop-shadow(1.5px 2px 1px rgb(8 7 15 / .3));
+  /* The manila, the same in both colour schemes: a parts tag's stock, its
+     tooth over it, the ink printed on it, and the patch around its eyelet. */
+  --manila: url(paper.svg) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f);
+  --on-manila: #2b2418; --manila-muted: #5c4c2e; --manila-patch: #c39a5c; --manila-bad: #a01414;
   font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 1rem 1rem 3rem; color: var(--fg); background: var(--bg); }
 @media (prefers-color-scheme: dark) {
   body { --bg: #16222d; --fg: #eef2f5; --muted: #a9b6c2; --line: #45566a; --faint: #3a4a5c; --card-bg: #1f2d3a; --link: #8ec5ff; --bad: #ff8a8a;
@@ -40,8 +49,15 @@ body { --bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint:
 a { color: var(--link); }
 header, main, #ui-error { max-width: 62rem; margin-inline: auto; }
 header { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; margin-bottom: 1.5rem; }
-/* The header's buttons, at its far end: small tags, a rivet each. */
-nav.top { margin-left: auto; display: flex; flex-wrap: wrap; gap: .5rem; }
+/* The header's buttons, at its far end: small tags, a rivet each. They
+   and the release are the header's nav, a popover (ui.html). In a wide
+   window the nav has no box of its own: its contents are the header's,
+   the release beside the brand and the buttons at the far end. Where they
+   would wrap (46rem, below) the nav is a menu behind the Menu button. */
+nav.top { display: contents; }
+nav.top button { order: 2; }
+header .version { order: 1; margin-right: auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.open-nav { display: none; }
 nav.top button { padding: .35rem .8rem .35rem 1.4rem;
   background: radial-gradient(circle at .7rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--metal); }
 nav.top .open-vins { anchor-name: --vins; }
@@ -107,7 +123,9 @@ button.copy { flex: none; }
 details { border: 1px solid var(--line); border-radius: 2px; padding: .25rem .75rem; margin: .5rem 0; }
 summary { cursor: pointer; font-weight: 600; padding: .25rem 0; }
 .wide, .scroll { overflow-x: auto; }
-main > .wide { padding: .25rem 1rem 1rem; background: var(--card-bg); border: 2px solid var(--steel); border-radius: 2px; box-shadow: 3px 3px 0 rgb(0 0 0 / .18); }
+/* A page's own table sits in a panel, as a note does: on the metal's edge
+   and a soft shadow. */
+main > .wide { padding: .25rem 1rem 1rem; background: var(--card-bg); border: 2px solid var(--steel); border-radius: 4px; box-shadow: 0 3px 0 var(--steel-dark), 0 8px 16px rgb(0 0 0 / .25); }
 .wide table { font-size: 13px; }
 
 /* The vocabularies (vocab.html). */
@@ -142,9 +160,9 @@ form.filter label { flex-basis: 100%; }
    gaps: a gap would move a column's centre off the fraction of the width
    the leader lines (page.html's SVGs, in 1020 units: 60 a cell, 170 a
    card) are drawn to. Each group names its colour once (--c), which its
-   label, bracket, leader line and card all use, and the colour its mark
-   takes on metal (--cm), which is the same light metal in both colour
-   schemes. */
+   label, bracket and leader line all use, and the colour its mark takes
+   on metal and its band on a card's manila (--cm), which is the same in
+   both colour schemes, as the metal and the manila are. */
 .g-wmi { --c: var(--c-wmi); --cm: #c8102e; }
 .g-vds { --c: var(--c-vds); --cm: #0b4fa8; }
 .g-check { --c: var(--c-check); --cm: #5b2d8e; }
@@ -165,16 +183,21 @@ form.filter label { flex-basis: 100%; }
 .plate, .labels { --plate-pad: 16px; }
 /* A cell's height, which the field over the cells takes as its line's. */
 .plate { --cell-h: clamp(2.4rem, 13cqw, 5.2rem); }
-.labels { padding: 0 var(--plate-pad); }
+/* The brackets stand 7px off the plate, above it and below: clear of its
+   focus ring, which reaches 6px out. */
+.labels { padding: 0 var(--plate-pad); margin-bottom: 7px; }
 .lab { text-align: center; font: 900 11px/1.2 var(--label-font); letter-spacing: .06em; text-transform: uppercase; color: var(--c); white-space: nowrap; }
-.lab::after { content: ""; display: block; height: 7px; margin: 3px 3px 0; border: 3px solid var(--c); border-bottom: 0; }
+.lab::after { content: ""; display: block; height: 7px; margin: 3px 3px 0; border: 4px solid var(--c); border-bottom: 0; border-radius: 2px 2px 0 0; filter: var(--stripe-lift); }
 
 /* The plate: the metal's body, a slotted screw at each end, light streaks
    of the brush over it (--metal), the dark streaks between them cut from a
    dark layer by the same grain as a mask, and a band of light across it
-   that a gradient mask fades out. */
-.plate { position: relative; isolation: isolate; padding: 10px var(--plate-pad); container-type: inline-size; border: 2px solid var(--steel); border-radius: 8px;
-  box-shadow: inset 0 1px 0 #fff, inset 0 -3px 6px rgb(0 0 0 / .25), 0 3px 0 var(--steel-dark), 0 8px 16px rgb(0 0 0 / .25);
+   that a gradient mask fades out. The ledge it sits on is its own bottom
+   border, under a line of the edge's steel, and not a shadow outside its
+   box: the focus ring, an outline, then stands the same distance off
+   every side of what is seen. */
+.plate { position: relative; isolation: isolate; padding: 10px var(--plate-pad) 12px; container-type: inline-size; border: 2px solid var(--steel); border-bottom: 3px solid var(--steel-dark); border-radius: 8px;
+  box-shadow: inset 0 1px 0 #fff, inset 0 -2px 0 var(--steel), inset 0 -5px 6px rgb(0 0 0 / .25), 0 8px 16px rgb(0 0 0 / .25);
   background: linear-gradient(var(--steel-dark), var(--steel-dark)) 3px 50% / 9px 2px no-repeat, linear-gradient(var(--steel-dark), var(--steel-dark)) calc(100% - 3px) 50% / 9px 2px no-repeat,
     radial-gradient(circle at 7.5px 50%, #f4f6f8 0 5px, var(--steel) 5.5px 6.5px, transparent 7px), radial-gradient(circle at calc(100% - 7.5px) 50%, #f4f6f8 0 5px, var(--steel) 5.5px 6.5px, transparent 7px), var(--metal); }
 .plate::before, .plate::after { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: 6px; pointer-events: none; }
@@ -187,15 +210,18 @@ form.filter label { flex-basis: 100%; }
 .cell .ch { display: inline-block; }
 .cell.bad { background: var(--bad); color: var(--on); text-shadow: none; border-bottom-color: var(--bad); }
 .under { padding: 0 16px; }
-.brk { height: 9px; margin: 4px 3px 0; border: 3px solid var(--faint); border-top: 0; }
+/* A bracket or a line whose group is typed is a strip of pinstripe tape in
+   the group's colour, lifted off the ground. One not yet typed is flat
+   and faint. */
+.brk { height: 9px; margin: 7px 3px 0; border: 3px solid var(--faint); border-top: 0; border-radius: 0 0 2px 2px; }
 .brk .name { display: none; }
-.brk.done { border-color: var(--c); }
+.brk.done { border-width: 4px; border-top: 0; border-color: var(--c); filter: var(--stripe-lift); }
 .leaders, .joins { display: block; width: 100%; overflow: visible; padding: 0 16px; box-sizing: border-box; }
 .leaders { height: 36px; }
 .joins { height: 28px; }
 .leaders path, .joins path { fill: none; stroke: var(--faint); stroke-width: 3; stroke-dasharray: 1; }
 #answer[data-done~="wmi"] path.g-wmi, #answer[data-done~="vds"] path.g-vds, #answer[data-done~="check"] path.g-check,
-#answer[data-done~="year"] path.g-year, #answer[data-done~="plant"] path.g-plant, #answer[data-done~="serial"] path.g-serial { stroke: var(--c); }
+#answer[data-done~="year"] path.g-year, #answer[data-done~="plant"] path.g-plant, #answer[data-done~="serial"] path.g-serial { stroke: var(--c); stroke-width: 5; stroke-linejoin: round; filter: var(--stripe-lift); }
 /* No line runs to a blank plate: with no name under them the lines to
    "Also known as" are not drawn. */
 .joins:has(+ .aka .stack:first-child .tagplate.blank) path { display: none; }
@@ -233,30 +259,44 @@ form.filter label { flex-basis: 100%; }
 .live .cell.sel { background: #16202b; color: #fff; text-shadow: none; border-radius: 4px; box-shadow: inset 0 0 0 3px var(--c); }
 .live .cell.sel.bad { background: var(--bad); color: var(--on); }
 
-/* The cards: six in a row, each a tag hung under its leader line by an
-   eyelet, a hole a radial mask punches through it (mask-clip keeps the
-   shadow) with a ring in the tag's heading around it. One there but empty
-   is faint. */
+/* The cards: six in a row, each a manila parts tag hung under its leader
+   line. The stock is the card's ::before, so the card's own shadow (a
+   drop-shadow: clip-path would cut a box-shadow away) follows its shape:
+   the top corners clipped, and the eyelet, a hole a radial mask punches
+   through a darker patch that reinforces it. The group's colour is
+   printed across the tag as its heading's band. One there but empty is a
+   dashed outline where its tag will hang. */
 .cards { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); padding: 0 16px; }
-.card { margin: 0 4px; padding: 0 .6rem .6rem; border: 3px solid var(--c); border-radius: 2px; background: var(--card-bg); min-width: 0; overflow-wrap: anywhere; box-shadow: 3px 3px 0 rgb(0 0 0 / .18);
-  mask-image: radial-gradient(circle at 50% 11px, transparent 3.5px, #000 4px); mask-clip: no-clip; }
-.card:not(.done) { border-style: dashed; border-color: var(--faint); box-shadow: none; }
+.card { position: relative; isolation: isolate; margin: 0 4px; padding: 28px .6rem .7rem; min-width: 0; overflow-wrap: anywhere; color: var(--on-manila); filter: drop-shadow(0 4px 5px rgb(8 7 15 / .28)); }
+.card::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(circle at 50% 14px, transparent 4px, var(--manila-patch) 4.5px 10px, transparent 10.5px), var(--manila);
+  clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%, 0 16px);
+  mask-image: radial-gradient(circle at 50% 14px, transparent 3.5px, #000 4px); }
+.card:not(.done) { padding: .5rem .6rem; color: var(--muted); border: 2px dashed var(--faint); border-radius: 2px; filter: none; }
+.card:not(.done)::before { display: none; }
 /* The card's own heading: the check digit's dialog is inside its card,
    and its heading is the dialog's. */
-.card:not(.done) > h2 { background: none; color: var(--muted); }
-.card > h2 { margin: 0 -.6rem .5rem; padding: 17px .6rem .25rem; font: 900 11px/1.3 var(--label-font); letter-spacing: .06em; text-transform: uppercase; color: var(--on); display: flex; justify-content: space-between; gap: .5rem;
-  background: radial-gradient(circle at 50% 8px, transparent 3.9px, rgb(255 255 255 / .75) 4px 6px, transparent 6.5px), var(--c); }
-.card > h2 .pos { font-weight: 400; opacity: .85; }
+.card:not(.done) > h2 { margin: 0; padding: 0; background: none; color: var(--muted); }
+.card > h2 { margin: 0 -.6rem .5rem; padding: .25rem .6rem; font: 900 11px/1.3 var(--label-font); letter-spacing: .06em; text-transform: uppercase; color: #fff; display: flex; justify-content: space-between; gap: .5rem; background: var(--cm); }
+.card > h2 .pos { font-weight: 400; opacity: .9; }
 .card dl { margin: 0; display: grid; gap: .35rem; }
-.card dt { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.card dt { font-size: 11px; color: var(--manila-muted); text-transform: uppercase; letter-spacing: .04em; }
 .card dd { margin: 0; font-weight: 600; line-height: 1.25; }
 .card .big { margin: 0; font: 700 1.5rem/1.2 var(--cell-font); }
 .card.g-check .big { font: 900 1rem/1.25 var(--label-font); }
-.card.bad { border-color: var(--bad); }
-.card.bad > h2 { background: var(--bad); color: var(--on); }
-.card .how { margin-top: .5rem; padding: .25rem .5rem; font-size: 10px; }
-ol.years { list-style: none; margin: .4rem 0 0; padding: 0; font-size: 11px; color: var(--muted); line-height: 1.35; }
-ol.years li.current { color: var(--fg); font-weight: 700; }
+.card.bad { --cm: var(--manila-bad); }
+.card.bad .big { color: var(--manila-bad); }
+/* A control on a tag is not metal: it is a strip of label tape in the
+   tag's own colour, stuck on the paper. The tape's ridges and edges are
+   the label tape's, its body the group's mark, and its letters raised
+   white with the halo vinyl takes where it is struck. */
+.card .how { margin-top: .5rem; padding: .25rem .5rem; font: 700 10px var(--cell-font); letter-spacing: .08em; color: var(--on-tape);
+  text-shadow: -1px -1px 0 rgb(8 7 15 / .5), 1px 1px 0 rgb(255 255 255 / .4), 0 0 3px rgb(255 255 255 / .55);
+  background: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .16) 2px 3px), linear-gradient(color-mix(in srgb, var(--cm) 86%, #fff), var(--cm));
+  border: 1px solid color-mix(in srgb, var(--cm) 60%, #000); border-top-color: color-mix(in srgb, var(--cm) 68%, #fff); border-bottom-width: 2px; border-radius: 2px; box-shadow: 0 2px 3px rgb(8 7 15 / .35); }
+.card .how:active { transform: translateY(1px); box-shadow: 0 1px 1px rgb(8 7 15 / .35); }
+ol.years { list-style: none; margin: .4rem 0 0; padding: 0; font-size: 11px; color: var(--manila-muted); line-height: 1.35; }
+ol.years li.current { color: var(--on-manila); font-weight: 700; }
 /* The sum's table keeps each cell on a line and scrolls sideways; the
    card's breaking of long words is not the dialog's. */
 .card dialog { overflow-wrap: normal; }
@@ -322,8 +362,8 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
 .fan:focus-visible ~ ol .stamp.switch { outline: 3px solid var(--link); outline-offset: -3px; }
 .seg { position: relative; align-self: stretch; display: flex; align-items: center; justify-content: center; padding: .35rem .6rem; text-align: center; min-width: 0; }
 .seg .w { font: 900 1.05rem/1.2 var(--cell-font); letter-spacing: .08em; text-shadow: var(--tape-emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere; }
-.seg::before { content: ""; position: absolute; left: 8px; right: 8px; top: -12px; height: 5px; border: 3px solid var(--c); border-bottom: 0; }
-.seg::after { content: ""; position: absolute; left: calc(50% - 1.5px); top: -31px; height: 19px; border-left: 3px solid var(--c); }
+.seg::before { content: ""; position: absolute; left: 8px; right: 8px; top: -13px; height: 5px; border: 4px solid var(--c); border-bottom: 0; border-radius: 2px 2px 0 0; filter: var(--stripe-lift); }
+.seg::after { content: ""; position: absolute; left: calc(50% - 2.5px); top: -31px; height: 18px; border-left: 5px solid var(--c); filter: var(--stripe-lift); }
 .seg.unsure::before, .seg.unsure .w { border-style: dashed; }
 .tagplate.rule .g-wmi::after, .tagplate.rule .g-vds::after { border-left-style: dashed; }
 .tagplate.rule .g-wmi .w, .tagplate.rule .g-vds .w { border-bottom-style: dashed; }
@@ -369,6 +409,28 @@ button.linkish { border: 0; background: none; box-shadow: none; padding: 0 .25re
 button.linkish:active { transform: none; box-shadow: none; }
 .menu .linkish { display: block; margin: .6rem auto 0; }
 .menu .linkish[hidden] { display: none; }
+
+/* The header's menu, where its buttons would wrap: the Menu button, a
+   key of the plate's metal with three bars struck in it, and behind it the
+   nav as a panel hung from the button, a note's panel: the buttons a
+   column, the release under them past a rule. The column is blocks, not
+   a grid: Safari stretches a grid in an anchored popover to the window's
+   foot. The VINs menu and the
+   dialogs open from inside it, as popovers of a popover. */
+@media (max-width: 46rem) {
+  .open-nav { display: block; order: 3; margin-left: auto; width: 2.75rem; height: 2rem; padding: 0; anchor-name: --nav;
+    background: linear-gradient(var(--on-metal), var(--on-metal)) 50% calc(50% - 5px) / 1.1rem 2px no-repeat, linear-gradient(var(--on-metal), var(--on-metal)) 50% 50% / 1.1rem 2px no-repeat,
+      linear-gradient(var(--on-metal), var(--on-metal)) 50% calc(50% + 5px) / 1.1rem 2px no-repeat, var(--metal); }
+  nav.top { display: none; }
+  nav.top:popover-open { display: block; inset: auto; height: fit-content; top: 3.6rem; right: max(.5rem, calc((100vw - 62rem) / 2)); margin: 0; box-sizing: border-box; width: min(16rem, calc(100vw - 1rem)); padding: .75rem;
+    border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .4); }
+  @supports (top: anchor(bottom)) {
+    nav.top:popover-open { position-anchor: --nav; top: calc(anchor(bottom) + .4rem); right: anchor(right); }
+  }
+  nav.top::backdrop { background: transparent; }
+  nav.top button { display: block; width: 100%; margin: 0 0 .5rem; text-align: left; }
+  nav.top .version { display: block; margin: .25rem 0 0; padding-top: .6rem; border-top: 1px solid var(--line); white-space: normal; overflow-wrap: anywhere; }
+}
 
 /* Motion: a group just completed draws its bracket and line in and pops
    its card; a character stamps into its cell. None of it for a visitor
@@ -417,10 +479,6 @@ button.linkish:active { transform: none; box-shadow: none; }
   .tagplate.below .info { top: calc(50% - .55rem); }
   .tagplate .info:active { transform: none; }
   .problems { padding-inline: 0; margin-inline: 0; }
-  nav.top { margin-left: 0; flex-basis: 100%; }
-  @supports not (top: anchor(bottom)) {
-    .menu[popover] { top: 6.2rem; }
-  }
 }
 
 /* A phone: the plate is two rows, so a cell is wide enough for a finger.
@@ -441,6 +499,9 @@ button.linkish:active { transform: none; box-shadow: none; }
   .under > .g-plant { grid-column: 2; }
   .under > .g-serial { grid-column: 3 / span 6; }
   .under { padding-bottom: 18px; }
+  /* A bracket's name is inside it here, and a filter on the bracket would
+     edge the name's letters too: these brackets lie flat. */
+  .brk.done { filter: none; }
   .brk .name { display: block; margin-top: 12px; text-align: center; white-space: nowrap; font: 900 10px/1.2 var(--label-font); letter-spacing: .06em; text-transform: uppercase; color: var(--c); }
   /* The check digit's sum is 17 characters wide, which a phone is not: its
      table is turned on its side, a character to a row, the four labels
