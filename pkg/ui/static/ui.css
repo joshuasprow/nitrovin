@@ -26,14 +26,26 @@ body { --bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint:
      colour struck or printed on it, a rivet, and a slotted screw. */
   --steel: #6f7b86; --steel-dark: #58626c; --on-metal: #232930;
   --metal: url(brushed.svg) 0 0 / 600px 120px, linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc);
-  --raised: inset 0 1px 0 #fff, 0 2px 0 var(--steel);
   --emboss: 0 1px 0 rgb(255 255 255 / .9), 0 -1px 1px rgb(0 0 0 / .45);
+  /* Elevation: three heights. A static strip of tape is stuck on, with a
+     small tight shadow (--lift-stuck). An unpressed button stands higher
+     than anything static beside it, and every one stands equally high: a
+     hard ledge of --steel-dark, which the dark ground does not swallow,
+     under a wide soft shadow (--lift-raised; a key of metal adds its lit
+     top, --raised). A pressed one is flush: 2px down, no drop shadow, an
+     inner shadow (--pressed) and a darker fill, the metal's --alu-in and
+     the black tape's --tape-in. */
+  --lift-stuck: 0 2px 3px rgb(8 7 15 / .32);
+  --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 9px rgb(8 7 15 / .38);
+  --raised: inset 0 1px 0 #fff, var(--lift-raised);
+  --pressed: inset 0 3px 4px rgb(8 7 15 / .4);
+  --alu-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .12) 2px 3px), linear-gradient(#8e99a3, #aab4bd);
   /* The tape, the same in both colour schemes: black label-maker vinyl,
      faint ridges across it, a lit top edge, and letters raised white. */
   --tape: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .13) 2px 3px), linear-gradient(#30363d, #171a1e);
+  --tape-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .2) 2px 3px), linear-gradient(#0c0e10, #1d2125);
   --tape-edge: #050607; --tape-lit: #69727c; --on-tape: #f6f8fa;
   --tape-emboss: -1px -1px 0 rgb(8 7 15 / .67), 1px 1px 0 rgb(255 255 255 / .33), 0 2px 2px rgb(8 7 15 / .53);
-  --tape-lift: 0 5px 7px rgb(8 7 15 / .4);
   /* A line of pinstripe tape, the brackets' and the leader lines': a lit
      edge up and left of it, and its shadow on the ground. */
   --stripe-lift: drop-shadow(-1px -1px 0 rgb(255 255 255 / .4)) drop-shadow(1.5px 2px 1px rgb(8 7 15 / .3));
@@ -47,7 +59,8 @@ body { --bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint:
   font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 1rem var(--gutter) 3rem; color: var(--fg); background: var(--bg); }
 @media (prefers-color-scheme: dark) {
   body { --bg: #16222d; --fg: #eef2f5; --muted: #a9b6c2; --line: #45566a; --faint: #3a4a5c; --card-bg: #1f2d3a; --link: #8ec5ff; --bad: #ff8a8a;
-    --c-wmi: #ff6b81; --c-vds: #7db4ff; --c-check: #c9a2ff; --c-year: #ffb067; --c-plant: #6fdcab; --c-serial: #b8c4cf; --on: #14181d; }
+    --c-wmi: #ff6b81; --c-vds: #7db4ff; --c-check: #c9a2ff; --c-year: #ffb067; --c-plant: #6fdcab; --c-serial: #b8c4cf; --on: #14181d;
+    --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 10px rgb(0 0 0 / .7); }
 }
 a { color: var(--link); }
 header, main, #ui-error { max-width: 62rem; margin-inline: auto; }
@@ -62,15 +75,17 @@ nav.top button { order: 2; }
 header .version { order: 1; margin-right: auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .open-nav { display: none; }
 nav.top button { padding: .35rem .8rem .35rem 1.4rem;
-  background: radial-gradient(circle at .7rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--metal); }
+  background: radial-gradient(circle at .7rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--key); }
 nav.top .open-vins { anchor-name: --vins; }
 nav.top .open-vins::after { content: " ▾"; }
 /* A button shows only where what it opens is: the VINs menu and the
    Developers dialog are the decoder's, not a vocabulary's list's. */
 body:not(:has(#vins)) nav.top .open-vins, body:not(:has(#developers)) nav.top .open-developers { display: none; }
-/* The brand is a small plate of its own, a rivet at each end. */
+/* The brand is a small plate of its own, a rivet at each end. It is
+   static, not a key: its edge is the metal's, with no ledge or shadow,
+   so the header's keys stand higher than it. */
 header a.brand { padding: .2rem 1.5rem; font: 900 13px var(--label-font); letter-spacing: .22em; text-transform: uppercase; text-decoration: none; color: var(--on-metal); text-shadow: var(--emboss);
-  border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised);
+  border: 1px solid var(--steel); border-radius: 3px; box-shadow: inset 0 1px 0 #fff, 0 2px 0 var(--steel);
   background: radial-gradient(circle at .65rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), radial-gradient(circle at calc(100% - .65rem) 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--metal); }
 header .version, header .version a { font: 600 11px var(--cell-font); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
 h1 { font: 900 1.3rem var(--label-font); letter-spacing: .04em; text-transform: uppercase; margin: .5rem 0; }
@@ -83,10 +98,12 @@ code, pre, .mono { font-family: var(--cell-font); }
 .hint { color: var(--muted); font-weight: 400; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .error { color: var(--bad); margin: .5rem 0; }
-/* A button is a key of the plate's metal: raised, and pressed in. */
-button { font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase; padding: .45rem .9rem; cursor: pointer;
-  color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); background: var(--metal); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised); }
-button:active { transform: translateY(2px); box-shadow: inset 0 1px 0 #fff; }
+/* A button is a key of the plate's metal (--key): raised, and pressed
+   flush. It is pressed while it is held, while it is on, and while the
+   menu it opens hangs from it. */
+button { --key: var(--metal); font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase; padding: .45rem .9rem; cursor: pointer;
+  color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); background: var(--key); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised); }
+button:active, button[aria-pressed=true], body:has(#vins:popover-open) .open-vins, body:has(nav.top:popover-open) .open-nav { --key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed); }
 input[type=text], input[type=search] { font: inherit; padding: .35rem .5rem; box-sizing: border-box; color: var(--fg); background: var(--card-bg); border: 1px solid var(--steel); border-radius: 2px; box-shadow: inset 0 2px 3px rgb(0 0 0 / .18); }
 label { font-weight: 600; }
 
@@ -307,8 +324,9 @@ form.filter label { flex-basis: 100%; }
 .card .how { margin-top: .3rem; padding: .25rem .5rem; font: 700 10px var(--cell-font); letter-spacing: .08em; color: var(--on-tape);
   text-shadow: -1px -1px 0 rgb(8 7 15 / .5), 1px 1px 0 rgb(255 255 255 / .4), 0 0 3px rgb(255 255 255 / .55);
   background: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .16) 2px 3px), linear-gradient(color-mix(in srgb, var(--cm) 86%, #fff), var(--cm));
-  border: 1px solid color-mix(in srgb, var(--cm) 60%, #000); border-top-color: color-mix(in srgb, var(--cm) 68%, #fff); border-bottom-width: 2px; border-radius: 2px; box-shadow: 0 2px 3px rgb(8 7 15 / .35); }
-.card .how:active { transform: translateY(1px); box-shadow: 0 1px 1px rgb(8 7 15 / .35); }
+  border: 1px solid color-mix(in srgb, var(--cm) 60%, #000); border-top-color: color-mix(in srgb, var(--cm) 68%, #fff); border-radius: 2px; box-shadow: var(--lift-raised); }
+.card .how:active { transform: translateY(2px); box-shadow: var(--pressed);
+  background: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .16) 2px 3px), linear-gradient(color-mix(in srgb, var(--cm) 72%, #000), color-mix(in srgb, var(--cm) 84%, #000)); }
 ol.years { list-style: none; margin: .15rem 0 0; padding: 0; font-size: 11px; color: var(--manila-muted); line-height: 1.35; }
 ol.years li { display: inline; white-space: nowrap; }
 ol.years li:not(:last-child)::after { content: " ·"; font-weight: 400; color: var(--manila-muted); }
@@ -345,14 +363,18 @@ table.sum .skip { color: var(--muted); }
    that on a narrow page (below) it can lie under four of six columns
    while the plate's label stays clear of it. */
 .aka { position: relative; display: flow-root; margin: 0 16px; }
+/* The heading's tape is stuck on; "N more vocabularies" is a switch, so
+   it stands raised, and is flush while it is on. */
 .aka h2, .more-voc { padding: .2rem .5rem; font: 900 9px/1.2 var(--cell-font); letter-spacing: .14em; text-transform: uppercase;
-  color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 2px solid var(--tape-edge); border-radius: 1px; box-shadow: 0 2px 3px rgb(8 7 15 / .35); }
+  color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 2px solid var(--tape-edge); border-radius: 1px; box-shadow: var(--lift-stuck); }
+.more-voc { border-bottom-width: 1px; box-shadow: var(--lift-raised); }
+.more-voc:active, .more:checked ~ .more-voc { transform: translateY(2px); background: var(--tape-in); box-shadow: var(--pressed); }
 .aka h2 { position: absolute; top: 6px; left: 0; margin: 0; }
 ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
 /* A stack's own measures: the room under a closed one for its edges
    (--under), the gap its lines cross from the strip above (--lead), what
    a closed stack above adds to that (--prev), and its strip's shadow. */
-.stack { position: relative; --under: 0px; --lead: 30px; --prev: 0px; --strip-shadow: var(--tape-lift); padding-bottom: var(--under); }
+.stack { position: relative; --under: 0px; --lead: 30px; --prev: 0px; --strip-shadow: var(--lift-stuck); padding-bottom: var(--under); }
 /* A closed stack: the plates under the top one are away, but for their
    edges, each a little narrower and lower, and room for them; the lines
    into the stack after it start under its top plate. A stack is open
@@ -362,9 +384,9 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
    link's target only if it has one. */
 .stack:has(.fan:not(:checked)):not(:has(.seg:target)) {
   & .tagplate.below { position: absolute; inset: 0 0 auto; margin: 0; visibility: hidden; }
-  &.d1 { --under: 12px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), var(--tape-lift); }
-  &.d2 { --under: 22px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), var(--tape-lift); }
-  &.d3 { --under: 32px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), 0 30px 0 -15px #1e2226, 0 31px 0 -14px var(--tape-edge), var(--tape-lift); }
+  &.d1 { --under: 12px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), var(--lift-stuck); }
+  &.d2 { --under: 22px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), var(--lift-stuck); }
+  &.d3 { --under: 32px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), 0 30px 0 -15px #1e2226, 0 31px 0 -14px var(--tape-edge), var(--lift-stuck); }
   &.d1 + .stack { --prev: 12px; }
   &.d2 + .stack { --prev: 22px; }
   &.d3 + .stack { --prev: 32px; }
@@ -399,9 +421,10 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
 .lbl .check { --cm: #a34c09; flex: none; padding: .15rem .4rem; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-decoration: none; white-space: nowrap; color: var(--on-tape);
   text-shadow: -1px -1px 0 rgb(8 7 15 / .5), 1px 1px 0 rgb(255 255 255 / .4);
   background: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .16) 2px 3px), var(--cm);
-  border: 1px solid color-mix(in srgb, var(--cm) 60%, #000); border-top-color: color-mix(in srgb, var(--cm) 68%, #fff); border-bottom-width: 2px; border-radius: 2px; box-shadow: 0 2px 3px rgb(8 7 15 / .35); }
+  border: 1px solid color-mix(in srgb, var(--cm) 60%, #000); border-top-color: color-mix(in srgb, var(--cm) 68%, #fff); border-radius: 2px; box-shadow: var(--lift-raised); }
 .lbl .check::after { content: " ›"; }
-.lbl .check:active { transform: translateY(1px); box-shadow: 0 1px 1px rgb(8 7 15 / .35); }
+.lbl .check:active { transform: translateY(2px); box-shadow: var(--pressed);
+  background: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .16) 2px 3px), color-mix(in srgb, var(--cm) 76%, #000); }
 .seg { position: relative; align-self: stretch; display: flex; align-items: center; justify-content: center; padding: .35rem .6rem; text-align: center; min-width: 0; }
 .seg .w { font: 900 1.05rem/1.2 var(--cell-font); letter-spacing: .08em; text-shadow: var(--tape-emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere; }
 .seg::before { content: ""; position: absolute; left: 8px; right: 8px; top: -13px; height: 5px; border: 4px solid var(--c); border-bottom: 0; border-radius: 2px 2px 0 0; filter: var(--stripe-lift); }
@@ -425,7 +448,7 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
   & .stamp.switch::after { content: "▴"; }
   & .tagplate::before { box-shadow: none; border-bottom: 0; }
   & .tagplate:first-child::before { border-radius: 2px 2px 0 0; }
-  & .tagplate:last-child::before { border-bottom: 3px solid var(--tape-edge); border-radius: 0 0 2px 2px; box-shadow: var(--tape-lift); }
+  & .tagplate:last-child::before { border-bottom: 3px solid var(--tape-edge); border-radius: 0 0 2px 2px; box-shadow: var(--lift-stuck); }
 }
 .tagplate.blank { grid-template-columns: 130fr 890fr; color: var(--muted); border: 3px dashed var(--faint); }
 .tagplate.blank::before { display: none; }
@@ -460,12 +483,12 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
 ul.examples { list-style: none; padding: 0; margin: 0 0 .6rem; display: grid; gap: .4rem; }
 ul.examples[hidden] { display: none; }
 ul.examples::before { content: attr(aria-label); font: 900 10px var(--label-font); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-a.example { display: block; padding: .35rem .8rem .35rem 1.4rem; font: 700 12px var(--cell-font); letter-spacing: .04em; text-decoration: none; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8);
+a.example { --key: var(--metal); display: block; padding: .35rem .8rem .35rem 1.4rem; font: 700 12px var(--cell-font); letter-spacing: .04em; text-decoration: none; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8);
   border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised); overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-  background: radial-gradient(circle at .7rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--metal); }
+  background: radial-gradient(circle at .7rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--key); }
 a.example.recent, a.example.surprise { font: 900 11px var(--label-font); letter-spacing: .06em; text-transform: uppercase; }
 a.example:hover { border-color: var(--link); }
-a.example:active { transform: translateY(2px); box-shadow: inset 0 1px 0 #fff; }
+a.example:active { --key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed); }
 button.linkish { border: 0; background: none; box-shadow: none; padding: 0 .25rem; color: var(--link); text-shadow: none; text-decoration: underline; text-transform: none; letter-spacing: 0; font: 13px system-ui, sans-serif; }
 button.linkish:active { transform: none; box-shadow: none; }
 .menu .linkish { display: block; margin: .6rem auto 0; }
@@ -481,7 +504,7 @@ button.linkish:active { transform: none; box-shadow: none; }
 @media (max-width: 46rem) {
   .open-nav { display: block; order: 3; margin-left: auto; width: 2.75rem; height: 2rem; padding: 0; anchor-name: --nav;
     background: linear-gradient(var(--on-metal), var(--on-metal)) 50% calc(50% - 5px) / 1.1rem 2px no-repeat, linear-gradient(var(--on-metal), var(--on-metal)) 50% 50% / 1.1rem 2px no-repeat,
-      linear-gradient(var(--on-metal), var(--on-metal)) 50% calc(50% + 5px) / 1.1rem 2px no-repeat, var(--metal); }
+      linear-gradient(var(--on-metal), var(--on-metal)) 50% calc(50% + 5px) / 1.1rem 2px no-repeat, var(--key); }
   nav.top { display: none; }
   nav.top:popover-open { display: block; inset: auto; height: fit-content; top: 3.6rem; right: max(.5rem, calc((100vw - 62rem) / 2)); margin: 0; box-sizing: border-box; width: min(16rem, calc(100vw - 1rem)); padding: .75rem;
     border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .4); }
@@ -545,8 +568,12 @@ button.linkish:active { transform: none; box-shadow: none; }
   .tagplate.below > .lbl { display: none; }
   .tagplate.below::before { border-top: 1px solid rgb(255 255 255 / .14); }
   .tagplate.below .seg { border-top: 0; }
-  .lbl .stamp { flex-wrap: nowrap; padding: .2rem .5rem; background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 2px solid var(--tape-edge); border-radius: 1px; box-shadow: 0 2px 3px rgb(8 7 15 / .35); }
+  .lbl .stamp { flex-wrap: nowrap; padding: .2rem .5rem; background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 2px solid var(--tape-edge); border-radius: 1px; box-shadow: var(--lift-stuck); }
   .lbl .stamp.switch .voc { flex-basis: auto; }
+  /* Here a stack's switch is a piece of tape of its own, so it stands
+     raised, and is flush while its stack is open. */
+  .lbl .stamp.switch { border-bottom-width: 1px; box-shadow: var(--lift-raised); }
+  .lbl .stamp.switch:active, .stack:has(.fan):is(:has(.fan:checked), :has(.seg:target)) .lbl .stamp.switch { transform: translateY(2px); background: var(--tape-in); box-shadow: var(--pressed); }
   .seg .w { font-size: .9rem; letter-spacing: .04em; }
   .tagplate.blank { grid-template-columns: minmax(0, 1fr); box-sizing: border-box; width: min(100% - 8px, 100vw - 2 * var(--gutter) - 8px); margin-left: 4px; }
   .tagplate.blank > .stamp { padding-block: .3rem; border-right: 0; border-bottom: 1px solid var(--faint); }
