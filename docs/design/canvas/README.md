@@ -15,14 +15,14 @@ kept together.
 | Page | Frames |
 | --- | --- |
 | Page 1, what `DESIGN.md` keeps | `Main`, `Materials`, `Diagram`, `Controls` |
-| Catalog and fitment, the texture passes | `Slice1Textures`: part types, candidates, marks and empty places, the textures behind #322. `Slice2Textures`: the stock strip and its rows, the textures behind #323. `Slice3Textures`: the capped strip, the filter and the part types dialog, a first pass that is not settled. `SecondTape`: aluminum embossing tape, the texture for a name that can be pressed |
+| Catalog and fitment, the texture passes | `Slice1Textures`: part types, candidates, marks and empty places, the textures behind #322. `Slice2Textures`: the stock strip and its rows, the textures behind #323. `Slice3Textures`: the capped strip, the filter and the part types dialog, the textures behind #324. `SecondTape`: aluminum embossing tape, the texture for a name that can be pressed |
 | Wireframes | `Desk1Stack`, `Tablet1Stack`, `Detail1Stack` (the page at 1280, 768 and 390 wide), `First1Stack`, `Empty1Stack`, `Types1Dialog` |
 
 The wireframes are the layout behind issues #320 to #325.
 
 ## This snapshot
 
-Canvas version `1795120326-50a8`, read on 2026-11-19.
+Canvas version `1795120713-e85b`, read on 2026-11-19.
 
 ## Rebuilding a canvas from a snapshot
 
