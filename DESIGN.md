@@ -92,15 +92,17 @@ text field laid over them.
   by `--emboss`, over a 4 px underline in its group's mark. Its size follows
   the plate's width through container units.
 - **Empty**, the plate reads "Type a VIN" in the label face across its middle.
-- **Focused**, the plate takes the 3 px `--link` outline, and the next empty
-  cell blinks a 6 px bar of `--link` along its bottom.
+- **Focused**, the plate takes the 3 px `--link` outline, 3 px off every side
+  of what is seen, and the next empty cell blinks a 6 px bar of `--link` along
+  its bottom. The brackets above and below stand 7 px off the plate, clear of
+  the ring.
 - **The caret among characters** is a 4 px bar in the gap before its cell.
   Under a mouse, the gap a click would pick shows the same bar at 35%.
 - **A selected cell** is inked: `#16202b`, white character, ringed 3 px in its
   group's colour.
 - **A character no VIN holds** fills its cell with `--bad`. A bad VIN is not
-  an error: the plate still decodes, and the problems are listed under the
-  answer.
+  an error: the plate still decodes, and once the VIN is whole its problems
+  are listed under the answer.
 - **A typed character stamps** into its cell (scale 1.6 to 1, 0.18 s).
 - **Narrow windows keep the plate.** Under 34 rem the cells wrap to two rows of
   nine, breaking after the check digit, so a cell stays wide enough for a
@@ -125,7 +127,8 @@ Around the body:
 - **Edge:** 1 px `--steel` (`#6f7b86`), 2 px on the VIN plate and dialogs.
 - **Raised:** `--raised`, a white line inside the top and 2 px of `--steel`
   below. The VIN plate and dialogs sit on 3 px of `--steel-dark` (`#58626c`)
-  and a soft drop shadow.
+  and a soft drop shadow. On the VIN plate that ledge is its own bottom
+  border, not a shadow, so the focus ring clears it.
 - **Lettering:** `--on-metal` (`#232930`) with `--emboss`, a white edge below
   and a dark edge above, so the letter reads as struck in.
 - **Pressed:** a button moves down 2 px and loses its lower edge.

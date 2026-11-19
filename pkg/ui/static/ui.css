@@ -176,16 +176,21 @@ form.filter label { flex-basis: 100%; }
 .plate, .labels { --plate-pad: 16px; }
 /* A cell's height, which the field over the cells takes as its line's. */
 .plate { --cell-h: clamp(2.4rem, 13cqw, 5.2rem); }
-.labels { padding: 0 var(--plate-pad); }
+/* The brackets stand 7px off the plate, above it and below: clear of its
+   focus ring, which reaches 6px out. */
+.labels { padding: 0 var(--plate-pad); margin-bottom: 7px; }
 .lab { text-align: center; font: 900 11px/1.2 var(--label-font); letter-spacing: .06em; text-transform: uppercase; color: var(--c); white-space: nowrap; }
 .lab::after { content: ""; display: block; height: 7px; margin: 3px 3px 0; border: 4px solid var(--c); border-bottom: 0; border-radius: 2px 2px 0 0; filter: var(--stripe-lift); }
 
 /* The plate: the metal's body, a slotted screw at each end, light streaks
    of the brush over it (--metal), the dark streaks between them cut from a
    dark layer by the same grain as a mask, and a band of light across it
-   that a gradient mask fades out. */
-.plate { position: relative; isolation: isolate; padding: 10px var(--plate-pad); container-type: inline-size; border: 2px solid var(--steel); border-radius: 8px;
-  box-shadow: inset 0 1px 0 #fff, inset 0 -3px 6px rgb(0 0 0 / .25), 0 3px 0 var(--steel-dark), 0 8px 16px rgb(0 0 0 / .25);
+   that a gradient mask fades out. The ledge it sits on is its own bottom
+   border, under a line of the edge's steel, and not a shadow outside its
+   box: the focus ring, an outline, then stands the same distance off
+   every side of what is seen. */
+.plate { position: relative; isolation: isolate; padding: 10px var(--plate-pad) 12px; container-type: inline-size; border: 2px solid var(--steel); border-bottom: 3px solid var(--steel-dark); border-radius: 8px;
+  box-shadow: inset 0 1px 0 #fff, inset 0 -2px 0 var(--steel), inset 0 -5px 6px rgb(0 0 0 / .25), 0 8px 16px rgb(0 0 0 / .25);
   background: linear-gradient(var(--steel-dark), var(--steel-dark)) 3px 50% / 9px 2px no-repeat, linear-gradient(var(--steel-dark), var(--steel-dark)) calc(100% - 3px) 50% / 9px 2px no-repeat,
     radial-gradient(circle at 7.5px 50%, #f4f6f8 0 5px, var(--steel) 5.5px 6.5px, transparent 7px), radial-gradient(circle at calc(100% - 7.5px) 50%, #f4f6f8 0 5px, var(--steel) 5.5px 6.5px, transparent 7px), var(--metal); }
 .plate::before, .plate::after { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: 6px; pointer-events: none; }
@@ -201,7 +206,7 @@ form.filter label { flex-basis: 100%; }
 /* A bracket or a line whose group is typed is a strip of pinstripe tape in
    the group's colour, lifted off the ground. One not yet typed is flat
    and faint. */
-.brk { height: 9px; margin: 5px 3px 0; border: 3px solid var(--faint); border-top: 0; border-radius: 0 0 2px 2px; }
+.brk { height: 9px; margin: 7px 3px 0; border: 3px solid var(--faint); border-top: 0; border-radius: 0 0 2px 2px; }
 .brk .name { display: none; }
 .brk.done { border-width: 4px; border-top: 0; border-color: var(--c); filter: var(--stripe-lift); }
 .leaders, .joins { display: block; width: 100%; overflow: visible; padding: 0 16px; box-sizing: border-box; }
