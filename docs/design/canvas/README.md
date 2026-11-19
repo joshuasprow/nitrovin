@@ -22,7 +22,7 @@ The wireframes are the layout behind issues #320 to #325.
 
 ## This snapshot
 
-Canvas version `1795119996-d1fe`, read on 2026-11-19.
+Canvas version `1795120326-50a8`, read on 2026-11-19.
 
 ## Rebuilding a canvas from a snapshot
 

@@ -49,6 +49,15 @@ body{margin:0}
 .stk{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:auto -.7rem 0;min-height:40px;padding:0 .7rem;font:900 12px var(--cell-font);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;color:var(--sc);text-shadow:var(--sts);background:var(--sb);border:0;border-top:1px solid var(--sbt);border-bottom:3px solid var(--sbb)}
 .stk svg{flex:none;width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.5}
 .rule{margin:0;border:0;border-top:2px solid var(--faint)}
+/* elevation: an unpressed button stands higher than anything static beside it; tape and key stand equally high */
+.root{--lift-stuck:0 2px 3px rgb(8 7 15/.32);--lift-raised:0 2px 0 var(--steel-dark),0 6px 9px rgb(8 7 15/.38)}
+.strip,.name{box-shadow:var(--lift-stuck)}
+.pt,.s2,.rec .tab{border-bottom-width:1px}
+.pt,.s2,.rec .tab,.key,.mbtn{box-shadow:inset 0 1px 0 #fff,var(--lift-raised)}
+.pt[aria-pressed="true"],.s2[aria-pressed="true"]{transform:translateY(2px);box-shadow:inset 0 2px 3px rgb(8 7 15/.3)}
+.stk{box-shadow:inset 0 1px 0 #fff,inset 0 -2px 0 var(--steel-dark)}
+.stk[aria-expanded="true"]{box-shadow:inset 0 2px 3px rgb(8 7 15/.3)}
+.stk.none{box-shadow:none}
 </style>
 </helmet>
 <div class="root" data-scheme="{{scheme}}" style="width: 1100px; height: 640px; box-sizing: border-box; padding: 40px; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; display: flex; flex-direction: column; gap: 26px">
