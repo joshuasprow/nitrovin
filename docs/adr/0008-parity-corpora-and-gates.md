@@ -17,8 +17,8 @@ committed VIN list, credited in `NOTICE` and in each corpus file's header.
 - **Committed** (`testdata/parity/<month>/corpus.tsv`): every VIN on main
   today (the oracle sample, the core, error and wrapper sets, ultravin's
   434-VIN parity corpus and its 64 cover VINs; about 700) plus every
-  deviation witness. The yard-owned 131-VIN inventory set from
-  snydersalvage/agent-tools is not published.
+  deviation witness. The first user's yard-owned 131-VIN inventory set is
+  not published.
 - **Generated each run**: VINs synthesized from the month's own patterns to
   reach every schema and WMI, and one-character mutations of corpus VINs for
   the error paths. They gate exactly like the committed set.
