@@ -56,10 +56,10 @@ type Library struct {
 	month  *vocab.Bundle
 	disk   Disk
 	remote Remote
-	// serverCatalog is the name of the server's catalog, "" when it has
-	// none: one catalog per nitrovin (ADR 0023), so the browser then
-	// compiles none.
-	serverCatalog string
+	// serverCatalog is the server's catalog as its worker config names it,
+	// a zero Name when it has none: one catalog per nitrovin (ADR 0023),
+	// so the browser then compiles none.
+	serverCatalog contract.VocabularyFile
 	now           func() time.Time
 	// opened is how long each step of opening took, as Server-Timing
 	// metrics: what a cold start costs.
@@ -234,7 +234,7 @@ func OpenLibrary(info contract.Info, remote Remote, disk Disk) (*Library, error)
 	s := &shelf{}
 	for _, v := range info.Vocabularies {
 		if v.Kind == string(vocab.KindCatalog) {
-			l.serverCatalog = v.Name
+			l.serverCatalog = v
 			continue
 		}
 		h := &held{name: v.Name, server: true}
@@ -280,8 +280,8 @@ func OpenLibrary(info contract.Info, remote Remote, disk Disk) (*Library, error)
 		h := openCatalog(rec, r)
 		// A server that gained a catalog since answers fit: one catalog
 		// per nitrovin, and one answer to one link (ADR 0023).
-		if l.serverCatalog != "" {
-			h.file, h.fault = nil, fmt.Sprintf("this server has a catalog now, %s; one catalog per nitrovin, so fit answers from the server's. Remove this browser's.", l.serverCatalog)
+		if l.serverCatalog.Name != "" {
+			h.file, h.fault = nil, fmt.Sprintf("this server has a catalog now, %s; one catalog per nitrovin, so fit answers from the server's. Remove this browser's.", l.serverCatalog.Name)
 		}
 		s.browser = append(s.browser, h)
 		slices.SortFunc(s.browser, func(a, b *held) int { return strings.Compare(a.name, b.name) })
@@ -494,8 +494,9 @@ func (l *Library) infoWith(drift bool) contract.Info {
 	return info
 }
 
-// ServerCatalog is the name of the server's catalog, "" when it has none.
-func (l *Library) ServerCatalog() string { return l.serverCatalog }
+// ServerCatalog is the server's catalog, its name and vehicle vocabulary,
+// a zero Name when it has none.
+func (l *Library) ServerCatalog() contract.VocabularyFile { return l.serverCatalog }
 
 // Month is the data month of the release's spine bundle.
 func (l *Library) Month() string { return l.month.Name() }
@@ -533,7 +534,7 @@ func (l *Library) list(s *shelf, hs []*held) []StoredFile {
 				out[i].Source = hex.EncodeToString(cc.SourceHash[:])
 			}
 		}
-		if h.catalog && h.fault != "" && l.serverCatalog == "" {
+		if h.catalog && h.fault != "" && l.serverCatalog.Name == "" {
 			out[i].Fault += " " + recompile
 		}
 		if h.linked() {
@@ -614,12 +615,13 @@ func (l *Library) Fit(ctx context.Context, req contract.FitRequest) (contract.Fi
 // pageFit is the page's fit (fit.go): Fit over dec, the VIN's decode the
 // page has already, when it is not nil; or, while the server holds the
 // catalog (one catalog per nitrovin, ADR 0023), the server's own
-// /v1/fit, as the browser does not read it.
-func (l *Library) pageFit(ctx context.Context, req contract.FitRequest, dec *contract.VINDecode) (contract.Fit, error) {
-	if l.serverCatalog != "" {
+// /v1/fit, as the browser does not read it, with raw its body.
+func (l *Library) pageFit(ctx context.Context, req contract.FitRequest, dec *contract.VINDecode) (fit contract.Fit, raw []byte, err error) {
+	if l.serverCatalog.Name != "" {
 		return l.serverFit(req)
 	}
-	return l.fit(ctx, req, dec)
+	fit, err = l.fit(ctx, req, dec)
+	return fit, nil, err
 }
 
 // fit is Fit, a VIN's decode dec when it is not nil, which is not asked
@@ -646,11 +648,11 @@ func (l *Library) fit(ctx context.Context, req contract.FitRequest, dec *contrac
 	return fit, err
 }
 
-// serverFit is req answered by the server's GET /v1/fit: the page's
-// requests alone, from a VIN, with a part type of the catalog's spine and
-// a page; its refusal as the server gave it, and in words when the server
-// cannot be reached.
-func (l *Library) serverFit(req contract.FitRequest) (contract.Fit, error) {
+// serverFit is req answered by the server's GET /v1/fit, and the body it
+// came in: the page's requests alone, from a VIN, with a part type of the
+// catalog's spine and a page; its refusal as the server gave it, and in
+// words when the server cannot be reached.
+func (l *Library) serverFit(req contract.FitRequest) (contract.Fit, []byte, error) {
 	q := url.Values{"from.vin": {req.From.VIN}}
 	if p := req.Part; p != nil {
 		q.Set("part.spine", p.Spine)
@@ -664,26 +666,28 @@ func (l *Library) serverFit(req contract.FitRequest) (contract.Fit, error) {
 	}
 	status, body, err := l.remote.Get("/v1/fit?" + q.Encode())
 	if err != nil {
-		return contract.Fit{}, &pageError{Status: http.StatusServiceUnavailable, Message: "Fitting the VIN " + req.From.VIN +
+		return contract.Fit{}, nil, &pageError{Status: http.StatusServiceUnavailable, Message: "Fitting the VIN " + req.From.VIN +
 			" needs this nitrovin's server, whose catalog it is, and the server could not be reached: this browser may be offline."}
 	}
 	if status != http.StatusOK {
 		var p contract.Problem
 		if json.Unmarshal(body, &p) == nil && p.Status != 0 && p.Type != contract.Internal {
-			return contract.Fit{}, &p
+			return contract.Fit{}, nil, &p
 		}
-		return contract.Fit{}, &pageError{Status: http.StatusBadGateway, Message: fmt.Sprintf("The server answered HTTP %d to the fit of %s: %s", status, req.From.VIN, p.Detail)}
+		return contract.Fit{}, nil, &pageError{Status: http.StatusBadGateway, Message: fmt.Sprintf("The server answered HTTP %d to the fit of %s: %s", status, req.From.VIN, p.Detail)}
 	}
 	var w serverFitJSON
 	if err := json.Unmarshal(body, &w); err != nil {
-		return contract.Fit{}, fmt.Errorf("reading the server's fit of %s: %w", req.From.VIN, err)
+		return contract.Fit{}, nil, fmt.Errorf("reading the server's fit of %s: %w", req.From.VIN, err)
 	}
-	return w.fit()
+	fit, err := w.fit()
+	return fit, body, err
 }
 
 // serverFitJSON is the server's fit (contract.Fit's JSON), as far as the
-// page reads it: its catalog's vehicles are read by the catalog's kind,
-// and its lists of conditions from their wire form.
+// page's card reads it; the Developers dialog shows the body itself. Its
+// catalog's vehicles are read by the catalog's kind, and its lists of
+// conditions from their wire form.
 type serverFitJSON struct {
 	Status     contract.FitStatus     `json:"status"`
 	Catalog    *contract.FitCatalog   `json:"catalog"`

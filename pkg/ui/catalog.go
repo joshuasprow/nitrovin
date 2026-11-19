@@ -50,7 +50,7 @@ func openCatalog(rec Record, r io.ReaderAt) *held {
 func catalogFile(h *held) contract.VocabularyFile {
 	f := h.file
 	ci := f.Catalog().Info()
-	v := contract.VocabularyFile{Name: h.name, Kind: string(vocab.KindCatalog), Version: f.Version, Release: ci.Release, FiledUnder: ci.FiledUnder, Blake3: h.rec.Blake3, Path: f.Path,
+	v := contract.VocabularyFile{Name: h.name, Kind: string(vocab.KindCatalog), Version: f.Version, Release: ci.Release, FiledUnder: ci.FiledUnder, Spine: ci.Spine, Vehicles: ci.Vehicles, Blake3: h.rec.Blake3, Path: f.Path,
 		CatalogCounts: &contract.CatalogCounts{Fitments: ci.Fitments, Applications: ci.Applications, Redirects: ci.Redirects, Retired: ci.Retired, Filings: ci.Filings}}
 	if cc := f.Compiled(); cc != nil {
 		v.Compiled = &contract.CompiledCatalog{Format: cc.Format, SourceBlake3: hex.EncodeToString(cc.SourceHash[:]), Writer: cc.Writer, DriftMonth: cc.DriftMonth, SkippedDrift: []string{}}
@@ -108,9 +108,9 @@ func (l *Library) Compile(src io.Reader, fileName string, size int64, scratch vo
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	cur := l.state.Load()
-	if l.serverCatalog != "" {
+	if l.serverCatalog.Name != "" {
 		return StoredFile{}, &pageError{Status: http.StatusConflict, Message: fmt.Sprintf(
-			"This server has a catalog, %s; one catalog per nitrovin, so this browser compiles none. Fit on this nitrovin answers from the server's catalog.", l.serverCatalog)}
+			"This server has a catalog, %s; one catalog per nitrovin, so this browser compiles none. Fit on this nitrovin answers from the server's catalog.", l.serverCatalog.Name)}
 	}
 	if i := slices.IndexFunc(cur.browser, func(h *held) bool { return h.catalog && h.linked() }); i >= 0 {
 		return StoredFile{}, &pageError{Status: http.StatusConflict, Message: fmt.Sprintf(

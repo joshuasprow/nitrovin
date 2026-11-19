@@ -3,6 +3,7 @@ package ui
 import (
 	"bytes"
 	"encoding/json"
+	"html"
 	"io"
 	"log"
 	"net/http"
@@ -144,8 +145,9 @@ var pageFitTargets = []string{
 // TestLibraryPageFit: the browser's library answers the page's parts
 // that fit as the server's pages do, from the catalog the browser holds,
 // over the page's own decode, asked for once; and, while the server holds
-// the catalog instead, from the server's /v1/fit. The catalog's lines are
-// the browser's too.
+// the catalog instead, from the server's /v1/fit, its Developers JSON the
+// server's every field (a redirect's candidate's redirects and via
+// included). The catalog's lines are the browser's too.
 func TestLibraryPageFit(t *testing.T) {
 	d := embedded(t)
 	srv := New(served{demoTranslator(t, d, true)}, log.New(io.Discard, "", 0))
@@ -186,8 +188,8 @@ func TestLibraryPageFit(t *testing.T) {
 	}
 	s.fits = demoTranslator(t, d, true)
 	l = openWith(t, s, newDisk())
-	if l.ServerCatalog() != "demo-catalog" {
-		t.Fatalf("the server's catalog %q; want demo-catalog", l.ServerCatalog())
+	if l.ServerCatalog().Name != "demo-catalog" || l.ServerCatalog().Vehicles != "demo-vehicles" {
+		t.Fatalf("the server's catalog %+v; want demo-catalog of demo-vehicles", l.ServerCatalog())
 	}
 	browser = NewInBrowser(l, BrowserConfig{}, log.New(io.Discard, "", 0))
 	for _, target := range pageFitTargets {
@@ -201,6 +203,28 @@ func TestLibraryPageFit(t *testing.T) {
 			t.Errorf("%s: the browser asked %q; want the server's fit", target, s.gets)
 		}
 	}
+	silverado := "/?from.vin=1GCVKREC6EZ123456&part.id=brake-rotor-rear"
+	for _, id := range []string{"fit-json", "candidates-json"} {
+		if want, got := devJSON(t, srv, silverado, id), devJSON(t, browser, silverado, id); got == "" || got != want {
+			t.Errorf("%s's %s in the browser, the server's catalog:\n%s\nwant the server's\n%s", silverado, id, got, want)
+		}
+	}
+	if got := devJSON(t, browser, silverado, "candidates-json"); !strings.Contains(got, `"redirects": [`) || !strings.Contains(got, `"via": [`) {
+		t.Errorf("%s's candidates' JSON in the browser lacks the server's redirects and via:\n%s", silverado, got)
+	}
+}
+
+// devJSON is the Developers dialog's JSON of id on target's page, as
+// text, without its "now" line: each fit is asked at its own second.
+func devJSON(t *testing.T, h *Handler, target, id string) string {
+	t.Helper()
+	_, _, body := response(t, h, "GET", target, nil)
+	m := regexp.MustCompile(`(?s)<pre tabindex="0" id="` + id + `"[^>]*>(.*?)</pre>`).FindStringSubmatch(body)
+	if m == nil {
+		return ""
+	}
+	lines := strings.Split(html.UnescapeString(m[1]), "\n")
+	return strings.Join(slices.DeleteFunc(lines, func(l string) bool { return strings.HasPrefix(strings.TrimSpace(l), `"now":`) }), "\n")
 }
 
 func mustRead(t *testing.T, path string) []byte {

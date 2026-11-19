@@ -151,7 +151,8 @@ func (s *decoderServer) Post(path string, body []byte) (int, []byte, error) {
 	return p.Status, b, nil
 }
 
-// serve has s serve data as its file name.
+// serve has s serve data as its file name, a catalog naming its vehicle
+// vocabulary as /v1/info does.
 func (s *decoderServer) serve(t *testing.T, name string, data []byte) {
 	t.Helper()
 	f, err := vocab.Read(name+".jsonl", bytes.NewReader(data))
@@ -159,6 +160,9 @@ func (s *decoderServer) serve(t *testing.T, name string, data []byte) {
 		t.Fatal(err)
 	}
 	v := contract.VocabularyFile{Name: name, Kind: string(f.Kind), Blake3: hex.EncodeToString(f.Hash[:])}
+	if c := f.Catalog(); c != nil {
+		v.Spine, v.Vehicles = c.Info().Spine, c.Info().Vehicles
+	}
 	s.info.Vocabularies = append(s.info.Vocabularies, v)
 	s.files[FilePath(s.info, v)] = data
 }
@@ -396,8 +400,8 @@ func TestLibraryCatalogRefusals(t *testing.T) {
 	s.info.Vocabularies = append(s.info.Vocabularies, contract.VocabularyFile{Name: "their-catalog", Kind: "catalog", Blake3: "ab12"})
 	disk := newDisk()
 	l := openWith(t, s, disk)
-	if l.ServerCatalog() != "their-catalog" || slices.ContainsFunc(s.gets, func(p string) bool { return strings.Contains(p, "their-catalog") }) {
-		t.Errorf("server catalog %q, asked for %q", l.ServerCatalog(), s.gets)
+	if l.ServerCatalog().Name != "their-catalog" || slices.ContainsFunc(s.gets, func(p string) bool { return strings.Contains(p, "their-catalog") }) {
+		t.Errorf("server catalog %q, asked for %q", l.ServerCatalog().Name, s.gets)
 	}
 	if _, err := compileFixture(t, l, catalog); err == nil || !strings.Contains(err.Error(), "This server has a catalog, their-catalog; one catalog per nitrovin") {
 		t.Errorf("with the server's catalog: %v", err)

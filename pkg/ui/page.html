@@ -211,7 +211,7 @@ own, which plate.js swaps in place (swap). */}}
 <span class="rails" aria-hidden="true"></span>
 {{with .Next}}<p class="more-cands">This page shows {{len $.Tags}} of {{$.Total}} candidates. <a class="swap" href="{{.}}">Next page</a></p>
 {{end}}{{end}}{{else}}<h2 id="fit-h" class="visually-hidden">Parts that fit</h2>
-<p class="blank"><span>{{.Blank}}</span>{{if .Add}}<button type="button" popovertarget="vocabularies">Add a catalog</button>{{end}}{{with .Way}}<a href="{{.Href}}">{{.Text}}</a>{{end}}</p>
+<p class="blank"><span>{{.Blank}}</span>{{if .Add}}<button type="button" popovertarget="vocabularies">Add a catalog</button>{{end}}{{range .Ways}}<a href="{{.Href}}">{{.Text}}</a>{{end}}</p>
 {{end}}</section>
 {{- end}}
 

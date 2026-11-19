@@ -1,7 +1,9 @@
 package ui
 
 import (
+	"bytes"
 	"context"
+	"html/template"
 	"net/url"
 	"slices"
 	"strconv"
@@ -64,10 +66,10 @@ type fitCard struct {
 	Total int
 	Next  string
 	// Blank is what the part types' place says in their stead, "" when
-	// it lists them; Way the link on from it, nil for none; Add the
+	// it lists them; Ways the links on from it, none for none; Add the
 	// control that opens the Vocabularies dialog.
 	Blank string
-	Way   *wayOn
+	Ways  []wayOn
 	Add   bool
 	// Invite asks for a press: nothing is pressed. NoneFit says the
 	// pressed part type has no candidate.
@@ -115,18 +117,19 @@ func fitHref(vin, part, after string) string {
 	return s
 }
 
-// catalogName is the loaded catalog's name, "" with none: in the browser,
-// the server's while it holds one, else the browser's.
-func (h *Handler) catalogName(info contract.Info) string {
-	if h.lib != nil && h.lib.ServerCatalog() != "" {
+// loadedCatalog is the loaded catalog as /v1/info lists it, a zero Name
+// with none: in the browser, the server's while it holds one, else the
+// browser's.
+func (h *Handler) loadedCatalog(info contract.Info) contract.VocabularyFile {
+	if h.lib != nil && h.lib.ServerCatalog().Name != "" {
 		return h.lib.ServerCatalog()
 	}
 	for _, v := range info.Vocabularies {
 		if v.Kind == string(vocab.KindCatalog) {
-			return v.Name
+			return v
 		}
 	}
-	return ""
+	return contract.VocabularyFile{}
 }
 
 // linesHref is the catalog's lines page, kept to where's fields.
@@ -140,7 +143,7 @@ func linesHref(catalog string, where url.Values) string {
 
 // idleFit is the card before a model is known: none loaded, or waiting.
 func (h *Handler) idleFit(info contract.Info) fitCard {
-	c := fitCard{Catalog: h.catalogName(info)}
+	c := fitCard{Catalog: h.loadedCatalog(info).Name}
 	if c.Catalog == "" {
 		c.Blank, c.Add = "No catalog loaded.", true
 		return c
@@ -151,12 +154,14 @@ func (h *Handler) idleFit(info contract.Info) fitCard {
 }
 
 // fit answers req: on the server its Pages; in the browser its own
-// catalog over dec, the page's decode, or the server's.
-func (h *Handler) fit(ctx context.Context, req contract.FitRequest, dec *contract.VINDecode) (contract.Fit, error) {
+// catalog over dec, the page's decode, or the server's, with raw the
+// server's /v1/fit body as it came, nil for any other.
+func (h *Handler) fit(ctx context.Context, req contract.FitRequest, dec *contract.VINDecode) (fit contract.Fit, raw []byte, err error) {
 	if h.lib != nil {
 		return h.lib.pageFit(ctx, req, dec)
 	}
-	return h.p.Fit(ctx, req)
+	fit, err = h.p.Fit(ctx, req)
+	return fit, nil, err
 }
 
 // fitVIN fills d's card for its VIN, whose model is known: its part
@@ -169,7 +174,7 @@ func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecod
 		return nil
 	}
 	req := contract.FitRequest{From: contract.FitFrom{VIN: d.VIN}, Limit: contract.MaxListLimit}
-	fit, err := h.fit(ctx, req, dec)
+	fit, raw, err := h.fit(ctx, req, dec)
 	if err != nil {
 		return err
 	}
@@ -179,13 +184,13 @@ func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecod
 			fields = cat[i].Fields
 		}
 	}
-	if err := h.fitJSON(res, "fit-json", "The part types", "the part types' JSON", fit); err != nil {
+	if err := h.fitJSON(res, "fit-json", "The part types", "the part types' JSON", fit, raw); err != nil {
 		return err
 	}
 	types := fit.PartTypes
 	for fit.Next != "" {
 		req.After = fit.Next
-		if fit, err = h.fit(ctx, req, dec); err != nil {
+		if fit, _, err = h.fit(ctx, req, dec); err != nil {
 			return err
 		}
 		types = append(types, fit.PartTypes...)
@@ -202,13 +207,13 @@ func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecod
 		return nil
 	case contract.FitNoVehicle:
 		c.Blank = c.Catalog + " has no " + d.Label + "."
-		c.Way = &wayOn{Text: "See the vehicles " + c.Catalog + " covers", Href: c.Lines}
+		c.Ways = []wayOn{{Text: "See the vehicles " + c.Catalog + " covers", Href: c.Lines}}
 		return nil
 	case contract.FitNoFitment:
 		names := modelNames(fit.Models, fields, true)
 		c.Blank = c.Catalog + " has the " + strings.Join(names, " and ") + ", and nothing in it fits " + yearWords(year) + "."
-		if len(fit.Models) > 0 {
-			c.Way = &wayOn{Text: "See " + c.Catalog + "'s " + names[0] + " lines", Href: linesHref(c.Catalog, vehicleWhere(fit.Models[0].Vehicle))}
+		for i, m := range fit.Models {
+			c.Ways = append(c.Ways, wayOn{Text: "See " + c.Catalog + "'s " + names[i] + " lines", Href: linesHref(c.Catalog, vehicleWhere(m.Vehicle))})
 		}
 		return nil
 	}
@@ -241,10 +246,10 @@ func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecod
 		limit = h.candidates
 	}
 	req = contract.FitRequest{From: contract.FitFrom{VIN: d.VIN}, Part: &contract.FitPart{Spine: fit.Catalog.Spine, ID: part}, Limit: limit, After: after}
-	if fit, err = h.fit(ctx, req, dec); err != nil {
+	if fit, raw, err = h.fit(ctx, req, dec); err != nil {
 		return err
 	}
-	if err := h.fitJSON(res, "candidates-json", "The candidates", "the candidates' JSON", fit); err != nil {
+	if err := h.fitJSON(res, "candidates-json", "The candidates", "the candidates' JSON", fit, raw); err != nil {
 		return err
 	}
 	for _, cand := range fit.Candidates {
@@ -260,11 +265,19 @@ func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecod
 	return nil
 }
 
-// fitJSON adds fit's JSON to the Developers dialog. As a translation's,
-// it names no request on /v1: the browser's own catalog is the
-// browser's alone, and the page is the same wherever it is drawn.
-func (h *Handler) fitJSON(res *result, id, title, what string, fit contract.Fit) error {
-	text, err := jsonText(fit)
+// fitJSON adds fit's JSON to the Developers dialog: raw, the server's
+// /v1/fit body, indented, when the browser asked the server, so the
+// dialog shows every field the server wrote. As a translation's, it names
+// no request on /v1: the browser's own catalog is the browser's alone,
+// and the page is the same wherever it is drawn.
+func (h *Handler) fitJSON(res *result, id, title, what string, fit contract.Fit, raw []byte) error {
+	var text template.HTML
+	var err error
+	if raw != nil {
+		text, err = indentText(bytes.TrimSpace(raw))
+	} else {
+		text, err = jsonText(fit)
+	}
 	if err != nil {
 		return err
 	}
@@ -355,7 +368,10 @@ func newCandidateTag(c contract.FitCandidate, elements contract.Elements, names 
 // text to read and "No conditions" when there is none. A confirmed model
 // year alone checks nothing a person needs told: every candidate's years
 // held, or it would not be one. A candidate a redirect reached says so,
-// with the part type the catalog lists it under.
+// with the part type the catalog lists it under. Each mark is a stamp, a
+// label and a list ("Not checked · Drive Type, Model year"), naming
+// elements as "Also known as" does (elementNames), whose sentence reads
+// "Not checked: Drive Type, model year" (unconfirmedText).
 func candidateMarks(c contract.FitCandidate, elements contract.Elements, names map[string]string) []fitMark {
 	var checked, unchecked []int32
 	year, text := false, false
@@ -397,20 +413,6 @@ func candidateMarks(c contract.FitCandidate, elements contract.Elements, names m
 			under = c.Fitment.Type
 		}
 		out = append(out, fitMark{Kind: "redirect", Text: "By redirect · " + under})
-	}
-	return out
-}
-
-// elementNames are elements' names as the decode gives them ("Drive
-// Type"), as "Also known as" writes them.
-func elementNames(ids []int32, elements contract.Elements) []string {
-	var out []string
-	for _, id := range ids {
-		if e, ok := elements.Find(id); ok && e.Variable != "" {
-			out = append(out, e.Variable)
-		} else {
-			out = append(out, "element "+strconv.Itoa(int(id)))
-		}
 	}
 	return out
 }
