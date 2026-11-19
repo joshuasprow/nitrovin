@@ -4,21 +4,44 @@ import (
 	"encoding/json"
 	"flag"
 	"os"
+	"runtime/debug"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/joshuasprow/nitrovin-data/pkg/artifact"
 )
 
-// elementsFixture is the 2026_10 public element table the layout tests run
-// on, as PublicElements reads it from that month's artifact. Regenerate with
+// elementsFixture is the pinned data month's public element table the
+// layout tests run on, as PublicElements reads it from that month's
+// artifact. Regenerate it with
 //
-//	NITROVIN_ARTIFACT=<2026_10 artifact> go test ./pkg/contract -run TestInfo -update-elements
-//
-// where the artifact is built as pkg/decoder's Postgres tests describe.
-const elementsFixture = "testdata/elements.2026_10.json"
+//	NITROVIN_ARTIFACT=$(go mod download -json github.com/joshuasprow/nitrovin-data | jq -r .Dir)/pkg/embedded/nitrovin.artifact \
+//	  go test ./pkg/contract -run 'TestInfo$' -update-elements
+const elementsFixture = "testdata/elements.json"
 
 var updateElements = flag.Bool("update-elements", false, "regenerate "+elementsFixture+" from $NITROVIN_ARTIFACT")
+
+// pinnedMonth is the data month go.mod pins: nitrovin-data v1.YYYYMM.N is
+// month YYYY_MM.
+func pinnedMonth(t *testing.T) string {
+	t.Helper()
+	bi, ok := debug.ReadBuildInfo()
+	if !ok {
+		t.Fatal("no build info")
+	}
+	for _, m := range bi.Deps {
+		if m.Path != "github.com/joshuasprow/nitrovin-data" {
+			continue
+		}
+		if v := strings.Split(m.Version, "."); len(v) == 3 && len(v[1]) == 6 {
+			return v[1][:4] + "_" + v[1][4:]
+		}
+		t.Fatalf("nitrovin-data version %s names no month", m.Version)
+	}
+	t.Fatal("nitrovin-data is not in the build info")
+	return ""
+}
 
 func loadElements(t *testing.T) Elements {
 	t.Helper()
@@ -36,7 +59,8 @@ func loadElements(t *testing.T) Elements {
 // TestInfo checks NewInfo on a real artifact: the Info validates against
 // the contract's schema, its element table is the fixture the layout tests
 // use, and it has the public and multi-valued elements docs/api/README.md
-// names for 2026_10.
+// names. All three hold for the pinned month; another month's artifact
+// skips.
 func TestInfo(t *testing.T) {
 	path := os.Getenv("NITROVIN_ARTIFACT")
 	if path == "" {
@@ -67,16 +91,13 @@ func TestInfo(t *testing.T) {
 		t.Fatal(err)
 	}
 	got = append(got, '\n')
+	if month := pinnedMonth(t); a.Month() != month {
+		t.Skipf("the fixture and README counts are the pinned month %s's; the artifact is %s", month, a.Month())
+	}
 	if *updateElements {
-		if a.Month() != "2026_10" {
-			t.Fatalf("the fixture is 2026_10's; the artifact is %s", a.Month())
-		}
 		if err := os.WriteFile(elementsFixture, got, 0o644); err != nil {
 			t.Fatal(err)
 		}
-	}
-	if a.Month() != "2026_10" {
-		t.Skipf("the fixture and README counts are 2026_10's; the artifact is %s", a.Month())
 	}
 	want, err := os.ReadFile(elementsFixture)
 	if err != nil {

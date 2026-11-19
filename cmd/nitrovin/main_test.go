@@ -23,7 +23,7 @@ import (
 
 // The tests run the binary `go build` makes, as a user does; only the
 // terminal case runs in-process, since a test has no terminal to give it.
-// The cases that decode need NITROVIN_ARTIFACT, the 2026_10 artifact; the
+// The cases that decode need NITROVIN_ARTIFACT, the pinned month's artifact; the
 // usage, refusal, unloadable-data and embedded-data cases need nothing.
 //
 //	NITROVIN_ARTIFACT=$PWD/nitrovin.artifact go test ./cmd/nitrovin
@@ -399,7 +399,7 @@ func TestDataPrecedence(t *testing.T) {
 // multi-valued element (Note) and one decoding to error codes.
 func TestText(t *testing.T) {
 	path, d := artifact(t)
-	answerKey(t, d) // the transcript is 2026_10's
+	answerKey(t, d) // the transcript is the answer key's month's
 	r := cli(t, []string{"NITROVIN_DATA=" + path}, "", "decode", "-o", "text", "--shape", "vpic", "--now", now, "2T1BURHE8JC123456", "5UXWX7C5XBA123456")
 	if r.exit != 0 || r.stderr != "" {
 		t.Fatalf("exit %d, stderr %q", r.exit, r.stderr)

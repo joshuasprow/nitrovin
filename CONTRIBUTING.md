@@ -70,18 +70,21 @@ Go at `mise.toml`'s pin ([Tools](#tools)).
 
 ```sh
 go build -o nitrovin ./cmd/nitrovin
-./nitrovin --version            # nitrovin <Go pseudo-version> (data 2026_10); +dirty with local changes
+./nitrovin --version            # nitrovin <Go pseudo-version> (data <month>); +dirty with local changes
 go test ./...                   # no data needed: tests that need an artifact or Postgres skip
 ```
 
-Most tests want an artifact. Download the one `go.mod` pins from
+Most tests want an artifact. The one `go.mod` pins is in the module cache
+(or download it from
 [nitrovin-data](https://github.com/joshuasprow/nitrovin-data/releases), or
-build it ([the importer](#the-importer)), and pass it by absolute path:
-`go test` runs each package in its own directory.
+build it: [the importer](#the-importer)). Pass it by absolute path:
+`go test` runs each package in its own directory. The pin's version names
+the data month: `v1.202611.1` is `2026_11`.
 
 ```sh
-gh release download v1.202610.1 -R joshuasprow/nitrovin-data -p nitrovin-2026_10.artifact
-NITROVIN_ARTIFACT=$PWD/nitrovin-2026_10.artifact go test ./...
+NITROVIN_ARTIFACT=$(go mod download -json github.com/joshuasprow/nitrovin-data | jq -r .Dir)/pkg/embedded/nitrovin.artifact \
+  go test ./...
+month=$(go list -m -f '{{.Version}}' github.com/joshuasprow/nitrovin-data | sed -E 's/^v1\.([0-9]{4})([0-9]{2})\..*/\1_\2/')
 ```
 
 That adds, among others, `TestParity` (the engine against the frozen
@@ -100,12 +103,16 @@ witnesses the oracle reads, `docs/vocabularies.md`, whose image recipe
 text `TestFormREADME` holds to the page's.
 
 - `contract.yml` (schemas, the no-data tests and the `js/wasm` build):
-  `pkg/contract`, `pkg/nitrovin`, `pkg/decoder`, `pkg/vocab`, `pkg/ui`,
-  `cmd/nitrovin`, `cmd/nitrovin-epa`, `testdata/vocab/`, `docs/api`'s four
-  schema documents, `README.md`, `go.mod`, `go.sum`. The tests that run
-  the vocabulary fixture, the demo set or the EPA sample against the embedded month must
-  pass, not skip: on the refresh's bump PR they fail it, naming the month,
-  if the new month breaks them ([the fixture](#vocabularies)).
+  `pkg/contract`, `pkg/nitrovin`, `pkg/decoder`, `pkg/vocab`, `pkg/fitment`,
+  `pkg/ui`, `cmd/nitrovin`, `cmd/nitrovin-epa`, `cmd/nitrovin-sw`,
+  `scripts/sw.sh`, `testdata/vocab/`, `docs/api`'s two schemas,
+  `openapi.yaml` and `mcp-tools.json`, `README.md`, `go.mod`, `go.sum`,
+  `mise.toml`, `mise.lock`, `.github/actions/mise/` and the workflow
+  itself. The tests that run the vocabulary fixture, the demo set or the
+  EPA sample against the embedded month must pass, not skip, and so must
+  `TestModelYearsCounts`, whose counts are the pinned month's: on the
+  refresh's bump PR they fail it, naming the month, if the new month breaks
+  them ([the fixture](#vocabularies)).
 - `import.yml`, **Tests**, on `pkg/`, `cmd/`, `go.mod`, `go.sum`,
   `testdata/parity/`, `testdata/vocab/`, `scripts/oracle.sh`, in four
   jobs. *Changed paths* decides whether Postgres is needed. *Artifact*
@@ -205,7 +212,7 @@ rows per table) from that stream. The same dump always gives the same bytes:
 ```sh
 go run ./cmd/nitrovin-import sql |
   docker exec -i nhtsa-oracle psql -X -q -U postgres -d vpic |
-  go run ./cmd/nitrovin-import build -month 2026_10   # nitrovin.artifact, nitrovin.json
+  go run ./cmd/nitrovin-import build -month "$month"   # nitrovin.artifact, nitrovin.json
 go run ./cmd/nitrovin-import inspect nitrovin.artifact            # header and tables
 go run ./cmd/nitrovin-import inspect nitrovin.artifact wmi wmi=5YJ
 ```
@@ -231,7 +238,7 @@ gets four files. The coverage summary goes to stderr, and `-report` writes
 the full report, including what the corpus alone misses.
 
 ```sh
-scripts/oracle.sh corpus testdata/parity/2026_10/corpus.tsv >corpus.tsv   # adds any new witness
+scripts/oracle.sh corpus "testdata/parity/$month/corpus.tsv" >corpus.tsv   # adds any new witness
 go run ./cmd/nitrovin-import vins -o run -report coverage.json nitrovin.artifact corpus.tsv   # prints run-1.tsv …
 ```
 
@@ -887,7 +894,7 @@ the one `go.mod` pins: a newer month, or the pinned month's dump re-touched
 
 Red anywhere publishes nothing: the pinned month stays, and the report goes
 to the issue "Refresh <month> is red", which the next green run closes.
-`gh workflow run refresh.yml -f month=2026_10` rebuilds a month whatever its
+`gh workflow run refresh.yml -f month=<month>` rebuilds a month whatever its
 dump; `-f dry-run=true` stops before anything is published. It needs the
 secrets `NITROVIN_DATA_DEPLOY_KEY` and `NITROVIN_DEPLOY_KEY` (write deploy
 keys of nitrovin-data and of this repo: a push or tag made with

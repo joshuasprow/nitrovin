@@ -36,7 +36,7 @@ flowchart LR
   - Its HTTP route and `docs/api/openapi.yaml`, and its MCP tool in `docs/api/mcp-tools.json`.
   - The tests for each surface: `TestServeContract`, `TestStdioOps`, `TestMCPVocabSession`, and the C library's `cmd/libnitrovin/testdata/{requests,vocab-requests}.jsonl` and `smoke.py`.
   - [docs/c-library.md](docs/c-library.md).
-- **Data month:** the `github.com/joshuasprow/nitrovin-data` version pinned in `go.mod` is the month, and bumping that pin is the only way to change it. Always derive it from the pin. Many files still name `2026_10` ([#312](https://github.com/joshuasprow/nitrovin/issues/312)).
+- **Data month:** the `github.com/joshuasprow/nitrovin-data` version pinned in `go.mod` is the month, and bumping that pin is the only way to change it. Always derive it from the pin. Files that still name `2026_10` state history or examples from it.
   ```sh
   go list -m -f '{{.Version}}' github.com/joshuasprow/nitrovin-data   # v1.202611.1 → 2026_11
   ```
@@ -185,7 +185,7 @@ uvx openapi-spec-validator docs/api/openapi.yaml
   | --- | --- |
   | `testdata/parity/<month>/` | `go test ./pkg/decoder -run 'TestParity$' -update-parity=<oracle run dir>` |
   | `pkg/contract/testdata/oracle/` | `scripts/refresh.sh contract-key testdata/parity/<month>` |
-  | `pkg/contract/testdata/elements.2026_10.json` | `-update-elements`, only from a 2026_10 artifact ([#312](https://github.com/joshuasprow/nitrovin/issues/312)) |
+  | `pkg/contract/testdata/elements.json` | `go test ./pkg/contract -run 'TestInfo$' -update-elements`, with `NITROVIN_ARTIFACT` the pinned artifact |
   | `cmd/nitrovin/testdata/text.txt` | `go test ./cmd/nitrovin -run 'TestText$' -update` |
   | `pkg/decoder/testdata/*.oracle.jsonl` | `-update-oracle`, against the oracle container |
   | `cmd/nitrovin-epa/testdata/vehicles.jsonl` | `go test ./cmd/nitrovin-epa -update` |

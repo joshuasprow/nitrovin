@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime/debug"
 	"slices"
 	"strconv"
 	"strings"
@@ -27,7 +28,8 @@ import (
 //
 //	NITROVIN_PSQL='docker exec -i nhtsa-oracle psql -X -q -U postgres -d vpic'
 //
-// NITROVIN_MONTH is the dump's data month (default 2026_10).
+// NITROVIN_MONTH is the dump's data month (default: the month go.mod pins,
+// nitrovin-data v1.YYYYMM.N being YYYY_MM).
 func TestPostgres(t *testing.T) {
 	psqlCmd := os.Getenv("NITROVIN_PSQL")
 	if psqlCmd == "" {
@@ -35,7 +37,7 @@ func TestPostgres(t *testing.T) {
 	}
 	month := os.Getenv("NITROVIN_MONTH")
 	if month == "" {
-		month = "2026_10"
+		month = pinnedMonth(t)
 	}
 	psql := func(script string) []byte {
 		t.Helper()
@@ -192,6 +194,21 @@ func TestPostgres(t *testing.T) {
 		}
 	}
 	t.Logf("%d sampled rows compared with the dump", checked)
+}
+
+// pinnedMonth is the data month go.mod pins: nitrovin-data v1.YYYYMM.N is
+// month YYYY_MM.
+func pinnedMonth(t *testing.T) string {
+	t.Helper()
+	if bi, ok := debug.ReadBuildInfo(); ok {
+		for _, m := range bi.Deps {
+			if v := strings.Split(m.Version, "."); m.Path == "github.com/joshuasprow/nitrovin-data" && len(v) == 3 && len(v[1]) == 6 {
+				return v[1][:4] + "_" + v[1][4:]
+			}
+		}
+	}
+	t.Fatal("no nitrovin-data version naming a month in the build info; set NITROVIN_MONTH")
+	return ""
 }
 
 // rawColumn is how the dump itself holds an artifact column.

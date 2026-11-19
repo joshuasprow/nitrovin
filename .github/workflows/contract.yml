@@ -95,7 +95,7 @@ jobs:
           required=(
             "pkg/nitrovin "{TestFixtureLoadsClean,TestFixtureDrift,TestTranslatorRefusesUnlinked,TestTranslate,TestTranslateAnswer}
             "pkg/nitrovin "{TestTranslateBatch,TestTranslateDrift,TestTranslateWithoutFiles,TestList,TestListPaging,TestSpineBundleTranslates}
-            "pkg/nitrovin "{TestCatalogLoads,TestCatalogDrift}
+            "pkg/nitrovin "{TestCatalogLoads,TestCatalogDrift,TestModelYearsCounts}
             "cmd/nitrovin "{TestVocabCheck,TestVocabLoad,TestServeVocabularies,TestVocabCheckCatalog,TestTranslate,TestTranslateRefused,TestList,TestListRefused}
             "cmd/nitrovin "{TestStdioOps,TestMCPVocabSession,TestWorker,TestWorkerCatalog,TestWorkerCatalogParts,TestWorkerStock,TestVocabPage,TestVocabTranslate}
             "cmd/nitrovin "{TestDemoCheck,TestDemoHints,TestWorkerDemo}

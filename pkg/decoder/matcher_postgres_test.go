@@ -30,7 +30,7 @@ import (
 // NITROVIN_ARTIFACT is an artifact built from that database:
 //
 //	go run ./cmd/nitrovin-import sql | $NITROVIN_PSQL |
-//	  go run ./cmd/nitrovin-import build -month 2026_10 -o "$NITROVIN_ARTIFACT"
+//	  go run ./cmd/nitrovin-import build -month <month> -o "$NITROVIN_ARTIFACT"
 //
 // The test writes scratch tables to the schema matcher_oracle and drops it.
 //
