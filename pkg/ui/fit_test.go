@@ -137,25 +137,38 @@ func TestPageFit(t *testing.T) {
 	// the marks the demo set's notes promise (#322): three alternators,
 	// all catalog text only; one front rotor, the decode's drive type
 	// ruling the other out; one rear rotor with no conditions. A year
-	// confirmed alone checks nothing worth a stamp.
+	// confirmed alone checks nothing worth a stamp. Marks are each
+	// application's, weakest wins: the tag shows their union, the weaker
+	// first. The demo set's candidates have one application a vehicle;
+	// the fitment fixture's left mirror has two for a 2010 Ram 1500 4WD,
+	// one with option text alone, one checked by Drive Type.
+	fixture := New(served{serverTranslator(t, embedded(t))}, log.New(io.Discard, "", 0))
 	for _, c := range []struct {
 		target  string
 		pressed string
 		tags    []string
+		on      *Handler // nil: the demo set's pages
 	}{
 		{pickup + "&part.id=alternator", "*Alternator 3", []string{
-			"DEMO-1001 | text: Catalog text only", "DEMO-1002 | text: Catalog text only", "DEMO-1003 | text: Catalog text only"}},
-		{pickup + "&part.id=brake-rotor-front", "*Brake Rotor, Front 1", []string{"DEMO-1102 | checked: Checked · Drive Type"}},
-		{pickup + "&part.id=brake-rotor-rear", "*Brake Rotor, Rear 1", []string{"DEMO-1111 | none: No conditions"}},
+			"DEMO-1001 | text: Catalog text only", "DEMO-1002 | text: Catalog text only", "DEMO-1003 | text: Catalog text only"}, nil},
+		{pickup + "&part.id=brake-rotor-front", "*Brake Rotor, Front 1", []string{"DEMO-1102 | checked: Checked · Drive Type"}, nil},
+		{pickup + "&part.id=brake-rotor-rear", "*Brake Rotor, Rear 1", []string{"DEMO-1111 | none: No conditions"}, nil},
 		// The CR-V's decode has no drive type to check an AWD fitment by.
-		{"/?from.vin=2HKRW2H53KH612345&part.id=transfer-case", "*Transfer Case 1", []string{"DEMO-4301 | unchecked: Not checked · Drive Type"}},
+		{"/?from.vin=2HKRW2H53KH612345&part.id=transfer-case", "*Transfer Case 1", []string{"DEMO-4301 | unchecked: Not checked · Drive Type"}, nil},
 		// The Silverado's rear rotor is listed with the front, and its
 		// series checked on the way to its catalog vehicle.
-		{"/?from.vin=1GCVKREC6EZ123456&part.id=brake-rotor-rear", "*Brake Rotor, Rear 1", []string{"DEMO-2101 | checked: Checked · Series | redirect: By redirect · Brake Rotor, Front"}},
-		// Eight characters name the model and no year: every year's.
-		{"/?from.vin=1FTEW1EG&part.id=brake-rotor-front", "*Brake Rotor, Front 1", []string{"DEMO-1102 | checked: Checked · Drive Type | unchecked: Not checked · Model year"}},
+		{"/?from.vin=1GCVKREC6EZ123456&part.id=brake-rotor-rear", "*Brake Rotor, Rear 1", []string{"DEMO-2101 | checked: Checked · Series | redirect: By redirect · Brake Rotor, Front"}, nil},
+		// Eight characters name the model and no year: every year's, the
+		// year a doubt before the drive type's check.
+		{"/?from.vin=1FTEW1EG&part.id=brake-rotor-front", "*Brake Rotor, Front 1", []string{"DEMO-1102 | unchecked: Not checked · Model year | checked: Checked · Drive Type"}, nil},
+		{"/?from.vin=1D7RV1GT5AS123456&part.id=mirror", "*Door Mirror 2", []string{
+			"MR-1001 | text: Catalog text only | checked: Checked · Drive Type", "MR-1001 | text: Catalog text only"}, fixture},
 	} {
-		s := fitSection(t, h, c.target)
+		on := h
+		if c.on != nil {
+			on = c.on
+		}
+		s := fitSection(t, on, c.target)
 		if pressed := slices.DeleteFunc(partTypes(s), func(n string) bool { return !strings.HasPrefix(n, "*") }); !slices.Equal(pressed, []string{c.pressed}) {
 			t.Errorf("%s: pressed %q; want %s", c.target, pressed, c.pressed)
 		}

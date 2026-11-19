@@ -315,6 +315,13 @@ catalog has for the vehicle, and the candidates of the one pressed.
   plain muted words, when nothing was either; and a solid stamp with an
   arrow, "By redirect" and the part type the catalog lists it under. A model
   year confirmed alone earns no stamp: every candidate's years held.
+- **Weakest wins.** Each of a candidate's applications earns its own marks,
+  and the tag shows their union, each kind once with its elements merged, so
+  it never claims more than the weakest way the candidate fits: an
+  application checked by Drive Type beside one with no condition reads "No
+  conditions" and "Checked · Drive Type", never Checked alone. The weaker
+  come first: Not checked, Catalog text only, No conditions, then Checked,
+  then By redirect.
 - **More candidates** than a page holds (30) are a "Next page" link away.
 
 ## Good enough: empty places

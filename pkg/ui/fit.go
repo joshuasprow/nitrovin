@@ -361,20 +361,27 @@ func newCandidateTag(c contract.FitCandidate, elements contract.Elements, names 
 }
 
 // candidateMarks are what nitrovin did and did not check of c against
-// the decode, from its applications' confirmed and unconfirmed (ADR 0018's
-// amendment of 2026-11-19): "Checked" names the elements a decoded value
-// met; "Not checked" those it could not check, and the model year when
-// none was known; with neither, "Catalog text only" when there is option
-// text to read and "No conditions" when there is none. A confirmed model
-// year alone checks nothing a person needs told: every candidate's years
-// held, or it would not be one. A candidate a redirect reached says so,
-// with the part type the catalog lists it under. Each mark is a stamp, a
-// label and a list ("Not checked · Drive Type, Model year"), naming
-// elements as "Also known as" does (elementNames), whose sentence reads
-// "Not checked: Drive Type, model year" (unconfirmedText).
+// the decode (ADR 0018's amendment of 2026-11-19), weakest wins: a tag
+// never claims more than the weakest way the candidate fits. Each
+// application earns its own marks from its confirmed and unconfirmed:
+// "Checked" names the elements a decoded value met; "Not checked" those
+// it could not check, and the model year when none was known; with
+// neither, "Catalog text only" when it has option text to read and "No
+// conditions" when it has none. A confirmed model year alone checks
+// nothing a person needs told: every candidate's years held, or it would
+// not be one. The tag shows the union of its applications' marks, once
+// each kind, a kind's elements merged, the weaker first: Not checked,
+// Catalog text only, No conditions, then Checked. So one application
+// checked by Drive Type beside one with no condition reads "No
+// conditions" and "Checked · Drive Type", never Checked alone. A
+// candidate a redirect reached says so last, with the part type the
+// catalog lists it under. Each mark is a stamp, a label and a list ("Not
+// checked · Drive Type, Model year"), naming elements as "Also known as"
+// does (elementNames), whose sentence reads "Not checked: Drive Type,
+// model year" (unconfirmedText).
 func candidateMarks(c contract.FitCandidate, elements contract.Elements, names map[string]string) []fitMark {
 	var checked, unchecked []int32
-	year, text := false, false
+	year, text, none := false, false, false
 	for _, a := range c.Applications {
 		for _, id := range a.Confirmed.Elements {
 			if !slices.Contains(checked, id) {
@@ -387,12 +394,15 @@ func candidateMarks(c contract.FitCandidate, elements contract.Elements, names m
 			}
 		}
 		year = year || a.Unconfirmed.ModelYear
-		text = text || strings.TrimSpace(a.Options) != ""
+		switch {
+		case len(a.Confirmed.Elements) > 0 || len(a.Unconfirmed.Elements) > 0 || a.Unconfirmed.ModelYear:
+		case strings.TrimSpace(a.Options) != "":
+			text = true
+		default:
+			none = true
+		}
 	}
 	var out []fitMark
-	if len(checked) > 0 {
-		out = append(out, fitMark{Kind: "checked", Text: "Checked · " + strings.Join(elementNames(checked, elements), ", ")})
-	}
 	if len(unchecked) > 0 || year {
 		words := elementNames(unchecked, elements)
 		if year {
@@ -400,12 +410,14 @@ func candidateMarks(c contract.FitCandidate, elements contract.Elements, names m
 		}
 		out = append(out, fitMark{Kind: "unchecked", Text: "Not checked · " + strings.Join(words, ", ")})
 	}
-	switch {
-	case len(out) > 0:
-	case text:
+	if text {
 		out = append(out, fitMark{Kind: "text", Text: "Catalog text only"})
-	default:
+	}
+	if none {
 		out = append(out, fitMark{Kind: "none", Text: "No conditions"})
+	}
+	if len(checked) > 0 {
+		out = append(out, fitMark{Kind: "checked", Text: "Checked · " + strings.Join(elementNames(checked, elements), ", ")})
 	}
 	if c.Reached == contract.ReachedRedirect {
 		under := names[c.Fitment.Type]
