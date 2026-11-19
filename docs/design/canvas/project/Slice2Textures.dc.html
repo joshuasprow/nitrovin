@@ -51,6 +51,12 @@ body{margin:0}
 .this{display:inline-block;margin-left:6px;padding:1px 6px;font:700 10px var(--cell-font);letter-spacing:.08em;text-transform:uppercase;color:var(--on-tape);text-shadow:var(--tape-emboss);background:var(--tape);border:1px solid var(--tape-edge);border-top-color:var(--tape-lit);border-radius:2px}
 .more{margin:8px 0 0;font-size:13px}
 .strip{display:flex;align-items:center;min-height:46px;padding:0 .7rem;color:var(--on-tape);font:700 11px var(--cell-font);letter-spacing:.08em;text-transform:uppercase;text-shadow:var(--tape-emboss);background:var(--tape);border:1px solid var(--tape-edge);border-top-color:var(--tape-lit);border-bottom-width:3px;border-radius:2px;box-shadow:var(--tape-lift)}
+/* the second tape: aluminum embossing tape, a name that presses */
+.root{--emboss:0 1px 0 rgb(255 255 255/.9),0 -1px 1px rgb(0 0 0/.45);--on-metal:#232930;--metal:url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0/600px 120px,linear-gradient(#eef1f4,#b4bec7 55%,#cdd5dc);
+  --alu:repeating-linear-gradient(0deg,transparent 0 2px,rgb(8 7 15/.07) 2px 3px),var(--metal);--alu-in:repeating-linear-gradient(0deg,transparent 0 2px,rgb(8 7 15/.1) 2px 3px),linear-gradient(#aab4bd,#c9d1d8)}
+.stk{color:var(--on-metal);text-shadow:var(--emboss);background:var(--alu);border-top-color:#fff;border-bottom-color:var(--steel-dark)}
+.stk[aria-expanded="true"]{background:var(--alu-in)}
+.stk.none{color:var(--manila-muted);text-shadow:none;background:none;border:0;border-top:2px dashed var(--manila-muted)}
 </style>
 </helmet>
 <div class="root" data-scheme="{{scheme}}" style="width: 1100px; height: 1180px; box-sizing: border-box; padding: 40px; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; display: flex; flex-direction: column; gap: 30px">
@@ -61,7 +67,7 @@ body{margin:0}
 </div>
 
 <section>
-<p class="cap">The strip, as tape on the tag <span>A control on a tag is label tape. A candidate has no group colour, so its tape is the black of its number. Left to right: both sources; only a shelf file; stock loaded, none for this part; no stock files.</span></p>
+<p class="cap">The strip, as aluminum tape on the tag <span>Settled. The strip is a name you press, so it is the second tape. The number above it does nothing, and stays black. Left to right: both sources; only a shelf file; stock loaded, none for this part; no stock files.</span></p>
 <div class="tags" style="grid-template-columns: repeat(4, minmax(0, 1fr))">
 <div class="mtag"><div class="mtag-in" style="height: 150px"><div class="numtape"><b>DEMO-1001</b><span>2015–2017</span></div><p class="opt">3.5L V6 EcoBoost</p><button type="button" class="stk" aria-expanded="false"><span>Stock · 2 shelf · 2 yard</span><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 4l5 5 5-5"></path></svg></button></div></div>
 <div class="mtag"><div class="mtag-in" style="height: 150px"><div class="numtape"><b>[number]</b><span>[years]</span></div><p class="opt">[options]</p><button type="button" class="stk" aria-expanded="false"><span>Stock · 2 shelf</span><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 4l5 5 5-5"></path></svg></button></div></div>

@@ -62,6 +62,14 @@
       "x": 1180,
       "y": 0
     },
+    "SecondTape.dc.html": {
+      "h": 640,
+      "page": "catalog-fitment",
+      "title": "The second tape: aluminum embossing tape",
+      "w": 1100,
+      "x": 3960,
+      "y": 0
+    },
     "Slice1Textures.dc.html": {
       "h": 1270,
       "page": "catalog-fitment",
@@ -76,6 +84,14 @@
       "title": "Slice 2 textures: the stock strip and its rows",
       "w": 1100,
       "x": 1600,
+      "y": 0
+    },
+    "Slice3Textures.dc.html": {
+      "h": 1120,
+      "page": "catalog-fitment",
+      "title": "Slice 3 textures: the capped strip, the filter and the dialog",
+      "w": 1100,
+      "x": 2780,
       "y": 0
     },
     "Types1Dialog.dc.html": {
@@ -147,7 +163,9 @@
     "Empty1Stack.dc.html",
     "Types1Dialog.dc.html",
     "Slice1Textures.dc.html",
-    "Slice2Textures.dc.html"
+    "Slice2Textures.dc.html",
+    "Slice3Textures.dc.html",
+    "SecondTape.dc.html"
   ],
   "pages": [
     {
