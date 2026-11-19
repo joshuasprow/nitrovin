@@ -221,13 +221,23 @@ fit.
 vehicle's lines in the catalog had to fit the vehicle and could not page the file
 as it is ([#322](https://github.com/joshuasprow/nitrovin/issues/322)). Beside
 `where.type`, `list` of the catalog takes the catalog's vehicle fields: its vehicle
-vocabulary's fields, matched after that vocabulary's normalization, or, when its
-vehicles are vPIC's, `make` and `model` ids and `ext`, matched exactly. Every field
-given holds. The lines are those `fitment.Reader.ByVehicle` gives for the matching
-vehicles, in key order with the same cursor, each holding only those vehicles'
-applications in file order; no matching vehicle is an empty page.
+vocabulary's fields, matched after that vocabulary's normalization, every one given
+holding; or, when its vehicles are vPIC's, one of `make` and `model` ids and `ext`,
+matched exactly. The lines are those `fitment.Reader.Matching` gives for the
+matching vehicles, in key order with the same cursor, each holding only those
+vehicles' applications in file order; no matching vehicle is an empty page.
+`/v1/info` names the catalog's `spine` and `vehicles`, so a reader learns which
+fields it takes without a fit.
 
 - **Additive.** Without a vehicle field `list` of the catalog is as it was; any other
   field is still refused.
 - **No years, no translation.** The fields name the catalog's own vehicles, as its
   lines do; reaching them from a VIN or another vocabulary stays `fit`'s work.
+- **One vPIC field.** A vPIC vehicle is exactly one make, one model or one extension,
+  so two of `make`, `model` and `ext` together could match nothing; the second is
+  refused at its pointer rather than answered with an empty page. `make` keeps the
+  make's own lines, not its models'.
+- **`Matching`, not `ByVehicle`.** A line needs a fitment's key, note, filed-under
+  entries and the matching applications, which `Matching` reads from the vehicle's
+  block alone in a compiled catalog (ADR 0023); `ByVehicle` would read every far
+  fitment whole on every page.

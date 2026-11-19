@@ -103,7 +103,7 @@ jobs:
             "cmd/nitrovin "{TestStdioOps,TestMCPVocabSession,TestWorker,TestWorkerCatalog,TestWorkerCatalogParts,TestWorkerStock,TestVocabPage,TestVocabTranslate}
             "cmd/nitrovin "{TestDemoCheck,TestDemoHints,TestWorkerDemo,TestFitCard}
             "pkg/nitrovin TestFitConfirmed" "cmd/nitrovin TestFitConfirmed"
-            "pkg/nitrovin TestListCatalogVehicle"
+            "pkg/nitrovin "{TestListCatalogVehicle,TestListCatalogVPIC}
             "pkg/ui "{TestLibraryDemoFit,TestDemoPanel,TestPageFit,TestCatalogEntries,TestLibraryPageFit}
             "cmd/nitrovin-epa "{TestBuild,TestEntry,TestCuratedLoadsClean}
           )

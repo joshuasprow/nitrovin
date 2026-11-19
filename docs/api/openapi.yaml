@@ -371,9 +371,9 @@ paths:
         `years` include that model year, or are unknown (ADR 0022). With the
         loaded catalog's name, its fitment lines in key order, by `where.type`
         (a part type) and the catalog's vehicle fields (its vehicle
-        vocabulary's fields, or `make`, `model` and `ext` for vPIC vehicles),
-        each line then holding only the matching vehicles' applications;
-        no other field. Every parameter
+        vocabulary's fields; for vPIC vehicles one of `make`, `model` and
+        `ext`, a second refused), each line then holding only the matching
+        vehicles' applications; no other field. Every parameter
         is given at most once, and an unknown one is refused.
       parameters:
         - name: name

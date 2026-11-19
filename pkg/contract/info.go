@@ -47,6 +47,12 @@ type VocabularyFile struct {
 	// FiledUnder is a catalog's filed-under part vocabulary (ADR 0024);
 	// "" (absent) when it names none and for every other kind.
 	FiledUnder string `json:"filed_under,omitempty"`
+	// Spine and Vehicles are a catalog's declared spine and its vehicle
+	// vocabulary, or "vpic" (vocab.Reserved): Vehicles names the vehicle
+	// fields list of the catalog takes (ADR 0018). "" (absent) for every
+	// other kind.
+	Spine    string `json:"spine,omitempty"`
+	Vehicles string `json:"vehicles,omitempty"`
 	// Blake3 is the hex blake3 hash of the file's bytes; for a compiled
 	// catalog, the hash its header records, of its bytes with the hash's
 	// own 32 zero (ADR 0021).

@@ -1664,9 +1664,9 @@ func decodeFitCursor(after string, kind fitKind) (int, *Problem) {
 // one part type with where.type, each a FitmentLine as the file has it, in
 // key order (part type, side, number), through fitment.Reader.Fitments.
 // The catalog's vehicle fields in where (its vehicle vocabulary's fields,
-// or make, model and ext when its vehicles are vpic) keep the fitments of
-// the vehicles holding every one, each line with only their applications,
-// through fitment.Reader.ByVehicle.
+// or one of make, model and ext when its vehicles are vpic) keep the
+// fitments of the vehicles holding every one, each line with only their
+// applications, through fitment.Reader.Matching.
 func (f Fitter) List(req ListRequest) (List, error) {
 	if f.Catalog == nil || req.Of == "" || req.Of != f.Catalog.Info().Name {
 		return f.Translator.List(req)
@@ -1676,32 +1676,24 @@ func (f Fitter) List(req ListRequest) (List, error) {
 	if info.Vehicles != vocab.Reserved {
 		fields = f.Set.File(info.Vehicles).Fields
 	}
-	byVehicle := false
+	byVehicle := ""
 	for _, k := range slices.Sorted(maps.Keys(req.Where)) {
 		switch {
 		case k == "type":
 		case slices.Contains(fields, k):
-			byVehicle = true
+			if byVehicle != "" && info.Vehicles == vocab.Reserved {
+				return List{}, NewProblem(InvalidRequest, pointerTo("/where", k), fmt.Sprintf("catalog %q's vehicles are vPIC's, each one make, one model or one extension: where takes one of make, model and ext, not both %s and %s", info.Name, byVehicle, k))
+			}
+			byVehicle = k
 		default:
 			return List{}, NewProblem(InvalidRequest, pointerTo("/where", k), fmt.Sprintf("catalog %q's fitments take where.type, a part type, and its vehicle fields %s, and no other field", info.Name, strings.Join(fields, ", ")))
 		}
 	}
-	var mk, model int32
-	if info.Vehicles == vocab.Reserved {
-		for _, k := range []string{"make", "model"} {
-			s, ok := req.Where[k]
-			if !ok {
-				continue
-			}
-			n, err := strconv.ParseInt(s, 10, 32)
-			if err != nil {
-				return List{}, NewProblem(InvalidRequest, pointerTo("/where", k), fmt.Sprintf("%q is not a vPIC %s id", s, k))
-			}
-			if k == "make" {
-				mk = int32(n)
-			} else {
-				model = int32(n)
-			}
+	var holds func(*vocab.Vehicle) bool
+	if byVehicle != "" {
+		var p *Problem
+		if holds, p = vehicleHolds(info, fields, req.Where, byVehicle); p != nil {
+			return List{}, p
 		}
 	}
 	limit := req.Limit
@@ -1727,7 +1719,7 @@ func (f Fitter) List(req ListRequest) (List, error) {
 		DecoderVersion: f.DecoderVersion,
 	}
 	filed := info.FiledUnder != ""
-	if !byVehicle {
+	if byVehicle == "" {
 		fits := f.Catalog.Fitments(req.Where["type"], after, limit+1)
 		if len(fits) > limit {
 			fits = fits[:limit]
@@ -1744,14 +1736,16 @@ func (f Fitter) List(req ListRequest) (List, error) {
 	}
 	var matched []vocab.Vehicle
 	for _, v := range s.Vehicles() {
-		if vehicleHolds(v, req.Where, fields, info, mk, model) {
+		if holds(v) {
 			matched = append(matched, *v)
 		}
 	}
 	if len(matched) == 0 {
 		return out, nil
 	}
-	cands := f.Catalog.ByVehicle(req.Where["type"], matched, nil)
+	// Matching reads a vehicle's applications from its block alone, and a
+	// line needs no more of its fitment (ADR 0023).
+	cands := f.Catalog.Matching(req.Where["type"], matched, nil)
 	if after != nil {
 		k := *after
 		cands = slices.DeleteFunc(cands, func(c vocab.Candidate) bool {
@@ -1769,33 +1763,45 @@ func (f Fitter) List(req ListRequest) (List, error) {
 	return out, nil
 }
 
-// vehicleHolds is whether a catalog vehicle holds every vehicle field of
-// where: a vocabulary's fields equal after the catalog's VehiclesCase, or
-// a vpic vehicle's make, model and ext exactly (make and model parsed).
-func vehicleHolds(v *vocab.Vehicle, where map[string]string, fields []string, info vocab.CatalogInfo, mk, model int32) bool {
+// vehicleHolds is whether a catalog vehicle holds where's vehicle fields:
+// a vocabulary's fields equal after the catalog's VehiclesCase, each
+// where-value normalized once here, or, when its vehicles are vpic, the
+// one field given, field, equal to the vehicle's make or model id or
+// extension.
+func vehicleHolds(info vocab.CatalogInfo, fields []string, where map[string]string, field string) (func(*vocab.Vehicle) bool, *Problem) {
 	if info.Vehicles == vocab.Reserved {
-		if _, ok := where["make"]; ok && v.Make != mk {
-			return false
+		var t vocab.Target
+		s := where[field]
+		if field == "ext" {
+			t.Ext = s
+		} else {
+			n, err := strconv.ParseInt(s, 10, 32)
+			if err != nil {
+				return nil, NewProblem(InvalidRequest, pointerTo("/where", field), fmt.Sprintf("%q is not a vPIC %s id", s, field))
+			}
+			if field == "make" {
+				t.Make = int32(n)
+			} else {
+				t.Model = int32(n)
+			}
 		}
-		if _, ok := where["model"]; ok && v.Model != model {
-			return false
+		return func(v *vocab.Vehicle) bool { return v.Target == t }, nil
+	}
+	want := map[string]string{}
+	for _, k := range fields {
+		if w, ok := where[k]; ok {
+			want[k] = info.VehiclesCase.Normalize(w)
 		}
-		if e, ok := where["ext"]; ok && v.Ext != e {
-			return false
+	}
+	return func(v *vocab.Vehicle) bool {
+		for k, w := range want {
+			got, has := v.Entry[k]
+			if !has || info.VehiclesCase.Normalize(got) != w {
+				return false
+			}
 		}
 		return true
-	}
-	for _, k := range fields {
-		w, ok := where[k]
-		if !ok {
-			continue
-		}
-		got, has := v.Entry[k]
-		if !has || info.VehiclesCase.Normalize(got) != info.VehiclesCase.Normalize(w) {
-			return false
-		}
-	}
-	return true
+	}, nil
 }
 
 // fitmentLine is a fitment with applications apps, in file order, with

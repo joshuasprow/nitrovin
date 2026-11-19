@@ -40,16 +40,16 @@ func TestCatalogLoads(t *testing.T) {
 		switch {
 		case v.Kind == "catalog":
 			catalogs = append(catalogs, v)
-		case v.Release != "" || v.CatalogCounts != nil:
-			t.Errorf("%s, a %s, carries a catalog's release or counts: %+v", v.Name, v.Kind, v)
+		case v.Release != "" || v.Spine != "" || v.Vehicles != "" || v.CatalogCounts != nil:
+			t.Errorf("%s, a %s, carries a catalog's release, files or counts: %+v", v.Name, v.Kind, v)
 		}
 	}
 	want := contract.CatalogCounts{Fitments: 5, Applications: 7, Redirects: 1, Retired: 1, Filings: 6}
-	if len(catalogs) != 1 || catalogs[0].Name != "parts-catalog" || catalogs[0].Release != "7.02" || catalogs[0].FiledUnder != "part-codes" || catalogs[0].CatalogCounts == nil || *catalogs[0].CatalogCounts != want {
+	if len(catalogs) != 1 || catalogs[0].Name != "parts-catalog" || catalogs[0].Release != "7.02" || catalogs[0].FiledUnder != "part-codes" || catalogs[0].Spine != "part-types" || catalogs[0].Vehicles != "catalog-models" || catalogs[0].CatalogCounts == nil || *catalogs[0].CatalogCounts != want {
 		t.Fatalf("info's catalog: %+v", catalogs)
 	}
-	if !strings.Contains(string(b), `"release":"7.02","filed_under":"part-codes","blake3":`) || !strings.Contains(string(b), `"drift":[],"fitments":5,"applications":7,"redirects":1,"retired":1,"filings":6}`) {
-		t.Errorf("info's JSON does not list the catalog's release and counts:\n%s", b)
+	if !strings.Contains(string(b), `"release":"7.02","filed_under":"part-codes","spine":"part-types","vehicles":"catalog-models","blake3":`) || !strings.Contains(string(b), `"drift":[],"fitments":5,"applications":7,"redirects":1,"retired":1,"filings":6}`) {
+		t.Errorf("info's JSON does not list the catalog's release, files and counts:\n%s", b)
 	}
 
 	cat := tr.Catalog()

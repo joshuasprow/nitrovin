@@ -376,6 +376,8 @@
               "redirects": { "type": "integer", "minimum": 0, "description": "A catalog's redirects; absent for every other kind." },
               "retired": { "type": "integer", "minimum": 0, "description": "A catalog's retired numbers; absent for every other kind." },
               "filed_under": { "type": "string", "minLength": 1, "description": "The part vocabulary a catalog names its fitments filed under (ADR 0024); absent when it names none, and for every other kind." },
+              "spine": { "type": "string", "minLength": 1, "description": "The declared spine a catalog's part types come from; absent for every other kind." },
+              "vehicles": { "type": "string", "minLength": 1, "description": "The vehicle vocabulary a catalog's vehicles are entries of, or vpic: the vehicle fields list of the catalog takes in where (ADR 0018); absent for every other kind." },
               "filings": { "type": "integer", "minimum": 0, "description": "A catalog's (entry, fitment) pairs: the entries each fitment is filed under, over all its fitments; 0 when it names no filed_under vocabulary. Absent for every other kind." },
               "compiled": {
                 "type": "object",
@@ -436,9 +438,9 @@
             "allOf": [
               {
                 "if": { "properties": { "kind": { "const": "catalog" } } },
-                "then": { "required": ["fitments", "applications", "redirects", "retired", "filings"] },
+                "then": { "required": ["spine", "vehicles", "fitments", "applications", "redirects", "retired", "filings"] },
                 "else": {
-                  "not": { "anyOf": [{ "required": ["fitments"] }, { "required": ["applications"] }, { "required": ["redirects"] }, { "required": ["retired"] }, { "required": ["compiled"] }, { "required": ["filed_under"] }, { "required": ["filings"] }] }
+                  "not": { "anyOf": [{ "required": ["spine"] }, { "required": ["vehicles"] }, { "required": ["fitments"] }, { "required": ["applications"] }, { "required": ["redirects"] }, { "required": ["retired"] }, { "required": ["compiled"] }, { "required": ["filed_under"] }, { "required": ["filings"] }] }
                 }
               },
               {
@@ -707,7 +709,7 @@
         "where": {
           "type": "object",
           "additionalProperties": { "type": ["string", "integer"] },
-          "description": "Fields to match after the fixed normalization: a vocabulary's fields; for vpic, make, a vPIC make id, to list its models, and with make year, one model year, keeping the models whose years include it or are unknown (ADR 0022); or model and element together, a vPIC model id and a public element id, to list the model's values for the element (ADR 0015). Model or element alone, either with make or year, or an element decoded from the VIN itself rather than a pattern (Model Year and the Corrections elements 142, 143, 144, 156, 191, 196) is refused. For the loaded catalog type, a part type id, and its vehicle fields: its vehicle vocabulary's fields (make, model), matched after that vocabulary's normalization, or for vPIC vehicles make and model ids and ext, keeping the lines of the vehicles matching every one, each with only their applications."
+          "description": "Fields to match after the fixed normalization: a vocabulary's fields; for vpic, make, a vPIC make id, to list its models, and with make year, one model year, keeping the models whose years include it or are unknown (ADR 0022); or model and element together, a vPIC model id and a public element id, to list the model's values for the element (ADR 0015). Model or element alone, either with make or year, or an element decoded from the VIN itself rather than a pattern (Model Year and the Corrections elements 142, 143, 144, 156, 191, 196) is refused. For the loaded catalog type, a part type id, and its vehicle fields, keeping the lines of the vehicles matching every one, each with only their applications: its vehicle vocabulary's fields (make, model), matched after that vocabulary's normalization, or for vPIC vehicles one of make and model ids and ext, matched exactly; a vPIC vehicle is one make, one model or one extension, so a second of them is refused."
         },
         "limit": { "type": "integer", "minimum": 1, "maximum": 1000, "default": 100 },
         "after": { "type": "string", "minLength": 1, "description": "The previous page's next cursor." }

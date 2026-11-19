@@ -638,7 +638,7 @@
       "get": {
         "operationId": "listEntries",
         "summary": "Page through vPIC or one loaded file.",
-        "description": "One page of what `name` lists: vPIC's makes (`vpic`), one make's\nmodels (`vpic` with `where.make`), or one model's values for an\nelement (`vpic` with `where.model` and `where.element` together, as\n`ModelValueEntry` values; ADR 0015); a vocabulary's entries with\ntheir mappings; a declared spine's entries; an extension set's\nextensions. `where.<field>` matches a field exactly after the fixed\nnormalization, once per field (`where.make=Dodge`). For `vpic`,\n`where.year` (only with `where.make`) keeps the models whose\n`years` include that model year, or are unknown (ADR 0022). With the\nloaded catalog's name, its fitment lines in key order, by `where.type`\n(a part type) and the catalog's vehicle fields (its vehicle\nvocabulary's fields, or `make`, `model` and `ext` for vPIC vehicles),\neach line then holding only the matching vehicles' applications;\nno other field. Every parameter\nis given at most once, and an unknown one is refused.\n",
+        "description": "One page of what `name` lists: vPIC's makes (`vpic`), one make's\nmodels (`vpic` with `where.make`), or one model's values for an\nelement (`vpic` with `where.model` and `where.element` together, as\n`ModelValueEntry` values; ADR 0015); a vocabulary's entries with\ntheir mappings; a declared spine's entries; an extension set's\nextensions. `where.<field>` matches a field exactly after the fixed\nnormalization, once per field (`where.make=Dodge`). For `vpic`,\n`where.year` (only with `where.make`) keeps the models whose\n`years` include that model year, or are unknown (ADR 0022). With the\nloaded catalog's name, its fitment lines in key order, by `where.type`\n(a part type) and the catalog's vehicle fields (its vehicle\nvocabulary's fields; for vPIC vehicles one of `make`, `model` and\n`ext`, a second refused), each line then holding only the matching\nvehicles' applications; no other field. Every parameter\nis given at most once, and an unknown one is refused.\n",
         "parameters": [
           {
             "name": "name",
@@ -1665,6 +1665,16 @@
                   "minLength": 1,
                   "description": "The part vocabulary a catalog names its fitments filed under (ADR 0024); absent when it names none, and for every other kind."
                 },
+                "spine": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "The declared spine a catalog's part types come from; absent for every other kind."
+                },
+                "vehicles": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "The vehicle vocabulary a catalog's vehicles are entries of, or vpic: the vehicle fields list of the catalog takes in where (ADR 0018); absent for every other kind."
+                },
                 "filings": {
                   "type": "integer",
                   "minimum": 0,
@@ -1841,6 +1851,8 @@
                   },
                   "then": {
                     "required": [
+                      "spine",
+                      "vehicles",
                       "fitments",
                       "applications",
                       "redirects",
@@ -1851,6 +1863,16 @@
                   "else": {
                     "not": {
                       "anyOf": [
+                        {
+                          "required": [
+                            "spine"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "vehicles"
+                          ]
+                        },
                         {
                           "required": [
                             "fitments"
@@ -2600,7 +2622,7 @@
                 "integer"
               ]
             },
-            "description": "Fields to match after the fixed normalization: a vocabulary's fields; for vpic, make, a vPIC make id, to list its models, and with make year, one model year, keeping the models whose years include it or are unknown (ADR 0022); or model and element together, a vPIC model id and a public element id, to list the model's values for the element (ADR 0015). Model or element alone, either with make or year, or an element decoded from the VIN itself rather than a pattern (Model Year and the Corrections elements 142, 143, 144, 156, 191, 196) is refused. For the loaded catalog type, a part type id, and its vehicle fields: its vehicle vocabulary's fields (make, model), matched after that vocabulary's normalization, or for vPIC vehicles make and model ids and ext, keeping the lines of the vehicles matching every one, each with only their applications."
+            "description": "Fields to match after the fixed normalization: a vocabulary's fields; for vpic, make, a vPIC make id, to list its models, and with make year, one model year, keeping the models whose years include it or are unknown (ADR 0022); or model and element together, a vPIC model id and a public element id, to list the model's values for the element (ADR 0015). Model or element alone, either with make or year, or an element decoded from the VIN itself rather than a pattern (Model Year and the Corrections elements 142, 143, 144, 156, 191, 196) is refused. For the loaded catalog type, a part type id, and its vehicle fields, keeping the lines of the vehicles matching every one, each with only their applications: its vehicle vocabulary's fields (make, model), matched after that vocabulary's normalization, or for vPIC vehicles one of make and model ids and ext, matched exactly; a vPIC vehicle is one make, one model or one extension, so a second of them is refused."
           },
           "limit": {
             "type": "integer",
