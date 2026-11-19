@@ -146,6 +146,9 @@ type mcpCall struct {
 	req *contract.Request
 	// pointer is a refusal's pointer; "" for an answer.
 	pointer string
+	// conditions is, for one of fitConditions, what the answer's
+	// applications must read.
+	conditions []string
 }
 
 // knownTool reports whether name is one of mcp-tools.json's tools.
@@ -409,7 +412,8 @@ func translating(t *testing.T, d *nitrovin.Decoder, files ...*vocab.File) loaded
 // TestMCPVocabSession runs a scripted session against the embedded data
 // with testdata/vocab and the synthetic catalog loaded, over stdio and
 // Streamable HTTP as TestMCPSession does: tools/list is still
-// mcp-tools.json's tools array; fit answers the catalog's examples;
+// mcp-tools.json's tools array; fit answers the catalog's examples, and
+// fitConditions with what each application confirmed;
 // translate answers a VIN and an entry, list gives the catalog and pages a
 // listing end to end, each as the Translator answers in-process; a request
 // the loaded files refuse is an isError Problem.
@@ -455,6 +459,9 @@ func TestMCPVocabSession(t *testing.T) {
 		{tool: "fit", args: `{"from":{"fitment":{"type":"brake-rotor-front","number":"BR-1999"}},"stock":["shelf","yard"],"location":["north","east"],"limit":1,"now":"` + now + `"}`},
 		{tool: "list", args: `{"of":"parts-catalog","where":{"type":"mirror"}}`},
 		{tool: "fit", args: `{"from":{"model":1938},"part":{"vocabulary":"listing","entry":{"category":"Brake Pads"}}}`, pointer: "/part/vocabulary"},
+	}
+	for _, c := range fitConditions {
+		calls = append(calls, mcpCall{tool: "fit", args: strings.TrimSuffix(c.item, "}") + `,"now":"` + now + `"}`, conditions: c.want})
 	}
 	runSessions(t, d, "", fixture+string(os.PathListSeparator)+fitmentFixture+string(os.PathListSeparator)+stockFixture, calls)
 }
@@ -622,6 +629,9 @@ func checkCall(t *testing.T, d loaded, c mcpCall, resp message, outputs map[stri
 		}
 		if err := validates(output, res.StructuredContent); err != nil {
 			t.Errorf("%s: structuredContent breaks the outputSchema: %v", c.args, err)
+		}
+		if c.conditions != nil {
+			checkConditions(t, "fit "+c.args, res.StructuredContent, c.conditions)
 		}
 		return
 	}

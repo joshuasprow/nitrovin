@@ -180,3 +180,36 @@ side is never ruled out by one, as an unknown value keeps an application
 (ADR 0009). `fitment.Reader` answers every side and `fit` applies the rule
 ([ADR 0017](0017-the-catalog-file.md)'s amendment,
 [#292](https://github.com/joshuasprow/nitrovin/issues/292)).
+
+## Amendment (2026-11-19): what an application's conditions confirmed
+
+An application said what could not be checked (`unconfirmed`) and not what was. One
+whose qualifier the decode met and one with no qualifier at all read the same:
+neither had `unconfirmed`. A reader showing candidates to a person needs to tell
+"the decode backs this" from "nothing was checked"
+([#321](https://github.com/joshuasprow/nitrovin/issues/321)).
+
+Each matched application gains `confirmed`, in `unconfirmed`'s type and wire form:
+the element ids of the qualifiers a decoded value met, then `"model_year"` when the
+year was known and the years hold it. It covers what `unconfirmed` covers: the
+application's own qualifiers and years, its model's and its part type's. A
+condition that applied is in exactly one of the two, and `confirmed` is absent when
+empty. So an application with `confirmed` had conditions that were met, one with
+`unconfirmed` had conditions that could not be checked, one with both had some of
+each, and one with neither had no condition: only its option text describes the
+fit.
+
+- **Both fields, not one status.** A status per application ("checked", "possible")
+  would decide for the reader what counts as backing. Most applications have years,
+  so `"model_year"` is confirmed on most of them, and whether a year alone is enough
+  is the reader's call. The lists let it look for an element id.
+- **Several mappings.** A model or a part type reached by several mappings has
+  `unconfirmed` empty when one of them checked everything (ADR 0012). `confirmed`
+  follows the same mappings: those that checked everything, else all of them. A
+  condition on a mapping that `unconfirmed` does not read is in neither field.
+- **Unchecked wins.** A condition left unchecked anywhere on the route is
+  `unconfirmed` and never also `confirmed`, so the two never contradict.
+- **Additive.** Which applications an answer holds, their order, paging and
+  `unconfirmed` are as they were. A failed condition still drops the application.
+- **Fit's applications only.** A translation's entries and a mapping's route keep
+  `unconfirmed` alone.

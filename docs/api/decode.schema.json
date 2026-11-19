@@ -1130,7 +1130,7 @@
     },
     "FitApplication": {
       "type": "object",
-      "description": "One application of a candidate that matched: the catalog's vehicle, the route to it, its years, its option text verbatim, and what could not be checked.",
+      "description": "One application of a candidate that matched: the catalog's vehicle, the route to it, its years, its option text verbatim, what could not be checked, and what was checked and held.",
       "required": ["vehicle", "options"],
       "properties": {
         "vehicle": { "$ref": "#/$defs/CatalogVehicle" },
@@ -1138,7 +1138,8 @@
         "first": { "type": "integer" },
         "last": { "type": "integer" },
         "options": { "type": "string", "description": "The catalog's option text, verbatim: a requirement for a person to settle." },
-        "unconfirmed": { "$ref": "#/$defs/Unconfirmed", "description": "The application's qualifiers and years, its model's and its part type's, that could not be checked; absent when everything was checked." }
+        "unconfirmed": { "$ref": "#/$defs/Unconfirmed", "description": "The application's qualifiers and years, its model's and its part type's, that could not be checked; absent when everything was checked." },
+        "confirmed": { "$ref": "#/$defs/Unconfirmed", "description": "In unconfirmed's form, what applied, was checked and held, of the application's qualifiers and years, its model's and its part type's: the element ids, ascending, of the qualifiers a decoded value met, then \"model_year\" when the year was known and the years hold it. A condition that applied is in exactly one of confirmed and unconfirmed. Absent when nothing was checked and held; with neither, no condition applied and only options describes the fit." }
       },
       "additionalProperties": false
     },

@@ -774,7 +774,7 @@ type FitCandidate struct {
 
 // FitApplication is one application of a candidate that matched: the
 // catalog's vehicle, the route to it, its years, its option text verbatim,
-// and what could not be checked.
+// what could not be checked, and what was checked and held.
 type FitApplication struct {
 	Vehicle CatalogVehicle `json:"vehicle"`
 	// Via are the mappings that reached the vehicle (its model's).
@@ -786,6 +786,12 @@ type FitApplication struct {
 	// the application's qualifiers and years, its model's and its part
 	// type's; absent when everything was checked.
 	Unconfirmed Unconfirmed `json:"unconfirmed,omitzero"`
+	// Confirmed is what applied on the route, was checked and held, in
+	// Unconfirmed's form: the element ids of the qualifiers the decode
+	// met, and the model year when the years were checked. A condition
+	// that applied is in exactly one of the two; absent when none was
+	// checked, and with neither, no condition applied.
+	Confirmed Unconfirmed `json:"confirmed,omitzero"`
 }
 
 // FitNames names a catalog's vehicle as a translation from it would: in

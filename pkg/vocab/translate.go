@@ -163,14 +163,19 @@ type Reached struct {
 	// Unconfirmed is what no Via could check, empty when one checked
 	// everything.
 	Unconfirmed Unconfirmed
+	// Confirmed is what the Via that Unconfirmed is of checked, and held.
+	Confirmed Unconfirmed
 }
 
 // Via is one mapping that held on a route: the spine entry it names (Ref)
-// and what of it could not be checked, along the whole route to it.
+// and, along the whole route to it, what of it could not be checked
+// (Unconfirmed) and what was checked and held (Confirmed). A condition
+// that applied is in exactly one of the two.
 type Via struct {
 	Ref         Ref
 	Mapping     *Mapping
 	Unconfirmed Unconfirmed
+	Confirmed   Unconfirmed
 }
 
 // Translated is the entries one target vocabulary reaches from the spine.
@@ -188,11 +193,15 @@ type Match struct {
 	// Unconfirmed is what no Via could check, empty when one checked
 	// everything.
 	Unconfirmed Unconfirmed
+	// Confirmed is what the Via that Unconfirmed is of checked, and held.
+	Confirmed Unconfirmed
 }
 
 // Unconfirmed is what applied on a route but could not be checked
 // (ADR 0012): qualifier elements with no decode, or that the decode left
-// empty, and the model year when none was known.
+// empty, and the model year when none was known. A field named Confirmed
+// has the same type for the other half: the qualifier elements the decode
+// met, and the model year when it was known and inside the years.
 type Unconfirmed struct {
 	// Elements are ascending element ids.
 	Elements  []int32
@@ -226,6 +235,40 @@ func unconfirmedOf(vias []Via) Unconfirmed {
 	return u
 }
 
+// confirmedOf is the Confirmed of something reached by vias, beside
+// unconfirmedOf: what the vias that checked everything checked, else what
+// any checked, less what unconfirmedOf leaves unchecked.
+func confirmedOf(vias []Via) Unconfirmed {
+	var full, all Unconfirmed
+	whole := false
+	for _, v := range vias {
+		if v.Unconfirmed.IsZero() {
+			whole = true
+			full = full.union(v.Confirmed)
+		}
+		all = all.union(v.Confirmed)
+	}
+	if whole {
+		return full
+	}
+	return all.less(unconfirmedOf(vias))
+}
+
+// less is u without what is in v: a condition is confirmed only where
+// nothing left it unchecked.
+func (u Unconfirmed) less(v Unconfirmed) Unconfirmed {
+	if u.IsZero() || v.IsZero() {
+		return u
+	}
+	out := Unconfirmed{ModelYear: u.ModelYear && !v.ModelYear}
+	for _, e := range u.Elements {
+		if !slices.Contains(v.Elements, e) {
+			out.Elements = append(out.Elements, e)
+		}
+	}
+	return out
+}
+
 // conditions checks mappings against what a translation knows: the model
 // year, else the years it falls in (first and last, nil unbounded), and
 // the decode for qualifiers.
@@ -237,27 +280,29 @@ type conditions struct {
 
 // check is whether mp holds (ADR 0009): a known model year outside its
 // range, or a decoded value outside a qualifier's set, rules it out. What
-// could not be checked keeps it, and is returned.
-func (c conditions) check(mp *Mapping) (Unconfirmed, bool) {
+// could not be checked keeps it, and is returned (unconfirmed), beside
+// what was checked and held (confirmed).
+func (c conditions) check(mp *Mapping) (confirmed, unconfirmed Unconfirmed, ok bool) {
 	return c.applies(mp.First, mp.Last, mp.Qualifiers)
 }
 
 // applies is whether model years first to last and qualifiers hold, as
 // check says for a mapping's.
-func (c conditions) applies(first, last *int, qualifiers []Qualifier) (Unconfirmed, bool) {
-	var u Unconfirmed
+func (c conditions) applies(first, last *int, qualifiers []Qualifier) (confirmed, unconfirmed Unconfirmed, ok bool) {
+	var u, held Unconfirmed
 	if first != nil || last != nil {
 		switch y := c.year; {
 		case y == nil:
 			// Years first to last against the years the vehicle falls in:
 			// none in common rules it out, some but not all is unchecked.
 			if first != nil && c.last != nil && *c.last < *first || last != nil && c.first != nil && *c.first > *last {
-				return Unconfirmed{}, false
+				return Unconfirmed{}, Unconfirmed{}, false
 			}
 			u.ModelYear = first != nil && (c.first == nil || *c.first < *first) || last != nil && (c.last == nil || *c.last > *last)
 		case first != nil && *y < *first, last != nil && *y > *last:
-			return Unconfirmed{}, false
+			return Unconfirmed{}, Unconfirmed{}, false
 		}
+		held.ModelYear = !u.ModelYear
 	}
 	for _, q := range qualifiers {
 		var got []Value
@@ -269,10 +314,13 @@ func (c conditions) applies(first, last *int, qualifiers []Qualifier) (Unconfirm
 			continue
 		}
 		if !slices.ContainsFunc(q.Values, func(v Value) bool { return slices.Contains(got, v) }) {
-			return Unconfirmed{}, false
+			return Unconfirmed{}, Unconfirmed{}, false
 		}
+		held.Elements = append(held.Elements, q.Element)
 	}
-	return u, true
+	slices.Sort(held.Elements)
+	held.Elements = slices.Compact(held.Elements)
+	return held, u, true
 }
 
 // Check is whether a catalog's application holds for a vehicle (ADR 0016,
@@ -281,6 +329,15 @@ func (c conditions) applies(first, last *int, qualifiers []Qualifier) (Unconfirm
 // it out; what year (nil: unknown) and d (nil: no decode) cannot check
 // keeps it, and is returned.
 func (a *Application) Check(year *int, d *Decoded) (Unconfirmed, bool) {
+	_, u, ok := a.Checked(year, d)
+	return u, ok
+}
+
+// Checked is Check, with what was checked and held beside what could not
+// be checked: the qualifier elements the decode met, and the model year
+// when it is known and the application has years. Each of the
+// application's conditions is in exactly one of the two.
+func (a *Application) Checked(year *int, d *Decoded) (confirmed, unconfirmed Unconfirmed, ok bool) {
 	return conditions{year: year, decoded: d}.applies(a.First, a.Last, a.Qualifiers)
 }
 
@@ -346,12 +403,12 @@ func (s *Set) Translate(q Query) (*Translation, error) {
 		}
 		for i := range e.Mappings {
 			mp := &e.Mappings[i]
-			u, ok := c.check(mp)
+			held, u, ok := c.check(mp)
 			if !ok {
 				continue
 			}
 			ref := Ref{Spine: f.Spine, Target: mp.Target}
-			r.add(ref, &Via{Ref: ref, Mapping: mp, Unconfirmed: u})
+			r.add(ref, &Via{Ref: ref, Mapping: mp, Unconfirmed: u, Confirmed: held})
 		}
 	default:
 		ref := from.Ref
@@ -397,7 +454,7 @@ func (s *Set) Translate(q Query) (*Translation, error) {
 	}
 	for i := range r.spine {
 		it := &r.spine[i]
-		it.Unconfirmed = unconfirmedOf(it.Via)
+		it.Unconfirmed, it.Confirmed = unconfirmedOf(it.Via), confirmedOf(it.Via)
 		if set := s.describe(it); set != nil {
 			used[set] = true
 		}
@@ -536,23 +593,24 @@ func (s *Set) match(f *File, spine []Reached, c conditions) Translated {
 				if mp.Target != it.Ref.Target {
 					continue
 				}
-				u, ok := c.check(mp)
+				held, u, ok := c.check(mp)
 				if !ok {
 					continue
 				}
+				u = u.union(it.Unconfirmed)
 				j, seen := at[e]
 				if !seen {
 					j = len(ms)
 					at[e] = j
 					ms = append(ms, Match{Entry: e})
 				}
-				ms[j].Via = append(ms[j].Via, Via{Ref: it.Ref, Mapping: mp, Unconfirmed: u.union(it.Unconfirmed)})
+				ms[j].Via = append(ms[j].Via, Via{Ref: it.Ref, Mapping: mp, Unconfirmed: u, Confirmed: held.union(it.Confirmed).less(u)})
 			}
 		}
 	}
 	keys := make(map[*Entry][]string, len(ms))
 	for i := range ms {
-		ms[i].Unconfirmed = unconfirmedOf(ms[i].Via)
+		ms[i].Unconfirmed, ms[i].Confirmed = unconfirmedOf(ms[i].Via), confirmedOf(ms[i].Via)
 		keys[ms[i].Entry] = normalized(ms[i].Entry.Fields, f.Case)
 	}
 	slices.SortFunc(ms, func(a, b Match) int { return compareKeys(keys[a.Entry], keys[b.Entry]) })

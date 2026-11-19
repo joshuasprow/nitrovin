@@ -1,7 +1,12 @@
 package main
 
 import (
+	"cmp"
 	"context"
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
@@ -159,5 +164,125 @@ func TestFitRefused(t *testing.T) {
 		{"fit", "--location", "", ram2010},
 	} {
 		usageMistake(t, args...)
+	}
+}
+
+// fitConditions are fits of the synthetic catalog's left mirror, whose two
+// applications are one without a qualifier beside one with Drive Type
+// (15), each as a GET's query and a POST's item, with what conditionsOf
+// must read in the answer on every surface (ADR 0018's amendment): the
+// decode meets the qualifier; nothing can be checked; and a year alone,
+// one condition met and one unknown.
+var fitConditions = []struct {
+	query, item string
+	want        []string
+}{
+	{"from.vin=1D7RV1GT5AS123456&part.spine=part-types&part.id=mirror&side=left",
+		`{"from":"1D7RV1GT5AS123456","part":{"spine":"part-types","id":"mirror"},"side":"left"}`,
+		[]string{
+			`MR-1001 "w/o towing package" confirmed ["model_year"] unconfirmed -`,
+			`MR-1001 "4WD, w/ towing package" confirmed [15,"model_year"] unconfirmed -`,
+		}},
+	{"from.vocabulary=catalog-models&from.entry.make=Dodge&from.entry.model=Ram+1500&part.spine=part-types&part.id=mirror&side=left",
+		`{"from":{"vocabulary":"catalog-models","entry":{"make":"Dodge","model":"Ram 1500"}},"part":{"spine":"part-types","id":"mirror"},"side":"left"}`,
+		[]string{
+			`MR-1001 "w/o towing package" confirmed - unconfirmed ["model_year"]`,
+			`MR-1001 "4WD, w/ towing package" confirmed - unconfirmed [15,"model_year"]`,
+		}},
+	{"from.model=1938&model_year=2010&part.spine=part-types&part.id=mirror&side=left",
+		`{"from":{"model":1938},"model_year":2010,"part":{"spine":"part-types","id":"mirror"},"side":"left"}`,
+		[]string{
+			`MR-1001 "w/o towing package" confirmed ["model_year"] unconfirmed -`,
+			`MR-1001 "4WD, w/ towing package" confirmed ["model_year"] unconfirmed [15]`,
+		}},
+}
+
+// conditionsOf reads a fit's JSON as a caller does: each application of
+// each candidate as its fitment's number, its option text, and its
+// confirmed and unconfirmed arrays as written, "-" for an absent one.
+func conditionsOf(t *testing.T, fit []byte) []string {
+	t.Helper()
+	var wire struct {
+		Candidates []struct {
+			Fitment      struct{ Number string }
+			Applications []struct {
+				Options                string
+				Confirmed, Unconfirmed json.RawMessage
+			}
+		}
+	}
+	if err := json.Unmarshal(fit, &wire); err != nil {
+		t.Fatalf("%s: %v", fit, err)
+	}
+	var out []string
+	for _, c := range wire.Candidates {
+		for _, a := range c.Applications {
+			out = append(out, fmt.Sprintf("%s %q confirmed %s unconfirmed %s", c.Fitment.Number, a.Options, cmp.Or(string(a.Confirmed), "-"), cmp.Or(string(a.Unconfirmed), "-")))
+		}
+	}
+	return out
+}
+
+// checkConditions fails unless a fit's JSON reads as want.
+func checkConditions(t *testing.T, what string, fit []byte, want []string) {
+	t.Helper()
+	if got := conditionsOf(t, fit); !slices.Equal(got, want) {
+		t.Errorf("%s:\n%s\nwant\n%s", what, strings.Join(got, "\n"), strings.Join(want, "\n"))
+	}
+}
+
+// TestFitConfirmed: `fit -` and stdio answer fitConditions with what the
+// decode confirmed beside what it could not check, as written in their
+// own output. An application with no years and no qualifier has neither
+// field: the synthetic catalog's all have years, so a catalog written
+// here has one, on the same vocabularies.
+func TestFitConfirmed(t *testing.T) {
+	fixtureData(t)
+	dir := t.TempDir()
+	catalog := `{"format":1,"kind":"catalog","name":"every-year","version":"1","spine":"part-types","vehicles":"catalog-models"}` + "\n" +
+		`{"fitment":{"type":"mirror","number":"M-1","side":"left"},"applications":[{"vehicle":{"make":"Dodge","model":"Ram 1500"},"options":"all"},{"vehicle":{"make":"Dodge","model":"Ram 1500"},"options":"4WD","qualifiers":{"15":[2]}}]}` + "\n"
+	if err := os.WriteFile(filepath.Join(dir, "catalog.jsonl"), []byte(catalog), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	type sets struct {
+		vocab []string
+		items []string
+		want  [][]string
+	}
+	shared := sets{vocab: []string{"--vocab", fixture, "--vocab", fitmentFixture}}
+	for _, c := range fitConditions {
+		shared.items, shared.want = append(shared.items, c.item), append(shared.want, c.want)
+	}
+	yearless := sets{
+		vocab: []string{"--vocab", filepath.Join(fitmentFixture, "catalog-models.jsonl"), "--vocab", filepath.Join(fitmentFixture, "part-types.jsonl"), "--vocab", dir},
+		items: []string{`{"from":{"vocabulary":"catalog-models","entry":{"make":"Dodge","model":"Ram 1500"}},"model_year":2010,"part":{"spine":"part-types","id":"mirror"}}`},
+		want:  [][]string{{`M-1 "all" confirmed - unconfirmed -`, `M-1 "4WD" confirmed - unconfirmed [15]`}},
+	}
+	for _, s := range []sets{shared, yearless} {
+		r := cli(t, nil, strings.Join(s.items, "\n")+"\n", slices.Concat(s.vocab, []string{"fit", "--now", now, "-"})...)
+		lines := strings.Split(strings.TrimSuffix(r.stdout, "\n"), "\n")
+		if r.exit != 0 || r.stderr != "" || len(lines) != len(s.items) {
+			t.Fatalf("fit -: exit %d, stderr %q, stdout %q; want %d answers", r.exit, r.stderr, r.stdout, len(s.items))
+		}
+		for i, l := range lines {
+			checkConditions(t, "fit - "+s.items[i], []byte(l), s.want[i])
+		}
+
+		var stdin strings.Builder
+		for _, item := range s.items {
+			stdin.WriteString(`{"op":"fit",` + strings.TrimPrefix(item, "{") + "\n")
+		}
+		r = cli(t, nil, stdin.String(), slices.Concat(s.vocab, []string{"stdio"})...)
+		lines = strings.Split(strings.TrimSuffix(r.stdout, "\n"), "\n")
+		if r.exit != 0 || r.stderr != "" || len(lines) != len(s.items) {
+			t.Fatalf("stdio: exit %d, stderr %q, stdout %q; want %d replies", r.exit, r.stderr, r.stdout, len(s.items))
+		}
+		for i, l := range lines {
+			var reply struct{ Fit json.RawMessage }
+			if err := json.Unmarshal([]byte(l), &reply); err != nil || reply.Fit == nil {
+				t.Fatalf("stdio reply %s: %v; want a fit", l, err)
+			}
+			checkConditions(t, "stdio "+s.items[i], reply.Fit, s.want[i])
+		}
 	}
 }

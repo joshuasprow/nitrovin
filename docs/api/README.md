@@ -828,10 +828,33 @@ object. Its inputs shape the answer:
   is listed in its `unconfirmed`, with what its model and part type left
   unchecked. Without a year every year's applications come back, with
   `"model_year"` unconfirmed where they have years.
+- **What was checked.** An application's `confirmed` lists, in
+  `unconfirmed`'s form, what applied, was checked and held: the element
+  ids of the qualifiers a decoded value met, then `"model_year"` when the
+  year was known and the years hold it. It covers what `unconfirmed`
+  covers (the application's own qualifiers and years, its model's and its
+  part type's), and each condition that applied is in exactly one of the
+  two. Where several mappings reach the model or the part type, the
+  conditions are those of the mappings that checked everything, else of
+  them all, as `unconfirmed` reads them. `confirmed` is absent when
+  nothing was checked and held, so an application reads three ways:
+  - with `confirmed`: conditions applied, and the year or the decode met
+    them;
+  - with `unconfirmed`: conditions applied that could not be checked;
+  - with neither: no condition applied, and only `options` describes the
+    fit.
+
+  An application can have both. Most applications have years, so
+  `confirmed` is often `["model_year"]` alone: a reader that asks whether
+  the decode backs an application looks for an element id, not for the
+  field. It changes nothing else: which applications an answer holds,
+  their order, paging, and `unconfirmed`. Only a fit's applications
+  carry it.
 - **Candidates** are ordered by part type, side and number. Each has
   `fitment` (`type`, `number`, `side`, `note`, and `filed_under` when the
   catalog names a vocabulary), `applications` (each
-  `vehicle`, `via`, `first`, `last`, `options` verbatim, `unconfirmed`)
+  `vehicle`, `via`, `first`, `last`, `options` verbatim, `unconfirmed`,
+  `confirmed`)
   and `reached`: `direct`, or `redirect` with the `redirects` that led
   there (one hop, never more). A redirect is for a catalog vehicle and
   years: it is followed unless a direct candidate already has an
@@ -939,8 +962,10 @@ The synthetic catalog's examples, tested on every surface, with
   2, each `reached: direct`.
 - The VIN's left mirror: `MR-1001` (`side: left`), both of its Ram 1500
   applications for 2009–2012, `via` vPIC model 1938; the decode settles
-  the 4WD qualifier, so neither is `unconfirmed`. From `{"model": 1938}`
-  and a year instead, the 4WD one is `unconfirmed: [15]`.
+  the 4WD qualifier, so neither is `unconfirmed`: the 4WD one is
+  `confirmed: [15, "model_year"]` and the other `confirmed:
+  ["model_year"]`. From `{"model": 1938}` and a year instead, the 4WD
+  one is `unconfirmed: [15]` beside `confirmed: ["model_year"]`.
 - The 2010 Silverado's rear rotor: `BR-2001`, a front rotor, `reached:
   redirect` with the redirect's option text "rear rotors are listed with
   the front", `unconfirmed: [34]` (its Series qualifier). A 2007
