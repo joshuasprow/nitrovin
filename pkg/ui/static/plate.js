@@ -389,6 +389,11 @@
     const vin = clean(new URLSearchParams(location.search).get('from.vin') || '');
     const input = document.getElementById('from-vin');
     if (!input) return;
+    // A move within the page (a link to a part of it, as "Check years"
+    // is) is no other VIN: the answer stays, and what the link points at
+    // stays in it.
+    const answer = document.getElementById('answer');
+    if (input.value === vin && answer && answer.dataset.vin === vin) return;
     input.value = vin;
     paint(vin, false);
     ask(vin, '').catch(console.error);

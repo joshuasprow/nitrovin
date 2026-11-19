@@ -122,6 +122,10 @@ type vinGroup struct {
 // is the id of the checkbox it is the label of, and Count the names in
 // the stack. Under marks the plates below the top one, which carry no
 // stamp of their own.
+//
+// Check, on the top plate alone, is the id of the first years in the stack
+// that are unsure, "" when every name's are sure: where the label's "Check
+// years" link goes. Those years carry it (YearsID).
 type akaTag struct {
 	ID, Vocabulary                string
 	Make, Model, Years            string
@@ -131,15 +135,28 @@ type akaTag struct {
 	Fan                           string
 	Count                         int
 	Under                         bool
+	Check                         string
+}
+
+// YearsID is the id of the tag's years, which only unsure years carry: a
+// "Check years" link's target.
+func (t akaTag) YearsID() string {
+	if !t.YearUnsure {
+		return ""
+	}
+	return t.ID + "-years"
 }
 
 // akaRow is one vocabulary's stack of "Also known as": its names, the
 // first on top and the rest under it until the stack is fanned out. A
 // vocabulary with no name keeps its place. Fan is its switch's id, "" for
-// a stack of one.
+// a stack of one. Late says where the stack falls past the block's cap
+// (akaShown): "third" for the one a phone keeps back, "rest" for those
+// every width does, "" for a stack always shown.
 type akaRow struct {
 	Vocabulary, Fan string
 	Names           []akaTag
+	Late            string
 }
 
 // Depth is how many plates show under the top one of a closed stack: the
@@ -153,6 +170,32 @@ func (r akaRow) Depth() int { return min(max(len(r.Names)-1, 0), 3) }
 type akaCard struct {
 	Rows          []akaRow
 	Waiting, None bool
+}
+
+// The block's cap: the vocabularies "Also known as" shows before its
+// "more" switch, on a phone (34rem and narrower) and on anything wider.
+const (
+	akaShownPhone = 2
+	akaShown      = 3
+)
+
+// Capped says the block has vocabularies to keep back, at some width.
+func (c akaCard) Capped() bool { return len(c.Rows) > akaShownPhone }
+
+// More is the switch's words where three vocabularies show, "" when no
+// more are loaded; MorePhone its words where two do.
+func (c akaCard) More() string      { return moreText(len(c.Rows) - akaShown) }
+func (c akaCard) MorePhone() string { return moreText(len(c.Rows) - akaShownPhone) }
+
+// moreText is "N more vocabularies", "" for none.
+func moreText(n int) string {
+	switch {
+	case n <= 0:
+		return ""
+	case n == 1:
+		return "1 more vocabulary"
+	}
+	return strconv.Itoa(n) + " more vocabularies"
 }
 
 // diagram is the plate and everything hanging off it.
@@ -426,6 +469,9 @@ func (d *diagram) names(tr contract.Translation, cat []contract.CatalogEntry, el
 				all[i+1].Under = true
 			}
 		}
+		if i := slices.IndexFunc(all, func(n akaTag) bool { return n.YearUnsure }); i >= 0 {
+			all[0].Check = all[i].YearsID()
+		}
 		row.Names = all
 		d.Names.Rows = append(d.Names.Rows, row)
 	}
@@ -435,6 +481,14 @@ func (d *diagram) names(tr contract.Translation, cat []contract.CatalogEntry, el
 	slices.SortStableFunc(d.Names.Rows, func(a, b akaRow) int {
 		return cmp.Compare(min(len(b.Names), 1), min(len(a.Names), 1))
 	})
+	for i := range d.Names.Rows {
+		switch {
+		case i >= akaShown:
+			d.Names.Rows[i].Late = "rest"
+		case i >= akaShownPhone:
+			d.Names.Rows[i].Late = "third"
+		}
+	}
 }
 
 // The check digit (49 CFR 565.15): each character's value, each

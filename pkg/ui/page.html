@@ -4,7 +4,9 @@ the plate: 17 cells under six brackets' labels, and one real input, which
 plate.js lays over the cells (without JavaScript it sits below them, and
 Decode sends it). Everything below the plate is the answer (#answer): the
 brackets under the plate, a card for each on its leader line, and the
-derived card "Also known as". The server draws it for whatever is typed so
+derived card "Also known as". The cards and the names are one region
+(hang): on a page narrower than 64rem it scrolls sideways, six columns
+wide, the names under the cards they come from. The server draws it for whatever is typed so
 far; plate.js asks again as the visitor types and swaps #answer and #dev.
 What developers need is behind the header's Developers button (developers,
 decode.html), and the VINs to try behind its VINs button (chips). No
@@ -54,6 +56,7 @@ it is whole; data-done the groups whose characters are all typed. */}}
 <path class="g-plant" pathLength="1" d="M630 0V18H765V36" vector-effect="non-scaling-stroke"/>
 <path class="g-serial" pathLength="1" d="M840 0V18H935V36" vector-effect="non-scaling-stroke"/>
 </svg>
+<div class="hang" role="region" aria-label="Cards and names" tabindex="0">
 <div class="cards">
 {{range .Groups}}{{template "card" .}}
 {{end}}</div>
@@ -63,6 +66,7 @@ it is whole; data-done the groups whose characters are all typed. */}}
 <path class="g-year" pathLength="1" d="M595 0V18H892.5V28" vector-effect="non-scaling-stroke"/>
 </svg>
 {{template "aka" .Names}}
+</div>
 {{with .Error}}<p class="error" role="alert">{{.}}</p>{{end}}
 {{if or .Problems .Fix}}<div class="problems" role="status">
 {{range .Problems}}<p>{{.}}</p>
@@ -71,9 +75,10 @@ it is whole; data-done the groups whose characters are all typed. */}}
 </div>
 {{- end}}
 
-{{/* card is a bracket's card: its rows, or its one large value, there
-but empty until its characters are typed. The check digit's opens its
-arithmetic, a popover; the year's carries the codes around it. */}}
+{{/* card is a bracket's card: its rows, each a label and its value on a
+line, or its one large value, there but empty until its characters are
+typed. The check digit's opens its arithmetic, a popover; the year's
+carries the codes around it, one run of small text. */}}
 {{define "card" -}}
 <section class="card g-{{.Key}}{{if .Done}} done{{end}}{{if .Bad}} bad{{end}}" data-group="{{.Key}}" aria-labelledby="card-{{.Key}}">
 <h2 id="card-{{.Key}}">{{.Title}} <span class="pos">{{if eq .From .To}}{{.From}}{{else}}{{.From}}–{{.To}}{{end}}</span></h2>
@@ -112,14 +117,21 @@ switch, the label of a checkbox (no script): on, the stack is one plate,
 a row to a name, under the one stamp. The columns are fixed fractions of
 the width (130, 170, 465 and 255 of 1020), which the lines above are drawn
 to. A vocabulary with no name, and the card before the model is known or
-with no vocabulary loaded, keep a blank plate in their place. */}}
+with no vocabulary loaded, keep a blank plate in their place. On a narrow
+page the columns are the cards' six: the make under Maker, the model
+under Vehicle and the years under Model year.
+
+The block shows three vocabularies, two on a phone, and keeps the rest
+(a stack's Late) behind the "more" switch after them, a checkbox's label
+as a stack's switch is. */}}
 {{define "aka" -}}
 <section class="aka{{if not (or .Waiting .None)}} done{{end}}" id="aka" aria-labelledby="aka-h">
 <h2 id="aka-h">Also known as</h2>
-<ol class="stacks">
+{{if .Capped}}<input type="checkbox" class="more visually-hidden" id="aka-more" aria-label="Show every vocabulary">
+{{end}}<ol class="stacks">
 {{if .None}}<li class="stack"><ol class="tags"><li class="tagplate blank"><span class="none">No vocabulary loaded. <button type="button" popovertarget="vocabularies">Add a vocabulary</button></span></li></ol></li>
 {{else if .Waiting}}<li class="stack"><ol class="tags"><li class="tagplate blank"><span class="none">Names turn up once the model is known.</span></li></ol></li>
-{{else}}{{range .Rows}}<li class="stack d{{.Depth}}">
+{{else}}{{range .Rows}}<li class="stack d{{.Depth}}{{with .Late}} {{.}}{{end}}">
 {{if .Fan}}<input type="checkbox" class="fan visually-hidden" id="{{.Fan}}" aria-label="Show every name in {{.Vocabulary}}">{{end}}
 <ol class="tags">
 {{range .Names}}{{template "aka-tag" .}}
@@ -127,7 +139,8 @@ with no vocabulary loaded, keep a blank plate in their place. */}}
 {{end}}</ol>
 </li>
 {{end}}{{end}}</ol>
-</section>
+{{if .Capped}}<label class="more-voc{{if not .More}} phone{{end}}" for="aka-more"><span class="n">{{with .More}}<span class="at3">{{.}}</span>{{end}}<span class="at2">{{.MorePhone}}</span></span><span class="less">Fewer vocabularies</span></label>
+{{end}}</section>
 {{- end}}
 
 {{/* aka-tag is one name: the vocabulary's stamp, then its make, model and
@@ -135,15 +148,20 @@ years, each under its group's bracket on the line from above. The top
 plate of a stack of several carries the stamp as the stack's switch, with
 how many names it holds; the plates under it carry none. A dashed line,
 bracket or mark is a doubt (akaTag), which the segment's title and the
-tag's note, a popover behind its button, say in words. */}}
+tag's note, a popover behind its button, say in words. The stamp is in
+the plate's label (lbl), which on a narrow page is a line above the name
+that stays put while the region scrolls. A stack with years that are
+unsure has "Check years" there, a link to the first of them: following it
+scrolls them into view, and fans the stack out when they are under its
+top plate (ui.css), with no script. */}}
 {{define "aka-tag" -}}
 <li class="tagplate{{if .Rule}} rule{{end}}{{if .Under}} below{{end}}">
-{{if .Fan}}<label class="stamp switch" for="{{.Fan}}" title="{{.Vocabulary}}: {{.Count}} names"><span class="voc">{{.Vocabulary}}</span> <span class="count">{{.Count}}</span></label>
-{{else if .Under}}<span class="stamp"></span>
-{{else}}<span class="stamp" title="{{.Vocabulary}}"><span class="voc">{{.Vocabulary}}</span></span>{{end}}
+<span class="lbl">{{if .Fan}}<label class="stamp switch" for="{{.Fan}}" title="{{.Vocabulary}}: {{.Count}} names"><span class="voc">{{.Vocabulary}}</span> <span class="count">{{.Count}}</span></label>
+{{else if not .Under}}<span class="stamp" title="{{.Vocabulary}}"><span class="voc">{{.Vocabulary}}</span></span>
+{{end}}{{with .Check}}<a class="check" href="#{{.}}">Check years<span class="visually-hidden"> in {{$.Vocabulary}}</span></a>{{end}}</span>
 <span class="seg g-wmi{{if not .Make}} none{{end}}" title="{{.MakeNote}}"><span class="w">{{.Make}}</span></span>
 <span class="seg g-vds{{if .ModelUnsure}} unsure{{end}}" title="{{.ModelNote}}"><span class="w">{{.Model}}</span></span>
-<span class="seg g-year{{if .YearUnsure}} unsure{{end}}" title="{{.YearNote}}"><span class="w">{{.Years}}</span></span>
+<span class="seg g-year{{if .YearUnsure}} unsure{{end}}"{{with .YearsID}} id="{{.}}"{{end}} title="{{.YearNote}}"><span class="w">{{.Years}}</span></span>
 {{with .Details}}<button type="button" class="info" popovertarget="{{$.ID}}" aria-label="How {{$.Make}} {{$.Model}} was reached">i</button>
 <div class="note" id="{{$.ID}}" popover>{{.}}</div>{{end}}
 </li>

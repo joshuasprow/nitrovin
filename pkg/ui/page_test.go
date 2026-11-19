@@ -4,7 +4,9 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -336,5 +338,109 @@ func TestBrowserDecode(t *testing.T) {
 	if status != 200 || !strings.Contains(body, "<title>2010 DODGE Ram · nitrovin</title>") || strings.Contains(body, `class="error"`) ||
 		slices.ContainsFunc(s.gets, func(g string) bool { return g != "/v1/decode/"+vin+"?full=true" }) {
 		t.Errorf("a decode's options in the browser's page: %d, asked %q\n%s", status, s.gets, body)
+	}
+}
+
+// TestNamesControls: what "Also known as" carries beside its names, on the
+// in-browser page over the fixture's fleet, whose month decodes no model
+// year: a name that holds for some years is unsure of them. A stack with
+// such years has a "Check years" link to the first of them, and a stack
+// whose names are all sure has none. Past three vocabularies the rest are
+// behind the block's switch, which says how many, and how many where a
+// phone shows two.
+func TestNamesControls(t *testing.T) {
+	const vin = "1D7RV1GT5AS123456"
+	vocabulary := func(name, make, model string) Picked {
+		return Picked{FileName: name + ".jsonl", Data: []byte(`{"format":1,"kind":"vocabulary","name":"` + name + `","version":"1","data_month":"2026_10","subject":"vehicle","fields":["make","model"]}` + "\n" +
+			`{"entry":{"make":"` + make + `","model":"` + model + `"},"mappings":[{"model":` + map[string]string{"Dodge": "1938", "Chevy": "1850"}[make] + `}]}` + "\n")}
+	}
+	// page is the VIN's page over the files picked.
+	page := func(t *testing.T, picked []Picked) string {
+		t.Helper()
+		s, d := server(t, "classics"), newDisk()
+		general := contract.Value("General")
+		s.info.Elements = contract.Elements{
+			{ElementID: 26, Variable: "Make", Code: "Make", GroupName: general, DataType: "lookup"},
+			{ElementID: 28, Variable: "Model", Code: "Model", GroupName: general, DataType: "lookup"},
+			{ElementID: 143, Variable: "Error Code", Code: "ErrorCode", DataType: "lookup"},
+		}
+		s.decodes[vin] = `{"vin":"` + vin + `","wmi":"1D7","check_digit_valid":true,"now":"2026-11-10T00:00:00Z","data_month":"2026_10","decoder_version":"v9","items":[` +
+			`{"element_id":26,"value":"DODGE","attribute_id":"476"},{"element_id":28,"value":"Ram","attribute_id":"1938"},{"element_id":143,"value":"0","attribute_id":"0"}]}`
+		l := open(t, s, d)
+		if _, err := l.Load(picked, quiet); err != nil {
+			t.Fatal(err)
+		}
+		h := NewInBrowser(l, BrowserConfig{ErrorTexts: map[int]string{0: "0 - VIN decoded clean"}}, log.New(io.Discard, "", 0))
+		status, _, body := response(t, h, "GET", "/?from.vin="+vin, nil)
+		if status != 200 {
+			t.Fatalf("the page: %d\n%s", status, body)
+		}
+		return body
+	}
+
+	// fleet's Ram 1500 holds to 2012, so its years are unsure; its name for
+	// any Dodge, and plain's one name, hold for any year.
+	t.Run("check years", func(t *testing.T) {
+		body := page(t, append(pick(t, "fleet"), vocabulary("plain", "Dodge", "Ram")))
+		links := regexp.MustCompile(`<a class="check" href="#([^"]+)">Check years<span class="visually-hidden"> in ([^<]+)</span></a>`).FindAllStringSubmatch(body, -1)
+		if len(links) != 1 || links[0][2] != "fleet" || strings.Count(body, "Check years") != 1 {
+			t.Fatalf("links to check years %q; want one, fleet's\n%s", links, body)
+		}
+		// The link leads to years the page marks unsure, the first of them.
+		target := `<span class="seg g-year unsure" id="` + links[0][1] + `" title="The years this name holds for. Model year not checked">`
+		first := strings.Index(body, `<span class="seg g-year unsure"`)
+		if first < 0 || !strings.HasPrefix(body[first:], target) {
+			t.Errorf("the link's target %q is not the first unsure years\n%s", links[0][1], body)
+		}
+		// Sure years are no link's target: they carry no id.
+		if sure := `<span class="seg g-year" title="The years this name holds for"><span class="w">any year</span></span>`; strings.Count(body, sure) != 2 {
+			t.Errorf("want fleet's name for any Dodge and plain's name sure of their years, as %s\n%s", sure, body)
+		}
+		if strings.Contains(body, `id="aka-more"`) || strings.Contains(body, "more vocabular") {
+			t.Errorf("two vocabularies, and the page has a switch for more\n%s", body)
+		}
+	})
+
+	for _, c := range []struct {
+		extra                  int
+		third, rest            int
+		more, morePhone, label string
+	}{
+		{1, 0, 0, "", "", ""},
+		{2, 1, 0, "", "1 more vocabulary", `<label class="more-voc phone" for="aka-more">`},
+		{4, 1, 2, "2 more vocabularies", "3 more vocabularies", `<label class="more-voc" for="aka-more">`},
+	} {
+		t.Run(strconv.Itoa(1+c.extra)+" vocabularies", func(t *testing.T) {
+			picked := pick(t, "fleet")
+			for i := range c.extra {
+				picked = append(picked, vocabulary("extra-"+strconv.Itoa(i+1), "Chevy", "Silverado"))
+			}
+			body := page(t, picked)
+			if got := strings.Count(body, `<li class="stack `); got != 1+c.extra {
+				t.Errorf("%d stacks; want %d: every vocabulary is on the page", got, 1+c.extra)
+			}
+			if third, rest := strings.Count(body, ` third">`), strings.Count(body, ` rest">`); third != c.third || rest != c.rest {
+				t.Errorf("%d stacks a phone keeps back and %d every width does; want %d and %d\n%s", third, rest, c.third, c.rest, body)
+			}
+			if has := strings.Contains(body, `<input type="checkbox" class="more visually-hidden" id="aka-more" aria-label="Show every vocabulary">`); has != (c.label != "") {
+				t.Errorf("the block's switch: %v; want %v\n%s", has, c.label != "", body)
+			}
+			if c.label == "" {
+				return
+			}
+			want := c.label + `<span class="n">`
+			if c.more != "" {
+				want += `<span class="at3">` + c.more + `</span>`
+			}
+			want += `<span class="at2">` + c.morePhone + `</span></span><span class="less">Fewer vocabularies</span></label>`
+			if !strings.Contains(body, want) {
+				t.Errorf("the page lacks %s\n%s", want, body)
+			}
+			// The stacks kept back are the last: fleet, which has a name,
+			// is first and never among them.
+			if fleet, late := strings.Index(body, `id="fan-fleet"`), strings.Index(body, ` third">`); fleet < 0 || fleet > late {
+				t.Errorf("fleet is not before the stacks kept back\n%s", body)
+			}
+		})
 	}
 }

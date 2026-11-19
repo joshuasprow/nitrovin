@@ -41,7 +41,10 @@ body { --bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint:
      tooth over it, the ink printed on it, and the patch around its eyelet. */
   --manila: url(paper.svg) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f);
   --on-manila: #2b2418; --manila-muted: #5c4c2e; --manila-patch: #c39a5c; --manila-bad: #a01414;
-  font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 1rem 1rem 3rem; color: var(--fg); background: var(--bg); }
+  /* The page's side margin, which the region of the cards and the names
+     reaches across on a narrow page. */
+  --gutter: 1rem;
+  font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 1rem var(--gutter) 3rem; color: var(--fg); background: var(--bg); }
 @media (prefers-color-scheme: dark) {
   body { --bg: #16222d; --fg: #eef2f5; --muted: #a9b6c2; --line: #45566a; --faint: #3a4a5c; --card-bg: #1f2d3a; --link: #8ec5ff; --bad: #ff8a8a;
     --c-wmi: #ff6b81; --c-vds: #7db4ff; --c-check: #c9a2ff; --c-year: #ffb067; --c-plant: #6fdcab; --c-serial: #b8c4cf; --on: #14181d; }
@@ -75,7 +78,7 @@ h2 { font-size: 1.1rem; margin: 1.5rem 0 .5rem; }
 h3 { font: 900 12px var(--label-font); letter-spacing: .08em; text-transform: uppercase; margin: 1.5rem 0 .5rem; padding-bottom: .2rem; border-bottom: 3px solid var(--c-vds); }
 #ui-error:empty { display: none; }
 #ui-error { color: var(--bad); border-left: 4px solid var(--bad); padding-left: .6rem; margin-bottom: 1rem; }
-a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible, pre:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
+a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible, pre:focus-visible, .hang:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
 code, pre, .mono { font-family: var(--cell-font); }
 .hint { color: var(--muted); font-weight: 400; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -265,9 +268,18 @@ form.filter label { flex-basis: 100%; }
    the top corners clipped, and the eyelet, a hole a radial mask punches
    through a darker patch that reinforces it. The group's colour is
    printed across the tag as its heading's band. One there but empty is a
-   dashed outline where its tag will hang. */
+   dashed outline where its tag will hang.
+
+   A card is short: a row is its label and its value on one line, a long
+   value wrapping under them, and the year's codes are one run of small
+   text. The six share a grid row, as tall as its tallest card, so no card
+   cuts its text off or keeps it behind a control.
+
+   The cards and the names under them are one region (.hang). On a wide
+   page (64rem and up) it is no more than their box. On a narrow one it
+   scrolls sideways (below). */
 .cards { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); padding: 0 16px; }
-.card { position: relative; isolation: isolate; margin: 0 4px; padding: 28px .6rem .7rem; min-width: 0; overflow-wrap: anywhere; color: var(--on-manila); filter: drop-shadow(0 4px 5px rgb(8 7 15 / .28)); }
+.card { position: relative; isolation: isolate; margin: 0 4px; padding: 28px .6rem .5rem; min-width: 0; overflow-wrap: anywhere; color: var(--on-manila); filter: drop-shadow(0 4px 5px rgb(8 7 15 / .28)); }
 .card::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background: radial-gradient(circle at 50% 14px, transparent 4px, var(--manila-patch) 4.5px 10px, transparent 10.5px), var(--manila);
   clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%, 0 16px);
@@ -277,11 +289,13 @@ form.filter label { flex-basis: 100%; }
 /* The card's own heading: the check digit's dialog is inside its card,
    and its heading is the dialog's. */
 .card:not(.done) > h2 { margin: 0; padding: 0; background: none; color: var(--muted); }
-.card > h2 { margin: 0 -.6rem .5rem; padding: .25rem .6rem; font: 900 11px/1.3 var(--label-font); letter-spacing: .06em; text-transform: uppercase; color: #fff; display: flex; justify-content: space-between; gap: .5rem; background: var(--cm); }
+.card > h2 { margin: 0 -.6rem .35rem; padding: .25rem .6rem; font: 900 11px/1.3 var(--label-font); letter-spacing: .06em; text-transform: uppercase; color: #fff; display: flex; justify-content: space-between; gap: .5rem; background: var(--cm); }
 .card > h2 .pos { font-weight: 400; opacity: .9; }
-.card dl { margin: 0; display: grid; gap: .35rem; }
-.card dt { font-size: 11px; color: var(--manila-muted); text-transform: uppercase; letter-spacing: .04em; }
-.card dd { margin: 0; font-weight: 600; line-height: 1.25; }
+.card dl { margin: 0; display: grid; gap: .1rem; line-height: 1.3; }
+/* The space after a label is where its line may break before the value. */
+.card dt::after { content: " "; }
+.card dt { display: inline; margin-right: .15rem; font-size: 11px; color: var(--manila-muted); text-transform: uppercase; letter-spacing: .04em; }
+.card dd { display: inline; margin: 0; font-weight: 600; }
 .card .big { margin: 0; font: 700 1.5rem/1.2 var(--cell-font); }
 .card.g-check .big { font: 900 1rem/1.25 var(--label-font); }
 .card.bad { --cm: var(--manila-bad); }
@@ -290,12 +304,14 @@ form.filter label { flex-basis: 100%; }
    tag's own colour, stuck on the paper. The tape's ridges and edges are
    the label tape's, its body the group's mark, and its letters raised
    white with the halo vinyl takes where it is struck. */
-.card .how { margin-top: .5rem; padding: .25rem .5rem; font: 700 10px var(--cell-font); letter-spacing: .08em; color: var(--on-tape);
+.card .how { margin-top: .3rem; padding: .25rem .5rem; font: 700 10px var(--cell-font); letter-spacing: .08em; color: var(--on-tape);
   text-shadow: -1px -1px 0 rgb(8 7 15 / .5), 1px 1px 0 rgb(255 255 255 / .4), 0 0 3px rgb(255 255 255 / .55);
   background: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .16) 2px 3px), linear-gradient(color-mix(in srgb, var(--cm) 86%, #fff), var(--cm));
   border: 1px solid color-mix(in srgb, var(--cm) 60%, #000); border-top-color: color-mix(in srgb, var(--cm) 68%, #fff); border-bottom-width: 2px; border-radius: 2px; box-shadow: 0 2px 3px rgb(8 7 15 / .35); }
 .card .how:active { transform: translateY(1px); box-shadow: 0 1px 1px rgb(8 7 15 / .35); }
-ol.years { list-style: none; margin: .4rem 0 0; padding: 0; font-size: 11px; color: var(--manila-muted); line-height: 1.35; }
+ol.years { list-style: none; margin: .15rem 0 0; padding: 0; font-size: 11px; color: var(--manila-muted); line-height: 1.35; }
+ol.years li { display: inline; white-space: nowrap; }
+ol.years li:not(:last-child)::after { content: " ·"; font-weight: 400; color: var(--manila-muted); }
 ol.years li.current { color: var(--on-manila); font-weight: 700; }
 /* The sum's table keeps each cell on a line and scrolls sideways; the
    card's breaking of long words is not the dialog's. */
@@ -323,34 +339,52 @@ table.sum .skip { color: var(--muted); }
    the edges of up to three more under it (shadows), which the lines to
    the next stack pass through. Its name on the top plate is the switch (a
    checkbox's label). On, the stack is one plate: the names are rows of
-   it with no gap, under the top row's brackets and beside the one stamp. */
+   it with no gap, under the top row's brackets and beside the one stamp.
+
+   The strip itself is the plate's ::before, laid under its columns, so
+   that on a narrow page (below) it can lie under four of six columns
+   while the plate's label stays clear of it. */
 .aka { position: relative; display: flow-root; margin: 0 16px; }
-.aka h2 { position: absolute; top: 6px; left: 0; margin: 0; padding: .2rem .5rem; font: 900 9px/1.2 var(--cell-font); letter-spacing: .14em; text-transform: uppercase;
+.aka h2, .more-voc { padding: .2rem .5rem; font: 900 9px/1.2 var(--cell-font); letter-spacing: .14em; text-transform: uppercase;
   color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 2px solid var(--tape-edge); border-radius: 1px; box-shadow: 0 2px 3px rgb(8 7 15 / .35); }
+.aka h2 { position: absolute; top: 6px; left: 0; margin: 0; }
 ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
-.stack { position: relative; --under: 0px; }
+/* A stack's own measures: the room under a closed one for its edges
+   (--under), the gap its lines cross from the strip above (--lead), what
+   a closed stack above adds to that (--prev), and its strip's shadow. */
+.stack { position: relative; --under: 0px; --lead: 30px; --prev: 0px; --strip-shadow: var(--tape-lift); padding-bottom: var(--under); }
 /* A closed stack: the plates under the top one are away, but for their
-   edges, each a little narrower and lower, and room for them. */
-.stack:has(.fan:not(:checked)) .tagplate.below { display: none; }
-.stack.d1:has(.fan:not(:checked)) { --under: 12px; }
-.stack.d2:has(.fan:not(:checked)) { --under: 22px; }
-.stack.d3:has(.fan:not(:checked)) { --under: 32px; }
-.stack { padding-bottom: var(--under); }
-.stack.d1:has(.fan:not(:checked)) .tagplate { box-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), var(--tape-lift); }
-.stack.d2:has(.fan:not(:checked)) .tagplate { box-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), var(--tape-lift); }
-.stack.d3:has(.fan:not(:checked)) .tagplate { box-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), 0 30px 0 -15px #1e2226, 0 31px 0 -14px var(--tape-edge), var(--tape-lift); }
-/* The lines into the stack after a closed one start under its top plate. */
-.stack.d1:has(.fan:not(:checked)) + .stack .tagplate .seg::after { top: -43px; height: 31px; }
-.stack.d2:has(.fan:not(:checked)) + .stack .tagplate .seg::after { top: -53px; height: 41px; }
-.stack.d3:has(.fan:not(:checked)) + .stack .tagplate .seg::after { top: -63px; height: 51px; }
-.tagplate { position: relative; display: grid; grid-template-columns: 130fr 170fr 465fr 255fr; align-items: center; margin-top: 30px; min-height: 2.9rem;
-  color: var(--on-tape); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--tape-lift); }
+   edges, each a little narrower and lower, and room for them; the lines
+   into the stack after it start under its top plate. A stack is open
+   when its switch is on, and when "Check years" has just led to years
+   inside it (:target), which a closed stack would hide. The plates that
+   are away keep a box, unseen under the top one: a browser scrolls to a
+   link's target only if it has one. */
+.stack:has(.fan:not(:checked)):not(:has(.seg:target)) {
+  & .tagplate.below { position: absolute; inset: 0 0 auto; margin: 0; visibility: hidden; }
+  &.d1 { --under: 12px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), var(--tape-lift); }
+  &.d2 { --under: 22px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), var(--tape-lift); }
+  &.d3 { --under: 32px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), 0 30px 0 -15px #1e2226, 0 31px 0 -14px var(--tape-edge), var(--tape-lift); }
+  &.d1 + .stack { --prev: 12px; }
+  &.d2 + .stack { --prev: 22px; }
+  &.d3 + .stack { --prev: 32px; }
+}
+.tagplate { position: relative; display: grid; grid-template-columns: 130fr 170fr 465fr 255fr; align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape); }
+.tagplate::before { content: ""; grid-area: 1 / 1 / 2 / -1; align-self: stretch; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--strip-shadow); }
+.tagplate > .lbl, .tagplate > .seg { grid-row: 1; }
+.tagplate > .lbl { grid-column: 1; }
+.tagplate > .g-wmi { grid-column: 2; }
+.tagplate > .g-vds { grid-column: 3; }
+.tagplate > .g-year { grid-column: 4; }
 /* On the tape a group's mark is its light colour, in either scheme. */
 .tagplate .g-wmi { --cm: #ff6b81; }
 .tagplate .g-vds { --cm: #7db4ff; }
 .tagplate .g-year { --cm: #ffb067; }
-.tagplate .stamp { align-self: stretch; display: flex; align-items: center; gap: .35rem; padding: 0 .5rem 0 .7rem; border-right: 1px solid rgb(255 255 255 / .18); min-width: 0;
-  font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss); }
+/* The plate's label: the vocabulary's stamp, and under it "Check years"
+   when the stack has years that are unsure. */
+.lbl { align-self: stretch; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 4px; padding: .3rem .5rem .3rem .7rem; border-right: 1px solid rgb(255 255 255 / .18); min-width: 0; }
+.tagplate .stamp { display: flex; align-items: center; gap: .35rem; min-width: 0; max-width: 100%; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss); }
+.tagplate > .stamp { align-self: stretch; padding: 0 .5rem 0 .7rem; border-right: 1px solid rgb(255 255 255 / .18); }
 .stamp .voc { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 /* The switch: the vocabulary's name on a line of its own, and under it
    how many names its stack holds and which way it goes. */
@@ -358,31 +392,58 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
 .stamp.switch .voc { flex-basis: 100%; }
 .stamp .count { flex: none; padding: 0 .35rem; border: 1px solid rgb(255 255 255 / .5); border-radius: 999px; }
 .stamp.switch::after { content: "▾"; flex: none; font-size: 9px; }
-.fan:checked ~ ol .stamp.switch::after { content: "▴"; }
-.fan:focus-visible ~ ol .stamp.switch { outline: 3px solid var(--link); outline-offset: -3px; }
+.fan:focus-visible ~ ol .stamp.switch { outline: 3px solid var(--link); outline-offset: 2px; }
+/* "Check years" is a strip of label tape in the year's colour, as a
+   control on a tag is in the tag's (.how): the warning that a name's
+   years are unsure, and the way to them. */
+.lbl .check { --cm: #a34c09; flex: none; padding: .15rem .4rem; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-decoration: none; white-space: nowrap; color: var(--on-tape);
+  text-shadow: -1px -1px 0 rgb(8 7 15 / .5), 1px 1px 0 rgb(255 255 255 / .4);
+  background: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .16) 2px 3px), var(--cm);
+  border: 1px solid color-mix(in srgb, var(--cm) 60%, #000); border-top-color: color-mix(in srgb, var(--cm) 68%, #fff); border-bottom-width: 2px; border-radius: 2px; box-shadow: 0 2px 3px rgb(8 7 15 / .35); }
+.lbl .check::after { content: " ›"; }
+.lbl .check:active { transform: translateY(1px); box-shadow: 0 1px 1px rgb(8 7 15 / .35); }
 .seg { position: relative; align-self: stretch; display: flex; align-items: center; justify-content: center; padding: .35rem .6rem; text-align: center; min-width: 0; }
 .seg .w { font: 900 1.05rem/1.2 var(--cell-font); letter-spacing: .08em; text-shadow: var(--tape-emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere; }
 .seg::before { content: ""; position: absolute; left: 8px; right: 8px; top: -13px; height: 5px; border: 4px solid var(--c); border-bottom: 0; border-radius: 2px 2px 0 0; filter: var(--stripe-lift); }
-.seg::after { content: ""; position: absolute; left: calc(50% - 2.5px); top: -31px; height: 18px; border-left: 5px solid var(--c); filter: var(--stripe-lift); }
+.seg::after { content: ""; position: absolute; left: calc(50% - 2.5px); top: calc(-1px - var(--lead) - var(--prev)); height: calc(var(--lead) + var(--prev) - 12px); border-left: 5px solid var(--c); filter: var(--stripe-lift); }
 .seg.unsure::before, .seg.unsure .w { border-style: dashed; }
 .tagplate.rule .g-wmi::after, .tagplate.rule .g-vds::after { border-left-style: dashed; }
 .tagplate.rule .g-wmi .w, .tagplate.rule .g-vds .w { border-bottom-style: dashed; }
 .seg.none::before { display: none; }
 .seg.none .w { border: 0; }
+/* The years "Check years" led to: ringed in their mark, and brought into
+   view with the cards above them and the label beside them still in it. */
+.seg:target { scroll-margin: 16rem 2rem 4rem; }
+.seg:target .w { outline: 2px solid var(--cm); outline-offset: 4px; }
 /* A fanned stack: one plate. The rows under the top one have no gap, no
    brackets and no stamp, only a hairline between their names. */
-.tagplate.below { margin-top: 0; border-top: 0; border-radius: 0; box-shadow: none; }
+.tagplate.below { margin-top: 0; }
+.tagplate.below::before { border-top: 0; border-radius: 0; box-shadow: none; }
 .tagplate.below .seg::before, .tagplate.below .seg::after { display: none; }
-.tagplate.below .seg, .tagplate.below .stamp { border-top: 1px solid rgb(255 255 255 / .14); }
-.stack:has(.fan:checked) .tagplate { box-shadow: none; border-bottom: 0; }
-.stack:has(.fan:checked) .tagplate:first-child { border-radius: 2px 2px 0 0; }
-.stack:has(.fan:checked) .tagplate:last-child { border-bottom: 3px solid var(--tape-edge); border-radius: 0 0 2px 2px; box-shadow: var(--tape-lift); }
-.tagplate.blank { grid-template-columns: 130fr 890fr; color: var(--muted); background: none; border: 3px dashed var(--faint); box-shadow: none; }
+.tagplate.below .seg, .tagplate.below .lbl { border-top: 1px solid rgb(255 255 255 / .14); }
+.stack:has(.fan):is(:has(.fan:checked), :has(.seg:target)) {
+  & .stamp.switch::after { content: "▴"; }
+  & .tagplate::before { box-shadow: none; border-bottom: 0; }
+  & .tagplate:first-child::before { border-radius: 2px 2px 0 0; }
+  & .tagplate:last-child::before { border-bottom: 3px solid var(--tape-edge); border-radius: 0 0 2px 2px; box-shadow: var(--tape-lift); }
+}
+.tagplate.blank { grid-template-columns: 130fr 890fr; color: var(--muted); border: 3px dashed var(--faint); }
+.tagplate.blank::before { display: none; }
 .tagplate.blank .stamp { border-right-color: var(--faint); text-shadow: none; }
 .tagplate.blank .none { grid-column: 2; padding: .5rem .75rem; }
 .tagplate.blank .none:first-child { grid-column: 1 / -1; }
 .tagplate .info { position: absolute; right: .45rem; top: 50%; transform: translateY(-50%); width: 1.35rem; height: 1.35rem; padding: 0; border-radius: 50%; font: italic 700 12px Georgia, serif; text-transform: none; letter-spacing: 0; }
 .tagplate .info:active { transform: translateY(calc(-50% + 2px)); }
+/* The block's cap: three vocabularies, and the rest behind the switch
+   after them, a checkbox's label as a stack's is: a piece of the heading's
+   tape that says how many more there are. A phone shows two (below). */
+.aka:has(.more:not(:checked)) .stack.rest { display: none; }
+.more-voc { display: block; width: fit-content; margin: 14px 0 0; cursor: pointer; }
+.more-voc.phone, .more-voc .at2 { display: none; }
+.more-voc::after { content: " ▾"; }
+.more:checked ~ .more-voc::after { content: " ▴"; }
+.more:checked ~ .more-voc .n, .more:not(:checked) ~ .more-voc .less { display: none; }
+.more:focus-visible ~ .more-voc { outline: 3px solid var(--link); outline-offset: 2px; }
 .note[popover] { box-sizing: border-box; max-width: min(30rem, calc(100vw - 2rem)); padding: .75rem 1rem; border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .4); }
 .note[popover]::backdrop { background: rgb(10 18 26 / .35); }
 
@@ -446,39 +507,68 @@ button.linkish:active { transform: none; box-shadow: none; }
 @keyframes pop { from { transform: translateY(-8px) scale(.92); opacity: 0; } }
 @keyframes stamp { from { transform: scale(1.6); opacity: .2; } }
 
-/* A narrow window: the lines go, the brackets and colours stay, and the
-   cards stack in the brackets' order. The one-cell groups' labels have no
-   room: their cards name them. */
-@media (max-width: 46rem) {
-  body { padding-inline: .5rem; }
+/* A narrow page (under 64rem): the cards and the names are one row that
+   scrolls sideways (.hang), six columns of one width (--col). The cards
+   keep the VIN's order. A name's strip lies under the first four columns,
+   its make under Maker, its model under Vehicle and its years under Model
+   year; nothing of a name is under Check digit, Plant or Serial. So a
+   swipe moves the names with the cards.
+
+   The lines from the three cards to the names are straight here, each
+   part's own (.seg::after) as on a wide page, only longer (--lead): from
+   the card, or the strip above, across the plate's label. The stepped
+   lines (.joins), and the leader lines to cards that now move, are not
+   drawn.
+
+   A plate's label is a line of its own above the strip, a piece of tape,
+   and stays at the region's leading edge while the row scrolls (sticky).
+   The first one carries the heading's words. */
+@media (width < 64rem) {
   .leaders, .joins { display: none; }
+  .hang { --col: 12.5rem; --lbl-h: 1.5rem; --gap: 12px; overflow-x: auto; overscroll-behavior-x: contain; margin: .75rem calc(-1 * var(--gutter)) 0; padding: 4px var(--gutter) 14px; }
+  .hang:focus-visible { outline-offset: -3px; }
+  .cards { grid-template-columns: repeat(6, var(--col)); width: max-content; padding: 0; }
+  .aka { width: calc(6 * var(--col)); margin: 0; }
+  .aka h2, .more-voc, .tagplate.blank { position: sticky; left: calc(var(--gutter) + 4px); }
+  .aka h2 { top: auto; width: fit-content; margin: 14px 0 -6px 4px; }
+  .aka.done h2 { position: absolute; left: auto; width: 1px; height: 1px; margin: 0; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .aka.done .stack:first-child .tagplate:first-child .stamp::before { content: "Also known as ·"; content: "Also known as ·" / ""; flex: none; }
+  .more-voc { margin-left: 4px; }
+  .stack { --lead: calc(var(--gap) + var(--lbl-h) + 16px); }
+  .tagplate { grid-template-columns: repeat(6, var(--col)); margin-top: var(--gap); min-height: 0; }
+  .tagplate::before { grid-area: 2 / 1 / 3 / 5; margin: 0 4px; min-height: 2.9rem; }
+  .tagplate > .seg { grid-row: 2; margin: 0 4px; }
+  .tagplate > .g-wmi { grid-column: 1; }
+  .tagplate > .g-vds { grid-column: 2; }
+  .tagplate > .g-year { grid-column: 4; padding-inline: 1.9rem; }
+  .tagplate > .lbl { grid-area: 1 / 1 / 2 / -1; justify-self: start; position: sticky; left: calc(var(--gutter) + 4px); z-index: 1; flex-direction: row; align-items: center; gap: .4rem; box-sizing: border-box; height: var(--lbl-h); max-width: calc(100vw - 2 * var(--gutter) - 8px); margin: 0 0 16px 4px; padding: 0; border: 0; }
+  .tagplate.below > .lbl { display: none; }
+  .tagplate.below::before { border-top: 1px solid rgb(255 255 255 / .14); }
+  .tagplate.below .seg { border-top: 0; }
+  .lbl .stamp { flex-wrap: nowrap; padding: .2rem .5rem; background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 2px solid var(--tape-edge); border-radius: 1px; box-shadow: 0 2px 3px rgb(8 7 15 / .35); }
+  .lbl .stamp.switch .voc { flex-basis: auto; }
+  .seg .w { font-size: .9rem; letter-spacing: .04em; }
+  .tagplate.blank { grid-template-columns: minmax(0, 1fr); box-sizing: border-box; width: min(100% - 8px, 100vw - 2 * var(--gutter) - 8px); margin-left: 4px; }
+  .tagplate.blank > .stamp { padding-block: .3rem; border-right: 0; border-bottom: 1px solid var(--faint); }
+  .tagplate.blank .none { grid-column: 1; }
+  /* A name's note is at the end of its years. */
+  .tagplate .info { right: auto; left: calc(4 * var(--col) - 4px - 1.7rem); top: auto; bottom: calc(1.45rem - .675rem); transform: none; }
+  .tagplate .info:active { transform: translateY(2px); }
+  .problems { margin-inline: 4px; }
+}
+@media (width < 64rem) and (prefers-reduced-motion: no-preference) {
+  .hang { scroll-behavior: smooth; }
+}
+
+/* A small window: the plate's cells are closer, and the one-cell groups'
+   labels have no room: their cards name them. */
+@media (max-width: 46rem) {
+  body { --gutter: .5rem; }
   .plate, .labels { --plate-pad: 18px; }
-  .under, .cards { padding-inline: 18px; }
+  .under { padding-inline: 18px; }
   .cell { margin: 0 1px; border-bottom-width: 3px; }
   .lab { font-size: 9px; }
   .lab.g-check span, .lab.g-year span, .lab.g-plant span { visibility: hidden; }
-  .cards { grid-template-columns: minmax(0, 1fr); gap: .5rem; margin-top: .75rem; padding-inline: 0; }
-  .card { margin: 0; }
-  .card dl { grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); }
-  .aka { margin: 1.25rem 0 0; }
-  .aka h2 { position: static; width: fit-content; margin-bottom: -6px; }
-  .tagplate { grid-template-columns: minmax(0, 1.3fr) minmax(0, 2fr) minmax(0, 1.3fr); }
-  .tagplate .stamp { grid-column: 1 / -1; padding-block: .2rem; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18); }
-  .tagplate.below .stamp { display: none; }
-  .tagplate.blank { grid-template-columns: minmax(0, 1fr); }
-  .tagplate.blank .none { grid-column: 1; }
-  .seg::before, .seg::after { display: none; }
-  /* A long make ("Roush Performance") breaks at its space, not in a word:
-     the words are smaller and closer here. A row under the top one has no
-     stamp row for its note's button, which sits at the row's end, clear
-     of the years. */
-  .seg { padding-inline: .35rem; }
-  .seg .w { font-size: .8rem; letter-spacing: .03em; overflow-wrap: normal; }
-  .tagplate .info { top: .1rem; right: .3rem; width: 1.1rem; height: 1.1rem; font-size: 10px; transform: none; }
-  .tagplate.below .g-year { padding-right: 1.5rem; }
-  .tagplate.below .info { top: calc(50% - .55rem); }
-  .tagplate .info:active { transform: none; }
-  .problems { padding-inline: 0; margin-inline: 0; }
 }
 
 /* A phone: the plate is two rows, so a cell is wide enough for a finger.
@@ -488,6 +578,14 @@ button.linkish:active { transform: none; box-shadow: none; }
    with the cells, nine characters to a line. */
 @media (max-width: 34rem) {
   .plate { --cell-h: 15cqw; }
+  /* The row's columns are narrower, and the names block shows two
+     vocabularies before its switch. */
+  .hang { --col: 9.5rem; }
+  .seg .w { font-size: .8rem; letter-spacing: .03em; }
+  .aka:has(.more:not(:checked)) .stack.third { display: none; }
+  .more-voc.phone { display: block; }
+  .more-voc .at3 { display: none; }
+  .more-voc .at2 { display: inline; }
   .labels, .cells, .under { grid-template-columns: repeat(9, minmax(0, 1fr)); }
   .cells { row-gap: 8px; }
   .cell { font-size: 9cqw; margin: 0 2px; border-bottom-width: 4px; }

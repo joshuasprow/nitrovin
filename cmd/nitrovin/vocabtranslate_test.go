@@ -79,7 +79,7 @@ func stacks(tb *tab) []stack {
 		return {
 			vocabulary: (s.querySelector(".voc") || s.querySelector(".stamp")).textContent,
 			names: plates.map(p => [...p.querySelectorAll(".seg.g-wmi, .seg.g-vds")].map(seg => seg.textContent).join(" ")).sort(),
-			shown: plates.filter(p => p.getClientRects().length > 0).length,
+			shown: plates.filter(p => p.checkVisibility({visibilityProperty: true})).length,
 		};
 	})`)
 }
