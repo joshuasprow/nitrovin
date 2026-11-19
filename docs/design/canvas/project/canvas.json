@@ -1,0 +1,149 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Controls.dc.html": {
+      "h": 1300,
+      "title": "Dialogs, forms and inputs",
+      "w": 1100,
+      "x": 3540,
+      "y": 0
+    },
+    "Desk1Stack.dc.html": {
+      "h": 1382,
+      "page": "wireframes",
+      "title": "1. Desktop, 1280 × 800",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "Detail1Stack.dc.html": {
+      "h": 1506,
+      "page": "wireframes",
+      "title": "1. Phone, 390 × 844",
+      "w": 430,
+      "x": 2208,
+      "y": 0
+    },
+    "Diagram.dc.html": {
+      "h": 920,
+      "title": "Decoded cards, brackets and lines",
+      "w": 1100,
+      "x": 2360,
+      "y": 0
+    },
+    "Empty1Stack.dc.html": {
+      "h": 650,
+      "page": "wireframes",
+      "title": "1. Empty states",
+      "w": 1280,
+      "x": 1360,
+      "y": 1590
+    },
+    "First1Stack.dc.html": {
+      "h": 400,
+      "page": "wireframes",
+      "title": "1. First view, no part type open",
+      "w": 1280,
+      "x": 0,
+      "y": 1590
+    },
+    "Main.dc.html": {
+      "h": 980,
+      "title": "VIN input",
+      "w": 1100,
+      "x": 0,
+      "y": 0
+    },
+    "Materials.dc.html": {
+      "h": 1340,
+      "title": "Aluminum, vinyl and manila",
+      "w": 1100,
+      "x": 1180,
+      "y": 0
+    },
+    "Types1Dialog.dc.html": {
+      "h": 730,
+      "page": "wireframes",
+      "title": "1. Part types dialog",
+      "w": 936,
+      "x": 2720,
+      "y": 1590
+    },
+    "Tablet1Stack.dc.html": {
+      "h": 1284,
+      "page": "wireframes",
+      "title": "1. Tablet, 768 × 1024",
+      "w": 768,
+      "x": 1360,
+      "y": 0
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-11-18T12:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "noteOrder": [
+    "heading",
+    "wire-heading",
+    "texture-next"
+  ],
+  "notes": {
+    "texture-next": {
+      "fill": "gray",
+      "page": "catalog-fitment",
+      "text": "Texture pass goes here\n\nThe layout is settled on the Wireframes page. Slices 1 to 4 each get their textures decided on this page before their issue is written: part types and candidates, then stock, then the dialog, then part-number mode.",
+      "w": 340,
+      "x": 0,
+      "y": 0
+    },
+    "heading": {
+      "kind": "title1",
+      "maxW": 4640,
+      "text": "nitrovin UI: what DESIGN.md keeps",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "wire-heading": {
+      "kind": "title1",
+      "maxW": 2800,
+      "page": "wireframes",
+      "text": "Where catalog items sit on the page",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Materials.dc.html",
+    "Diagram.dc.html",
+    "Controls.dc.html",
+    "Desk1Stack.dc.html",
+    "Tablet1Stack.dc.html",
+    "Detail1Stack.dc.html",
+    "First1Stack.dc.html",
+    "Empty1Stack.dc.html",
+    "Types1Dialog.dc.html"
+  ],
+  "pages": [
+    {
+      "id": "page-1",
+      "name": "Page 1"
+    },
+    {
+      "id": "catalog-fitment",
+      "name": "Catalog and fitment"
+    },
+    {
+      "id": "wireframes",
+      "name": "Wireframes"
+    }
+  ],
+  "title": "nitrovin UI Design"
+}

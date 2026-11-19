@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Part types dialog</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.w{width:936px;box-sizing:border-box;background:#fff;color:#1f2933;font:14px/1.4 system-ui,sans-serif}
+.w .hd{padding:16px 20px 0;height:88px;box-sizing:border-box}
+.w h1{margin:0;font:700 18px/1.2 system-ui,sans-serif}
+.w .sub{margin:4px 0 0;color:#3e4c59}
+.dlg{box-sizing:border-box;width:896px;margin:0 20px;border:2px solid #1f2933;border-radius:6px;background:#fff;overflow:hidden}
+.dh{display:flex;align-items:center;justify-content:space-between;padding:9px 20px;border-bottom:2px solid #1f2933;background:#cbd2d9}
+.dh h2{margin:0;font:700 13px system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase}
+.dh button{padding:6px 14px;border:1.5px solid #52606d;border-radius:3px;background:#eef1f4;font:700 12px system-ui,sans-serif;color:inherit;cursor:pointer}
+.db{padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px}
+.db input{height:44px;box-sizing:border-box;padding:0 12px;border:1.5px solid #52606d;border-radius:3px;background:#fff;font:14px system-ui,sans-serif}
+.hint{margin:0;font-size:13px;color:#3e4c59}
+.grp h3{margin:0 0 6px;padding-bottom:4px;border-bottom:1.5px solid #52606d;font:700 11px ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase}
+.grp .ts{display:flex;flex-wrap:wrap;gap:8px}
+.t{display:flex;align-items:baseline;gap:14px;min-height:44px;box-sizing:border-box;padding:0 12px;border:1.5px solid #8a6a22;border-radius:3px;background:#fff3c4;font:700 11px system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:inherit;cursor:pointer;align-items:center}
+.t strong{font:700 14px ui-monospace,monospace}
+.t.on{border-width:3px}
+.t.ph{border-style:dashed}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 24px}
+</style>
+</helmet>
+<div class="w" style="height: 730px">
+<div class="hd">
+<h1>What "[N] more" opens: the part types dialog</h1>
+<p class="sub">Every part type the catalog has for this vehicle, under headings taken from a loaded part vocabulary. Choosing one closes the dialog and puts that type first in the strip, pressed.</p>
+</div>
+<div class="dlg">
+<div class="dh"><h2>Part types</h2><button type="button">Close</button></div>
+<div class="db">
+<input type="search" aria-label="Filter part types" placeholder="Filter part types">
+<p class="hint">2015 Ford F150 in demo-catalog · grouped by demo-part-codes</p>
+<div class="grp"><h3 style="display: flex; justify-content: space-between; align-items: baseline">Opened recently <button type="button" style="border: 0; background: none; padding: 0; font: 700 12px system-ui, sans-serif; text-decoration: underline; text-transform: none; letter-spacing: 0; color: inherit; cursor: pointer">Clear recent</button></h3><div class="ts"><button type="button" class="t on" aria-pressed="true">Alternator <strong>3</strong></button></div></div>
+<div class="cols">
+<div class="grp"><h3>DEMO-ALT</h3><div class="ts"><button type="button" class="t on" aria-pressed="true">Alternator <strong>3</strong></button></div></div>
+<div class="grp"><h3>DEMO-ROT</h3><div class="ts"><button type="button" class="t">Brake rotor, front <strong>1</strong></button><button type="button" class="t">Brake rotor, rear <strong>1</strong></button></div></div>
+<div class="grp"><h3>[heading]</h3><div class="ts"><button type="button" class="t ph">[part type] <strong>[n]</strong></button><button type="button" class="t ph">[part type] <strong>[n]</strong></button><button type="button" class="t ph">[part type] <strong>[n]</strong></button></div></div>
+<div class="grp"><h3>[heading]</h3><div class="ts"><button type="button" class="t ph">[part type] <strong>[n]</strong></button><button type="button" class="t ph">[part type] <strong>[n]</strong></button></div></div>
+<div class="grp"><h3>[heading]</h3><div class="ts"><button type="button" class="t ph">[part type] <strong>[n]</strong></button><button type="button" class="t ph">[part type] <strong>[n]</strong></button><button type="button" class="t ph">[part type] <strong>[n]</strong></button><button type="button" class="t ph">[part type] <strong>[n]</strong></button></div></div>
+<div class="grp"><h3>Other</h3><div class="ts"><button type="button" class="t ph">[part type the vocabulary does not place] <strong>[n]</strong></button></div></div>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":936,"height":730}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

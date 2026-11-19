@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Aluminum and vinyl</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.root{--steel:#6f7b86;--steel-dark:#58626c;--on-metal:#232930;--link:#0b4fa8;--faint:#a9bccb;
+  --label-font:"Arial Black","Helvetica Neue",system-ui,sans-serif;--cell-font:ui-monospace,monospace;
+  --metal:url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0/600px 120px,linear-gradient(#eef1f4,#b4bec7 55%,#cdd5dc);
+  --raised:inset 0 1px 0 #fff,0 2px 0 var(--steel);
+  --emboss:0 1px 0 rgb(255 255 255/.9),0 -1px 1px rgb(0 0 0/.45);
+  --tape:repeating-linear-gradient(0deg,transparent 0 2px,rgb(8 7 15/.13) 2px 3px),linear-gradient(#30363d,#171a1e);
+  --tape-edge:#050607;--tape-lit:#69727c;--on-tape:#f6f8fa;
+  --tape-emboss:-1px -1px 0 rgb(8 7 15/.67),1px 1px 0 rgb(255 255 255/.33),0 2px 2px rgb(8 7 15/.53);
+  --tape-lift:0 5px 7px rgb(8 7 15/.4)}
+.root{--bg:#dcecf7;--fg:#14181d;--muted:#47515c;--card-bg:#ffffff}
+.root[data-scheme="dark"]{--bg:#16222d;--fg:#eef2f5;--muted:#a9b6c2;--faint:#3a4a5c;--link:#8ec5ff;--card-bg:#1f2d3a}
+.g-wmi{--c:#c8102e;--cm:#ff6b81}.g-vds{--c:#0b4fa8;--cm:#7db4ff}.g-year{--c:#a34c09;--cm:#ffb067}
+[data-scheme="dark"] .g-wmi{--c:#ff6b81}[data-scheme="dark"] .g-vds{--c:#7db4ff}[data-scheme="dark"] .g-year{--c:#ffb067}
+.btn{font:900 11px var(--label-font);letter-spacing:.08em;text-transform:uppercase;padding:.45rem .9rem;cursor:pointer;color:var(--on-metal);text-shadow:0 1px 0 rgb(255 255 255/.8);background:var(--metal);border:1px solid var(--steel);border-radius:3px;box-shadow:var(--raised)}
+.btn.pressed{transform:translateY(2px);box-shadow:inset 0 1px 0 #fff}
+.btn.tag{padding:.35rem .8rem .35rem 1.4rem;background:radial-gradient(circle at .7rem 50%,var(--steel-dark) 0 2.5px,#e6ebef 3px 4px,transparent 4.5px),var(--metal)}
+.brand{display:inline-block;padding:.2rem 1.5rem;font:900 13px var(--label-font);letter-spacing:.22em;text-transform:uppercase;text-decoration:none;color:var(--on-metal);text-shadow:var(--emboss);border:1px solid var(--steel);border-radius:3px;box-shadow:var(--raised);
+  background:radial-gradient(circle at .65rem 50%,var(--steel-dark) 0 2.5px,#e6ebef 3px 4px,transparent 4.5px),radial-gradient(circle at calc(100% - .65rem) 50%,var(--steel-dark) 0 2.5px,#e6ebef 3px 4px,transparent 4.5px),var(--metal)}
+.example{display:inline-block;padding:.35rem .8rem .35rem 1.4rem;font:700 12px var(--cell-font);letter-spacing:.04em;text-decoration:none;color:var(--on-metal);text-shadow:0 1px 0 rgb(255 255 255/.8);border:1px solid var(--steel);border-radius:3px;box-shadow:var(--raised);
+  background:radial-gradient(circle at .7rem 50%,var(--steel-dark) 0 2.5px,#e6ebef 3px 4px,transparent 4.5px),var(--metal)}
+.panel{border:2px solid var(--steel);border-radius:6px;background:var(--card-bg);box-shadow:0 3px 0 var(--steel-dark),0 18px 40px rgb(0 0 0/.3);overflow:hidden}
+.dialog-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.55rem 2.1rem;border-bottom:2px solid var(--steel);box-shadow:inset 0 1px 0 #fff,0 2px 4px rgb(0 0 0/.2);
+  background:linear-gradient(var(--steel-dark),var(--steel-dark)) .65rem 50%/9px 2px no-repeat,linear-gradient(var(--steel-dark),var(--steel-dark)) calc(100% - .65rem) 50%/9px 2px no-repeat,
+    radial-gradient(circle at calc(.65rem + 4.5px) 50%,#f4f6f8 0 5px,var(--steel) 5.5px 6.5px,transparent 7px),radial-gradient(circle at calc(100% - .65rem - 4.5px) 50%,#f4f6f8 0 5px,var(--steel) 5.5px 6.5px,transparent 7px),var(--metal)}
+.dialog-head h3{margin:0;font:900 13px var(--label-font);letter-spacing:.14em;text-transform:uppercase;color:var(--on-metal);text-shadow:var(--emboss)}
+.aka{position:relative}
+.aka-h{position:absolute;top:6px;left:0;margin:0;padding:.2rem .5rem;font:900 9px/1.2 var(--cell-font);letter-spacing:.14em;text-transform:uppercase;color:var(--on-tape);text-shadow:var(--tape-emboss);background:var(--tape);border-top:1px solid var(--tape-lit);border-bottom:2px solid var(--tape-edge);border-radius:1px;box-shadow:0 2px 3px rgb(8 7 15/.35)}
+.tagplate{position:relative;display:grid;grid-template-columns:130fr 170fr 465fr 255fr;align-items:center;margin-top:30px;min-height:2.9rem;color:var(--on-tape);background:var(--tape);border:1px solid var(--tape-edge);border-top-color:var(--tape-lit);border-bottom-width:3px;border-radius:2px;box-shadow:var(--tape-lift)}
+.stamp{align-self:stretch;display:flex;align-items:center;padding:0 .5rem 0 .7rem;border-right:1px solid rgb(255 255 255/.18);min-width:0;font:700 10px var(--cell-font);letter-spacing:.08em;text-transform:uppercase;text-shadow:var(--tape-emboss)}
+.seg{position:relative;align-self:stretch;display:flex;align-items:center;justify-content:center;padding:.35rem .6rem;text-align:center;min-width:0}
+.seg .w{font:900 1.05rem/1.2 var(--cell-font);letter-spacing:.08em;text-shadow:var(--tape-emboss);border-bottom:3px solid var(--cm);padding-bottom:1px}
+.seg::before{content:"";position:absolute;left:8px;right:8px;top:-13px;height:5px;border:4px solid var(--c);border-bottom:0;border-radius:2px 2px 0 0;filter:var(--stripe-lift)}
+.seg::after{content:"";position:absolute;left:calc(50% - 2.5px);top:-31px;height:18px;border-left:5px solid var(--c);filter:var(--stripe-lift)}
+.info{position:absolute;right:.45rem;top:50%;transform:translateY(-50%);width:1.35rem;height:1.35rem;padding:0;border-radius:50%;font:italic 700 12px Georgia,serif;text-transform:none;letter-spacing:0}
+.tagplate.blank{grid-template-columns:130fr 890fr;color:var(--muted);background:none;border:3px dashed var(--faint);box-shadow:none}
+.tagplate.blank .stamp{border-right-color:var(--faint);text-shadow:none}
+.tagplate.blank .none{padding:.5rem .75rem}
+.root{--manila:url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0/200px 200px,linear-gradient(#efdcae,#e2c88f);--on-manila:#2b2418;--manila-muted:#5c4c2e;--manila-patch:#c39a5c;
+  --stripe-lift:drop-shadow(-1px -1px 0 rgb(255 255 255/.4)) drop-shadow(1.5px 2px 1px rgb(8 7 15/.3))}
+.hang{display:flex;flex-direction:column;align-items:center;width:176px}
+.hang .line{width:0;height:26px;border-left:5px solid var(--c);filter:var(--stripe-lift)}
+.hang .line.wait{border-left:3px solid var(--faint);filter:none}
+.mtag{display:grid;align-self:stretch;min-width:0;filter:drop-shadow(0 4px 5px rgb(8 7 15/.28))}
+.mtag-in{box-sizing:border-box;padding:28px .6rem .7rem;min-width:0;overflow-wrap:anywhere;color:var(--on-manila);
+  background:radial-gradient(circle at 50% 14px,transparent 4px,var(--manila-patch) 4.5px 10px,transparent 10.5px),var(--manila);
+  -webkit-clip-path:polygon(16px 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%,0 16px);clip-path:polygon(16px 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%,0 16px);
+  -webkit-mask-image:radial-gradient(circle at 50% 14px,transparent 3.5px,#000 4px);mask-image:radial-gradient(circle at 50% 14px,transparent 3.5px,#000 4px)}
+.mtag h3{margin:0 -.6rem .5rem;padding:.25rem .6rem;font:900 11px/1.3 var(--label-font);letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--c0);display:flex;justify-content:space-between;gap:.5rem}
+.mtag h3 .pos{font-weight:400;opacity:.9}
+.mtag dl{margin:0;display:grid;gap:.35rem}
+.mtag dt{font-size:11px;color:var(--manila-muted);text-transform:uppercase;letter-spacing:.04em}
+.mtag dd{margin:0;font-weight:600;line-height:1.25}
+.mtag .big{margin:0;font:700 1.5rem/1.2 var(--cell-font)}
+.mtag.wait{filter:none}
+.mtag.wait .mtag-in{padding:.5rem .6rem;background:none;-webkit-clip-path:none;clip-path:none;-webkit-mask-image:none;mask-image:none;border:2px dashed var(--faint);border-radius:2px}
+.mtag.wait h3{margin:0;padding:0;background:none;color:var(--muted)}
+.cap{margin:0 0 10px;font:900 11px/1.3 var(--label-font);letter-spacing:.08em;text-transform:uppercase;color:var(--fg)}
+.cap span{font:400 13px/1.3 system-ui,sans-serif;letter-spacing:0;text-transform:none;color:var(--muted);margin-left:10px}
+.h2{margin:0;padding-bottom:4px;font:900 14px/1.2 var(--label-font);letter-spacing:.08em;text-transform:uppercase;border-bottom:3px solid var(--steel)}
+.sw{display:flex;align-items:center;gap:8px;font:12px/1.3 ui-monospace,monospace;color:var(--fg)}
+.sw i{flex:none;width:36px;height:24px;border:1px solid #58626c;border-radius:2px}
+</style>
+</helmet>
+<div class="root" data-scheme="{{scheme}}" style="width: 1100px; height: 1340px; box-sizing: border-box; padding: 40px; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; display: flex; flex-direction: column; gap: 22px">
+
+<div>
+<h1 style="margin: 0; font: 900 21px/1.2 'Arial Black', 'Helvetica Neue', system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase">Three materials</h1>
+<p style="margin: 6px 0 0; color: var(--muted); max-width: 800px">Brushed aluminum is everything a visitor presses or reads a heading from. Black label-maker tape is a name from a vocabulary. Manila is a decoded card. All three keep the same colours in the light and the dark scheme.</p>
+</div>
+
+<h2 class="h2">Aluminum</h2>
+
+<section>
+<p class="cap">Small tags: one rivet each <span>The brand has a rivet at each end. A pressed key drops 2px and loses its edge.</span></p>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+<a class="brand" href="#">nitrovin</a>
+<button type="button" class="btn tag">VINs ▾</button>
+<button type="button" class="btn tag">Vocabularies</button>
+<button type="button" class="btn tag">Developers</button>
+<a class="example" href="#">1FTEW1EG7FFA12345</a>
+<button type="button" class="btn">Close</button>
+<button type="button" class="btn pressed">Close</button>
+</div>
+</section>
+
+<section>
+<p class="cap">Heads and plates: a slotted screw at each end <span>The VIN plate and every dialog's head.</span></p>
+<div class="panel">
+<div class="dialog-head">
+<h3>Developers</h3>
+<button type="button" class="btn">Close</button>
+</div>
+<p style="margin: 0; padding: 14px 20px; color: var(--muted); font-size: 13px">The panel under a head is plain card ground. Only the head is metal.</p>
+</div>
+</section>
+
+<section>
+<p class="cap">The recipe <span>Body gradient, the grain laid over it as light streaks, a raised edge, a struck letter.</span></p>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 20px">
+<div class="sw"><i style="background: linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc)"></i>body #eef1f4 → #b4bec7 → #cdd5dc</div>
+<div class="sw"><i style="background: #6f7b86"></i>--steel #6f7b86</div>
+<div class="sw"><i style="background: #58626c"></i>--steel-dark #58626c</div>
+<div class="sw"><i style="background: #232930"></i>--on-metal #232930</div>
+</div>
+</section>
+
+<h2 class="h2" style="margin-top: 8px">Vinyl tape</h2>
+
+<section>
+<p class="cap">A name is a strip of label tape <span>The vocabulary's stamp, then make, model and years, each raised white over its group's light mark. The brackets and lines into it are pinstripe tape.</span></p>
+<div class="aka">
+<h3 class="aka-h">Also known as</h3>
+<div class="tagplate">
+<span class="stamp">demo-vehicles</span>
+<span class="seg g-wmi"><span class="w">Ford</span></span>
+<span class="seg g-vds"><span class="w">F150</span></span>
+<span class="seg g-year"><span class="w">any year</span></span>
+<button type="button" class="btn info" aria-label="How Ford F150 was reached">i</button>
+</div>
+<div class="tagplate blank" style="margin-top: 18px">
+<span class="stamp">demo-classics</span>
+<span class="none">No name for this one yet.</span>
+</div>
+</div>
+</section>
+
+<section>
+<p class="cap">The recipe <span>Faint ridges across a dark body, a lit top edge, a heavy bottom edge, a soft lift.</span></p>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 20px">
+<div class="sw"><i style="background: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .13) 2px 3px), linear-gradient(#30363d, #171a1e)"></i>body #30363d → #171a1e</div>
+<div class="sw"><i style="background: #69727c"></i>--tape-lit #69727c</div>
+<div class="sw"><i style="background: #050607"></i>--tape-edge #050607</div>
+<div class="sw"><i style="background: #f6f8fa"></i>--on-tape #f6f8fa</div>
+</div>
+</section>
+
+<h2 class="h2" style="margin-top: 8px">Manila</h2>
+
+<section>
+<p class="cap">A decoded card is a parts tag <span>Clipped corners, a reinforced eyelet, the group's colour printed as a band. It hangs from a line of pinstripe tape.</span></p>
+<div style="display: flex; align-items: stretch; gap: 20px">
+<div class="hang g-wmi" style="--c0: #c8102e">
+<div class="line"></div>
+<div class="mtag"><div class="mtag-in">
+<h3>Maker <span class="pos">1–3</span></h3>
+<dl>
+<div><dt>Make</dt><dd>FORD</dd></div>
+<div><dt>Type</dt><dd>TRUCK</dd></div>
+</dl>
+</div></div>
+</div>
+<div class="hang g-year" style="--c0: #b3540a">
+<div class="line"></div>
+<div class="mtag"><div class="mtag-in">
+<h3>Model year <span class="pos">10</span></h3>
+<p class="big">2015</p>
+</div></div>
+</div>
+<div class="hang">
+<div class="line wait"></div>
+<div class="mtag wait"><div class="mtag-in">
+<h3>Plant <span class="pos">11</span></h3>
+</div></div>
+</div>
+</div>
+</section>
+
+<section>
+<p class="cap">The recipe <span>Fine paper grain over a warm body, ink that holds in both schemes, a darker patch around the hole.</span></p>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 20px">
+<div class="sw"><i style="background: url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f)"></i>body #efdcae → #e2c88f</div>
+<div class="sw"><i style="background: #c39a5c"></i>--manila-patch #c39a5c</div>
+<div class="sw"><i style="background: #2b2418"></i>--on-manila #2b2418</div>
+<div class="sw"><i style="background: #5c4c2e"></i>--manila-muted #5c4c2e</div>
+</div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1100,"height":1340}}'>
+class Component extends DCLogic {
+renderVals() {
+let d = this.props.dark;
+if (d === undefined) {
+try { d = JSON.parse(document.querySelector('script[data-dc-script]').getAttribute('data-props')).dark.default; } catch (e) {}
+}
+return { scheme: (d === true || d === 'true') ? 'dark' : 'light' };
+}
+}
+</script>
+</body>
+</html>

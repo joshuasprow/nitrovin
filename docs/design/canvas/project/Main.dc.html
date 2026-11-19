@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VIN input</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.root{--steel:#6f7b86;--steel-dark:#58626c;--on-metal:#232930;--link:#0b4fa8;--bad:#b91c1c;--faint:#a9bccb;
+  --label-font:"Arial Black","Helvetica Neue",system-ui,sans-serif;--cell-font:ui-monospace,monospace;
+  --metal:url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0/600px 120px,linear-gradient(#eef1f4,#b4bec7 55%,#cdd5dc);
+  --emboss:0 1px 0 rgb(255 255 255/.9),0 -1px 1px rgb(0 0 0/.45)}
+.root{--bg:#dcecf7;--fg:#14181d;--muted:#47515c;--on:#ffffff}
+.root[data-scheme="dark"]{--bg:#16222d;--fg:#eef2f5;--muted:#a9b6c2;--faint:#3a4a5c;--link:#8ec5ff;--bad:#ff8a8a;--on:#14181d}
+.g-wmi{--c:#c8102e;--cm:#c8102e}.g-vds{--c:#0b4fa8;--cm:#0b4fa8}.g-check{--c:#5b2d8e;--cm:#5b2d8e}.g-year{--c:#a34c09;--cm:#b3540a}.g-plant{--c:#0f6b46;--cm:#0f6b46}.g-serial{--c:#3d4650;--cm:#3d4650}
+[data-scheme="dark"] .g-wmi{--c:#ff6b81}[data-scheme="dark"] .g-vds{--c:#7db4ff}[data-scheme="dark"] .g-check{--c:#c9a2ff}[data-scheme="dark"] .g-year{--c:#ffb067}[data-scheme="dark"] .g-plant{--c:#6fdcab}[data-scheme="dark"] .g-serial{--c:#b8c4cf}
+.labels,.cells,.under{display:grid;grid-template-columns:repeat(17,minmax(0,1fr))}
+.labels,.under{padding:0 16px}
+.labels>.g-wmi,.under>.g-wmi{grid-column:1/span 3}
+.labels>.g-vds,.under>.g-vds{grid-column:4/span 5}
+.labels>.g-check,.under>.g-check{grid-column:9}
+.labels>.g-year,.under>.g-year{grid-column:10}
+.labels>.g-plant,.under>.g-plant{grid-column:11}
+.labels>.g-serial,.under>.g-serial{grid-column:12/span 6}
+.lab{text-align:center;font:900 11px/1.2 var(--label-font);letter-spacing:.06em;text-transform:uppercase;color:var(--c);white-space:nowrap}
+.root{--stripe-lift:drop-shadow(-1px -1px 0 rgb(255 255 255/.4)) drop-shadow(1.5px 2px 1px rgb(8 7 15/.3))}
+.lab::after{content:"";display:block;height:7px;margin:3px 3px 0;border:4px solid var(--c);border-bottom:0;border-radius:2px 2px 0 0;filter:var(--stripe-lift)}
+.plate{position:relative;isolation:isolate;padding:10px 16px;border:2px solid var(--steel);border-radius:8px;
+  box-shadow:inset 0 1px 0 #fff,inset 0 -3px 6px rgb(0 0 0/.25),0 3px 0 var(--steel-dark),0 8px 16px rgb(0 0 0/.25);
+  background:linear-gradient(var(--steel-dark),var(--steel-dark)) 3px 50%/9px 2px no-repeat,linear-gradient(var(--steel-dark),var(--steel-dark)) calc(100% - 3px) 50%/9px 2px no-repeat,
+    radial-gradient(circle at 7.5px 50%,#f4f6f8 0 5px,var(--steel) 5.5px 6.5px,transparent 7px),radial-gradient(circle at calc(100% - 7.5px) 50%,#f4f6f8 0 5px,var(--steel) 5.5px 6.5px,transparent 7px),var(--metal)}
+.plate::before,.plate::after{content:"";position:absolute;inset:0;z-index:-1;border-radius:6px;pointer-events:none}
+.plate::before{background:#1c2630;opacity:.22;-webkit-mask-image:url(/_blob/9d26d515fa68a38e6638bb4a880cacf5);mask-image:url(/_blob/9d26d515fa68a38e6638bb4a880cacf5);-webkit-mask-size:600px 120px;mask-size:600px 120px;-webkit-mask-position:211px 47px;mask-position:211px 47px}
+.plate::after{background:linear-gradient(105deg,transparent 30%,#fff 45%,transparent 60%);opacity:.35;-webkit-mask-image:linear-gradient(#000,transparent 70%);mask-image:linear-gradient(#000,transparent 70%)}
+.plate.focus{outline:3px solid var(--link);outline-offset:3px}
+.cell{position:relative;display:flex;align-items:center;justify-content:center;height:83px;margin:0 2px;box-sizing:border-box;font:700 46px/1 var(--cell-font);color:var(--on-metal);text-shadow:var(--emboss);border-bottom:4px solid var(--cm,var(--c))}
+.cell.next{box-shadow:inset 0 -6px 0 var(--link)}
+.cell.sel{background:#16202b;color:#fff;text-shadow:none;border-radius:4px;box-shadow:inset 0 0 0 3px var(--c)}
+.cell.bad{background:var(--bad);color:var(--on);text-shadow:none;border-bottom-color:var(--bad)}
+.cell.caret::before{content:"";position:absolute;left:-4px;top:10%;bottom:10%;width:4px;border-radius:2px;background:var(--on-metal)}
+.placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:900 20px/1 var(--label-font);letter-spacing:.14em;text-transform:uppercase;color:var(--steel-dark);text-shadow:var(--emboss)}
+.brk{height:9px;margin:5px 3px 0;border:3px solid var(--faint);border-top:0;border-radius:0 0 2px 2px}
+.brk.done{border-width:4px;border-top:0;border-color:var(--c);filter:var(--stripe-lift)}
+.cap{margin:0 0 10px;font:900 11px/1.3 var(--label-font);letter-spacing:.08em;text-transform:uppercase;color:var(--fg)}
+.cap span{font:400 13px/1.3 system-ui,sans-serif;letter-spacing:0;text-transform:none;color:var(--muted);margin-left:10px}
+</style>
+</helmet>
+<div class="root" data-scheme="{{scheme}}" style="width: 1100px; height: 980px; box-sizing: border-box; padding: 40px; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; display: flex; flex-direction: column; gap: 30px">
+
+<div>
+<h1 style="margin: 0; font: 900 21px/1.2 'Arial Black', 'Helvetica Neue', system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase">VIN input</h1>
+<p style="margin: 6px 0 0; color: var(--muted); max-width: 760px">The form is the plate: 17 struck cells under six group labels, drawn over one real text field. The field keeps paste, selection and the phone keyboard; the cells draw everything the visitor sees.</p>
+</div>
+
+<section>
+<p class="cap">Empty <span>The placeholder is stamped across the plate in the label face.</span></p>
+<div class="labels">
+<span class="lab g-wmi">Maker</span><span class="lab g-vds">Vehicle</span><span class="lab g-check">Check</span><span class="lab g-year">Year</span><span class="lab g-plant">Plant</span><span class="lab g-serial">Serial</span>
+</div>
+<div class="plate">
+<div class="cells">
+<span class="cell g-wmi"></span><span class="cell g-wmi"></span><span class="cell g-wmi"></span><span class="cell g-vds"></span><span class="cell g-vds"></span><span class="cell g-vds"></span><span class="cell g-vds"></span><span class="cell g-vds"></span><span class="cell g-check"></span><span class="cell g-year"></span><span class="cell g-plant"></span><span class="cell g-serial"></span><span class="cell g-serial"></span><span class="cell g-serial"></span><span class="cell g-serial"></span><span class="cell g-serial"></span><span class="cell g-serial"></span>
+</div>
+<div class="placeholder">Type a VIN</div>
+</div>
+<div class="under">
+<span class="brk g-wmi"></span><span class="brk g-vds"></span><span class="brk g-check"></span><span class="brk g-year"></span><span class="brk g-plant"></span><span class="brk g-serial"></span>
+</div>
+</section>
+
+<section>
+<p class="cap">Typing, focused <span>The next cell blinks a bar in the link colour. A finished group's bracket becomes pinstripe tape in its colour.</span></p>
+<div class="labels">
+<span class="lab g-wmi">Maker</span><span class="lab g-vds">Vehicle</span><span class="lab g-check">Check</span><span class="lab g-year">Year</span><span class="lab g-plant">Plant</span><span class="lab g-serial">Serial</span>
+</div>
+<div class="plate focus">
+<div class="cells">
+<span class="cell g-wmi">1</span><span class="cell g-wmi">H</span><span class="cell g-wmi">G</span><span class="cell g-vds">C</span><span class="cell g-vds">M</span><span class="cell g-vds">8</span><span class="cell g-vds">2</span><span class="cell g-vds">6</span><span class="cell g-check next"></span><span class="cell g-year"></span><span class="cell g-plant"></span><span class="cell g-serial"></span><span class="cell g-serial"></span><span class="cell g-serial"></span><span class="cell g-serial"></span><span class="cell g-serial"></span><span class="cell g-serial"></span>
+</div>
+</div>
+<div class="under">
+<span class="brk g-wmi done"></span><span class="brk g-vds done"></span><span class="brk g-check"></span><span class="brk g-year"></span><span class="brk g-plant"></span><span class="brk g-serial"></span>
+</div>
+</section>
+
+<section>
+<p class="cap">Caret and selection <span>The caret is a bar in the gap before its cell. A selected cell is inked dark, ringed in its group's colour.</span></p>
+<div class="labels">
+<span class="lab g-wmi">Maker</span><span class="lab g-vds">Vehicle</span><span class="lab g-check">Check</span><span class="lab g-year">Year</span><span class="lab g-plant">Plant</span><span class="lab g-serial">Serial</span>
+</div>
+<div class="plate">
+<div class="cells">
+<span class="cell g-wmi">1</span><span class="cell g-wmi">H</span><span class="cell g-wmi">G</span><span class="cell g-vds sel">C</span><span class="cell g-vds sel">M</span><span class="cell g-vds sel">8</span><span class="cell g-vds sel">2</span><span class="cell g-vds sel">6</span><span class="cell g-check">3</span><span class="cell g-year">3</span><span class="cell g-plant">A</span><span class="cell g-serial">0</span><span class="cell g-serial">0</span><span class="cell g-serial caret">4</span><span class="cell g-serial">3</span><span class="cell g-serial">5</span><span class="cell g-serial">2</span>
+</div>
+</div>
+<div class="under">
+<span class="brk g-wmi done"></span><span class="brk g-vds done"></span><span class="brk g-check done"></span><span class="brk g-year done"></span><span class="brk g-plant done"></span><span class="brk g-serial done"></span>
+</div>
+</section>
+
+<section>
+<p class="cap">A character no VIN holds <span>I, O and Q fill their cell with the error colour; the plate still decodes.</span></p>
+<div class="labels">
+<span class="lab g-wmi">Maker</span><span class="lab g-vds">Vehicle</span><span class="lab g-check">Check</span><span class="lab g-year">Year</span><span class="lab g-plant">Plant</span><span class="lab g-serial">Serial</span>
+</div>
+<div class="plate">
+<div class="cells">
+<span class="cell g-wmi">1</span><span class="cell g-wmi">H</span><span class="cell g-wmi">G</span><span class="cell g-vds">C</span><span class="cell g-vds">M</span><span class="cell g-vds">8</span><span class="cell g-vds bad">O</span><span class="cell g-vds">6</span><span class="cell g-check">3</span><span class="cell g-year">3</span><span class="cell g-plant">A</span><span class="cell g-serial">0</span><span class="cell g-serial">0</span><span class="cell g-serial">4</span><span class="cell g-serial">3</span><span class="cell g-serial">5</span><span class="cell g-serial">2</span>
+</div>
+</div>
+<div class="under">
+<span class="brk g-wmi done"></span><span class="brk g-vds done"></span><span class="brk g-check done"></span><span class="brk g-year done"></span><span class="brk g-plant done"></span><span class="brk g-serial done"></span>
+</div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;dark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true},&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:980}}">
+class Component extends DCLogic {
+renderVals() {
+let d = this.props.dark;
+if (d === undefined) {
+try { d = JSON.parse(document.querySelector('script[data-dc-script]').getAttribute('data-props')).dark.default; } catch (e) {}
+}
+return { scheme: (d === true || d === 'true') ? 'dark' : 'light' };
+}
+}
+</script>
+</body>
+</html>
