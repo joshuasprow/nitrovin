@@ -70,6 +70,14 @@
       "x": 420,
       "y": 0
     },
+    "Slice2Textures.dc.html": {
+      "h": 1180,
+      "page": "catalog-fitment",
+      "title": "Slice 2 textures: the stock strip and its rows",
+      "w": 1100,
+      "x": 1600,
+      "y": 0
+    },
     "Types1Dialog.dc.html": {
       "h": 730,
       "page": "wireframes",
@@ -138,7 +146,8 @@
     "First1Stack.dc.html",
     "Empty1Stack.dc.html",
     "Types1Dialog.dc.html",
-    "Slice1Textures.dc.html"
+    "Slice1Textures.dc.html",
+    "Slice2Textures.dc.html"
   ],
   "pages": [
     {
