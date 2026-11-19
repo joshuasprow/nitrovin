@@ -457,12 +457,12 @@ func (l *Library) Opened() string { return l.opened }
 // and files, but for the catalog and stock: the browser's catalog, when it
 // holds one that links, and its stock files that link, as /v1/info lists
 // them, each with its drift; never the server's catalog, which the
-// browser does not read (the worker sends the fit page to the server
-// while it has one), nor its stock, which it does not publish.
+// browser does not read (the page's fit asks the server's /v1/fit while
+// it has one, pageFit), nor its stock, which it does not publish.
 func (l *Library) Info() contract.Info { return l.infoWith(true) }
 
 // LoadInfo is Info without the drift, which the pages but the files'
-// panel never show: a fit page never waits on measuring it.
+// panel never show: the page never waits on measuring it.
 func (l *Library) LoadInfo() contract.Info { return l.infoWith(false) }
 
 // infoWith is Info, its drift measured when drift is set.
@@ -608,6 +608,23 @@ func (l *Library) translate(req contract.TranslateRequest, dec *contract.VINDeco
 // answers no-catalog), a VIN decoded by the server's /v1/decode as for
 // Translate.
 func (l *Library) Fit(ctx context.Context, req contract.FitRequest) (contract.Fit, error) {
+	return l.fit(ctx, req, nil)
+}
+
+// pageFit is the page's fit (fit.go): Fit over dec, the VIN's decode the
+// page has already, when it is not nil; or, while the server holds the
+// catalog (one catalog per nitrovin, ADR 0023), the server's own
+// /v1/fit, as the browser does not read it.
+func (l *Library) pageFit(ctx context.Context, req contract.FitRequest, dec *contract.VINDecode) (contract.Fit, error) {
+	if l.serverCatalog != "" {
+		return l.serverFit(req)
+	}
+	return l.fit(ctx, req, dec)
+}
+
+// fit is Fit, a VIN's decode dec when it is not nil, which is not asked
+// for again.
+func (l *Library) fit(ctx context.Context, req contract.FitRequest, dec *contract.VINDecode) (contract.Fit, error) {
 	start := time.Now()
 	// A Fit within the clock's resolution (a millisecond, in some
 	// browsers) still counts: at least a nanosecond.
@@ -615,6 +632,9 @@ func (l *Library) Fit(ctx context.Context, req contract.FitRequest) (contract.Fi
 	f := l.fitter(l.state.Load())
 	var decodeErr error
 	f.Decode = func(vin string, year contract.Null[int32], now time.Time) (contract.VINDecode, error) {
+		if dec != nil {
+			return *dec, nil
+		}
 		d, _, err := l.decode(vin, year, now)
 		decodeErr = err
 		return d, err
@@ -624,6 +644,144 @@ func (l *Library) Fit(ctx context.Context, req contract.FitRequest) (contract.Fi
 		return fit, decodeErr
 	}
 	return fit, err
+}
+
+// serverFit is req answered by the server's GET /v1/fit: the page's
+// requests alone, from a VIN, with a part type of the catalog's spine and
+// a page; its refusal as the server gave it, and in words when the server
+// cannot be reached.
+func (l *Library) serverFit(req contract.FitRequest) (contract.Fit, error) {
+	q := url.Values{"from.vin": {req.From.VIN}}
+	if p := req.Part; p != nil {
+		q.Set("part.spine", p.Spine)
+		q.Set("part.id", p.ID)
+	}
+	if req.Limit != 0 {
+		q.Set("limit", strconv.Itoa(req.Limit))
+	}
+	if req.After != "" {
+		q.Set("after", req.After)
+	}
+	status, body, err := l.remote.Get("/v1/fit?" + q.Encode())
+	if err != nil {
+		return contract.Fit{}, &pageError{Status: http.StatusServiceUnavailable, Message: "Fitting the VIN " + req.From.VIN +
+			" needs this nitrovin's server, whose catalog it is, and the server could not be reached: this browser may be offline."}
+	}
+	if status != http.StatusOK {
+		var p contract.Problem
+		if json.Unmarshal(body, &p) == nil && p.Status != 0 && p.Type != contract.Internal {
+			return contract.Fit{}, &p
+		}
+		return contract.Fit{}, &pageError{Status: http.StatusBadGateway, Message: fmt.Sprintf("The server answered HTTP %d to the fit of %s: %s", status, req.From.VIN, p.Detail)}
+	}
+	var w serverFitJSON
+	if err := json.Unmarshal(body, &w); err != nil {
+		return contract.Fit{}, fmt.Errorf("reading the server's fit of %s: %w", req.From.VIN, err)
+	}
+	return w.fit()
+}
+
+// serverFitJSON is the server's fit (contract.Fit's JSON), as far as the
+// page reads it: its catalog's vehicles are read by the catalog's kind,
+// and its lists of conditions from their wire form.
+type serverFitJSON struct {
+	Status     contract.FitStatus     `json:"status"`
+	Catalog    *contract.FitCatalog   `json:"catalog"`
+	Vehicle    *contract.Vehicle      `json:"vehicle"`
+	Models     []serverFitModel       `json:"models"`
+	PartTypes  []contract.FitPartType `json:"part_types"`
+	Candidates []struct {
+		Fitment      contract.Fitment  `json:"fitment"`
+		Reached      contract.FitReach `json:"reached"`
+		Applications []struct {
+			Vehicle     json.RawMessage      `json:"vehicle"`
+			First       contract.Null[int32] `json:"first"`
+			Last        contract.Null[int32] `json:"last"`
+			Options     string               `json:"options"`
+			Unconfirmed []json.RawMessage    `json:"unconfirmed"`
+			Confirmed   []json.RawMessage    `json:"confirmed"`
+		} `json:"applications"`
+	} `json:"candidates"`
+	Total          int       `json:"total"`
+	Next           string    `json:"next"`
+	Now            time.Time `json:"now"`
+	DataMonth      string    `json:"data_month"`
+	DecoderVersion string    `json:"decoder_version"`
+}
+
+// serverFitModel is one of a server fit's models, as the page reads it.
+type serverFitModel struct {
+	Vehicle json.RawMessage `json:"vehicle"`
+	Name    string          `json:"name"`
+}
+
+// fit is w as the page reads a fit.
+func (w serverFitJSON) fit() (contract.Fit, error) {
+	out := contract.Fit{Status: w.Status, Catalog: w.Catalog, Vehicle: w.Vehicle, PartTypes: w.PartTypes, Total: w.Total, Next: w.Next, Now: w.Now, DataMonth: w.DataMonth, DecoderVersion: w.DecoderVersion}
+	vpic := w.Catalog != nil && w.Catalog.Vehicles == vocab.Reserved
+	for _, m := range w.Models {
+		v, err := catalogVehicleJSON(m.Vehicle, vpic)
+		if err != nil {
+			return contract.Fit{}, err
+		}
+		out.Models = append(out.Models, contract.FitModel{Vehicle: v, Name: m.Name})
+	}
+	for _, c := range w.Candidates {
+		fc := contract.FitCandidate{Fitment: c.Fitment, Reached: c.Reached}
+		for _, a := range c.Applications {
+			v, err := catalogVehicleJSON(a.Vehicle, vpic)
+			if err != nil {
+				return contract.Fit{}, err
+			}
+			un, err := conditionsJSON(a.Unconfirmed)
+			if err != nil {
+				return contract.Fit{}, err
+			}
+			con, err := conditionsJSON(a.Confirmed)
+			if err != nil {
+				return contract.Fit{}, err
+			}
+			fc.Applications = append(fc.Applications, contract.FitApplication{Vehicle: v, First: a.First, Last: a.Last, Options: a.Options, Unconfirmed: un, Confirmed: con})
+		}
+		out.Candidates = append(out.Candidates, fc)
+	}
+	return out, nil
+}
+
+// catalogVehicleJSON is a catalog's vehicle as its JSON writes it: a vPIC
+// make, model or extension when vpic, else a vocabulary entry's fields.
+func catalogVehicleJSON(raw json.RawMessage, vpic bool) (contract.CatalogVehicle, error) {
+	if vpic {
+		var r struct {
+			Make  int32  `json:"make"`
+			Model int32  `json:"model"`
+			Ext   string `json:"ext"`
+		}
+		err := json.Unmarshal(raw, &r)
+		return contract.CatalogVehicle{Make: r.Make, Model: r.Model, Ext: r.Ext}, err
+	}
+	var entry map[string]string
+	err := json.Unmarshal(raw, &entry)
+	return contract.CatalogVehicle{Entry: entry}, err
+}
+
+// conditionsJSON is a list of conditions as its JSON writes it: element
+// ids, then "model_year".
+func conditionsJSON(raw []json.RawMessage) (contract.Unconfirmed, error) {
+	var u contract.Unconfirmed
+	for _, r := range raw {
+		var id int32
+		if json.Unmarshal(r, &id) == nil {
+			u.Elements = append(u.Elements, id)
+			continue
+		}
+		var s string
+		if err := json.Unmarshal(r, &s); err != nil || s != "model_year" {
+			return u, fmt.Errorf("reading the server's fit: %s is no condition", r)
+		}
+		u.ModelYear = true
+	}
+	return u, nil
 }
 
 // List answers as /v1/vocabularies does, the catalog's fitments a page

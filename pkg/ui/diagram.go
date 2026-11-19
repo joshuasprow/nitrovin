@@ -201,10 +201,12 @@ func moreText(n int) string {
 // diagram is the plate and everything hanging off it.
 type diagram struct {
 	// VIN is what was typed, cleaned (cleanVIN).
-	VIN      string
-	Cells    []cell
-	Groups   []vinGroup
-	Names    akaCard
+	VIN    string
+	Cells  []cell
+	Groups []vinGroup
+	Names  akaCard
+	// Fit is the parts that fit, under the names (fit.go).
+	Fit      fitCard
 	Complete bool
 	// Label names the vehicle, for the title and a recent chip: "2003
 	// HONDA Accord".

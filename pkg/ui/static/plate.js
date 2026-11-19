@@ -11,6 +11,8 @@
 //   the Developers dialog it drew: the same HTML the form's answer is;
 // - the URL follows what is typed in place, and a whole VIN is a history
 //   entry, so Back steps through VINs and not keystrokes;
+// - a part type pressed among the parts that fit, a link to the page, is
+//   asked for and swapped in the same way, a history entry of its own;
 // - a group whose characters were just completed is marked fresh, which
 //   the stylesheet draws in;
 // - the plate edits as a text field does, because it is one: the input's
@@ -84,13 +86,13 @@
 
   let timer = 0;
   let pending = null;
-  // ask asks the server for vin's answer; how is the history's part:
-  // 'push', 'replace' or '' to leave it alone.
-  const ask = async (vin, how) => {
+  // ask asks the server for url's answer, the page with a VIN and perhaps
+  // a part type pressed; how is the history's part: 'push', 'replace' or
+  // '' to leave it alone.
+  const ask = async (url, how) => {
     clearTimeout(timer);
     if (pending) pending.abort();
     const mine = pending = new AbortController();
-    const url = urlFor(vin);
     let html;
     try {
       const r = await fetch(url, { headers: { 'HX-Request': 'true' }, signal: mine.signal });
@@ -101,7 +103,7 @@
     }
     if (pending === mine) pending = null;
     swap(new DOMParser().parseFromString(html, 'text/html'));
-    const whole = vin.length === LENGTH;
+    const whole = (new URL(url, location.href).searchParams.get('from.vin') || '').length === LENGTH;
     // Asked again for the VIN the page is at (Enter on it), it is the
     // same entry: a second would make Back do nothing.
     if (how === 'push' && url === location.pathname + location.search) how = 'replace';
@@ -160,7 +162,7 @@
     paint(vin, true);
     show();
     clearTimeout(timer);
-    timer = setTimeout(() => ask(vin, how(vin)).catch(console.error), vin.length === LENGTH ? 0 : WAIT);
+    timer = setTimeout(() => ask(urlFor(vin), how(vin)).catch(console.error), vin.length === LENGTH ? 0 : WAIT);
   });
 
   // Pasted text goes in at the caret or over the selection, as much of it
@@ -184,7 +186,7 @@
     if (e.target.id !== 'vin-form') return;
     e.preventDefault();
     const vin = clean(document.getElementById('from-vin').value);
-    ask(vin, how(vin)).catch(console.error);
+    ask(urlFor(vin), how(vin)).catch(console.error);
   });
 
   // Enter sends the form: the field is a textarea (init), which would
@@ -385,18 +387,38 @@
   });
   document.addEventListener('pointerdown', () => ghost(-1));
 
+  // A part type pressed, or the next page of its candidates, is a link
+  // to the page (page.html's fit): its answer is swapped in place, as a
+  // VIN's is, and is a history entry of its own. The link the visitor
+  // followed keeps the focus, in the answer that replaced it.
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('#answer a.swap');
+    if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    const kind = a.classList.contains('ptype') ? 'a.ptype' : 'a.swap:not(.ptype)';
+    const i = [...document.querySelectorAll('#answer ' + kind)].indexOf(a);
+    const focused = document.activeElement === a;
+    const u = new URL(a.href);
+    ask(u.pathname + u.search, 'push').then(() => {
+      const again = document.querySelectorAll('#answer ' + kind)[i];
+      if (focused && again) again.focus({ preventScroll: true });
+    }).catch(console.error);
+  });
+
   window.addEventListener('popstate', () => {
-    const vin = clean(new URLSearchParams(location.search).get('from.vin') || '');
+    const q = new URLSearchParams(location.search);
+    const vin = clean(q.get('from.vin') || '');
     const input = document.getElementById('from-vin');
     if (!input) return;
     // A move within the page (a link to a part of it, as "Check years"
-    // is) is no other VIN: the answer stays, and what the link points at
-    // stays in it.
+    // is) is no other VIN nor part type: the answer stays, and what the
+    // link points at stays in it.
     const answer = document.getElementById('answer');
-    if (input.value === vin && answer && answer.dataset.vin === vin) return;
+    if (input.value === vin && answer && answer.dataset.vin === vin &&
+      (answer.dataset.part || '') === (q.get('part.id') || '') && (answer.dataset.after || '') === (q.get('after') || '')) return;
     input.value = vin;
     paint(vin, false);
-    ask(vin, '').catch(console.error);
+    ask(location.pathname + location.search, '').catch(console.error);
   });
 
   // Recent VINs, this browser's own.

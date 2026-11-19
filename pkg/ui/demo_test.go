@@ -123,6 +123,86 @@ func TestLibraryDemoFit(t *testing.T) {
 	}
 }
 
+// pageFitTargets are pages the demo set's parts that fit answer: part
+// types, each mark, a redirect, a VIN with no year, and each place with
+// nothing to list.
+var pageFitTargets = []string{
+	"/?from.vin=1FTEW1EG7FFA12345",
+	"/?from.vin=1FTEW1EG7FFA12345&part.id=alternator",
+	"/?from.vin=1FTEW1EG7FFA12345&part.id=brake-rotor-front",
+	"/?from.vin=1FTEW1EG7FFA12345&part.id=brake-rotor-rear",
+	"/?from.vin=1FTEW1EG7FFA12345&part.id=mirror",
+	"/?from.vin=1FTEW1EG7FFA12345&part.id=wiper",
+	"/?from.vin=2HKRW2H53KH612345&part.id=transfer-case",
+	"/?from.vin=1GCVKREC6EZ123456&part.id=brake-rotor-rear",
+	"/?from.vin=1FTEW1EG&part.id=alternator",
+	"/?from.vin=1HGCM82633A004352",
+	"/?from.vin=1FTFW1EF6DFA12345",
+	"/?from.vin=1FT",
+}
+
+// TestLibraryPageFit: the browser's library answers the page's parts
+// that fit as the server's pages do, from the catalog the browser holds,
+// over the page's own decode, asked for once; and, while the server holds
+// the catalog instead, from the server's /v1/fit. The catalog's lines are
+// the browser's too.
+func TestLibraryPageFit(t *testing.T) {
+	d := embedded(t)
+	srv := New(served{demoTranslator(t, d, true)}, log.New(io.Discard, "", 0))
+
+	s := newDecoderServer(t, d)
+	l := openWith(t, s, newDisk())
+	loadDemo(t, l)
+	browser := NewInBrowser(l, BrowserConfig{}, log.New(io.Discard, "", 0))
+	for _, target := range pageFitTargets {
+		s.gets = nil
+		want, got := fitSection(t, srv, target), fitSection(t, browser, target)
+		if got != want {
+			t.Errorf("%s in the browser:\n%s\nwant the server's\n%s", target, got, want)
+		}
+		decodes := 0
+		for _, g := range s.gets {
+			if strings.HasPrefix(g, "/v1/decode/") {
+				decodes++
+			}
+		}
+		if decodes > 1 {
+			t.Errorf("%s: the browser asked for %d decodes: %q", target, decodes, s.gets)
+		}
+	}
+	for _, target := range []string{"/ui/vocabularies/demo-catalog?where.make=Ford&where.model=F150", "/ui/vocabularies/demo-catalog?limit=3&where.type=alternator"} {
+		_, _, body := response(t, srv, "GET", target, nil)
+		want, wantNext := lineRows(body)
+		_, _, body = response(t, browser, "GET", target, nil)
+		if got, next := lineRows(body); !slices.Equal(got, want) || next != wantNext || len(got) == 0 {
+			t.Errorf("%s in the browser: %q, next %q; want the server's %q, next %q", target, got, next, want, wantNext)
+		}
+	}
+
+	// The server holds the catalog: the browser's page asks its /v1/fit.
+	s = newDecoderServer(t, d)
+	for _, f := range theDemo().files {
+		s.serve(t, f.Name, f.data)
+	}
+	s.fits = demoTranslator(t, d, true)
+	l = openWith(t, s, newDisk())
+	if l.ServerCatalog() != "demo-catalog" {
+		t.Fatalf("the server's catalog %q; want demo-catalog", l.ServerCatalog())
+	}
+	browser = NewInBrowser(l, BrowserConfig{}, log.New(io.Discard, "", 0))
+	for _, target := range pageFitTargets {
+		s.gets = nil
+		if want, got := fitSection(t, srv, target), fitSection(t, browser, target); got != want {
+			t.Errorf("%s in the browser, the server's catalog:\n%s\nwant the server's\n%s", target, got, want)
+		}
+		if strings.Contains(target, "&part.id=alternator") && !slices.ContainsFunc(s.gets, func(g string) bool {
+			return strings.HasPrefix(g, "/v1/fit?") && strings.Contains(g, "part.id=alternator")
+		}) {
+			t.Errorf("%s: the browser asked %q; want the server's fit", target, s.gets)
+		}
+	}
+}
+
 func mustRead(t *testing.T, path string) []byte {
 	t.Helper()
 	b, err := os.ReadFile(path)

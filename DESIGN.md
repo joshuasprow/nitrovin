@@ -162,8 +162,10 @@ copy sits in a recess: an inset shadow on a slightly darkened ground.
 
 ## Signature: vinyl tape
 
-Vinyl is two tapes. A name from a vocabulary is a strip of black label-maker
-tape. A bracket or a leader line is pinstripe tape in its group's colour.
+Vinyl is three tapes. A name from a vocabulary is a strip of black
+label-maker tape. A name that can be pressed is the second tape, embossing
+tape in the plate's metal. A bracket or a leader line is pinstripe tape in
+its group's colour.
 
 ### Label tape
 
@@ -194,13 +196,31 @@ tape. A bracket or a leader line is pinstripe tape in its group's colour.
   the tape's body darkened to `#0c0e10`–`#1d2125`. On a wide page a stack's
   stamp is a column of its strip, and lies level with it.
 - **An empty place stays.** A vocabulary with no name, or none loaded, keeps a
-  blank strip: a 3 px dashed `--faint` outline with a sentence in it.
+  blank strip: a 3 px dashed `--faint` outline with a sentence in it (empty
+  places, below).
 - **On a tag the tape takes the tag's colour.** A control on a manila tag is
   the same ridged tape with the group's mark as its body, edges mixed lighter
   and darker from that colour, and a faint white halo on its letters, as
   vinyl whitens where it is struck. "Check years" is the same tape in the
   year's colour. Each stands raised, its own bottom edge 1 px, and pressed it
   is flush, its colour mixed darker with black.
+
+### The second tape
+
+A part type is both a name and a control. A name that can be pressed is the
+second tape: embossing tape in the plate's own metal. Black label tape stays
+for a name that does nothing, and a key of metal for a control that names
+nothing.
+
+- **Body:** `--alu`, the tape's faint ridges over `--metal`, a 1 px `--steel`
+  edge with a white top and a `--steel-dark` bottom.
+- **Lettering:** `--on-metal` in the monospace face at 14 px, weight 900,
+  struck as the plate's characters are (`--emboss`), in the name's own case.
+- **A count** sits after the name in a small pill outlined in `--on-metal`
+  at 55%.
+- **Raised and pressed** as every control: `--raised` unpressed; pressed
+  (`aria-current`, the part type the page shows), flush on `--alu-in` under
+  `--pressed`.
 
 ### Pinstripe tape
 
@@ -259,6 +279,59 @@ that it is narrow.
   names of "Also known as" are in the same region and the same columns, so a
   swipe moves them with the cards. The region reaches both edges of the
   window, is named, and takes focus, so a keyboard scrolls it.
+
+## Good enough: the parts that fit
+
+Under "Also known as", in the page's single column, the part types the loaded
+catalog has for the vehicle, and the candidates of the one pressed.
+
+- **The strip** is label tape, stuck on: its stamp reads "Parts that fit ·"
+  and the catalog's name, over the names' stamp and make columns (300 of
+  1020); the catalog's model the decode reached and the year it asked with
+  ("any year" without one) sit under the names' model and years, each over
+  its group's underline and under its group's bracket, on the lines from
+  Vehicle and Model year that run on through the names. No line runs from a
+  blank strip, or past the names' "more" switch. Narrow, the stamp is a line
+  of its own above the two words and no line runs to it.
+- **The part types** are the second tape, a wrapping row, by name A to Z,
+  each with its count. Each is a link to the page with it pressed (the URL's
+  `part.id`); the pressed one's link presses nothing. Nothing is pressed
+  without the parameter, and a blank strip asks for a press.
+- **The candidates** are manila tags, three to a row, one to a row under
+  34 rem, in the answer's order. A tag's number is a strip of label tape
+  across it under the eyelet, where a card prints its band, with the years at
+  its trailing end; a candidate has no group and takes no colour. Its side,
+  option text (verbatim) and note are rows in the tag's ink under muted
+  labels.
+- **The rails** are two lines of pinstripe tape, Vehicle's and Model year's,
+  from the pressed part type (by anchor positioning; from the tags' corner
+  where a browser has none) along to the tags' leading edge, down it, and
+  along each row to two drops into each eyelet. Where they cross, Model
+  year's lies over Vehicle's.
+- **Marks are ink on the tag**, in its ordinary ink: a solid stamp, a little
+  askew, with a tick, "Checked" and the decoded elements that met the
+  catalog's conditions; a dashed stamp with a warning triangle, "Not
+  checked" and what could not be; "Catalog text only" and "No conditions",
+  plain muted words, when nothing was either; and a solid stamp with an
+  arrow, "By redirect" and the part type the catalog lists it under. A model
+  year confirmed alone earns no stamp: every candidate's years held.
+- **More candidates** than a page holds (30) are a "Next page" link away.
+
+## Good enough: empty places
+
+Where the page has no answer, the place stays, as a blank strip: a 3 px dashed
+`--faint` outline with one sentence in `--muted`. A control in it is a key of
+metal; a way on is a link.
+
+- **Under the names:** a vocabulary with no name, none loaded, or a model
+  not known yet.
+- **The parts that fit:** no catalog loaded, with a key that opens the
+  Vocabularies dialog; the model not known yet; the catalog lacks the
+  vehicle, naming both, with a link to the catalog's lines; the catalog has
+  the vehicle and nothing for its year, with a link to its lines for the
+  vehicle; nothing pressed; and a pressed part type with nothing for the
+  vehicle.
+- **A card** not typed yet is a 2 px dashed outline (manila tags, above).
 
 ## Good enough: where the brackets and lines run
 
@@ -351,8 +424,9 @@ Every other control is plain and small.
   over the dialog the dashes turn `--link`.
 - **Offer** (Load demo, Load EPA): a 2 px `--line` box holding one button and
   a hint.
-- **Filter** (a vocabulary's entries): a label on its own line, then a search
-  field, a Filter button and a "Show all" link in a wrapping row.
+- **Filter** (a file's entries, a catalog's lines): each field a label over a
+  search field, then a Filter button and a "Show all" link, in a wrapping
+  row. A catalog's lines filter on the part type and the vehicle's fields.
 - **Inline form** (Remove, in a table row): a form that is only its button.
 - **Switch without a script:** a visually hidden checkbox whose label is the
   control, as on a stack of label tape. Off, it stands raised; on, it is
@@ -377,7 +451,8 @@ Every other control is plain and small.
   is a strip of label tape in the tag's colour. Either way it stands at the
   controls' one height, and pressed it is flush.
 - A new static strip of tape is stuck on, with `--lift-stuck`, never raised.
-- A new name from a vocabulary is a strip of label tape.
+- A new name from a vocabulary is a strip of label tape; one that can be
+  pressed is the second tape.
 - A new fact about the VIN itself is a row on a tag, under its group's band.
 - A new connection between two things is a line of pinstripe tape.
 - A fourth material needs a reason, as manila had: something the page hangs,

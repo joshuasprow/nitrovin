@@ -19,13 +19,15 @@ import (
 
 // The page (ADR 0013). GET / is nitrovin's one page for browsers: the VIN
 // decoder, drawn as the VIN's diagram (diagram.go). Its form, the plate,
-// asks the page itself with a VIN's from (from.vin) and nothing else, so
-// every answer is a shareable URL. The page reads no other parameter of a
-// decode: what it asks of a VIN is always the same, the plain decode.
-// Below the plate is the answer for
+// asks the page itself with a VIN's from (from.vin), so every answer is a
+// shareable URL. The page reads no other parameter of a decode: what it
+// asks of a VIN is always the same, the plain decode. It reads one more,
+// the part type pressed among the parts that fit (part.id, fit.go), and
+// that one's page of candidates (after). Below the plate is the answer for
 // whatever is typed so far, a partial VIN included: a card for each of the
-// VIN's groups, and the vehicle's names in every vocabulary loaded, its
-// translation on vPIC's spine. A VIN the decoder refuses is the page
+// VIN's groups, the vehicle's names in every vocabulary loaded, its
+// translation on vPIC's spine, and the parts that fit it in the catalog
+// loaded. A VIN the decoder refuses is the page
 // still, with what is wrong said below the plate. The vocabularies loaded
 // are behind the header's Vocabularies button, in a dialog of their own
 // (vocab.go), which the layout holds beside the page's main, so no answer
@@ -80,13 +82,14 @@ func vinHref(vin string) string {
 }
 
 // result is what the Developers dialog shows of the answer: the decode's
-// own request, and the JSON of it and of its translation.
+// own request, and the JSON of it, of its translation and of its fit.
 type result struct {
 	Decode *decodeView
-	// JSON are the answer's objects, each in the dialog: the translation,
-	// and the decode.
+	// JSON are the answer's objects, each in the dialog: the decode, the
+	// translation, the part types and the candidates.
 	JSON []jsonDoc
-	// URL is the page's for the VIN, with nothing else in its query.
+	// URL is the page's: the VIN, and the part type pressed with its page
+	// of candidates.
 	URL string
 }
 
@@ -198,6 +201,8 @@ func (h *Handler) home(r *http.Request) (view, error) {
 		return view{location: vinHref(surpriseVINs[rand.IntN(len(surpriseVINs))]), status: http.StatusSeeOther}, nil
 	}
 	d := newDiagram(cleanVIN(raw.Get("from.vin")))
+	d.Fit = h.idleFit(info)
+	d.Fit.Part, d.Fit.After = raw.Get(partParam), raw.Get(afterParam)
 	page := &homePage{Diagram: d, DataMonth: info.DataMonth, DecoderVersion: info.DecoderVersion, Links: h.links(info)}
 	for _, e := range exampleVINs {
 		page.Examples = append(page.Examples, example{Label: e.vin, Hint: e.hint, Href: vinHref(e.vin)})
@@ -256,25 +261,35 @@ func (h *Handler) home(r *http.Request) (view, error) {
 	}
 	slices.Sort(to)
 	d.Names.None = len(to) == 0
-	if d.Names.Waiting || d.Names.None {
+	if !d.Names.Waiting && !d.Names.None {
+		req, err := contract.ParseTranslateQuery(url.Values{"from.vin": {d.VIN}, "to": to})
+		if err != nil {
+			return refuse(err)
+		}
+		tr, err := h.translate(req, vd)
+		if err != nil {
+			return refuse(err)
+		}
+		d.names(tr, cat, info.Elements)
+		tr.Vocabularies = slices.Clone(tr.Vocabularies)
+		slices.SortFunc(tr.Vocabularies, func(a, b contract.FileVersion) int { return strings.Compare(a.Name, b.Name) })
+		body, err := jsonText(tr)
+		if err != nil {
+			return view{}, err
+		}
+		res.JSON = append(res.JSON, jsonDoc{ID: "translation-json", Title: "The translation", What: "the translation's JSON", Text: body})
+	}
+
+	// The parts that fit, once the model is known.
+	if d.Names.Waiting {
 		return v, nil
 	}
-	req, err := contract.ParseTranslateQuery(url.Values{"from.vin": {d.VIN}, "to": to})
-	if err != nil {
+	if err := h.fitVIN(r.Context(), d, vd, cat, info.Elements, raw.Get(partParam), raw.Get(afterParam), res); err != nil {
 		return refuse(err)
 	}
-	tr, err := h.translate(req, vd)
-	if err != nil {
-		return refuse(err)
+	if d.Fit.Page != "" {
+		res.URL = requestOrigin(r) + d.Fit.Page
 	}
-	d.names(tr, cat, info.Elements)
-	tr.Vocabularies = slices.Clone(tr.Vocabularies)
-	slices.SortFunc(tr.Vocabularies, func(a, b contract.FileVersion) int { return strings.Compare(a.Name, b.Name) })
-	body, err := jsonText(tr)
-	if err != nil {
-		return view{}, err
-	}
-	res.JSON = append(res.JSON, jsonDoc{ID: "translation-json", Title: "The translation", What: "the translation's JSON", Text: body})
 	return v, nil
 }
 

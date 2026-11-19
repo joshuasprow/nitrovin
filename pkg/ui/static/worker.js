@@ -7,12 +7,13 @@
 //
 // - It answers the page (/) once this browser holds a file: the page's
 //   "Also known as" is then over the browser's vocabularies and the
-//   server's. It answers an old link to /ui/translate the same way, by
-//   moving it to the page as the server does, an entry list
-//   (/ui/vocabularies/<name>) of a file it holds, /ui/files, and the
-//   browser's compiled catalog's download (/ui/files/catalog);
-//   everything else goes to the server unchanged, and so does the page
-//   of a browser that holds no file.
+//   server's, and its parts that fit are the browser's catalog's. It
+//   answers an old link to /ui/translate the same way, by moving it to
+//   the page as the server does, an entry list (/ui/vocabularies/<name>)
+//   of a file it holds, its compiled catalog's lines among them,
+//   /ui/files, and the browser's compiled catalog's download
+//   (/ui/files/catalog); everything else goes to the server unchanged,
+//   and so does the page of a browser that holds no file.
 // - A file reaches it by postMessage from the page, never by a request: no
 //   file's bytes are ever sent to the server. A yard stock file's VINs
 //   alone go to the server's POST /v1/decode, once, as it loads.
@@ -247,7 +248,8 @@ self.addEventListener('fetch', (e) => {
     return;
   }
   // The page is the module's once this browser holds a file: its "Also
-  // known as" is over the browser's vocabularies and the server's.
+  // known as" is over the browser's vocabularies and the server's, and
+  // its parts that fit over the catalog of either.
   if (url.pathname === PAGE) {
     e.respondWith(storedNames().then((stored) => (stored.size > 0 ? own(e.request, () => serve(e.request)) : network(e.request))));
     return;
@@ -315,6 +317,7 @@ self.addEventListener('message', (e) => {
   }
   if (op === 'catalog') {
     if (self.nitrovin) self.nitrovin.reset();
+    forget();
     if (e.ports[0]) e.ports[0].postMessage({ done: true });
     return;
   }

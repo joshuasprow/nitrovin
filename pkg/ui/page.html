@@ -3,11 +3,12 @@
 the plate: 17 cells under six brackets' labels, and one real input, which
 plate.js lays over the cells (without JavaScript it sits below them, and
 Decode sends it). Everything below the plate is the answer (#answer): the
-brackets under the plate, a card for each on its leader line, and the
-derived card "Also known as". The cards and the names are one region
-(hang): on a page narrower than 64rem it scrolls sideways, six columns
-wide, the names under the cards they come from. The server draws it for whatever is typed so
-far; plate.js asks again as the visitor types and swaps #answer and #dev.
+brackets under the plate, a card for each on its leader line, the derived
+card "Also known as", and the parts that fit (fit). The cards and the
+names are one region (hang): on a page narrower than 64rem it scrolls
+sideways, six columns wide, the names under the cards they come from. The
+server draws it for whatever is typed so far; plate.js asks again as the
+visitor types, or presses a part type, and swaps #answer and #dev.
 What developers need is behind the header's Developers button (developers,
 decode.html), and the VINs to try behind its VINs button (chips). No
 inline script or style: CSP refuses both, so every position is a class on
@@ -42,9 +43,11 @@ and the input. data-vin is the VIN the server drew. */}}
 
 {{/* answer takes the diagram: what hangs off the plate. data-vin and
 data-label are what it answers, which plate.js keeps as a recent VIN once
-it is whole; data-done the groups whose characters are all typed. */}}
+it is whole; data-done the groups whose characters are all typed;
+data-part and data-after the part type pressed and its page, which
+plate.js tells a history entry by. */}}
 {{define "answer" -}}
-<div id="answer" class="stage" data-vin="{{.VIN}}" data-label="{{.Label}}"{{if .Complete}} data-complete{{end}} data-done="{{range .Groups}}{{if .Done}}{{.Key}} {{end}}{{end}}">
+<div id="answer" class="stage" data-vin="{{.VIN}}" data-label="{{.Label}}"{{if .Complete}} data-complete{{end}} data-done="{{range .Groups}}{{if .Done}}{{.Key}} {{end}}{{end}}"{{with .Fit.Part}} data-part="{{.}}"{{end}}{{with .Fit.After}} data-after="{{.}}"{{end}}>
 <div class="under" aria-hidden="true">
 {{range .Groups}}<span class="brk g-{{.Key}}{{if .Done}} done{{end}}"><span class="name">{{.Label}}</span></span>
 {{end}}</div>
@@ -67,6 +70,7 @@ it is whole; data-done the groups whose characters are all typed. */}}
 </svg>
 {{template "aka" .Names}}
 </div>
+{{template "fit" .Fit}}
 {{with .Error}}<p class="error" role="alert">{{.}}</p>{{end}}
 {{if or .Problems .Fix}}<div class="problems" role="status">
 {{range .Problems}}<p>{{.}}</p>
@@ -165,6 +169,50 @@ top plate (ui.css), with no script. */}}
 {{with .Details}}<button type="button" class="info" popovertarget="{{$.ID}}" aria-label="How {{$.Make}} {{$.Model}} was reached">i</button>
 <div class="note" id="{{$.ID}}" popover>{{.}}</div>{{end}}
 </li>
+{{- end}}
+
+{{/* fit is the parts that fit (fit.go), under the names. Found, it is a
+strip of label tape saying what was asked (the catalog, and the model and
+year it asked with, on the lines from Vehicle and Model year through the
+names), the vehicle's part types as the second tape, each a link that
+presses it, and the pressed one's candidates as manila tags on two rails
+of pinstripe tape: Vehicle's and Model year's, from the pressed part type
+down the tags' leading edge to each eyelet (.rails, ui.css). A tag's
+number is a strip of label tape across it; its rows are the catalog's
+words, verbatim; its marks are ink on it: a solid stamp checked, a dashed
+one not, plain words for what has nothing checked. Where there is nothing
+to list, the part types' place is a blank strip with a sentence, and the
+Vocabularies dialog's button or a link on. Every link here is the page's
+own, which plate.js swaps in place (swap). */}}
+{{define "fit" -}}
+<section class="fit" id="fit" aria-labelledby="fit-h">
+{{if .Types}}<div class="fitstrip">
+<h2 id="fit-h" class="stamp">Parts that fit · {{.Catalog}}</h2>
+<span class="seg g-vds"><span class="w">{{.Model}}</span></span>
+<span class="seg g-year"><span class="w">{{.Year}}</span></span>
+</div>
+<ul class="ptypes" aria-label="Part types">
+{{range .Types}}<li><a class="ptype swap" href="{{.Href}}"{{if .Pressed}} aria-current="true"{{end}}>{{.Name}} <span class="n">{{.Count}}<span class="visually-hidden"> {{if eq .Count 1}}candidate{{else}}candidates{{end}}</span></span></a></li>
+{{end}}</ul>
+{{if .Invite}}<p class="blank"><span>Press a part type to see what fits this vehicle.</span></p>
+{{end}}{{with .NoneFit}}<p class="blank"><span>{{.}}</span></p>
+{{end}}{{if .Tags}}<ol class="cands" aria-label="Candidates: {{.Pressed}}">
+{{range .Tags}}<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">{{.Number}}</b>{{with .Years}} <span class="yrs">{{.}}</span>{{end}}</p>
+<dl>
+{{with .Side}}<div><dt>Side</dt><dd>{{.}}</dd></div>
+{{end}}{{range .Options}}<div><dt>Options</dt><dd>{{.}}</dd></div>
+{{end}}{{with .Note}}<div><dt>Note</dt><dd>{{.}}</dd></div>
+{{end}}</dl>
+<p class="marks">{{range .Marks}}<span class="mk {{.Kind}}">{{if eq .Kind "checked"}}<svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 7.5l3.5 3.5L12 3.5"/></svg>{{else if eq .Kind "unchecked"}}<svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>{{else if eq .Kind "redirect"}}<svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 7h9M7.5 3.5L11 7l-3.5 3.5"/></svg>{{end}}{{.Text}}</span>
+{{end}}</p>
+</div></li>
+{{end}}</ol>
+<span class="rails" aria-hidden="true"></span>
+{{with .Next}}<p class="more-cands">This page shows {{len $.Tags}} of {{$.Total}} candidates. <a class="swap" href="{{.}}">Next page</a></p>
+{{end}}{{end}}{{else}}<h2 id="fit-h" class="visually-hidden">Parts that fit</h2>
+<p class="blank"><span>{{.Blank}}</span>{{if .Add}}<button type="button" popovertarget="vocabularies">Add a catalog</button>{{end}}{{with .Way}}<a href="{{.Href}}">{{.Text}}</a>{{end}}</p>
+{{end}}</section>
 {{- end}}
 
 {{/* chips are what to try, the menu the header's VINs button opens (a

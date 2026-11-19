@@ -78,6 +78,18 @@ func TestWorkerDemo(t *testing.T) {
 	if !strings.Contains(strings.Join(strings.Fields(text(got[1])), " "), "Dodge Ram 1500") {
 		t.Errorf("%s: the page lacks the demo's Dodge Ram 1500: %s", target, got[1])
 	}
+	// The page's parts that fit are the catalog compiled here: the part
+	// types and a pressed one's candidates, as the server draws them on
+	// the same files (#322).
+	for _, target := range []string{"/?from.vin=1FTEW1EG7FFA12345", "/?from.vin=1FTEW1EG7FFA12345&part.id=alternator", "/?from.vin=1GCVKREC6EZ123456&part.id=brake-rotor-rear"} {
+		got := eval[[]string](tb, `fetch(`+jsString(target)+`, {headers: {"HX-Request": "true"}}).then(async r => [String(r.status), await r.text()])`)
+		if want := mainOf(t, same, srv.URL, target, true); got[0] != "200" || timeless(got[1]) != want || !strings.Contains(got[1], `<section class="fit"`) {
+			t.Errorf("%s: the worker's page differs from the server's\nworker: %s %s\nserver: %s", target, got[0], got[1], want)
+		}
+	}
+	if got := eval[string](tb, `fetch("/?from.vin=1FTEW1EG7FFA12345&part.id=alternator").then(r => r.text())`); strings.Count(got, `<li class="cand">`) != 3 {
+		t.Errorf("the worker's alternators: %s", got)
+	}
 
 	// The catalog compiled here, downloaded, fits as the demo's own file.
 	var files []string
