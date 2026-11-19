@@ -266,6 +266,9 @@ type reached struct {
 	// same, one for one, as the answer has them.
 	vehicles []vocab.Vehicle
 	models   []FitModel
+	// confirmed is, model for model, what the route to it checked, and
+	// held: an answer carries it on the model's applications.
+	confirmed []Unconfirmed
 	// year is the decoded year, else the request's; decoded is the VIN's.
 	year                      *int
 	decoded                   *vocab.Decoded
@@ -378,7 +381,7 @@ func (f Fitter) reach(req FitRequest, info vocab.CatalogInfo) (*reached, error) 
 	}
 	v.known = tr.Status != vocab.StatusUnknown
 	v.vehicles = fitment.Vehicles(info, tr)
-	v.models = models(info, tr)
+	v.models, v.confirmed = models(info, tr)
 	if len(v.models) != len(v.vehicles) { // fitment.Vehicles walks the translation as models does
 		panic(fmt.Sprintf("fit: %d models for %d vehicles", len(v.models), len(v.vehicles)))
 	}
@@ -386,9 +389,10 @@ func (f Fitter) reach(req FitRequest, info vocab.CatalogInfo) (*reached, error) 
 }
 
 // models are the catalog's vehicles a translation reached, as an answer
-// has them, in fitment.Vehicles's order.
-func models(info vocab.CatalogInfo, tr *vocab.Translation) []FitModel {
-	out := []FitModel{}
+// has them, in fitment.Vehicles's order, and what the route to each
+// checked, and held.
+func models(info vocab.CatalogInfo, tr *vocab.Translation) ([]FitModel, []Unconfirmed) {
+	out, held := []FitModel{}, []Unconfirmed{}
 	if info.Vehicles == vocab.Reserved {
 		for _, r := range tr.Spine {
 			if r.Ref.ID == "" {
@@ -396,12 +400,13 @@ func models(info vocab.CatalogInfo, tr *vocab.Translation) []FitModel {
 					Vehicle: CatalogVehicle{Make: r.Ref.Make, Model: r.Ref.Model, Ext: r.Ref.Ext}, Name: r.Name,
 					Via: vias(r.Via), Unconfirmed: unconfirmed(r.Unconfirmed),
 				})
+				held = append(held, unconfirmed(r.Confirmed))
 			}
 		}
-		return out
+		return out, held
 	}
 	if tr.Vocabulary != nil && tr.Vocabulary.Name == info.Vehicles && tr.Entry != nil {
-		return append(out, FitModel{Vehicle: CatalogVehicle{Entry: tr.Vocabulary.FieldsOf(tr.Entry)}, Note: tr.Entry.Note})
+		return append(out, FitModel{Vehicle: CatalogVehicle{Entry: tr.Vocabulary.FieldsOf(tr.Entry)}, Note: tr.Entry.Note}), append(held, Unconfirmed{})
 	}
 	for _, to := range tr.To {
 		if to.Vocabulary.Name != info.Vehicles {
@@ -412,18 +417,21 @@ func models(info vocab.CatalogInfo, tr *vocab.Translation) []FitModel {
 				Vehicle: CatalogVehicle{Entry: to.Vocabulary.FieldsOf(m.Entry)}, Note: m.Entry.Note,
 				Via: vias(m.Via), Unconfirmed: unconfirmed(m.Unconfirmed),
 			})
+			held = append(held, unconfirmed(m.Confirmed))
 		}
 	}
-	return out
+	return out, held
 }
 
 // partType is a part type of the catalog's spine a fit asks about, and
-// what its route left unchecked. filedUnder is, when the part named is an
-// entry of the catalog's filed-under vocabulary, that entry: the type's
-// direct fitments are those filed under it (ADR 0024).
+// what its route left unchecked, and what it checked, and held. filedUnder
+// is, when the part named is an entry of the catalog's filed-under
+// vocabulary, that entry: the type's direct fitments are those filed
+// under it (ADR 0024).
 type partType struct {
 	id, name    string
 	unconfirmed vocab.Unconfirmed
+	confirmed   vocab.Unconfirmed
 	filedUnder  map[string]string
 }
 
@@ -476,7 +484,7 @@ func (f Fitter) typesOf(q vocab.Query, info vocab.CatalogInfo, from, to string) 
 	var out []partType
 	for _, r := range tr.Spine {
 		if r.Ref.Spine == info.Spine && r.Ref.ID != "" {
-			out = append(out, partType{id: r.Ref.ID, name: r.Name, unconfirmed: r.Unconfirmed})
+			out = append(out, partType{id: r.Ref.ID, name: r.Name, unconfirmed: r.Unconfirmed, confirmed: r.Confirmed})
 		}
 	}
 	slices.SortFunc(out, func(a, b partType) int { return strings.Compare(a.id, b.id) })
@@ -582,7 +590,8 @@ func intOf(y Null[int32]) *int {
 
 // matching is cs, side kept, as an answer has them: each with the
 // applications that hold against the vehicle's year and decode (and the
-// redirect's years, through rd), the unchecked of the route to each.
+// redirect's years, through rd), the unchecked of the route to each, and
+// what the route checked, and held: a condition in one is not in the other.
 func (f Fitter) matching(cs []vocab.Candidate, t partType, v *reached, side vocab.Side, rd *vocab.Redirect) []FitCandidate {
 	out := make([]FitCandidate, 0, len(cs))
 	for _, c := range cs {
@@ -594,17 +603,19 @@ func (f Fitter) matching(cs []vocab.Candidate, t partType, v *reached, side voca
 			if rd != nil && v.year == nil && !overlaps(a.First, a.Last, rd.First, rd.Last) {
 				continue
 			}
-			u, ok := a.Check(v.year, v.decoded)
+			held, u, ok := a.Checked(v.year, v.decoded)
 			if !ok {
 				continue
 			}
 			fa := FitApplication{Vehicle: catalogVehicle(a.Vehicle), First: year(a.First), Last: year(a.Last), Options: a.Options}
-			uc := Unconfirmed{Elements: u.Elements, ModelYear: u.ModelYear}
+			uc, cf := unconfirmed(u), unconfirmed(held)
 			if i := v.modelOf(a.Vehicle); i >= 0 {
 				fa.Via = v.models[i].Via
 				uc = uc.union(v.models[i].Unconfirmed)
+				cf = cf.union(v.confirmed[i])
 			}
 			fa.Unconfirmed = uc.union(unconfirmed(t.unconfirmed))
+			fa.Confirmed = cf.union(unconfirmed(t.confirmed)).less(fa.Unconfirmed)
 			fc.Applications = append(fc.Applications, fa)
 		}
 		if len(fc.Applications) > 0 {
@@ -618,6 +629,21 @@ func (f Fitter) matching(cs []vocab.Candidate, t partType, v *reached, side voca
 // being unbounded.
 func overlaps(a1, a2, b1, b2 *int) bool {
 	return (a1 == nil || b2 == nil || *a1 <= *b2) && (b1 == nil || a2 == nil || *b1 <= *a2)
+}
+
+// less is u without what is in w: a condition is confirmed only where
+// nothing on the route left it unchecked.
+func (u Unconfirmed) less(w Unconfirmed) Unconfirmed {
+	if u.IsZero() || w.IsZero() {
+		return u
+	}
+	out := Unconfirmed{ModelYear: u.ModelYear && !w.ModelYear}
+	for _, e := range u.Elements {
+		if !slices.Contains(w.Elements, e) {
+			out.Elements = append(out.Elements, e)
+		}
+	}
+	return out
 }
 
 // union is what is unchecked in u or w.

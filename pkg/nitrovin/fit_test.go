@@ -1,7 +1,9 @@
 package nitrovin
 
 import (
+	"cmp"
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -95,6 +97,15 @@ func namesText(n contract.FitNames) string {
 	return " → " + strings.Join(out, " ")
 }
 
+// confirmedText writes an application's Confirmed as " ok[15 model_year]",
+// "" when empty.
+func confirmedText(u contract.Unconfirmed) string {
+	if u.IsZero() {
+		return ""
+	}
+	return " ok" + strings.TrimPrefix(unconfirmedText(u), " ")
+}
+
 // filedText writes the entries a fitment is filed under as " under
 // [FRT,ROT]", each entry's fields joined by "/"; "" when it carries none.
 func filedText(fm contract.Fitment) string {
@@ -110,8 +121,9 @@ func filedText(fm contract.Fitment) string {
 
 // fitSummary writes a fit as lines: its status; each model; then the
 // fitment a key reached, or those an ambiguous key did; then the
-// answer's list, an item a line (an application, a redirect, indented
-// under its candidate); then the total, and "next" when there is a page
+// answer's list, an item a line (an application, with what it left
+// unconfirmed and then what it confirmed, and a redirect, indented under
+// its candidate); then the total, and "next" when there is a page
 // after.
 func fitSummary(f contract.Fit) []string {
 	out := []string{"status " + string(f.Status)}
@@ -134,7 +146,7 @@ func fitSummary(f contract.Fit) []string {
 	for _, c := range f.Candidates {
 		out = append(out, fmt.Sprintf("candidate %s %s %s %s%s", c.Fitment.Type, c.Fitment.Number, c.Fitment.Side, c.Reached, filedText(c.Fitment)))
 		for _, a := range c.Applications {
-			out = append(out, fmt.Sprintf("  %s %s %q%s%s", vehicleText(a.Vehicle), yearsText(a.First, a.Last), a.Options, viasText(a.Via), unconfirmedText(a.Unconfirmed)))
+			out = append(out, fmt.Sprintf("  %s %s %q%s%s", vehicleText(a.Vehicle), yearsText(a.First, a.Last), a.Options, viasText(a.Via), unconfirmedText(a.Unconfirmed)+confirmedText(a.Confirmed)))
 		}
 		for _, r := range c.Redirects {
 			out = append(out, fmt.Sprintf("  redirect %s %s %s→%s %q", vehicleText(r.Vehicle), yearsText(r.First, r.Last), r.From, r.To, r.Options))
@@ -197,24 +209,26 @@ func TestFit(t *testing.T) {
 			"total 2",
 		}},
 		// A VIN's decode settles the 4WD qualifier, so nothing is
-		// unconfirmed; the side keeps the left mirror.
+		// unconfirmed and Drive Type (15) is confirmed; the side keeps the
+		// left mirror.
 		{"candidates from a VIN", `{"from":` + ramVIN + `,"part":{"spine":"part-types","id":"mirror"},"side":"left"}`, []string{
 			"status found",
 			"model Dodge/Ram 1500 via model:1938",
 			"candidate mirror MR-1001 left direct under [MIR]",
-			`  Dodge/Ram 1500 2009-2012 "w/o towing package" via model:1938`,
-			`  Dodge/Ram 1500 2009-2012 "4WD, w/ towing package" via model:1938`,
+			`  Dodge/Ram 1500 2009-2012 "w/o towing package" via model:1938 ok[model_year]`,
+			`  Dodge/Ram 1500 2009-2012 "4WD, w/ towing package" via model:1938 ok[15 model_year]`,
 			"total 1",
 		}},
-		// From a vPIC model and a year, Drive Type (15) is not checked.
+		// From a vPIC model and a year, Drive Type (15) is not checked and
+		// the year is: one condition in each field.
 		{"candidates from a model", `{"from":{"model":1938},"model_year":2010,"part":{"spine":"part-types","id":"mirror"}}`, []string{
 			"status found",
 			"model Dodge/Ram 1500 via model:1938",
 			"candidate mirror MR-1001 left direct under [MIR]",
-			`  Dodge/Ram 1500 2009-2012 "w/o towing package" via model:1938`,
-			`  Dodge/Ram 1500 2009-2012 "4WD, w/ towing package" via model:1938 [15]`,
+			`  Dodge/Ram 1500 2009-2012 "w/o towing package" via model:1938 ok[model_year]`,
+			`  Dodge/Ram 1500 2009-2012 "4WD, w/ towing package" via model:1938 [15] ok[model_year]`,
 			"candidate mirror MR-1001 right direct under [MIR]",
-			`  Dodge/Ram 1500 2009-2012 "w/o towing package" via model:1938`,
+			`  Dodge/Ram 1500 2009-2012 "w/o towing package" via model:1938 ok[model_year]`,
 			"total 2",
 		}},
 		// No year: every year's applications, the model year unconfirmed.
@@ -231,7 +245,7 @@ func TestFit(t *testing.T) {
 			"status found",
 			"model Chevrolet/Silverado 1500",
 			"candidate brake-rotor-front BR-2001  redirect under [FRT,ROT]",
-			`  Chevrolet/Silverado 1500 2007-2013 "w/ heavy duty brakes" [34]`,
+			`  Chevrolet/Silverado 1500 2007-2013 "w/ heavy duty brakes" [34] ok[model_year]`,
 			`  redirect Chevrolet/Silverado 1500 2007-2013 brake-rotor-rear→brake-rotor-front "rear rotors are listed with the front"`,
 			"total 1",
 		}},
@@ -241,7 +255,7 @@ func TestFit(t *testing.T) {
 			"status found",
 			"model Chevrolet/Silverado 1500",
 			"candidate brake-rotor-front BR-2001  direct under [FRT,ROT]",
-			`  Chevrolet/Silverado 1500 2007-2013 "w/ heavy duty brakes" [34]`,
+			`  Chevrolet/Silverado 1500 2007-2013 "w/ heavy duty brakes" [34] ok[model_year]`,
 			"total 1",
 		}},
 		// The entry is the catalog's filed-under vocabulary's: the front
@@ -260,7 +274,7 @@ func TestFit(t *testing.T) {
 			"status found",
 			"model Chevrolet/Silverado 1500",
 			"candidate brake-rotor-front BR-2001  redirect under [FRT,ROT]",
-			`  Chevrolet/Silverado 1500 2007-2013 "w/ heavy duty brakes" [34]`,
+			`  Chevrolet/Silverado 1500 2007-2013 "w/ heavy duty brakes" [34] ok[model_year]`,
 			`  redirect Chevrolet/Silverado 1500 2007-2013 brake-rotor-rear→brake-rotor-front "rear rotors are listed with the front"`,
 			"total 1",
 		}},
@@ -712,10 +726,10 @@ func TestFitModels(t *testing.T) {
 			"model Ram A via model:1938",
 			"model Ram B via model:1938",
 			"candidate brake-rotor-front F-1  redirect",
-			`  Ram B 2009-2012 "" via model:1938`,
+			`  Ram B 2009-2012 "" via model:1938 ok[model_year]`,
 			`  redirect Ram B 2009-2012 brake-rotor-rear→brake-rotor-front ""`,
 			"candidate brake-rotor-rear R-1  direct",
-			`  Ram A 2009-2012 "" via model:1938`,
+			`  Ram A 2009-2012 "" via model:1938 ok[model_year]`,
 			"total 2",
 		}},
 		{"no year, later years through a redirect", `{"from":{"vocabulary":"cm","entry":{"model":"Ram A"}},"part":{"spine":"part-types","id":"brake-rotor-rear"}}`, []string{
@@ -926,5 +940,139 @@ func TestFitRelatedTies(t *testing.T) {
 		if want := []int32{twins[1], twins[0]}; !slices.Equal(got, want) {
 			t.Errorf("%s: models of one name in the order %v; want %v, their applications' order", f.name, got, want)
 		}
+	}
+}
+
+// conditions reads a fit's JSON as a caller does: each application of each
+// candidate as its fitment's number, its option text, and its confirmed
+// and unconfirmed arrays as written, "-" for an absent one.
+func conditions(t *testing.T, f contract.Fit) []string {
+	t.Helper()
+	b, err := json.Marshal(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var wire struct {
+		Candidates []struct {
+			Fitment      struct{ Number string }
+			Applications []struct {
+				Options                string
+				Confirmed, Unconfirmed json.RawMessage
+			}
+		}
+	}
+	if err := json.Unmarshal(b, &wire); err != nil {
+		t.Fatal(err)
+	}
+	var out []string
+	for _, c := range wire.Candidates {
+		for _, a := range c.Applications {
+			out = append(out, fmt.Sprintf("%s %q confirmed %s unconfirmed %s", c.Fitment.Number, a.Options, cmp.Or(string(a.Confirmed), "-"), cmp.Or(string(a.Unconfirmed), "-")))
+		}
+	}
+	return out
+}
+
+// TestFitConfirmed: an application lists what the decode confirmed beside
+// what it could not check (ADR 0018's amendment), each condition that
+// applied in exactly one of the two: a qualifier the decode meets is
+// confirmed, one it cannot check unconfirmed, and with no condition there
+// is neither field. The conditions are the application's own, its
+// model's and its part type's.
+func TestFitConfirmed(t *testing.T) {
+	const (
+		ram    = `{"vocabulary":"catalog-models","entry":{"make":"Dodge","model":"Ram 1500"}}`
+		ramVIN = `"1D7RV1GT5AS123456"` // a 2010 Ram 1500 4WD
+		mirror = `"part":{"spine":"part-types","id":"mirror"},"side":"left"`
+	)
+	// The shared catalog: MR-1001's two applications for 2009-2012, one
+	// with a Drive Type (15) qualifier beside one without.
+	shared := catalogTranslator(t)
+	// A catalog whose applications have no years: one with no condition
+	// at all, one with the Drive Type qualifier alone; and a part
+	// vocabulary that reaches the mirror only for 4WD.
+	dir := t.TempDir()
+	write(t, dir, "catalog.jsonl",
+		`{"format":1,"kind":"catalog","name":"every-year","version":"1","spine":"part-types","vehicles":"catalog-models"}`,
+		`{"fitment":{"type":"mirror","number":"M-1","side":"left"},"applications":[{"vehicle":{"make":"Dodge","model":"Ram 1500"},"options":"all"},{"vehicle":{"make":"Dodge","model":"Ram 1500"},"options":"4WD","qualifiers":{"15":[2]}}]}`,
+		`{"fitment":{"type":"mirror","number":"M-2","side":"left"},"applications":[{"vehicle":{"make":"Chevrolet","model":"Silverado 1500"},"options":"all"}]}`)
+	write(t, dir, "drive.jsonl",
+		`{"format":1,"kind":"vocabulary","name":"drive","version":"1","subject":"part","fields":["code"],"spine":"part-types"}`,
+		`{"entry":{"code":"M4"},"mappings":[{"id":"mirror","qualifiers":{"15":[2]}}]}`)
+	files, err := vocab.Open("../../testdata/vocab/fitment/catalog-models.jsonl", "../../testdata/vocab/fitment/part-types.jsonl", dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	yearless, err := NewTranslator(embeddedDecoder(t), files...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []struct {
+		name    string
+		tr      *Translator
+		request string
+		want    []string
+	}{
+		{"the decode meets the qualifier", shared, `{"from":` + ramVIN + `,` + mirror + `}`, []string{
+			`MR-1001 "w/o towing package" confirmed ["model_year"] unconfirmed -`,
+			`MR-1001 "4WD, w/ towing package" confirmed [15,"model_year"] unconfirmed -`,
+		}},
+		// A vehicle by name has no decode: the qualifier's element is
+		// unknown, and without a year so are the years.
+		{"nothing to check with", shared, `{"from":` + ram + `,` + mirror + `}`, []string{
+			`MR-1001 "w/o towing package" confirmed - unconfirmed ["model_year"]`,
+			`MR-1001 "4WD, w/ towing package" confirmed - unconfirmed [15,"model_year"]`,
+		}},
+		// Two conditions, one met and one unknown: one in each field.
+		{"a year and no decode", shared, `{"from":` + ram + `,"model_year":2010,` + mirror + `}`, []string{
+			`MR-1001 "w/o towing package" confirmed ["model_year"] unconfirmed -`,
+			`MR-1001 "4WD, w/ towing package" confirmed ["model_year"] unconfirmed [15]`,
+		}},
+		// No years and no qualifier: no condition applied, and a year
+		// given changes nothing.
+		{"no condition", yearless, `{"from":` + ram + `,"model_year":2010,` + mirror + `}`, []string{
+			`M-1 "all" confirmed - unconfirmed -`,
+			`M-1 "4WD" confirmed - unconfirmed [15]`,
+		}},
+		{"no condition, from a VIN", yearless, `{"from":"1GCEK19J07Z123456",` + mirror + `}`, []string{
+			`M-2 "all" confirmed - unconfirmed -`,
+		}},
+		// The model's conditions count: the VIN reaches the Ram 1500
+		// through a mapping for years to 2012, which its year meets.
+		{"the model's years", yearless, `{"from":` + ramVIN + `,` + mirror + `}`, []string{
+			`M-1 "all" confirmed ["model_year"] unconfirmed -`,
+			`M-1 "4WD" confirmed [15,"model_year"] unconfirmed -`,
+		}},
+		// So do the part type's: the part reaches the mirror through a
+		// mapping with the Drive Type qualifier.
+		{"the part type's qualifier, met", yearless, `{"from":"1GCEK19J07Z123456","part":{"vocabulary":"drive","entry":{"code":"M4"}}}`, []string{
+			`M-2 "all" confirmed [15] unconfirmed -`,
+		}},
+		{"the part type's qualifier, unknown", yearless, `{"from":` + ram + `,"part":{"vocabulary":"drive","entry":{"code":"M4"}}}`, []string{
+			`M-1 "all" confirmed - unconfirmed [15]`,
+			`M-1 "4WD" confirmed - unconfirmed [15]`,
+		}},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			f, err := fit(t, c.tr, c.request)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := conditions(t, f); !slices.Equal(got, c.want) {
+				t.Errorf("%s:\n%s\nwant\n%s", c.request, strings.Join(got, "\n"), strings.Join(c.want, "\n"))
+			}
+			for _, cand := range f.Candidates {
+				for _, a := range cand.Applications {
+					if a.Confirmed.ModelYear && a.Unconfirmed.ModelYear {
+						t.Errorf("%s %q: model_year is in both fields", cand.Fitment.Number, a.Options)
+					}
+					for _, e := range a.Confirmed.Elements {
+						if slices.Contains(a.Unconfirmed.Elements, e) {
+							t.Errorf("%s %q: element %d is in both fields", cand.Fitment.Number, a.Options, e)
+						}
+					}
+				}
+			}
+		})
 	}
 }

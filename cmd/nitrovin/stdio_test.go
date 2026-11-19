@@ -191,6 +191,9 @@ func TestStdioOps(t *testing.T) {
 		// the problem's type and pointer.
 		id, kind string
 		pointer  string
+		// conditions is, for one of fitConditions, what its reply's
+		// applications must read.
+		conditions []string
 	}
 	script := []line{
 		{in: `{"vin":"1GCVKREC6EZ123456","now":"` + now + `"}`, kind: "decode"},
@@ -218,6 +221,10 @@ func TestStdioOps(t *testing.T) {
 		{in: `{"id":13,"op":"list","of":"parts-catalog","where":{"type":"mirror"}}`, id: "13", kind: "list"},
 		{in: `{"id":14,"op":"fit","from":{"model":1938},"part":{"spine":"parts","id":"brake-rotor"},"now":"` + now + `"}`, id: "14", kind: string(contract.InvalidRequest), pointer: "/part/spine"},
 		{in: `{"id":15,"op":"fit","from":{"fitment":{"type":"mirror","number":"MR-1001"}},"related":true}`, id: "15", kind: string(contract.InvalidRequest), pointer: "/related"},
+	}
+
+	for _, c := range fitConditions {
+		script = append(script, line{in: `{"op":"fit",` + strings.TrimSuffix(strings.TrimPrefix(c.item, "{"), "}") + `,"now":"` + now + `"}`, kind: "fit", conditions: c.want})
 	}
 
 	var stdin, want strings.Builder
@@ -257,6 +264,9 @@ func TestStdioOps(t *testing.T) {
 		b, err := json.Marshal(body)
 		if err != nil {
 			t.Fatal(err)
+		}
+		if l.conditions != nil {
+			checkConditions(t, l.in, b, l.conditions)
 		}
 		want.WriteByte('{')
 		if l.id != "" {

@@ -826,10 +826,17 @@ func vocabCases(t *testing.T, svc decodeService) []apiCase {
 // testdata/vocab; their bodies are the Go module's bytes for the same
 // requests, refusals included. Each GET /v1/fit asks what one item of the
 // POST asks, and the POST answers exactly the GETs' answers, in order.
+// fitConditions' are asked beside the examples, their bodies read.
 func fitCases(t *testing.T, svc decodeService) []apiCase {
 	var cases []apiCase
 	var items, answers []string
-	for _, c := range fitExamples {
+	examples := slices.Clone(fitExamples)
+	conditions := map[string][]string{}
+	for _, c := range fitConditions {
+		examples = append(examples, struct{ query, item string }{c.query, c.item})
+		conditions[c.item] = c.want
+	}
+	for _, c := range examples {
 		item := strings.TrimSuffix(c.item, "}") + `,"now":"` + now + `"}`
 		req, err := contract.ParseFitRequest([]byte(item))
 		if err != nil {
@@ -837,6 +844,11 @@ func fitCases(t *testing.T, svc decodeService) []apiCase {
 		}
 		f, err := svc.Fit(context.Background(), req)
 		want := wantBody(t, f, err)
+		if w, ok := conditions[c.item]; ok {
+			// The body every GET and the POST must answer, read: what
+			// the decode confirmed, and what it could not check.
+			checkConditions(t, "/v1/fit?"+c.query, want, w)
+		}
 		cases = append(cases, apiCase{op: opFitOne, method: "GET", target: "/v1/fit?" + c.query + "&now=" + now, status: 200, want: want})
 		items = append(items, item)
 		answers = append(answers, string(bytes.TrimSuffix(want, []byte("\n"))))

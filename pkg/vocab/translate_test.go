@@ -315,7 +315,8 @@ func deref(y *int) any {
 
 // TestApplicationCheck: an application holds as a mapping does: a known
 // year outside its years or a decoded value outside a qualifier's set
-// rules it out, and what cannot be checked is returned.
+// rules it out, and what cannot be checked is returned, beside what was
+// checked and held (Checked): each condition in exactly one of the two.
 func TestApplicationCheck(t *testing.T) {
 	c := fixtureCatalog(t)
 	fit, _ := c.ByNumber("mirror", "MR-1001", SideLeft)
@@ -327,16 +328,27 @@ func TestApplicationCheck(t *testing.T) {
 		d    *Decoded
 		ok   bool
 		want string
+		held string
 	}{
-		{new(2010), nil, true, " [15] false"},
-		{nil, nil, true, " [15] true"},
-		{new(2014), nil, false, ""},
-		{new(2010), fourWD, true, ""},
-		{new(2010), twoWD, false, ""},
+		{new(2010), nil, true, " [15] false", " [] true"},
+		{nil, nil, true, " [15] true", ""},
+		{new(2014), nil, false, "", ""},
+		{new(2010), fourWD, true, "", " [15] true"},
+		{nil, fourWD, true, " [] true", " [15] false"},
+		{new(2010), twoWD, false, "", ""},
 	} {
 		u, ok := a.Check(tc.year, tc.d)
 		if ok != tc.ok || unconfirmedLine(u) != tc.want {
 			t.Errorf("year %v, decode %v: %t%q; want %t%q", deref(tc.year), tc.d, ok, unconfirmedLine(u), tc.ok, tc.want)
 		}
+		held, u, ok := a.Checked(tc.year, tc.d)
+		if ok != tc.ok || unconfirmedLine(u) != tc.want || unconfirmedLine(held) != tc.held {
+			t.Errorf("Checked, year %v, decode %v: %t, unconfirmed%q, confirmed%q; want %t,%q,%q", deref(tc.year), tc.d, ok, unconfirmedLine(u), unconfirmedLine(held), tc.ok, tc.want, tc.held)
+		}
+	}
+	// No years and no qualifiers: nothing applies, so nothing is in either.
+	plain := &Application{Vehicle: a.Vehicle}
+	if held, u, ok := plain.Checked(new(2010), fourWD); !ok || !held.IsZero() || !u.IsZero() {
+		t.Errorf("an application with no condition: %t, unconfirmed%q, confirmed%q; want true and neither", ok, unconfirmedLine(u), unconfirmedLine(held))
 	}
 }

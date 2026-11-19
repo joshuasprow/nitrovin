@@ -9,7 +9,8 @@ vocab-requests.jsonl with the vocabulary files loaded (--vocab). On a
 handle from nitrovin_open, and on one from nitrovin_open_vocab with the
 files, every non-blank request line must get exactly its reply line from
 nitrovin_decode, called in order and then from eight threads at once on
-one handle. Also checked: both open functions' errors, nitrovin_info with
+one handle. Also checked: a fit's confirmed and unconfirmed conditions as
+the library writes them, both open functions' errors, nitrovin_info with
 and without vocabularies, a second handle beside the first, and a NULL
 handle. Exit 0 when all hold.
 """
@@ -155,6 +156,23 @@ for v, f in zip(loaded, vocab_files):
 print(f"nitrovin_info: vocabularies {', '.join(names)}")
 
 session(hv, "nitrovin_open_vocab", lines(vocab_requests_path), lines(vocab_replies_path))
+
+# The left mirror's two applications, the second with a Drive Type (15)
+# qualifier: confirmed and unconfirmed as the library writes them for the
+# requests named for it, None for an absent one.
+want = {
+    "confirmed": [(["model_year"], None), ([15, "model_year"], None)],
+    "unconfirmed": [(None, ["model_year"]), (None, [15, "model_year"])],
+    "both": [(["model_year"], None), (["model_year"], [15])],
+}
+for req in lines(vocab_requests_path):
+    name = json.loads(req).get("id") if req.endswith(b"}") else None
+    if isinstance(name, str) and name in want:
+        apps = json.loads(decode(hv, req))["fit"]["candidates"][0]["applications"]
+        got = [(a.get("confirmed"), a.get("unconfirmed")) for a in apps]
+        assert got == want.pop(name), f"fit {name}: (confirmed, unconfirmed) {got}"
+assert not want, f"no request named {sorted(want)}"
+print("fit: applications say what the decode confirmed and what it could not check")
 check(decode(h, requests[0]), 0)
 lib.nitrovin_close(hv)
 check(decode(h, requests[0]), 0)

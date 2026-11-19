@@ -271,6 +271,17 @@ func TestFitJSON(t *testing.T) {
 			FitApplication{Vehicle: CatalogVehicle{Model: 1938}, First: Value[int32](2009), Options: "", Unconfirmed: Unconfirmed{Elements: []int32{15}}},
 			"FitApplication", `{"vehicle":{"model":1938},"first":2009,"options":"","unconfirmed":[15]}`,
 		},
+		// confirmed has unconfirmed's wire form, after it; with neither
+		// field no condition applied.
+		{
+			FitApplication{Vehicle: CatalogVehicle{Model: 1938}, First: Value[int32](2009), Options: "4WD", Unconfirmed: Unconfirmed{Elements: []int32{34}}, Confirmed: Unconfirmed{Elements: []int32{15}, ModelYear: true}},
+			"FitApplication", `{"vehicle":{"model":1938},"first":2009,"options":"4WD","unconfirmed":[34],"confirmed":[15,"model_year"]}`,
+		},
+		{
+			FitApplication{Vehicle: CatalogVehicle{Model: 1938}, Options: "", Confirmed: Unconfirmed{ModelYear: true}},
+			"FitApplication", `{"vehicle":{"model":1938},"options":"","confirmed":["model_year"]}`,
+		},
+		{FitApplication{Vehicle: CatalogVehicle{Model: 1938}, Options: "all"}, "FitApplication", `{"vehicle":{"model":1938},"options":"all"}`},
 		{
 			Fit{Status: FitNoCatalog, Models: []FitModel{}, Candidates: []FitCandidate{}, Now: time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC), DataMonth: "2026_10", DecoderVersion: "v1"},
 			"Fit", `{"status":"no-catalog","models":[],"candidates":[],"total":0,"now":"2026-11-01T00:00:00Z","data_month":"2026_10","decoder_version":"v1"}`,

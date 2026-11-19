@@ -99,6 +99,7 @@ jobs:
             "cmd/nitrovin "{TestVocabCheck,TestVocabLoad,TestServeVocabularies,TestVocabCheckCatalog,TestTranslate,TestTranslateRefused,TestList,TestListRefused}
             "cmd/nitrovin "{TestStdioOps,TestMCPVocabSession,TestWorker,TestWorkerCatalog,TestWorkerCatalogParts,TestWorkerStock,TestVocabPage,TestVocabTranslate}
             "cmd/nitrovin "{TestDemoCheck,TestDemoHints,TestWorkerDemo}
+            "pkg/nitrovin TestFitConfirmed" "cmd/nitrovin TestFitConfirmed"
             "pkg/ui "{TestLibraryDemoFit,TestDemoPanel}
             "cmd/nitrovin-epa "{TestBuild,TestEntry,TestCuratedLoadsClean}
           )
