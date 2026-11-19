@@ -240,6 +240,7 @@ script. There are three sizes.
 | Dialog (`dialog[popover]`) | Vocabularies, Developers, JSON, the check digit's sum | `min(56rem, 100vw - 2rem)` | `rgb(10 18 26 / .55)` |
 | Note (`.note[popover]`) | How a name on the tape was reached | up to `30rem` | `rgb(10 18 26 / .35)` |
 | Menu (`.menu[popover]`) | The VINs to try | `19rem` | none |
+| Header menu (`nav.top[popover]`) | The header's buttons and the release, under 46 rem | `16rem` | none |
 
 - **Panel:** panel ground and `--fg`, a 2 px `--steel` edge, on 3 px of
   `--steel-dark` and a deep soft shadow. Corners are 6 px on a dialog and 4 px
@@ -252,6 +253,12 @@ script. There are three sizes.
   browser knows it) and scrolls inside itself.
 - **The menu hangs from its button** by CSS anchor positioning, and from the
   header's end where the browser has none. Its rows are small metal tags.
+- **The header collapses where its buttons would wrap** (46 rem). The
+  header's nav is itself a popover. In a wide window it has no box: the
+  release sits beside the brand and the buttons at the far end. In a narrow
+  one the Menu button, a key of metal with three bars, opens it as a panel
+  hung from the button: the buttons in a column, then the release under a
+  rule. The VINs menu and the dialogs open from inside it.
 - **Sections** inside a dialog are `h3`: the label face at 12 px over a 3 px
   rule in the vehicle group's blue.
 - **A dialog inside a card** (the check digit's sum) takes the panel's colours,

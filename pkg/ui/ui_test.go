@@ -153,7 +153,8 @@ func checkPage(t *testing.T, name, body, title string) {
 		`<script src="` + testAssetsAttr + `/htmx.min.js" defer></script>`,
 		`<script src="` + testAssetsAttr + `/copy.js" defer></script>`,
 		`<script src="` + testAssetsAttr + `/plate.js" defer></script>`,
-		`<a class="brand" href="/">nitrovin</a>` + "\n" + `<small class="version">v0.1.9-0.20261110120000-0123456789ab&#43;dirty · data 2026_10</small>`,
+		`<a class="brand" href="/">nitrovin</a>` + "\n",
+		`<small class="version">v0.1.9-0.20261110120000-0123456789ab&#43;dirty · data 2026_10</small>` + "\n",
 		`<div id="ui-error" role="alert"></div>`,
 		"</html>\n",
 	} {
@@ -288,7 +289,10 @@ func TestVersion(t *testing.T) {
 		h := New(backend{info: info}, log.New(io.Discard, "", 0)).WithWorker(Worker{Module: []byte("\x00asm"), Exec: []byte("// go")})
 		for _, target := range []string{"/", "/ui/nothing"} {
 			_, hdr, body := response(t, h, "GET", target, nil)
-			if !strings.Contains(body, `<a class="brand" href="/">nitrovin</a>`+"\n"+want) {
+			// The release is the header's: beside the brand, or the last
+			// line of the nav where the page has one.
+			header, _, _ := strings.Cut(body, "</header>")
+			if !strings.Contains(header, `<a class="brand" href="/">nitrovin</a>`+"\n") || !strings.Contains(header, "\n"+want) {
 				t.Errorf("%s %s: the header lacks %s\n%s", version, target, want, body)
 			}
 			if got := hdr.Get(ReleaseHeader); got != Release(info) {

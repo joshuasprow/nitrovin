@@ -49,8 +49,15 @@ body { --bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint:
 a { color: var(--link); }
 header, main, #ui-error { max-width: 62rem; margin-inline: auto; }
 header { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; margin-bottom: 1.5rem; }
-/* The header's buttons, at its far end: small tags, a rivet each. */
-nav.top { margin-left: auto; display: flex; flex-wrap: wrap; gap: .5rem; }
+/* The header's buttons, at its far end: small tags, a rivet each. They
+   and the release are the header's nav, a popover (ui.html). In a wide
+   window the nav has no box of its own: its contents are the header's,
+   the release beside the brand and the buttons at the far end. Where they
+   would wrap (46rem, below) the nav is a menu behind the Menu button. */
+nav.top { display: contents; }
+nav.top button { order: 2; }
+header .version { order: 1; margin-right: auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.open-nav { display: none; }
 nav.top button { padding: .35rem .8rem .35rem 1.4rem;
   background: radial-gradient(circle at .7rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--metal); }
 nav.top .open-vins { anchor-name: --vins; }
@@ -395,6 +402,28 @@ button.linkish:active { transform: none; box-shadow: none; }
 .menu .linkish { display: block; margin: .6rem auto 0; }
 .menu .linkish[hidden] { display: none; }
 
+/* The header's menu, where its buttons would wrap: the Menu button, a
+   key of the plate's metal with three bars struck in it, and behind it the
+   nav as a panel hung from the button, a note's panel: the buttons a
+   column, the release under them past a rule. The column is blocks, not
+   a grid: Safari stretches a grid in an anchored popover to the window's
+   foot. The VINs menu and the
+   dialogs open from inside it, as popovers of a popover. */
+@media (max-width: 46rem) {
+  .open-nav { display: block; order: 3; margin-left: auto; width: 2.75rem; height: 2rem; padding: 0; anchor-name: --nav;
+    background: linear-gradient(var(--on-metal), var(--on-metal)) 50% calc(50% - 5px) / 1.1rem 2px no-repeat, linear-gradient(var(--on-metal), var(--on-metal)) 50% 50% / 1.1rem 2px no-repeat,
+      linear-gradient(var(--on-metal), var(--on-metal)) 50% calc(50% + 5px) / 1.1rem 2px no-repeat, var(--metal); }
+  nav.top { display: none; }
+  nav.top:popover-open { display: block; inset: auto; height: fit-content; top: 3.6rem; right: max(.5rem, calc((100vw - 62rem) / 2)); margin: 0; box-sizing: border-box; width: min(16rem, calc(100vw - 1rem)); padding: .75rem;
+    border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .4); }
+  @supports (top: anchor(bottom)) {
+    nav.top:popover-open { position-anchor: --nav; top: calc(anchor(bottom) + .4rem); right: anchor(right); }
+  }
+  nav.top::backdrop { background: transparent; }
+  nav.top button { display: block; width: 100%; margin: 0 0 .5rem; text-align: left; }
+  nav.top .version { display: block; margin: .25rem 0 0; padding-top: .6rem; border-top: 1px solid var(--line); white-space: normal; overflow-wrap: anywhere; }
+}
+
 /* Motion: a group just completed draws its bracket and line in and pops
    its card; a character stamps into its cell. None of it for a visitor
    who asked for less. */
@@ -442,10 +471,6 @@ button.linkish:active { transform: none; box-shadow: none; }
   .tagplate.below .info { top: calc(50% - .55rem); }
   .tagplate .info:active { transform: none; }
   .problems { padding-inline: 0; margin-inline: 0; }
-  nav.top { margin-left: 0; flex-basis: 100%; }
-  @supports not (top: anchor(bottom)) {
-    .menu[popover] { top: 6.2rem; }
-  }
 }
 
 /* A phone: the plate is two rows, so a cell is wide enough for a finger.
