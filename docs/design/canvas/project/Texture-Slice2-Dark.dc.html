@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Slice 2 textures: the stock strip and its rows, dark</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.root{--steel:#6f7b86;--steel-dark:#58626c;--link:#0b4fa8;--faint:#a9bccb;--muted:#47515c;
+  --label-font:"Arial Black","Helvetica Neue",system-ui,sans-serif;--cell-font:ui-monospace,monospace;
+  --manila:url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0/200px 200px,linear-gradient(#efdcae,#e2c88f);
+  --on-manila:#2b2418;--manila-muted:#5c4c2e;--manila-patch:#c39a5c;
+  --tape:repeating-linear-gradient(0deg,transparent 0 2px,rgb(8 7 15/.13) 2px 3px),linear-gradient(#30363d,#171a1e);--tape-edge:#050607;--tape-lit:#69727c;--on-tape:#f6f8fa;
+  --tape-emboss:-1px -1px 0 rgb(8 7 15/.67),1px 1px 0 rgb(255 255 255/.33),0 2px 2px rgb(8 7 15/.53);
+  --tape-lift:0 3px 4px rgb(8 7 15/.35)}
+.root{--bg:#dcecf7;--fg:#14181d;--panel:#f7fbfe;--line:#c3d3df}
+.root[data-scheme="dark"]{--bg:#16222d;--fg:#eef2f5;--muted:#a9b6c2;--faint:#3a4a5c;--link:#8ec5ff;--panel:#1e2c38;--line:#34465a}
+.cap{margin:0 0 10px;font:900 11px/1.3 var(--label-font);letter-spacing:.08em;text-transform:uppercase;color:var(--fg)}
+.cap span{font:400 13px/1.4 system-ui,sans-serif;letter-spacing:0;text-transform:none;color:var(--muted);margin-left:10px}
+.tags{display:grid;gap:0}
+.mtag{display:grid;margin:0 6px;min-width:0;filter:drop-shadow(0 4px 5px rgb(8 7 15/.28))}
+.mtag-in{display:flex;flex-direction:column;box-sizing:border-box;padding:28px .7rem 0;min-width:0;overflow-wrap:anywhere;color:var(--on-manila);
+  background:radial-gradient(circle at 50% 14px,transparent 4px,var(--manila-patch) 4.5px 10px,transparent 10.5px),var(--manila);
+  -webkit-clip-path:polygon(16px 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%,0 16px);clip-path:polygon(16px 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%,0 16px);
+  -webkit-mask-image:radial-gradient(circle at 50% 14px,transparent 3.5px,#000 4px);mask-image:radial-gradient(circle at 50% 14px,transparent 3.5px,#000 4px)}
+.numtape{display:flex;justify-content:space-between;align-items:baseline;margin:0 -.7rem .6rem;padding:.3rem .7rem;color:var(--on-tape);text-shadow:var(--tape-emboss);background:var(--tape);border-top:1px solid var(--tape-lit);border-bottom:3px solid var(--tape-edge)}
+.numtape b{font:900 18px var(--cell-font);letter-spacing:.06em}
+.numtape span{font:700 12px var(--cell-font)}
+.opt{margin:0 0 .7rem;font-weight:600;line-height:1.25}
+.stk{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:auto -.7rem 0;min-height:40px;padding:0 .7rem;font:900 12px var(--cell-font);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;color:var(--on-tape);text-shadow:var(--tape-emboss);background:var(--tape);border:0;border-top:1px solid var(--tape-lit);border-bottom:3px solid var(--tape-edge)}
+.stk svg{flex:none;width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.5}
+.stk u{text-transform:none;letter-spacing:0}
+.stk[aria-expanded="true"]{border-bottom-width:1px;padding-top:2px;background:repeating-linear-gradient(0deg,transparent 0 2px,rgb(8 7 15/.2) 2px 3px),linear-gradient(#171a1e,#30363d)}
+.stk.none{cursor:default;color:var(--manila-muted);text-shadow:none;background:none;border:0;border-top:2px dashed var(--manila-muted)}
+.panel{position:relative;margin:16px 6px 0;background:var(--panel);border:2px solid var(--steel);border-radius:4px;box-shadow:0 3px 0 var(--steel-dark),0 8px 16px rgb(0 0 0/.25)}
+.panel .notch{position:absolute;top:-10px;width:16px;height:16px;background:var(--panel);border-left:2px solid var(--steel);border-top:2px solid var(--steel);transform:rotate(45deg)}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.cols>div{padding:12px 16px 14px}
+.cols>div+div{border-left:1px solid var(--line)}
+.panel h3{margin:0 0 6px;display:flex;justify-content:space-between;align-items:baseline;font:900 11px var(--label-font);letter-spacing:.08em;text-transform:uppercase}
+.panel h3 span{font:400 12px system-ui,sans-serif;letter-spacing:0;text-transform:none;color:var(--muted)}
+.panel table{width:100%;border-collapse:collapse;font-size:14px}
+.panel td{padding:7px 8px 7px 0;vertical-align:top;border-top:1px solid var(--line)}
+.panel .id{font:700 13px var(--cell-font);white-space:nowrap}
+.panel .note{display:block;font-size:12px;color:var(--muted)}
+.panel a{color:var(--link)}
+.this{display:inline-block;margin-left:6px;padding:1px 6px;font:700 10px var(--cell-font);letter-spacing:.08em;text-transform:uppercase;color:var(--on-tape);text-shadow:var(--tape-emboss);background:var(--tape);border:1px solid var(--tape-edge);border-top-color:var(--tape-lit);border-radius:2px}
+.more{margin:8px 0 0;font-size:13px}
+.strip{display:flex;align-items:center;min-height:46px;padding:0 .7rem;color:var(--on-tape);font:700 11px var(--cell-font);letter-spacing:.08em;text-transform:uppercase;text-shadow:var(--tape-emboss);background:var(--tape);border:1px solid var(--tape-edge);border-top-color:var(--tape-lit);border-bottom-width:3px;border-radius:2px;box-shadow:var(--tape-lift)}
+/* the second tape: aluminum embossing tape, a name that presses */
+.root{--emboss:0 1px 0 rgb(255 255 255/.9),0 -1px 1px rgb(0 0 0/.45);--on-metal:#232930;--metal:url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0/600px 120px,linear-gradient(#eef1f4,#b4bec7 55%,#cdd5dc);
+  --alu:repeating-linear-gradient(0deg,transparent 0 2px,rgb(8 7 15/.07) 2px 3px),var(--metal);--alu-in:repeating-linear-gradient(0deg,transparent 0 2px,rgb(8 7 15/.1) 2px 3px),linear-gradient(#aab4bd,#c9d1d8)}
+.stk{color:var(--on-metal);text-shadow:var(--emboss);background:var(--alu);border-top-color:#fff;border-bottom-color:var(--steel-dark)}
+.stk[aria-expanded="true"]{background:var(--alu-in)}
+.stk.none{color:var(--manila-muted);text-shadow:none;background:none;border:0;border-top:2px dashed var(--manila-muted)}
+/* elevation: an unpressed button stands higher than anything static beside it; tape and key stand equally high */
+.root{--lift-stuck:0 2px 3px rgb(8 7 15/.32);--lift-raised:0 2px 0 var(--steel-dark),0 6px 9px rgb(8 7 15/.38)}
+.strip,.name{box-shadow:var(--lift-stuck)}
+.pt,.s2,.rec .tab{border-bottom-width:1px}
+.pt,.s2,.rec .tab,.key,.mbtn{box-shadow:inset 0 1px 0 #fff,var(--lift-raised)}
+.pt[aria-pressed="true"],.s2[aria-pressed="true"]{transform:translateY(2px);box-shadow:inset 0 2px 3px rgb(8 7 15/.3)}
+.stk{box-shadow:inset 0 1px 0 #fff,inset 0 -2px 0 var(--steel-dark)}
+.stk[aria-expanded="true"]{box-shadow:inset 0 2px 3px rgb(8 7 15/.3)}
+.stk.none{box-shadow:none}
+</style>
+</helmet>
+<div class="root" data-scheme="dark" style="width: 1100px; height: 1180px; box-sizing: border-box; padding: 40px; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; display: flex; flex-direction: column; gap: 30px">
+
+<div>
+<h1 style="margin: 0; font: 900 21px/1.2 'Arial Black', 'Helvetica Neue', system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase">Slice 2 textures: the stock strip and its rows</h1>
+<p style="margin: 6px 0 0; color: var(--muted); max-width: 860px">A first pass in the settled materials, on slice 1's candidate tags. No new material and no new colour. Data is the demo set's.</p>
+</div>
+
+<section>
+<p class="cap">The strip, as aluminum tape on the tag <span>Settled. The strip is a name you press, so it is the second tape. The number above it does nothing, and stays black. Left to right: both sources; only a shelf file; stock loaded, none for this part; no stock files.</span></p>
+<div class="tags" style="grid-template-columns: repeat(4, minmax(0, 1fr))">
+<div class="mtag"><div class="mtag-in" style="height: 150px"><div class="numtape"><b>DEMO-1001</b><span>2015–2017</span></div><p class="opt">3.5L V6 EcoBoost</p><button type="button" class="stk" aria-expanded="false"><span>Stock · 2 shelf · 2 yard</span><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 4l5 5 5-5"></path></svg></button></div></div>
+<div class="mtag"><div class="mtag-in" style="height: 150px"><div class="numtape"><b>[number]</b><span>[years]</span></div><p class="opt">[options]</p><button type="button" class="stk" aria-expanded="false"><span>Stock · 2 shelf</span><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 4l5 5 5-5"></path></svg></button></div></div>
+<div class="mtag"><div class="mtag-in" style="height: 150px"><div class="numtape"><b>[number]</b><span>[years]</span></div><p class="opt">[options]</p><span class="stk none"><span>Stock · none</span></span></div></div>
+<div class="mtag"><div class="mtag-in" style="height: 150px"><div class="numtape"><b>[number]</b><span>[years]</span></div><p class="opt">[options]</p><button type="button" class="stk"><span>Stock · not loaded</span><u>Add stock</u></button></div></div>
+</div>
+</section>
+
+<section>
+<p class="cap">Opened: the rows, as a panel <span>Settled. The pressed strip is pushed in. Its rows are the page's own table panel, notched up at the tag they belong to, with shelf and yard as two equal halves.</span></p>
+<div class="tags" style="grid-template-columns: repeat(3, minmax(0, 1fr))">
+<div class="mtag"><div class="mtag-in" style="height: 150px"><div class="numtape"><b>DEMO-1001</b><span>2015–2017</span></div><p class="opt">3.5L V6 EcoBoost (VIN G, 8th digit)</p><button type="button" class="stk" aria-expanded="true"><span>Stock · 2 shelf · 2 yard</span><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 10l5-5 5 5"></path></svg></button></div></div>
+<div class="mtag"><div class="mtag-in" style="height: 150px"><div class="numtape"><b>DEMO-1002</b><span>2015–2020</span></div><p class="opt">5.0L V8 (VIN F, 8th digit)</p><button type="button" class="stk" aria-expanded="false"><span>Stock · 0 shelf · 2 yard</span><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 4l5 5 5-5"></path></svg></button></div></div>
+<div class="mtag"><div class="mtag-in" style="height: 150px"><div class="numtape"><b>DEMO-1003</b><span>2015–2020</span></div><p class="opt">2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</p><button type="button" class="stk" aria-expanded="false"><span>Stock · 0 shelf · 2 yard</span><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 4l5 5 5-5"></path></svg></button></div></div>
+</div>
+<div class="panel">
+<span class="notch" style="left: 156px"></span>
+<div class="cols">
+<div><h3>On the shelf · 2 <span>as of 2026-11-12</span></h3>
+<table><tbody>
+<tr><td class="id">DEMO-S-01</td><td>demo-north</td><td>demo: used, grade A</td></tr>
+<tr><td class="id">DEMO-S-02</td><td>demo-south</td><td>demo: used, grade B<span class="note">Tagged with a retired number, DEMO-0901</span></td></tr>
+</tbody></table>
+<p class="more">Past ten rows: <a href="#">Show all</a></p></div>
+<div><h3>In the yard · 2 <span>as of 2026-11-12</span></h3>
+<table><tbody>
+<tr><td class="id">DEMO-Y-01</td><td>demo-north</td><td>row D-1 · demo: white<span class="note"><strong style="color: var(--fg)">This VIN</strong>: the vehicle being looked up</span></td></tr>
+<tr><td class="id">DEMO-Y-02</td><td>demo-south</td><td>row D-1 · demo: blue</td></tr>
+</tbody></table></div>
+</div>
+</div>
+</section>
+
+<section>
+<p class="cap">Shelf rows with no number <span>Settled. Some shelf rows name a part type and a vehicle but no part number, so they belong to no candidate. They sit after the candidates, under their own strip, in the same panel.</span></p>
+<div class="strip" style="margin: 0 6px">On the shelf with no number · Alternator · 2015 Ford F150</div>
+<div class="panel" style="margin-top: 10px"><div style="padding: 12px 16px 14px">
+<table><tbody>
+<tr><td class="id">[id]</td><td>[location]</td><td>[the source's fields]</td></tr>
+</tbody></table>
+</div></div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1100,"height":1180}}'>
+class Component extends DCLogic {
+renderVals() {
+let d = this.props.dark;
+if (d === undefined) {
+try { d = JSON.parse(document.querySelector('script[data-dc-script]').getAttribute('data-props')).dark.default; } catch (e) {}
+}
+return { scheme: (d === true || d === 'true') ? 'dark' : 'light' };
+}
+}
+</script>
+</body>
+</html>
