@@ -30,8 +30,10 @@ Each part has one of two standings.
 - **Two colour schemes, three fixed materials.** The ground, the text, the
   dialogs and the group colours change between light and dark. The metal, the
   tape and the manila do not: each is the same object under either light.
-- **Motion is a stamp, a draw and a pop**, each under 0.4 s, and none of it
-  under `prefers-reduced-motion`.
+- **Motion marks a change: a stamp, a draw and a pop**, each under 0.4 s, and
+  none of it under `prefers-reduced-motion`. A typed character stamps in; a
+  finished group draws its bracket and line and pops its card. The only
+  motion that loops is the caret's blink on the focused plate, once a second.
 
 ## Tokens
 
@@ -59,8 +61,9 @@ leader line all use it, and its card prints it as a band.
 | Serial `serial` | 12–17 | `#3d4650` | `#b8c4cf` |
 
 A group's mark on a material is `--cm`. On metal and on manila it is the
-light-scheme colour in both schemes. On label tape it is the dark-scheme colour
-in both schemes.
+light-scheme colour in both schemes, except the year's, which is a shade
+brighter there (`#b3540a`). On label tape it is the dark-scheme colour in both
+schemes.
 
 Two typefaces carry the look, and both are system fonts.
 
@@ -281,7 +284,9 @@ Every other control is plain and small.
 - **Disclosure:** `details` with a weight-600 `summary`, in a 1 px `--line`
   box. In a table row it has no box.
 - **Table:** rows ruled 1 px in `--line`. The header row is the label face at
-  11 px over a 3 px `--steel` rule.
+  11 px over a 3 px `--steel` rule. A page's own table (a vocabulary's
+  entries) sits in a panel like a note's: panel ground, a 2 px `--steel` edge,
+  4 px corners, on 3 px of `--steel-dark` and a soft shadow.
 - **Focus:** every link, button, summary, field and `pre` takes a 3 px
   `--link` outline, 2 px off. The plate takes it 3 px off.
 - **Errors:** `--bad` text. A refusal and the page's error slot add a 4 px

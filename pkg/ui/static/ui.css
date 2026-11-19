@@ -116,7 +116,9 @@ button.copy { flex: none; }
 details { border: 1px solid var(--line); border-radius: 2px; padding: .25rem .75rem; margin: .5rem 0; }
 summary { cursor: pointer; font-weight: 600; padding: .25rem 0; }
 .wide, .scroll { overflow-x: auto; }
-main > .wide { padding: .25rem 1rem 1rem; background: var(--card-bg); border: 2px solid var(--steel); border-radius: 2px; box-shadow: 3px 3px 0 rgb(0 0 0 / .18); }
+/* A page's own table sits in a panel, as a note does: on the metal's edge
+   and a soft shadow. */
+main > .wide { padding: .25rem 1rem 1rem; background: var(--card-bg); border: 2px solid var(--steel); border-radius: 4px; box-shadow: 0 3px 0 var(--steel-dark), 0 8px 16px rgb(0 0 0 / .25); }
 .wide table { font-size: 13px; }
 
 /* The vocabularies (vocab.html). */
@@ -151,9 +153,9 @@ form.filter label { flex-basis: 100%; }
    gaps: a gap would move a column's centre off the fraction of the width
    the leader lines (page.html's SVGs, in 1020 units: 60 a cell, 170 a
    card) are drawn to. Each group names its colour once (--c), which its
-   label, bracket, leader line and card all use, and the colour its mark
-   takes on metal (--cm), which is the same light metal in both colour
-   schemes. */
+   label, bracket and leader line all use, and the colour its mark takes
+   on metal and its band on a card's manila (--cm), which is the same in
+   both colour schemes, as the metal and the manila are. */
 .g-wmi { --c: var(--c-wmi); --cm: #c8102e; }
 .g-vds { --c: var(--c-vds); --cm: #0b4fa8; }
 .g-check { --c: var(--c-check); --cm: #5b2d8e; }
