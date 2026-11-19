@@ -311,6 +311,7 @@ func TestAssets(t *testing.T) {
 		"brushed.svg": "image/svg+xml",
 		"copy.js":     "text/javascript; charset=utf-8",
 		"htmx.min.js": "text/javascript; charset=utf-8",
+		"paper.svg":   "image/svg+xml",
 		"plate.js":    "text/javascript; charset=utf-8",
 		"ui.css":      "text/css; charset=utf-8",
 	} {

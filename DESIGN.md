@@ -4,7 +4,8 @@ The page at `/` (`pkg/ui`) looks like a stamped VIN plate with tags hung from
 it. This file states which parts of that look are the design, and which parts
 are settled enough to leave alone. It describes; the code is the source:
 [ui.css](pkg/ui/static/ui.css), [page.html](pkg/ui/page.html),
-[plate.js](pkg/ui/static/plate.js) and [brushed.svg](pkg/ui/static/brushed.svg).
+[plate.js](pkg/ui/static/plate.js), [brushed.svg](pkg/ui/static/brushed.svg) and
+[paper.svg](pkg/ui/static/paper.svg).
 The references behind the choices are in
 [docs/research/vin-page.md](docs/research/vin-page.md) and
 [docs/research/textures.md](docs/research/textures.md).
@@ -13,22 +14,22 @@ Each part has one of two standings.
 
 | Standing | Parts | What it means for a change |
 | --- | --- | --- |
-| **Signature** | The VIN input, the vinyl tape, the aluminum plates | These are the page's identity. New UI is built from them, and a change keeps every rule below. |
-| **Good enough** | The decoded cards, the brackets and leader lines | These work and stay as they are. A change fixes a bug or follows a signature part; it does not restyle them. |
+| **Signature** | The VIN input, and the three materials: aluminum plates, vinyl tape, manila tags | These are the page's identity. New UI is built from them, and a change keeps every rule below. |
+| **Good enough** | What a decoded card holds, and where the brackets and leader lines run | These work and stay as they are. A change fixes a bug or follows a signature part; it does not rearrange them. |
 
 ## Ground rules
 
 - **No inline style or script.** The page's CSP refuses both. Every position is
   a class in the one stylesheet, on a fixed grid.
 - **No raster images.** A texture is a gradient, a shadow, a mask, or
-  `brushed.svg`'s `feTurbulence` noise.
+  `feTurbulence` noise in an SVG (`brushed.svg`, `paper.svg`).
 - **The page works without JavaScript.** The server draws the whole answer for
   whatever VIN the URL carries. Scripts only make it live.
 - **Popovers, not scripted overlays.** Menus, dialogs and notes are
   `popover` elements opened by `popovertarget`.
-- **Two colour schemes, two fixed materials.** The ground, the text, the cards
-  and the group colours change between light and dark. The metal and the tape
-  do not: both are the same object under either light.
+- **Two colour schemes, three fixed materials.** The ground, the text, the
+  dialogs and the group colours change between light and dark. The metal, the
+  tape and the manila do not: each is the same object under either light.
 - **Motion is a stamp, a draw and a pop**, each under 0.4 s, and none of it
   under `prefers-reduced-motion`.
 
@@ -40,13 +41,13 @@ All tokens are custom properties on `body` in `ui.css`.
 | --- | --- | --- |
 | Ground `--bg` | `#dcecf7` | `#16222d` |
 | Text `--fg` / `--muted` | `#14181d` / `#47515c` | `#eef2f5` / `#a9b6c2` |
-| Card ground `--card-bg` | `#ffffff` | `#1f2d3a` |
+| Panel ground `--card-bg` | `#ffffff` | `#1f2d3a` |
 | Rule `--line`, not-yet `--faint` | `#9fb3c2`, `#a9bccb` | `#45566a`, `#3a4a5c` |
 | Link and focus `--link` | `#0b4fa8` | `#8ec5ff` |
 | Error `--bad` | `#b91c1c` | `#ff8a8a` |
 
-Each of the six groups of a VIN has one colour, `--c`. Its label, bracket,
-leader line and card all use it.
+Each of the six groups of a VIN has one colour, `--c`. Its label, bracket and
+leader line all use it, and its card prints it as a band.
 
 | Group | Positions | Light | Dark |
 | --- | --- | --- | --- |
@@ -57,8 +58,9 @@ leader line and card all use it.
 | Plant `plant` | 11 | `#0f6b46` | `#6fdcab` |
 | Serial `serial` | 12–17 | `#3d4650` | `#b8c4cf` |
 
-A group's mark on a material is `--cm`. On metal it is the light-scheme
-colour in both schemes. On tape it is the dark-scheme colour in both schemes.
+A group's mark on a material is `--cm`. On metal and on manila it is the
+light-scheme colour in both schemes. On label tape it is the dark-scheme colour
+in both schemes.
 
 Two typefaces carry the look, and both are system fonts.
 
@@ -131,15 +133,17 @@ The fastener says what the piece is.
 | --- | --- | --- |
 | Rivet | Small tags: header buttons, menu rows; one at each end of the brand | A 2.5 px `--steel-dark` dot in a light ring |
 | Slotted screw | The VIN plate and every dialog's head, one at each end | A 5 px light disc, a `--steel` ring, a 9 × 2 px slot |
-| Eyelet | A decoded card | A hole punched by a radial mask, ringed in the card's heading |
+| Eyelet | A manila tag | A hole punched by a radial mask through a darker patch that reinforces it |
 
-Only a dialog's head is metal. The panel under it is card ground. Text to
+Only a dialog's head is metal. The panel under it is panel ground. Text to
 copy sits in a recess: an inset shadow on a slightly darkened ground.
 
 ## Signature: vinyl tape
 
-A name from a vocabulary is a strip of black label-maker tape. The tape is
-the one material on the page that is not metal, as a parts bin's label is not.
+Vinyl is two tapes. A name from a vocabulary is a strip of black label-maker
+tape. A bracket or a leader line is pinstripe tape in its group's colour.
+
+### Label tape
 
 - **Body:** `--tape`, faint ridges every 3 px over
   `linear-gradient(#30363d, #171a1e)`.
@@ -163,36 +167,60 @@ the one material on the page that is not metal, as a parts bin's label is not.
 - **An empty place stays.** A vocabulary with no name, or none loaded, keeps a
   blank strip: a 3 px dashed `--faint` outline with a sentence in it.
 
-## Good enough: decoded cards
+### Pinstripe tape
+
+- **Body:** the group's colour, `--c`. A bracket is 4 px with its outer
+  corners rounded 2 px. A leader line is 5 px with round joins.
+- **Lift:** `--stripe-lift`, two drop shadows: a 1 px light edge up and left,
+  and a soft shadow down and right. The stripe reads as stuck on the ground.
+- **Not yet typed**, a bracket or a line is flat: 3 px of `--faint`, no lift.
+- **A bracket that holds its name** (the lower row on a phone) lies flat, so
+  the lift does not edge the letters.
+
+## Signature: manila tags
+
+A decoded card is a manila parts tag, hung by its eyelet from its leader line.
+
+- **Stock:** `--manila`, `paper.svg`'s fine noise at `200px 200px` over
+  `linear-gradient(#efdcae, #e2c88f)`.
+- **Shape:** the top corners are clipped 16 px by a `clip-path`. The stock is
+  the card's `::before`, so the card's own `drop-shadow` follows the shape; a
+  `box-shadow` would be clipped away.
+- **Eyelet:** a 3.5 px hole at the top centre, in a 10 px patch of
+  `--manila-patch` (`#c39a5c`). The ground shows through the hole.
+- **Band:** the group's mark, `--cm`, printed across the tag under the eyelet,
+  with the title and positions in white in the label face.
+- **Ink:** `--on-manila` (`#2b2418`) for values and `--manila-muted`
+  (`#5c4c2e`) for row labels. Both hold in the dark scheme, because the stock
+  does.
+- **Wrong:** a card whose group is wrong prints its band and its large value
+  in `--manila-bad` (`#a01414`).
+- **Not yet typed**, a card keeps its place as a 2 px dashed `--faint` outline
+  with its muted title, and no stock.
+
+## Good enough: what a card holds
 
 Each group has a card under its bracket, six in a row on the same width as the
 plate.
 
-- A card is a tag: card ground, a 3 px border in its group's colour, a hard
-  `3px 3px 0` shadow, and an eyelet at the top of its heading band.
-- The heading band is the group's colour with the title in the label face and
-  the positions beside it ("Vehicle 4–8").
+- The band reads the group's title and its positions ("Vehicle 4–8").
 - The body is either label and value rows, or one large value in the monospace
   face. The check digit's card opens its arithmetic in a dialog. The year's
   card lists the codes around its own.
-- A card for a group not yet typed keeps its place: dashed `--faint` border,
-  no shadow, a muted heading.
-- A card whose group is wrong turns its border and band to `--bad`.
 - A newly finished group pops its card in (0.3 s).
 - Under 46 rem the cards stack in the brackets' order.
 
-## Good enough: brackets and leader lines
+## Good enough: where the brackets and lines run
 
-- A label sits over its cells with a 3 px bracket opening downward. A second
+- A label sits over its cells with a bracket opening downward. A second
   bracket under the plate opens upward. Both are borders, not images.
-- A leader line runs from each lower bracket to its card: 3 px, square
-  corners, one elbow. A second set of lines joins the maker's, the vehicle's
-  and the year's cards to the tape's columns.
+- A leader line runs from each lower bracket to its card, with square turns
+  and one elbow. A second set of lines joins the maker's, the vehicle's and
+  the year's cards to the label tape's columns.
 - The lines are SVG paths in a 1020-unit box (60 a cell, 170 a card),
   stretched to the stage with `vector-effect="non-scaling-stroke"`. Positions
   come from arithmetic on the grid, and nothing is measured at run time.
-- Brackets and lines are `--faint` until their group is typed, then take its
-  colour. A newly finished group draws its bracket and line in.
+- A newly finished group draws its bracket and line in.
 - No line runs to a blank strip.
 - Under 46 rem the lines go, and the brackets and colours stay.
 
@@ -200,8 +228,11 @@ plate.
 
 - A new control is a piece of metal. Reuse `--metal`, `--raised` and
   `--emboss`, and pick its fastener from the table above.
-- A new name from a vocabulary is a strip of tape.
-- A new fact about the VIN itself is a row in a card, in its group's colour.
+- A new name from a vocabulary is a strip of label tape.
+- A new fact about the VIN itself is a row on a tag, under its group's band.
+- A new connection between two things is a line of pinstripe tape.
+- A fourth material needs a reason, as manila had: something the page hangs,
+  sticks or bolts on that the three cannot be.
 - A seventh colour needs a reason. The six group colours are the only hues
   besides `--link` and `--bad`.
 - Check both colour schemes, a 390 px window, and the page with JavaScript

@@ -116,6 +116,7 @@ var static = func() map[string]asset {
 		"copy.js":     {"text/javascript; charset=utf-8", read("copy.js")},
 		"disk.js":     {"text/javascript; charset=utf-8", read("disk.js")},
 		"htmx.min.js": {"text/javascript; charset=utf-8", read("htmx.min.js")},
+		"paper.svg":   {"image/svg+xml", read("paper.svg")},
 		"plate.js":    {"text/javascript; charset=utf-8", read("plate.js")},
 		"ui.css":      {"text/css; charset=utf-8", read("ui.css")},
 		"vocab.js":    {"text/javascript; charset=utf-8", read("vocab.js")},
