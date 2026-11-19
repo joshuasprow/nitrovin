@@ -831,8 +831,9 @@ object. Its inputs shape the answer:
 - **What was checked.** An application's `confirmed` lists, in
   `unconfirmed`'s form, what applied, was checked and held: the element
   ids of the qualifiers a decoded value met, then `"model_year"` when the
-  year was known and the years hold it. It covers what `unconfirmed`
-  covers (the application's own qualifiers and years, its model's and its
+  years were checked and held: a known year is inside them, or with
+  none known every year the vehicle's entry spans is. It covers what
+  `unconfirmed` covers (the application's own qualifiers and years, its model's and its
   part type's), and each condition that applied is in exactly one of the
   two. Where several mappings reach the model or the part type, the
   conditions are those of the mappings that checked everything, else of

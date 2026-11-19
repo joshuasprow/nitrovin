@@ -424,9 +424,10 @@ func models(info vocab.CatalogInfo, tr *vocab.Translation) ([]FitModel, []Unconf
 }
 
 // partType is a part type of the catalog's spine a fit asks about, and
-// what its route left unchecked, and what it checked, and held. filedUnder is, when the part named is an
-// entry of the catalog's filed-under vocabulary, that entry: the type's
-// direct fitments are those filed under it (ADR 0024).
+// what its route left unchecked, and what it checked, and held. filedUnder
+// is, when the part named is an entry of the catalog's filed-under
+// vocabulary, that entry: the type's direct fitments are those filed
+// under it (ADR 0024).
 type partType struct {
 	id, name    string
 	unconfirmed vocab.Unconfirmed

@@ -191,7 +191,8 @@ neither had `unconfirmed`. A reader showing candidates to a person needs to tell
 
 Each matched application gains `confirmed`, in `unconfirmed`'s type and wire form:
 the element ids of the qualifiers a decoded value met, then `"model_year"` when the
-year was known and the years hold it. It covers what `unconfirmed` covers: the
+years were checked and held: a known year is inside them, or with none known every
+year the vehicle's entry spans is. It covers what `unconfirmed` covers: the
 application's own qualifiers and years, its model's and its part type's. A
 condition that applied is in exactly one of the two, and `confirmed` is absent when
 empty. So an application with `confirmed` had conditions that were met, one with

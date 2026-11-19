@@ -201,7 +201,8 @@ type Match struct {
 // (ADR 0012): qualifier elements with no decode, or that the decode left
 // empty, and the model year when none was known. A field named Confirmed
 // has the same type for the other half: the qualifier elements the decode
-// met, and the model year when it was known and inside the years.
+// met, and the model year when the years were checked and held: a known
+// year inside them, or with none known every year the entry spans.
 type Unconfirmed struct {
 	// Elements are ascending element ids.
 	Elements  []int32
