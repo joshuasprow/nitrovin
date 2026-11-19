@@ -1,0 +1,29 @@
+# worktrunk's project config (https://worktrunk.dev/config/): one stock
+# Postgres server per worktree. pkg/stock/pg's tests drop schemas and the
+# cluster-wide role nitrovin_stock, so two worktrees can share neither a
+# server nor a database. Project commands need approval once
+# (`wt config approvals add`).
+#
+#   eval "$(wt stock-pg)"   start (or restart) this worktree's server and
+#                           export NITROVIN_STOCK_PG_DSN for it
+#
+# The server is nitrovin-stock-<worktree> on a port hashed from the worktree's
+# name, from the postgres:17 digest import.yml names (scripts/tools.sh check
+# holds the workflows to one digest). Removing the worktree removes it.
+
+[aliases]
+stock-pg = '''
+set -e
+name=nitrovin-stock-{{ worktree_name }}
+port={{ ('stock-' ~ worktree_name) | hash_port }}
+if ! docker start "$name" >/dev/null 2>&1; then
+  image=$(grep -ohE 'postgres:17@sha256:[0-9a-f]+' '{{ worktree_path }}/.github/workflows/import.yml' | head -n 1)
+  docker run -d --name "$name" -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=stock \
+    -p "127.0.0.1:$port:5432" "$image" >/dev/null
+fi
+until docker exec "$name" pg_isready -q -h 127.0.0.1 -U postgres -d stock; do sleep 0.2; done
+echo "export NITROVIN_STOCK_PG_DSN='postgres://postgres:postgres@127.0.0.1:$port/stock?sslmode=disable'"
+'''
+
+[post-remove]
+stock-pg = "docker rm -f nitrovin-stock-{{ worktree_name }} >/dev/null 2>&1 || true"
