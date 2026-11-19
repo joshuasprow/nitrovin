@@ -30,6 +30,17 @@ Each part has one of two standings.
 - **Two colour schemes, three fixed materials.** The ground, the text, the
   dialogs and the group colours change between light and dark. The metal, the
   tape and the manila do not: each is the same object under either light.
+- **Three heights: stuck, raised and pressed.** A static strip of tape is
+  stuck on, with a small tight shadow, `--lift-stuck`. A control that is not
+  pressed stands higher than anything static beside it, and every such
+  control stands equally high, whether metal or tape: a 3 px ledge of
+  `--steel-dark` under a wide soft shadow, `--lift-raised`. A pressed control
+  is flush: 2 px down, no drop shadow, a visibly darker fill, and an inner
+  shadow, `--pressed`. A drop shadow disappears on the dark ground, so there
+  the ledge tells raised from static, and the fill and the inner shadow tell
+  pressed from raised; the soft shadow is only deeper there. A control is
+  pressed while it is held, while it is on (a switch, or
+  `aria-pressed="true"`), and while the menu it opens hangs from it.
 - **Motion marks a change: a stamp, a draw and a pop**, each under 0.4 s, and
   none of it under `prefers-reduced-motion`. A typed character stamps in; a
   finished group draws its bracket and line and pops its card. The only
@@ -125,13 +136,18 @@ dialogs' heads. The metal is four layers.
 Around the body:
 
 - **Edge:** 1 px `--steel` (`#6f7b86`), 2 px on the VIN plate and dialogs.
-- **Raised:** `--raised`, a white line inside the top and 2 px of `--steel`
-  below. The VIN plate and dialogs sit on 3 px of `--steel-dark` (`#58626c`)
-  and a soft drop shadow. On the VIN plate that ledge is its own bottom
-  border, not a shadow, so the focus ring clears it.
+- **Raised:** `--raised`, a white line inside the top over `--lift-raised`,
+  on every key. The VIN plate and dialogs sit on 3 px of `--steel-dark`
+  (`#58626c`) and a soft drop shadow. On the VIN plate that ledge is its own
+  bottom border, not a shadow, so the focus ring clears it. The brand is
+  static: a white line inside the top and 2 px of `--steel` below, with no
+  shadow, so the header's keys stand higher than it.
 - **Lettering:** `--on-metal` (`#232930`) with `--emboss`, a white edge below
   and a dark edge above, so the letter reads as struck in.
-- **Pressed:** a button moves down 2 px and loses its lower edge.
+- **Pressed:** a key moves down 2 px, loses its ledge and its shadow, and
+  takes `--alu-in`, `linear-gradient(#8e99a3, #aab4bd)` under faint ridges,
+  with `--pressed` inside its top. A rivet or the Menu button's bars stay
+  on it.
 
 The fastener says what the piece is.
 
@@ -154,7 +170,8 @@ tape. A bracket or a leader line is pinstripe tape in its group's colour.
 - **Body:** `--tape`, faint ridges every 3 px over
   `linear-gradient(#30363d, #171a1e)`.
 - **Edges:** a lit top (`--tape-lit`, `#69727c`), a heavy bottom
-  (`--tape-edge`, `#050607`, 3 px), and `--tape-lift` under it.
+  (`--tape-edge`, `#050607`, 3 px), and `--lift-stuck` under it: a strip of
+  tape is stuck on, lower than any control.
 - **Lettering:** `--on-tape` (`#f6f8fa`) in the monospace face with
   `--tape-emboss`, a dark edge up and left and a light edge down and right, so
   the letter reads as raised.
@@ -171,12 +188,19 @@ tape. A bracket or a leader line is pinstripe tape in its group's colour.
 - **Several names stack.** The first strip is on top, with the edges of up to
   three more under it. The stamp is the switch and carries the count. Opened,
   the stack is one strip with a row to a name.
+- **A switch of tape stands raised.** "N more vocabularies", and on a narrow
+  page a stack's stamp on its line of its own, keep a 1 px bottom edge on the
+  controls' ledge and shadow. On, each is flush, and its fill is `--tape-in`,
+  the tape's body darkened to `#0c0e10`–`#1d2125`. On a wide page a stack's
+  stamp is a column of its strip, and lies level with it.
 - **An empty place stays.** A vocabulary with no name, or none loaded, keeps a
   blank strip: a 3 px dashed `--faint` outline with a sentence in it.
 - **On a tag the tape takes the tag's colour.** A control on a manila tag is
   the same ridged tape with the group's mark as its body, edges mixed lighter
   and darker from that colour, and a faint white halo on its letters, as
-  vinyl whitens where it is struck.
+  vinyl whitens where it is struck. "Check years" is the same tape in the
+  year's colour. Each stands raised, its own bottom edge 1 px, and pressed it
+  is flush, its colour mixed darker with black.
 
 ### Pinstripe tape
 
@@ -289,7 +313,8 @@ script. There are three sizes.
 - **Height:** a dialog keeps inside the window (`100dvh - 2rem` where the
   browser knows it) and scrolls inside itself.
 - **The menu hangs from its button** by CSS anchor positioning, and from the
-  header's end where the browser has none. Its rows are small metal tags.
+  header's end where the browser has none. Its rows are small metal tags,
+  raised as keys are. While it is open, its button is pressed.
 - **The header collapses where its buttons would wrap** (46 rem, its own
   width: the cards change at 64 rem). The
   header's nav is itself a popover. In a wide window it has no box: the
@@ -308,10 +333,10 @@ The page has one form that matters, the plate, and it is described above.
 Every other control is plain and small.
 
 - **Button:** a key of the plate's metal. The label face at 11 px, upper case,
-  `--on-metal`, a 1 px `--steel` edge, `--raised`. Pressed, it moves down
-  2 px. A button in the header or a row in the menu adds a rivet. The one
-  exception is a button on a manila tag, which is label tape in the tag's
-  colour.
+  `--on-metal`, a 1 px `--steel` edge, `--raised`. Pressed, it is flush
+  (ground rules: three heights). A button in the header or a row in the menu
+  adds a rivet. The one exception is a button on a manila tag, which is label
+  tape in the tag's colour.
 - **Link-like button** (`.linkish`, "Clear recent"): no metal. `--link`,
   underlined, in the body face.
 - **Text and search fields:** a recess. Panel ground, a 1 px `--steel` edge,
@@ -330,7 +355,9 @@ Every other control is plain and small.
   field, a Filter button and a "Show all" link in a wrapping row.
 - **Inline form** (Remove, in a table row): a form that is only its button.
 - **Switch without a script:** a visually hidden checkbox whose label is the
-  control, as on a stack of label tape.
+  control, as on a stack of label tape. Off, it stands raised; on, it is
+  pressed. A stack's stamp on a wide page is the one switch that lies level
+  with its strip (vinyl tape, above).
 - **Disclosure:** `details` with a weight-600 `summary`, in a 1 px `--line`
   box. In a table row it has no box.
 - **Table:** rows ruled 1 px in `--line`. The header row is the label face at
@@ -347,7 +374,9 @@ Every other control is plain and small.
 
 - A new control is a piece of metal. Reuse `--metal`, `--raised` and
   `--emboss`, and pick its fastener from the table above. On a manila tag it
-  is a strip of label tape in the tag's colour.
+  is a strip of label tape in the tag's colour. Either way it stands at the
+  controls' one height, and pressed it is flush.
+- A new static strip of tape is stuck on, with `--lift-stuck`, never raised.
 - A new name from a vocabulary is a strip of label tape.
 - A new fact about the VIN itself is a row on a tag, under its group's band.
 - A new connection between two things is a line of pinstripe tape.
