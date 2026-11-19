@@ -22,13 +22,17 @@ its place in it.
 | 3. Wireframes, part-number mode (#325) | `Wire-Part-Desktop`, `Wire-Part-Phone`, `Wire-Part-States` |
 | 4. Textures (#322 to #325) | `Texture-SecondTape` (the second tape and the elevation rule), then one frame a slice: `Texture-Slice1` to `Texture-Slice4` |
 
+Rows 1 and 4 are drawn twice: each frame has a twin beside it in the dark
+scheme, in a file named with `-Dark`. A frame is fixed to its scheme; none has
+a switch. The wireframes in rows 2 and 3 have no colour and no twin.
+
 ## This snapshot
 
-Canvas version `1795121667-f3d3`, read on 2026-11-19.
+Canvas version `1795122344-2681`, read on 2026-11-19.
 
 ## Rebuilding a canvas from a snapshot
 
-Publish this folder as the root of a new Design canvas. Nine frames
+Publish this folder as the root of a new Design canvas. Nine frames and their dark twins
 (`Main`, `Materials`, `Diagram`, `Controls` and the five `Texture-` frames)
 draw their textures from two
 images uploaded to the original canvas, at addresses that resolve only there:
@@ -39,7 +43,7 @@ images uploaded to the original canvas, at addresses that resolve only there:
 | `/_blob/8df67eb7edb3679ce1a61d297a1fcd76` | `pkg/ui/static/paper.svg` |
 
 Upload both to the new canvas and replace each address with the one the
-upload returns. Without that, those nine frames draw with no texture.
+upload returns. Without that, those eighteen frames draw with no texture.
 
 ## Data
 

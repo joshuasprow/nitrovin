@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The second tape: aluminum embossing tape, dark</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.root{--steel:#6f7b86;--steel-dark:#58626c;--on-metal:#232930;--faint:#a9bccb;--muted:#47515c;
+  --label-font:"Arial Black","Helvetica Neue",system-ui,sans-serif;--cell-font:ui-monospace,monospace;
+  --metal:url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0/600px 120px,linear-gradient(#eef1f4,#b4bec7 55%,#cdd5dc);
+  --raised:inset 0 1px 0 #fff,0 2px 0 var(--steel);
+  --emboss:0 1px 0 rgb(255 255 255/.9),0 -1px 1px rgb(0 0 0/.45);
+  --manila:url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0/200px 200px,linear-gradient(#efdcae,#e2c88f);
+  --on-manila:#2b2418;--manila-patch:#c39a5c;
+  --tape:repeating-linear-gradient(0deg,transparent 0 2px,rgb(8 7 15/.13) 2px 3px),linear-gradient(#30363d,#171a1e);--tape-edge:#050607;--tape-lit:#69727c;--on-tape:#f6f8fa;
+  --tape-emboss:-1px -1px 0 rgb(8 7 15/.67),1px 1px 0 rgb(255 255 255/.33),0 2px 2px rgb(8 7 15/.53);
+  --tape-lift:0 3px 4px rgb(8 7 15/.35)}
+.root{--bg:#dcecf7;--fg:#14181d}
+.root[data-scheme="dark"]{--bg:#16222d;--fg:#eef2f5;--muted:#a9b6c2;--faint:#3a4a5c}
+.v-a{--sb:repeating-linear-gradient(0deg,transparent 0 2px,rgb(8 7 15/.07) 2px 3px),var(--metal);--sbp:repeating-linear-gradient(0deg,transparent 0 2px,rgb(8 7 15/.1) 2px 3px),linear-gradient(#aab4bd,#c9d1d8);--sc:var(--on-metal);--sts:var(--emboss);--sbd:var(--steel);--sbt:#fff;--sbb:var(--steel-dark);--sr:2px;--sn:rgb(35 41 48/.55)}
+.v-b{--sb:linear-gradient(#fbfaf6,#efece2);--sbp:linear-gradient(#e2ded2,#ece9df);--sc:#14181d;--sts:none;--sbd:#b9b3a3;--sbt:#fff;--sbb:#a59f8f;--sr:4px;--sn:rgb(20 24 29/.5)}
+.v-c{--sb:repeating-linear-gradient(0deg,transparent 0 2px,rgb(8 7 15/.13) 2px 3px),linear-gradient(#66717c,#48515a);--sbp:repeating-linear-gradient(0deg,transparent 0 2px,rgb(8 7 15/.18) 2px 3px),linear-gradient(#48515a,#5b6570);--sc:#f6f8fa;--sts:var(--tape-emboss);--sbd:#2f363d;--sbt:#98a3ae;--sbb:#262c32;--sr:2px;--sn:rgb(255 255 255/.5)}
+.cap{margin:0 0 10px;font:900 11px/1.3 var(--label-font);letter-spacing:.08em;text-transform:uppercase;color:var(--fg)}
+.cap span{font:400 13px/1.4 system-ui,sans-serif;letter-spacing:0;text-transform:none;color:var(--muted);margin-left:10px}
+.pair{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:28px;align-items:start}
+.types{display:flex;flex-wrap:wrap;align-items:stretch;gap:10px}
+.s2{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 14px;font:900 14px var(--cell-font);letter-spacing:.06em;cursor:pointer;color:var(--sc);text-shadow:var(--sts);background:var(--sb);border:1px solid var(--sbd);border-top-color:var(--sbt);border-bottom:3px solid var(--sbb);border-radius:var(--sr);box-shadow:var(--tape-lift)}
+.s2 .n{padding:1px 7px;border:1px solid var(--sn);border-radius:9px;font-size:11px;text-shadow:none}
+.s2[aria-pressed="true"]{transform:translateY(2px);border-bottom-width:1px;box-shadow:none;background:var(--sbp)}
+.rec{display:inline-flex;align-items:stretch}
+.rec .tab{display:flex;align-items:center;padding:0 8px;font:700 10px var(--cell-font);letter-spacing:.08em;text-transform:uppercase;color:var(--sc);text-shadow:var(--sts);background:var(--sb);border:1px solid var(--sbd);border-top-color:var(--sbt);border-bottom:3px solid var(--sbb);border-right-color:var(--sn);border-radius:var(--sr) 0 0 var(--sr);box-shadow:var(--tape-lift)}
+.rec .s2{border-radius:0 var(--sr) var(--sr) 0;border-left:0}
+.key{display:inline-flex;align-items:center;min-height:44px;padding:0 .9rem;font:900 11px var(--label-font);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;color:var(--on-metal);text-shadow:0 1px 0 rgb(255 255 255/.8);background:var(--metal);border:1px solid var(--steel);border-radius:3px;box-shadow:var(--raised)}
+.name{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;font:900 14px var(--cell-font);letter-spacing:.06em;color:var(--on-tape);text-shadow:var(--tape-emboss);background:var(--tape);border:1px solid var(--tape-edge);border-top-color:var(--tape-lit);border-bottom-width:3px;border-radius:2px;box-shadow:var(--tape-lift)}
+.mtag{display:grid;min-width:0;filter:drop-shadow(0 4px 5px rgb(8 7 15/.28))}
+.mtag-in{display:flex;flex-direction:column;box-sizing:border-box;height:150px;padding:28px .7rem 0;min-width:0;color:var(--on-manila);
+  background:radial-gradient(circle at 50% 14px,transparent 4px,var(--manila-patch) 4.5px 10px,transparent 10.5px),var(--manila);
+  -webkit-clip-path:polygon(16px 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%,0 16px);clip-path:polygon(16px 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%,0 16px);
+  -webkit-mask-image:radial-gradient(circle at 50% 14px,transparent 3.5px,#000 4px);mask-image:radial-gradient(circle at 50% 14px,transparent 3.5px,#000 4px)}
+.numtape{display:flex;justify-content:space-between;align-items:baseline;margin:0 -.7rem .6rem;padding:.3rem .7rem;color:var(--on-tape);text-shadow:var(--tape-emboss);background:var(--tape);border-top:1px solid var(--tape-lit);border-bottom:3px solid var(--tape-edge)}
+.numtape b{font:900 18px var(--cell-font);letter-spacing:.06em}
+.numtape span{font:700 12px var(--cell-font)}
+.opt{margin:0;font-weight:600;line-height:1.25}
+.stk{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:auto -.7rem 0;min-height:40px;padding:0 .7rem;font:900 12px var(--cell-font);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;color:var(--sc);text-shadow:var(--sts);background:var(--sb);border:0;border-top:1px solid var(--sbt);border-bottom:3px solid var(--sbb)}
+.stk svg{flex:none;width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.5}
+.rule{margin:0;border:0;border-top:2px solid var(--faint)}
+/* elevation: an unpressed button stands higher than anything static beside it; tape and key stand equally high */
+.root{--lift-stuck:0 2px 3px rgb(8 7 15/.32);--lift-raised:0 2px 0 var(--steel-dark),0 6px 9px rgb(8 7 15/.38)}
+.strip,.name{box-shadow:var(--lift-stuck)}
+.pt,.s2,.rec .tab{border-bottom-width:1px}
+.pt,.s2,.rec .tab,.key,.mbtn{box-shadow:inset 0 1px 0 #fff,var(--lift-raised)}
+.pt[aria-pressed="true"],.s2[aria-pressed="true"]{transform:translateY(2px);box-shadow:inset 0 2px 3px rgb(8 7 15/.3)}
+.stk{box-shadow:inset 0 1px 0 #fff,inset 0 -2px 0 var(--steel-dark)}
+.stk[aria-expanded="true"]{box-shadow:inset 0 2px 3px rgb(8 7 15/.3)}
+.stk.none{box-shadow:none}
+</style>
+</helmet>
+<div class="root" data-scheme="dark" style="width: 1100px; height: 640px; box-sizing: border-box; padding: 40px; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; display: flex; flex-direction: column; gap: 26px">
+
+<div>
+<h1 style="margin: 0; font: 900 21px/1.2 'Arial Black', 'Helvetica Neue', system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase">The second tape: aluminum embossing tape</h1>
+<p style="margin: 6px 0 0; color: var(--muted); max-width: 900px">The seam: black tape means a name, and metal means a control. A part type and a stock strip are both, and each time one side was picked. The second tape means "a name you can press". Black tape stays for a name that does nothing, and a key of metal for a control that names nothing.</p>
+</div>
+
+<section>
+<p class="cap">Where the seam shows today <span>A name that does nothing, three names that press, and a control that names nothing, all but one in the same black.</span></p>
+<div class="types">
+<span class="name">demo-vehicles · Ford F150</span>
+<button type="button" class="name" style="cursor: pointer">Alternator</button>
+<button type="button" class="name" style="cursor: pointer">Brake Rotor, Front</button>
+<button type="button" class="name" style="cursor: pointer">Stock · 2 shelf · 2 yard</button>
+<button type="button" class="key">[N] more</button>
+</div>
+</section>
+
+<hr class="rule">
+
+<section class="v-a">
+<p class="cap">Chosen: aluminum embossing tape <span>The tape, in the plate's metal: raised letters, the tape's ridges, the monospace face in its own case. It sits exactly on the seam, half tape and half metal.</span></p>
+<div class="pair">
+<div class="types">
+<span class="rec"><span class="tab">Recent</span><button type="button" class="s2" aria-pressed="true">Alternator<span class="n">3</span></button></span>
+<button type="button" class="s2" aria-pressed="false">Brake Rotor, Front<span class="n">1</span></button>
+<button type="button" class="s2" aria-pressed="false">Brake Rotor, Rear<span class="n">1</span></button>
+<button type="button" class="key">[N] more</button>
+</div>
+<div class="mtag"><div class="mtag-in"><div class="numtape"><b>DEMO-1001</b><span>2015–2017</span></div><p class="opt">3.5L V6 EcoBoost</p><button type="button" class="stk"><span>Stock · 2 shelf · 2 yard</span><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 4l5 5 5-5"></path></svg></button></div></div>
+</div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1100,"height":640}}'>
+class Component extends DCLogic {
+renderVals() {
+let d = this.props.dark;
+if (d === undefined) {
+try { d = JSON.parse(document.querySelector('script[data-dc-script]').getAttribute('data-props')).dark.default; } catch (e) {}
+}
+return { scheme: (d === true || d === 'true') ? 'dark' : 'light' };
+}
+}
+</script>
+</body>
+</html>
