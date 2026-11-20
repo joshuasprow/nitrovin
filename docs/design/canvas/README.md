@@ -37,12 +37,16 @@ own markup, captured from a server with the demo set, and the rules of
 colour-scheme queries are resolved for that box: the page at 1280, 768 and
 390 wide.
 
+`scripts/canvas.sh` builds the frames, and its header says how. No frame is
+edited by hand: a change to the page is a rerun, and the diff of this folder
+is what to publish.
+
 The wireframes and texture frames that proposed the fitment slices (#320 to
 #325) are removed from the canvas. This folder's history holds them.
 
 ## This snapshot
 
-Canvas version `1795194881-1a1f`, published on 2026-11-20.
+Canvas version `1795195411-1ca1`, published on 2026-11-20.
 
 ## Rebuilding a canvas from a snapshot
 

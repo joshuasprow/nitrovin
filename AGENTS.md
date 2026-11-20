@@ -58,7 +58,7 @@ flowchart LR
 | `docs/adr/`, `docs/deviations/`, [GLOSSARY.md](GLOSSARY.md) | Decisions, registered parity deviations, and project vocabulary. |
 | `testdata/parity/<month>/` | The frozen parity key. |
 | `testdata/vocab/` | The shared synthetic vocabulary fixture. The vehicle vocabulary is `fleet.jsonl`; `yard` names only a stock kind. |
-| `scripts/` | The oracle, refresh, release, tool pins, C library and Service Worker builds. A script's header comment is its usage text. |
+| `scripts/` | The oracle, refresh, release, tool pins, C library and Service Worker builds, and the design canvas's frames. A script's header comment is its usage text. |
 
 ## Development Commands
 
@@ -149,6 +149,7 @@ UI that is not built yet is drawn on a Claude Design canvas before it is specifi
   1. Read the canvas's files down into the snapshot folder before any edit. The page saves hand edits as new versions and sends no notice, so `git diff` after the read is the drift check.
   2. Commit what the read changed, as the canvas's own edits.
   3. Edit, publish, then commit the published state.
+- **The frames are built, never drawn by hand.** `scripts/canvas.sh` rebuilds all twelve from the running page and `pkg/ui/static/ui.css`. A PR that changes the stylesheet or the templates reruns it; `git diff docs/design/canvas` shows which frames moved, and those are the files to publish. Two runs on one checkout write the same bytes.
 - **Never force a publish.** A refused publish means the page is newer: read again and merge.
 - **When a slice ships, its frames are folded into the settled frames or removed.** A proposal left on the canvas after its slice ships reads as undecided.
 - **Snapshot when an issue is filed against a frame**, so the issue's wording has something fixed behind it.
