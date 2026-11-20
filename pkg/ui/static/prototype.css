@@ -85,3 +85,8 @@
 }
 .proto .pgl .prow { justify-content: flex-start; }
 .proto .pgl .prow .n { margin-left: auto; }
+
+/* No bracket ends but the plate's own: a line into a strip of names or
+   into the Parts that fit strip runs straight down to the tape. */
+.seg::before { display: none; }
+.seg::after { height: calc(var(--lead) + var(--prev) + 1px); }
