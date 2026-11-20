@@ -130,13 +130,17 @@ mode is in the URL, and nothing is remembered between visits.
 - **The switch** sits over the plate's leading edge: two keys of metal
   joined, "VIN" and "Part number", a rivet each. Each is a link to the page
   in its mode with nothing on the plate, so it works without a script; the
-  mode the page is in is pressed, flush. With a script the other mode's
-  plate and answer are swapped in place, a history entry of their own.
+  mode the page is in is pressed, flush. With a script the key's plate,
+  empty, and its answer are swapped in place, the pressed key's too, a
+  history entry of their own.
   Under 34 rem the switch is the plate's width, the keys halves of it.
 - **The URL** names the mode by the fit request's own fitment key:
   `from.fitment.type`, `from.fitment.number` and, for a sided part,
-  `from.fitment.side`, as the VIN's is `from.vin`. A URL is one mode: a VIN
-  beside a fitment key is refused in words.
+  `from.fitment.side`, as the VIN's is `from.vin`, and the request is the
+  fit request's own query, refused in its words. A URL is one mode: one
+  naming a VIN beside a fitment key is the VIN's plate, empty, saying
+  both ("This link names a VIN, …, and a part number, …") over a link to
+  each mode with its own.
 - **The plate** is the VIN plate unchanged: its metal, its screws, its
   ledge, its focus ring. It holds two fields on a grid of three, the part
   type in the first and the number in the other two, under labels and
@@ -181,15 +185,19 @@ mode is in the URL, and nothing is remembered between visits.
   and location; under 34 rem they scroll sideways as a candidate's do.
   The rows are the page's, paged with the vehicles; "Show all" is every one.
 - **The vehicles** are the page's own table panel beside the tag, with no
-  line or notch to it: the catalog's name for each vehicle, its years, its
-  option text verbatim, and its names in the vehicle vocabularies loaded,
-  each a strip of label tape after its vocabulary's name. A vehicle is no
-  link. More than a page (30) are a "Next page" link away. On a narrow
-  page each vehicle is a row of its own under the table's caption (name
-  and years, then options, then names), and under 34 rem the table
-  follows the tag.
+  line or notch to it: the catalog's name for each vehicle (a vPIC
+  catalog's as VIN mode names one, "vPIC model 1801 (F-150)", where the
+  answer carries the name), its years, its option text verbatim, and its
+  names in the vehicle vocabularies loaded, each a strip of label tape
+  after its vocabulary's name. While the server holds the catalog, a
+  browser names them in the server's vocabularies alone, which the
+  server's fit knows. A vehicle is no link. More than a page (30) are a
+  "Next page" link away. On a narrow page each vehicle is a row of its
+  own under the table's caption (name and years, then options, then
+  names), and under 34 rem the table follows the tag.
 - **A sided part** asked for with no side is asked on each side: one found
-  is the answer; several are links, one to each side.
+  is the answer, and its side stays on every link from it; several are
+  links, one to each side.
 - **Nothing of a VIN's answer** is drawn in this mode: no cards, no "Also
   known as", no lines to them, no parts that fit.
 
