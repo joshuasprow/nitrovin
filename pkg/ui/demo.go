@@ -32,8 +32,13 @@ import (
 // per nitrovin holds (ADR 0023): the offer is refused, in words, while
 // the server or the browser holds another catalog. Remove demo removes
 // every file of it at once.
+//
+// demo/vpic holds a second catalog of the same vehicles, as vPIC's own
+// makes, models and extensions (#350), for a server and the tests:
+// `nitrovin serve` loads it in place of demo-catalog. It is not embedded,
+// so it is neither published nor part of Load demo.
 
-//go:embed demo
+//go:embed demo/*.jsonl
 var demoFS embed.FS
 
 // demoDir is the demo set's directory in the package, and in the

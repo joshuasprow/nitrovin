@@ -23,7 +23,10 @@
 # ones, on the strip fixture (TestPartTypeStrip, in pkg/ui and in the same
 # Chrome); the plate's part-number mode, its part, vehicles and stock, by
 # the server and the browser alike (TestPagePartMode, TestLibraryPartMode)
-# and in the same Chrome (TestPartMode); and the packages it runs built
+# and in the same Chrome (TestPartMode); the demo set's vPIC catalog
+# (pkg/ui/demo/vpic) checked beside it (TestDemoCheck), on each surface of
+# the page (TestPageDemoVPIC) and never in Load demo
+# (TestDemoVPICNotOffered); and the packages it runs built
 # for js/wasm. The
 # same decodes on the engine's output, and the CLI's decodes of the answer
 # key, need an artifact: import.yml's artifact job runs them.
@@ -111,6 +114,7 @@ jobs:
             "pkg/nitrovin TestFitConfirmed" "cmd/nitrovin TestFitConfirmed"
             "pkg/nitrovin "{TestListCatalogVehicle,TestListCatalogVPIC}
             "pkg/ui "{TestLibraryDemoFit,TestDemoPanel,TestPageFit,TestCatalogEntries,TestLibraryPageFit,TestPageStock,TestLibraryStockPage,TestPartTypeStrip,TestPagePartMode,TestLibraryPartMode}
+            "pkg/ui "{TestPageDemoVPIC,TestDemoVPICNotOffered}
             "cmd/nitrovin-epa "{TestBuild,TestEntry,TestCuratedLoadsClean}
           )
           status=0

@@ -52,7 +52,8 @@ func validLine(s *jsonschema.Schema, line string) error {
 }
 
 // TestSchema: every line of the fixture, and of the demo set
-// (pkg/ui/demo), which Open reads without a fault, validates against
+// (pkg/ui/demo, its vPIC catalog in pkg/ui/demo/vpic among it), which
+// Open reads without a fault, validates against
 // vocabulary.schema.json, and lines Read refuses alone break it too.
 func TestSchema(t *testing.T) {
 	s := lineSchema(t)
@@ -81,10 +82,11 @@ func TestSchema(t *testing.T) {
 		t.Fatal("no testdata/vocab/partmode/*.jsonl")
 	}
 	demo, _ := filepath.Glob("../../pkg/ui/demo/*.jsonl")
-	if len(demo) == 0 {
-		t.Fatal("no pkg/ui/demo/*.jsonl")
+	vpicDemo, _ := filepath.Glob("../../pkg/ui/demo/vpic/*.jsonl")
+	if len(demo) == 0 || len(vpicDemo) == 0 {
+		t.Fatal("no pkg/ui/demo/*.jsonl or pkg/ui/demo/vpic/*.jsonl")
 	}
-	for _, p := range slices.Concat(paths, drift, fitment, stockFiles, stockDrift, stockLive, stockMore, strip, partMode, demo) {
+	for _, p := range slices.Concat(paths, drift, fitment, stockFiles, stockDrift, stockLive, stockMore, strip, partMode, demo, vpicDemo) {
 		data, err := os.ReadFile(p)
 		if err != nil {
 			t.Fatal(err)
