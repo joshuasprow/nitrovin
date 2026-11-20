@@ -73,15 +73,15 @@
       "y": 0
     },
     "Proposal-PartType-1280-Dark.dc.html": {
-      "h": 2200,
+      "h": 2330,
       "page": "proposals",
       "title": "Proposal: the part type field in the strip, 1280 wide, dark",
       "w": 1280,
       "x": 0,
-      "y": 2890
+      "y": 2940
     },
     "Proposal-PartType-1280.dc.html": {
-      "h": 2200,
+      "h": 2330,
       "page": "proposals",
       "title": "Proposal: the part type field in the strip, 1280 wide, light",
       "w": 1280,
@@ -89,15 +89,15 @@
       "y": 0
     },
     "Proposal-PartType-390-Dark.dc.html": {
-      "h": 2770,
+      "h": 2820,
       "page": "proposals",
       "title": "Proposal: the part type field in the strip, 390 wide, dark",
       "w": 470,
       "x": 2288,
-      "y": 2890
+      "y": 2940
     },
     "Proposal-PartType-390.dc.html": {
-      "h": 2770,
+      "h": 2820,
       "page": "proposals",
       "title": "Proposal: the part type field in the strip, 390 wide, light",
       "w": 470,
@@ -105,15 +105,15 @@
       "y": 0
     },
     "Proposal-PartType-768-Dark.dc.html": {
-      "h": 2620,
+      "h": 2670,
       "page": "proposals",
       "title": "Proposal: the part type field in the strip, 768 wide, dark",
       "w": 848,
       "x": 1360,
-      "y": 2890
+      "y": 2940
     },
     "Proposal-PartType-768.dc.html": {
-      "h": 2620,
+      "h": 2670,
       "page": "proposals",
       "title": "Proposal: the part type field in the strip, 768 wide, light",
       "w": 848,
