@@ -24,6 +24,14 @@ fragment, so every answer redraws it with its own request first. */}}
 <dt>Answer</dt>
 <dd class="actions">{{template "json" .}} <a href="{{.Decode.NHTSA}}">NHTSA's decoder</a></dd>
 </dl>
+{{else}}
+<h3 id="this-request">This lookup</h3>
+<dl class="snippets">
+<dt>URL</dt>
+<dd><div class="copyable"><pre tabindex="0" class="wrap" id="copy-url" data-copy="this page's URL">{{.URL}}</pre></div></dd>
+<dt>Answer</dt>
+<dd class="actions">{{template "json" .}}</dd>
+</dl>
 {{end}}{{end}}
 <h3 id="install">Install</h3>
 <dl class="snippets">
