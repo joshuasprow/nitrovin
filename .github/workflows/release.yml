@@ -102,6 +102,8 @@ jobs:
     # A tag's run is one shard, all. Anything else runs two, fit and rest:
     # BenchmarkFit's fixtures and loads take half of all's eight minutes.
     strategy:
+      # Each shard's rows stand on their own: one failing cancels no other.
+      fail-fast: false
       matrix:
         shard: ${{ fromJSON(github.event_name == 'push' && '["all"]' || '["fit", "rest"]') }}
     runs-on: ubuntu-24.04
