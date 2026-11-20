@@ -4,16 +4,16 @@ go 1.27
 
 require (
 	github.com/andybalholm/brotli v1.3.0
-	// regexp2 (MIT) reads the published schemas' patterns as ECMA-262, the
-	// dialect JSON Schema names, where Go's regexp is RE2
-	// (pkg/vocab/schema_test.go): tests only, no binary links it.
-	// jsonschema's own tests already required it.
-	github.com/dlclark/regexp2 v1.11.0
 	// chromedp drives headless Chrome over the DevTools protocol for
 	// TestForm's browser runs (cmd/nitrovin/browser_test.go): tests only, no
 	// binary links it. go-json-experiment below is its own.
 	github.com/chromedp/cdproto v0.159.0
 	github.com/chromedp/chromedp v0.23.0
+	// regexp2 (MIT) reads the published schemas' patterns as ECMA-262, the
+	// dialect JSON Schema names, where Go's regexp is RE2
+	// (pkg/vocab/schema_test.go): tests only, no binary links it.
+	// jsonschema's own tests already required it.
+	github.com/dlclark/regexp2 v1.11.0
 	// pgx (MIT) reads a stock connector's relation at request time
 	// (ADR 0020). Only pkg/stock/pg imports it, and only cmd/nitrovin
 	// imports that: the C library and the WebAssembly build carry no
@@ -30,6 +30,10 @@ require (
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
 	github.com/zeebo/blake3 v0.2.4
 	go.yaml.in/yaml/v3 v3.0.6
+	// fallback (BSD-3-Clause) carries Mozilla's CA roots for TLS where the
+	// system has none: the image is the binary on scratch (#358). Only
+	// cmd/nitrovin imports it.
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20261115193255-739070949446
 )
 
 require (
