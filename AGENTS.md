@@ -212,3 +212,4 @@ UI that is not built yet is drawn on a Claude Design canvas before it is specifi
   | `cmd/nitrovin-epa/testdata/vehicles.jsonl` | `go test ./cmd/nitrovin-epa -update` |
 
 - **Not gated:** `pkg/decoder` coverage is reported only. CI runs no fuzzing (`FuzzPrimitives`, `FuzzOpenCompiled`). Benchmarks (`bench/`) gate nothing. `go test -count=1 ./scripts` tests `release.sh`.
+  - **Release's bench:** a tag runs every benchmark on one runner at the default `-benchtime`, and that table is the release notes' footer. A pull request or a dispatch without a tag runs two shards, `BenchmarkFit` and the rest, each on its own runner at `-benchtime 100ms`: about three minutes, not eight. Their table, in `bench-table`'s summary, compares only roughly with a tag's.

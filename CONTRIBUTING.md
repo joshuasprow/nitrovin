@@ -1053,12 +1053,15 @@ Related vehicles are their costliest request: at 1%, 25 ms compiled and
 36 ms as JSON Lines with no year (`-benchtime 10s`; at the default 1 s a p99
 is about the slowest of 85 requests), in at most 26 reads. `TestRelatedReadsSpread`
 holds their reads in CI, on a small catalog laid out as the full-scale one
-reads. `release.yml`'s bench job runs them on its runner, and
-`bench/vocab/notes` turns the output into the table the release notes end
-with, beside the budgets, which are stated for the reference machine (an
-Apple M5 Pro). Nothing gates on it: runner timings are too noisy, and a
-failed bench job leaves the table out rather than holding the release.
-Dispatched, or on a pull request, the table is the bench job's summary.
+reads. On a tag, `release.yml`'s bench job runs them all on its runner,
+and `bench/vocab/notes`, in its bench-table job, turns the output into the
+table the release notes end with, beside the budgets, which are stated for
+the reference machine (an Apple M5 Pro). Nothing gates on it: runner
+timings are too noisy, and a failed bench job leaves the table out rather
+than holding the release. Dispatched without a tag, or on a pull request,
+the bench runs in two shards, each on its own runner, `BenchmarkFit` and
+every other, at `-benchtime 100ms`, and the table is bench-table's summary:
+a check that every benchmark runs, its numbers rougher than a tag's.
 
 To reproduce the table, with the EPA vocabulary of the data month `go.mod`
 pins:
