@@ -83,3 +83,5 @@
   .proto-bar { padding: 4px 8px; font-size: 12px; }
   .proto-bar .proto-state { display: none; }
 }
+.proto .pgl .prow { justify-content: flex-start; }
+.proto .pgl .prow .n { margin-left: auto; }

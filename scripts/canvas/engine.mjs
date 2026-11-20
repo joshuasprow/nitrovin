@@ -113,7 +113,7 @@ const fixBody = (b) => b.replace(/url\("?[^")]*?(brushed\.svg|paper\.svg)"?\)/g,
 
 // ---- parsing the stylesheet's source: the CSSOM's own serialisation of a
 // shorthand holding var() loses it, so the declarations are kept as written.
-function flatten(src) {
+export function flatten(src) {
   src = src.replace(/\/\*[\s\S]*?\*\//g, '');
   const out = [];
   const walk = (text, ctx) => {
