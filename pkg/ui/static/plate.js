@@ -613,11 +613,12 @@
   // With it:
   //
   // - a part type a page presses is kept in this browser (the last 8,
-  //   newest first, by its spine). Up to three the vehicle has, the
-  //   pressed one aside, sit under the picker, in the order they were
-  //   opened; part-number mode's dialog lists every one it has under
-  //   "Opened recently", whose Clear recent forgets them, as the VINs
-  //   menu's forgets them and the VINs;
+  //   newest first, by its spine). Up to two the vehicle has, the
+  //   pressed one aside, sit beside the picker on its tape where the page
+  //   is wide enough to show them (ui.css), in the order they were
+  //   opened; the list, and part-number mode's dialog, lead with every
+  //   one it has under "Opened recently", whose Clear recent forgets
+  //   them, as the VINs menu's forgets them and the VINs;
   // - the filter narrows the list as it is typed, by name, hiding a
   //   heading left with none;
   // - pressing the pressed part type in the list shuts the list and
@@ -625,7 +626,7 @@
   //
   // Nothing is kept when storage fails.
   const PARTS = 'nitrovin.recent-parts';
-  const UNDER = 3;
+  const UNDER = 2;
   const recentParts = () => {
     try {
       return JSON.parse(localStorage.getItem(PARTS) || '[]').filter((r) => r && r.spine && r.id).slice(0, KEPT);

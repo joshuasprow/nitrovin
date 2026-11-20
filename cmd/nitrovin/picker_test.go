@@ -24,8 +24,9 @@ var stripFixture = abs("../../testdata/vocab/strip")
 // it. Pressing the pressed one in the list changes nothing; the key
 // clears it. Without JavaScript there is no filter and nothing is recent.
 // With it, the filter narrows the list and a filter matching nothing says
-// so; a part type opened before sits under the picker, never the pressed
-// one, and pressing it there presses it; the focus stays on the picker.
+// so; a part type opened before leads the list, and at 1280 sits beside
+// the picker on its tape, never the pressed one, and pressing it there
+// presses it; the focus stays on the picker.
 // axe audits each state. CI (CI set) needs the browser; a machine without
 // one skips.
 func TestPartTypePicker(t *testing.T) {
@@ -90,7 +91,7 @@ func TestPartTypePicker(t *testing.T) {
 					t.Errorf("the list's filter is shown %d times with scripts %v", n, js)
 				}
 				if eval[bool](tb, `CSS.supports("anchor-name: --a")`) {
-					off := eval[[]float64](tb, `(() => { const p = document.querySelector(".ptsel").getBoundingClientRect(), d = document.getElementById("part-types").getBoundingClientRect();
+					off := eval[[]float64](tb, `(() => { const p = document.querySelector(".ptkeys").getBoundingClientRect(), d = document.getElementById("part-types").getBoundingClientRect();
 						return [Math.abs(d.left - p.left), Math.abs(d.width - p.width), Math.min(d.top, innerHeight - d.bottom, d.left, innerWidth - d.right),
 							Math.min(Math.abs(d.top - p.bottom), Math.abs(p.top - d.bottom))]; })()`)
 					if off[0] > 1 || off[1] > 1 || off[2] < 0 || off[3] > 8 {
@@ -157,14 +158,29 @@ func TestPartTypePicker(t *testing.T) {
 				}
 				if js {
 					if got := eval[[]string](tb, `[...document.querySelectorAll(".ptrecents:not([hidden]) li")].map((li) => li.dataset.part)`); !slices.Equal(got, []string{"water-pump"}) {
-						t.Errorf("Fog Lamp pressed, under the picker: %q; want Water Pump alone", got)
+						t.Errorf("Fog Lamp pressed, beside the picker: %q; want Water Pump alone", got)
 					}
-					tb.audit(name + ", a recent part type under the picker")
+					// On the tape where the page is wide enough to show it;
+					// on a phone, at the head of the list.
+					onTape := eval[bool](tb, `document.querySelector(".ptrecents").getClientRects().length > 0`)
+					if onTape != (size.width > 736) {
+						t.Errorf("at %d wide the recent part types are on the tape: %v", size.width, onTape)
+					}
+					tb.audit(name + ", a recent part type")
 					settle()
-					tb.do(chromedp.Click(chromedp.CSS(`.ptrecents li[data-part="water-pump"] a.ptype`)))
+					if onTape {
+						tb.do(chromedp.Click(chromedp.CSS(`.ptrecents li[data-part="water-pump"] a.ptype`)))
+					} else {
+						tb.do(chromedp.Click(chromedp.CSS(`#pick-type`)))
+						tb.wait(`#part-types:popover-open`)
+						if got := eval[[]string](tb, `[...document.querySelectorAll("#part-types .ptrecent:not([hidden]) li")].map((li) => li.dataset.part)`); !slices.Equal(got, []string{"fog-lamp", "water-pump"}) {
+							t.Errorf("the list's Opened recently: %q; want Fog Lamp then Water Pump", got)
+						}
+						tb.do(chromedp.Click(chromedp.CSS(`#part-types .ptrecent li[data-part="water-pump"] a.ptype`)))
+					}
 					tb.wait(`#answer[data-part="water-pump"] .ptrecents li[data-part="fog-lamp"]`)
 					if got := tb.at(); got != pump {
-						t.Errorf("Water Pump pressed under the picker, the tab is at %s; want %s", got, pump)
+						t.Errorf("Water Pump pressed among the recent, the tab is at %s; want %s", got, pump)
 					}
 				} else if n := tb.count(".ptrecents:not([hidden])"); n != 0 {
 					t.Error("without scripts a part type is recent")

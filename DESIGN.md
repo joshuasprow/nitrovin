@@ -413,8 +413,8 @@ pressed.
   off the window runs to the window's edge. A browser without scroll
   timelines draws no line between the names and the strip.
 - **The picker** is one key of the second tape on its own piece of label
-  tape, under the strip, at most 24 rem wide and the page's width on a
-  phone. Over its name it is labelled "Part type". With nothing pressed
+  tape, under the strip, the key at most 24 rem wide and the page's width
+  on a phone. Over its name it is labelled "Part type". With nothing pressed
   (no `part.id` in the URL) it reads "Choose a part type" with the count
   of the vehicle's part types in the part types' pill, and a blank strip
   under it asks for a choice. With one pressed it reads the part type's
@@ -425,7 +425,8 @@ pressed.
 - **The picker's list** is the part types dialog, hung from the picker at
   its width, over whatever is under it: it pushes nothing down. It has no
   head and no backdrop, and pressing outside it or Escape shuts it. It
-  holds the filter (with JavaScript), then every part type under its
+  holds the filter (with JavaScript), then those opened recently, then
+  every part type under its
   headings in one column, each a row of the second tape with its count at
   the far end. It is never taller than half the window less the picker,
   so it fits under the picker, or over it where there is no room under,
@@ -447,9 +448,12 @@ pressed.
   None matching says so under it.
 - **Recent part types**, with JavaScript, are kept in the browser as
   recent VINs are, the last eight, newest first, and nothing is kept when
-  storage fails. Up to three the vehicle has, never the pressed one, sit
-  under the picker after the word "Recent", each the second tape with its
-  count: pressing one presses it. The VINs menu's "Clear recent" forgets
+  storage fails. The picker's list leads with every one the vehicle has,
+  under "Opened recently" with its "Clear recent", at every width. Above
+  46 rem, up to two, never the pressed one, also sit on the picker's own
+  tape, beside it after a hairline and the word "Recent", each a smaller
+  strip of the second tape with its count: pressing one presses it. A
+  phone's tape is the picker alone. The VINs menu's "Clear recent" forgets
   them and the VINs.
 - **A choice keeps the focus on the picker**, from the list or from under
   it, and so does clearing.
@@ -494,7 +498,7 @@ pressed.
   come first: Not checked, Match the options yourself, No conditions, then
   Checked,
   then By redirect.
-- **This vehicle**, beside the picker, where a candidate on the page has
+- **This vehicle**, under the picker's tape, where a candidate on the page has
   option text: what the decode says of the vehicle that a catalog's
   options name, so the match is a glance and the reader never counts along
   the plate. After the words "This vehicle" in the label face, the Vehicle
@@ -503,7 +507,7 @@ pressed.
   each over an underline in the group's colour, as on the plate, with its
   position under it. It is ink on the ground, not a control. The page
   puts the two side by side and judges nothing: it marks no candidate as
-  the match. Under 46 rem it is a row of its own under the picker.
+  the match.
 - **More candidates** than a page holds (30) are a "Next page" link away.
 - **The stock strip** is the bottom edge of every tag, and the only part of
   it that presses: the second tape, "Stock · 2 shelf · 2 yard", naming only

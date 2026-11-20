@@ -65,7 +65,7 @@ export const frames = [
     heading: 'The fitment card',
     intro: 'The parts that fit: a strip naming the catalog\'s vehicle, a picker of its part types, and the candidates as manila tags on rails that come down from the picker. A candidate\'s stock strip opens its shelf and yard rows.',
     items: [
-      { vp: 'wide', url: vin(F150, '&part.id=alternator&fitment.number=DEMO-1001'), keep: ['#answer > .hang > .aka', '#fit'], cap: 'Picker, candidates, marks and stock', note: 'Alternator pressed: the picker names it and counts its candidates, and × beside it clears. Beside it, what the decode says of this vehicle, to match each candidate\'s options against. The first candidate\'s stock is open under its row.' },
+      { vp: 'wide', url: vin(F150, '&part.id=alternator&fitment.number=DEMO-1001'), keep: ['#answer > .hang > .aka', '#fit'], cap: 'Picker, candidates, marks and stock', note: 'Alternator pressed: the picker names it and counts its candidates, and × beside it clears. Under its tape, what the decode says of this vehicle, to match each candidate\'s options against. The first candidate\'s stock is open under its row.' },
       { vp: 'wide', url: vin(F150, '&part.id=alternator'), open: ['#part-types'], keep: ['#answer > .hang > .aka', '#fit'], style: 'padding-bottom: 300px', cap: 'The picker\'s list', note: 'Hung from the picker at its width, over the candidates: every part type under the part vocabulary\'s headings, in an order that never changes. The pressed one is flush; pressing it again changes nothing.' },
       { vp: 'wide', url: vin(SILV, '&part.id=brake-rotor-rear'), keep: ['#answer > .hang > .aka', '#fit'], cap: 'By redirect', note: 'One tag: the rails run from the riser to its eyelet. The mark names the part type the catalog lists it under.' },
       { row: [
@@ -92,7 +92,7 @@ export const frames = [
       { vp: 'wide', url: vin(F150), pre: showVocab, open: ['#vocabularies'], keep: ['#vocabularies'], cap: 'Vocabularies', note: 'A dashed box around a native file input, beside what the server holds; then a table of label-face headers over a steel rule, each row with a disclosure.' },
       { vp: 'wide', base: BARE, url: '/', pre: showVocab, open: ['#vocabularies'], keep: ['#vocabularies'], cap: 'Vocabularies, none loaded', note: 'The offer: one key and a hint.' },
       { h2: 'Forms and inputs' },
-      { vp: 'wide', url: vin(CAMRY), keep: ['#fit .fitstrip', '#fit .ptwrap'], visit: [vin(CAMRY, '&part.id=starter'), vin(CAMRY, '&part.id=headlamp')], cap: 'Picker and Recent', note: 'The picker asks for a part type and counts the vehicle\'s. Up to three opened recently sit under it.' },
+      { vp: 'wide', url: vin(CAMRY), keep: ['#fit .fitstrip', '#fit .ptwrap'], visit: [vin(CAMRY, '&part.id=starter'), vin(CAMRY, '&part.id=headlamp')], cap: 'Picker and Recent', note: 'The picker asks for a part type and counts the vehicle\'s. Up to three opened recently sit beside it on its tape.' },
       { vp: 'wide', url: vin(CAMRY), keep: ['#fit .fitstrip', '#fit .ptwrap', '#part-types'], open: ['#part-types'], style: 'padding-bottom: 560px', cap: 'The picker\'s list', note: 'A recessed filter, then each part type as a row of the second tape with its count at the far end.' },
       { vp: 'wide', url: vin('1FTEW1EG0FFA12345'), keep: ['#answer > .hang > .cards .card.g-check', '#answer .error', '#answer .errors', '#answer .problems'], cap: 'Errors', note: 'Error-colour text on the tag and under the names.' },
     ],
