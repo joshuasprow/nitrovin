@@ -118,6 +118,80 @@ text field laid over them.
 - **Narrow windows keep the plate.** Under 34 rem the cells wrap to two rows of
   nine, breaking after the check digit, so a cell stays wide enough for a
   finger. Under a coarse pointer the selection handles are the cells' own.
+- **The second mode changes none of this.** In VIN mode the plate, its
+  cells, its field and its answer are as above. The one addition is the
+  switch over the plate's leading edge (the plate's second mode, below).
+
+## Signature: the plate's second mode
+
+The plate also asks for a part number (#325). The page opens on a VIN; the
+mode is in the URL, and nothing is remembered between visits.
+
+- **The switch** sits over the plate's leading edge: two keys of metal
+  joined, "VIN" and "Part number", a rivet each. Each is a link to the page
+  in its mode with nothing on the plate, so it works without a script; the
+  mode the page is in is pressed, flush. With a script the other mode's
+  plate and answer are swapped in place, a history entry of their own.
+  Under 34 rem the switch is the plate's width, the keys halves of it.
+- **The URL** names the mode by the fit request's own fitment key:
+  `from.fitment.type`, `from.fitment.number` and, for a sided part,
+  `from.fitment.side`, as the VIN's is `from.vin`. A URL is one mode: a VIN
+  beside a fitment key is refused in words.
+- **The plate** is the VIN plate unchanged: its metal, its screws, its
+  ledge, its focus ring. It holds two fields on a grid of three, the part
+  type in the first and the number in the other two, under labels and
+  brackets in the Serial group's colour: a part number is the nearest thing
+  to a serial, and a seventh colour would need a reason. Under 34 rem the
+  fields stack, the brackets above give way, and each field's label is
+  struck into the plate over it.
+- **The part type** is a strip of the second tape stuck to the plate, raised
+  as a control, its name in its own case and a chevron at its trailing end.
+  It is a button that opens the part types dialog (a popover, so without a
+  script too), which lists every part type of the catalog: its spine's
+  entries, under the headings of a part vocabulary, with no count. Choosing
+  one closes the dialog, fills the field, and keeps the number; with a
+  script the focus goes back to the number. While the dialog is open the
+  strip is pressed. With no catalog it reads "No catalog loaded" and opens
+  the Vocabularies dialog.
+- **The number** is the form's own text field, struck into the plate in the
+  VIN's lettering (monospace 700, `--on-metal`, `--emboss`) over a 4 px
+  underline in the Serial group's mark, in the case it was typed. Empty, it
+  reads "Type its number" in the label face. Without a script Look up sends
+  it; with one the page asks as it is typed, 150 ms after the last key, in
+  the same history entry, and Look up (Enter) makes one of its own.
+- **Under the plate** the number's bracket opens upward, flat and faint
+  until a number is typed. One line of pinstripe tape in the Serial group's
+  colour runs from its foot to the eyelet of the part's tag: an SVG path in
+  the leader lines' 1020-unit box, from 680 (the number's third's centre)
+  to the tag's centre, 170 on a wide page and 255 on a narrow one, and on
+  down into the eyelet. Under 34 rem it runs straight down. No line is
+  drawn without a tag. Each width draws its own path; nothing is measured.
+- **The part** is a manila parts tag in the first third (the first half on
+  a narrow page), as a candidate's:
+  its number on black label tape under the eyelet with its part type's name
+  at the tape's trailing end, then its side, how many vehicles it fits in
+  the catalog, its note, and its stock strip along its bottom edge. A
+  retired number answers with the part that replaced it: its tag carries a
+  solid ink stamp, "Replaces" and the number asked for, and the catalog's
+  note on the retirement as a row.
+- **Its stock** behaves as a candidate's: the strip opens the shelf rows and
+  the yard vehicles among the vehicles listed, named in the URL as a
+  candidate's are (`fitment.number`). They hang under the tag, in its
+  third, notched up at it, shelf over yard, a row's fields under its id
+  and location; under 34 rem they scroll sideways as a candidate's do.
+  The rows are the page's, paged with the vehicles; "Show all" is every one.
+- **The vehicles** are the page's own table panel beside the tag, with no
+  line or notch to it: the catalog's name for each vehicle, its years, its
+  option text verbatim, and its names in the vehicle vocabularies loaded,
+  each a strip of label tape after its vocabulary's name. A vehicle is no
+  link. More than a page (30) are a "Next page" link away. On a narrow
+  page each vehicle is a row of its own under the table's caption (name
+  and years, then options, then names), and under 34 rem the table
+  follows the tag.
+- **A sided part** asked for with no side is asked on each side: one found
+  is the answer; several are links, one to each side.
+- **Nothing of a VIN's answer** is drawn in this mode: no cards, no "Also
+  known as", no lines to them, no parts that fit.
 
 ## Signature: aluminum plates
 
@@ -445,6 +519,12 @@ metal; a way on is a link.
   the vehicle and nothing for its year, with a link to its lines for the
   vehicle; nothing pressed; and a pressed part type with nothing for the
   vehicle.
+- **A part number's place**, the tag's and the table's: nothing typed yet,
+  asking for a part type and a number; a number with no part type, asking
+  for its part type; no catalog loaded, with the same key; no such part,
+  naming the catalog, the part type and the number; a part listed with no
+  vehicle, saying so; and a part on more than one side, with a link to
+  each.
 - **A card** not typed yet is a 2 px dashed outline (manila tags, above).
 - **A candidate's stock** with none for it is muted words over a dashed
   rule on its tag, and a column of its rows with none says "None." (the
