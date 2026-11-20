@@ -42,7 +42,7 @@ The wireframes and texture frames that proposed the fitment slices (#320 to
 
 ## This snapshot
 
-Canvas version `1795194252-f1e2`, published on 2026-11-20.
+Canvas version `1795194881-1a1f`, published on 2026-11-20.
 
 ## Rebuilding a canvas from a snapshot
 
