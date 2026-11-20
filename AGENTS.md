@@ -150,6 +150,7 @@ UI that is not built yet is drawn on a Claude Design canvas before it is specifi
   2. Commit what the read changed, as the canvas's own edits.
   3. Edit, publish, then commit the published state.
 - **Never force a publish.** A refused publish means the page is newer: read again and merge.
+- **When a slice ships, its frames are folded into the settled frames or removed.** A proposal left on the canvas after its slice ships reads as undecided.
 - **Snapshot when an issue is filed against a frame**, so the issue's wording has something fixed behind it.
 - **Uploaded images belong to one canvas.** A frame references them by an address that resolves only there. A canvas rebuilt from a snapshot needs them copied across and each reference rewritten. Their originals are `pkg/ui/static/brushed.svg` and `pkg/ui/static/paper.svg`.
 - **Frames follow the public-text rule:** the demo set's data only.

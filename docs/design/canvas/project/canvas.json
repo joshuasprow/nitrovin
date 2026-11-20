@@ -4,217 +4,84 @@
   "boards": {
     "Main.dc.html": {
       "h": 2100,
-      "title": "1.1 The VIN input, both modes, light",
+      "title": "The VIN input, both modes, light",
       "w": 1280,
       "x": 0,
       "y": 0
     },
     "Materials.dc.html": {
       "h": 1820,
-      "title": "1.2 Materials and elevation, light",
+      "title": "Materials and elevation, light",
       "w": 1280,
       "x": 1360,
       "y": 0
     },
     "Diagram.dc.html": {
       "h": 1940,
-      "title": "1.3 Cards, brackets and lines, light",
+      "title": "Cards, brackets and lines, light",
       "w": 1280,
       "x": 2720,
       "y": 0
     },
     "Controls.dc.html": {
       "h": 2850,
-      "title": "1.5 Dialogs, forms and inputs, light",
+      "title": "Dialogs, forms and inputs, light",
       "w": 1280,
       "x": 5440,
       "y": 0
     },
     "Main-Dark.dc.html": {
       "h": 2100,
-      "title": "1.1 The VIN input, both modes, dark",
+      "title": "The VIN input, both modes, dark",
       "w": 1280,
       "x": 0,
       "y": 3730
     },
     "Materials-Dark.dc.html": {
       "h": 1820,
-      "title": "1.2 Materials and elevation, dark",
+      "title": "Materials and elevation, dark",
       "w": 1280,
       "x": 1360,
       "y": 3730
     },
     "Diagram-Dark.dc.html": {
       "h": 1940,
-      "title": "1.3 Cards, brackets and lines, dark",
+      "title": "Cards, brackets and lines, dark",
       "w": 1280,
       "x": 2720,
       "y": 3730
     },
     "Controls-Dark.dc.html": {
       "h": 2850,
-      "title": "1.5 Dialogs, forms and inputs, dark",
+      "title": "Dialogs, forms and inputs, dark",
       "w": 1280,
       "x": 5440,
       "y": 3730
     },
-    "Wire-Vin-Desktop.dc.html": {
-      "h": 1382,
-      "title": "2.1 Wireframe, VIN mode: desktop 1280 × 800",
-      "w": 1280,
-      "x": 0,
-      "y": 7760
-    },
-    "Wire-Vin-Tablet.dc.html": {
-      "h": 1284,
-      "title": "2.2 Wireframe, VIN mode: tablet 768 × 1024",
-      "w": 768,
-      "x": 1360,
-      "y": 7760
-    },
-    "Wire-Vin-Phone.dc.html": {
-      "h": 1506,
-      "title": "2.3 Wireframe, VIN mode: phone 390 × 844",
-      "w": 430,
-      "x": 2208,
-      "y": 7760
-    },
-    "Wire-Vin-FirstView.dc.html": {
-      "h": 400,
-      "title": "2.4 Wireframe, VIN mode: first view",
-      "w": 1280,
-      "x": 2718,
-      "y": 7760
-    },
-    "Wire-Vin-Empty.dc.html": {
-      "h": 650,
-      "title": "2.5 Wireframe, VIN mode: empty states",
-      "w": 1280,
-      "x": 4078,
-      "y": 7760
-    },
-    "Wire-Vin-TypesDialog.dc.html": {
-      "h": 730,
-      "title": "2.6 Wireframe, VIN mode: part types dialog",
-      "w": 936,
-      "x": 5438,
-      "y": 7760
-    },
-    "Wire-Part-Desktop.dc.html": {
-      "h": 890,
-      "title": "3.1 Wireframe, part-number mode: desktop 1280 × 800",
-      "w": 1280,
-      "x": 0,
-      "y": 9686
-    },
-    "Wire-Part-Phone.dc.html": {
-      "h": 950,
-      "title": "3.2 Wireframe, part-number mode: phone 390 × 844",
-      "w": 430,
-      "x": 1360,
-      "y": 9686
-    },
-    "Wire-Part-States.dc.html": {
-      "h": 560,
-      "title": "3.3 Wireframe, part-number mode: other states",
-      "w": 1280,
-      "x": 1870,
-      "y": 9686
-    },
-    "Texture-SecondTape.dc.html": {
-      "h": 640,
-      "title": "4.1 Texture: the second tape and elevation, light",
-      "w": 1100,
-      "x": 0,
-      "y": 11056
-    },
-    "Texture-Slice1.dc.html": {
-      "h": 1270,
-      "title": "4.2 Texture, slice 1: part types and candidates (#322), light",
-      "w": 1100,
-      "x": 1180,
-      "y": 11056
-    },
-    "Texture-Slice2.dc.html": {
-      "h": 1180,
-      "title": "4.3 Texture, slice 2: the stock strip and its rows (#323), light",
-      "w": 1100,
-      "x": 2360,
-      "y": 11056
-    },
-    "Texture-Slice3.dc.html": {
-      "h": 1120,
-      "title": "4.4 Texture, slice 3: the capped strip, filter and dialog (#324), light",
-      "w": 1100,
-      "x": 3540,
-      "y": 11056
-    },
-    "Texture-Slice4.dc.html": {
-      "h": 1040,
-      "title": "4.5 Texture, slice 4: part-number mode (#325), light",
-      "w": 1100,
-      "x": 4720,
-      "y": 11056
-    },
-    "Texture-SecondTape-Dark.dc.html": {
-      "h": 640,
-      "title": "4.1 Texture: the second tape and elevation, dark",
-      "w": 1100,
-      "x": 0,
-      "y": 12446
-    },
-    "Texture-Slice1-Dark.dc.html": {
-      "h": 1270,
-      "title": "4.2 Texture, slice 1: part types and candidates (#322), dark",
-      "w": 1100,
-      "x": 1180,
-      "y": 12446
-    },
-    "Texture-Slice2-Dark.dc.html": {
-      "h": 1180,
-      "title": "4.3 Texture, slice 2: the stock strip and its rows (#323), dark",
-      "w": 1100,
-      "x": 2360,
-      "y": 12446
-    },
-    "Texture-Slice3-Dark.dc.html": {
-      "h": 1120,
-      "title": "4.4 Texture, slice 3: the capped strip, filter and dialog (#324), dark",
-      "w": 1100,
-      "x": 3540,
-      "y": 12446
-    },
-    "Texture-Slice4-Dark.dc.html": {
-      "h": 1040,
-      "title": "4.5 Texture, slice 4: part-number mode (#325), dark",
-      "w": 1100,
-      "x": 4720,
-      "y": 12446
-    },
     "Fitment.dc.html": {
       "h": 3610,
-      "title": "1.4 The fitment card, light",
+      "title": "The fitment card, light",
       "w": 1280,
       "x": 4080,
       "y": 0
     },
     "Fitment-Dark.dc.html": {
       "h": 3610,
-      "title": "1.4 The fitment card, dark",
+      "title": "The fitment card, dark",
       "w": 1280,
       "x": 4080,
       "y": 3730
     },
     "States.dc.html": {
       "h": 3540,
-      "title": "1.6 States, light",
+      "title": "States, light",
       "w": 1280,
       "x": 6800,
       "y": 0
     },
     "States-Dark.dc.html": {
       "h": 3540,
-      "title": "1.6 States, dark",
+      "title": "States, dark",
       "w": 1280,
       "x": 6800,
       "y": 3730
@@ -229,43 +96,16 @@
     "view": "canvas"
   },
   "noteOrder": [
-    "heading",
-    "row-wire-vin",
-    "row-wire-part",
-    "row-texture"
+    "heading"
   ],
   "notes": {
     "heading": {
       "kind": "title1",
       "maxW": 8080,
-      "text": "1. The page as built: what DESIGN.md describes",
+      "text": "The page as built: what DESIGN.md describes",
       "w": 240,
       "x": 0,
       "y": -300
-    },
-    "row-wire-vin": {
-      "kind": "title1",
-      "maxW": 6374,
-      "text": "2. Wireframes: VIN mode (#320 to #324)",
-      "w": 240,
-      "x": 0,
-      "y": 7460
-    },
-    "row-wire-part": {
-      "kind": "title1",
-      "maxW": 3150,
-      "text": "3. Wireframes: part-number mode (#325)",
-      "w": 240,
-      "x": 0,
-      "y": 9386
-    },
-    "row-texture": {
-      "kind": "title1",
-      "maxW": 5820,
-      "text": "4. Textures (#322 to #325)",
-      "w": 240,
-      "x": 0,
-      "y": 10756
     }
   },
   "order": [
@@ -280,26 +120,7 @@
     "Diagram-Dark.dc.html",
     "Fitment-Dark.dc.html",
     "Controls-Dark.dc.html",
-    "States-Dark.dc.html",
-    "Wire-Vin-Desktop.dc.html",
-    "Wire-Vin-Tablet.dc.html",
-    "Wire-Vin-Phone.dc.html",
-    "Wire-Vin-FirstView.dc.html",
-    "Wire-Vin-Empty.dc.html",
-    "Wire-Vin-TypesDialog.dc.html",
-    "Wire-Part-Desktop.dc.html",
-    "Wire-Part-Phone.dc.html",
-    "Wire-Part-States.dc.html",
-    "Texture-SecondTape.dc.html",
-    "Texture-Slice1.dc.html",
-    "Texture-Slice2.dc.html",
-    "Texture-Slice3.dc.html",
-    "Texture-Slice4.dc.html",
-    "Texture-SecondTape-Dark.dc.html",
-    "Texture-Slice1-Dark.dc.html",
-    "Texture-Slice2-Dark.dc.html",
-    "Texture-Slice3-Dark.dc.html",
-    "Texture-Slice4-Dark.dc.html"
+    "States-Dark.dc.html"
   ],
   "pages": [
     {
