@@ -550,7 +550,7 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
   color: var(--on-metal); text-shadow: var(--emboss); background: var(--alu); border: 0; border-top: 1px solid #fff; border-bottom: 3px solid var(--steel-dark); border-radius: 0; box-shadow: inset 0 1px 0 rgb(255 255 255 / .6); }
 .stk svg { flex: none; width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; }
 .stk u { text-transform: none; letter-spacing: 0; }
-.stk:active, .stk[aria-expanded=true] { transform: none; padding-top: 2px; background: var(--alu-in); border-bottom-width: 1px; box-shadow: var(--pressed); }
+.stk:not(.none):active, .stk[aria-expanded=true] { transform: none; padding-top: 2px; background: var(--alu-in); border-bottom-width: 1px; box-shadow: var(--pressed); }
 .stk.none { cursor: auto; color: var(--manila-muted); text-shadow: none; background: none; border: 0; border-top: 2px dashed var(--manila-muted); box-shadow: none; }
 /* The open candidate's rows: the page's table panel, notched up at its
    tag. On a wide page it is the row under the tag's, which the tags
@@ -564,10 +564,10 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
 .rows::after { z-index: 1; left: calc(var(--rail-x) + 9px - 24px); bottom: -27px; border-color: var(--c-year); }
 .stock-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .stock-cols.one { grid-template-columns: minmax(0, 1fr); }
-.stock-cols:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
+.stock-cols:focus-visible, .nonum:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
 .stock-col { min-width: 0; padding: 12px 16px 14px; }
 .stock-col + .stock-col { border-left: 1px solid var(--line); }
-.stock-col h3 { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 .75rem; margin: 0 0 6px; padding: 0; border: 0; font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase; }
+.stock-col :is(h3, h4) { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 .75rem; margin: 0 0 6px; padding: 0; border: 0; font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase; }
 .stock-col .asof { font: 400 12px system-ui, sans-serif; letter-spacing: 0; text-transform: none; color: var(--muted); }
 .stock-col table { font-size: 14px; }
 .stock-col th, .stock-col td { padding: 7px 8px 7px 0; font-weight: 400; overflow-wrap: anywhere; border-bottom: 0; border-top: 1px solid var(--line); }
@@ -580,7 +580,7 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
 /* The shelf rows with no number, after the candidates: a strip of label
    tape, stuck on, naming the part type and the vehicle, over a panel. */
 .nonum { margin: 30px 0 0 22px; }
-.nonum-tape { display: flex; align-items: center; box-sizing: border-box; min-height: 2.6rem; margin: 0; padding: .3rem .7rem; color: var(--on-tape); font: 700 11px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss);
+.nonum-tape { display: flex; align-items: center; box-sizing: border-box; min-height: 2.6rem; margin: 0; padding: .3rem .7rem; color: var(--on-tape); font: 700 12px var(--cell-font); letter-spacing: .04em; text-transform: none; text-shadow: var(--tape-emboss);
   background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck); }
 .stock-panel { margin-top: 10px; }
 /* The rails' pieces, each 5px of pinstripe tape: the vehicle's bar 9px

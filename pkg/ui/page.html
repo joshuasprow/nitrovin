@@ -45,10 +45,10 @@ and the input. data-vin is the VIN the server drew. */}}
 data-label are what it answers, which plate.js keeps as a recent VIN once
 it is whole; data-done the groups whose characters are all typed;
 data-part and data-after the part type pressed and its page, and
-data-number, data-side and data-rows the candidate whose stock is open,
-which plate.js tells a history entry by. */}}
+data-type, data-number, data-side and data-rows the candidate whose stock
+is open and the panel shown whole, which plate.js tells a history entry by. */}}
 {{define "answer" -}}
-<div id="answer" class="stage" data-vin="{{.VIN}}" data-label="{{.Label}}"{{if .Complete}} data-complete{{end}} data-done="{{range .Groups}}{{if .Done}}{{.Key}} {{end}}{{end}}"{{with .Fit.Part}} data-part="{{.}}"{{end}}{{with .Fit.After}} data-after="{{.}}"{{end}}{{with .Fit.Number}} data-number="{{.}}"{{end}}{{with .Fit.Side}} data-side="{{.}}"{{end}}{{if .Fit.All}} data-rows="all"{{end}}>
+<div id="answer" class="stage" data-vin="{{.VIN}}" data-label="{{.Label}}"{{if .Complete}} data-complete{{end}} data-done="{{range .Groups}}{{if .Done}}{{.Key}} {{end}}{{end}}"{{with .Fit.Part}} data-part="{{.}}"{{end}}{{with .Fit.After}} data-after="{{.}}"{{end}}{{with .Fit.Type}} data-type="{{.}}"{{end}}{{with .Fit.Number}} data-number="{{.}}"{{end}}{{with .Fit.Side}} data-side="{{.}}"{{end}}{{with .Fit.Rows}} data-rows="{{.}}"{{end}}>
 <div class="under" aria-hidden="true">
 {{range .Groups}}<span class="brk g-{{.Key}}{{if .Done}} done{{end}}"><span class="name">{{.Label}}</span></span>
 {{end}}</div>
@@ -215,9 +215,13 @@ own, which plate.js swaps in place (swap). */}}
 {{with .Panel}}{{template "stock-rows" .}}
 {{end}}{{end}}</ol>
 <span class="rails" aria-hidden="true"></span><span class="risers" aria-hidden="true"></span>
-{{end}}{{with .NoNumber}}<div class="nonum">
+{{end}}{{with .NoNumber}}<div class="nonum" id="stock-nonum" tabindex="-1">
 <h3 class="nonum-tape" id="{{.ID}}-h">{{$.NoNumberName}}</h3>
-<div class="stock-panel"><div class="stock-col">{{template "stock-table" .Rows}}</div></div>
+<div class="stock-panel"><div class="stock-col">
+<h4><span>{{.Heading}}</span>{{with .AsOf}} <span class="asof">{{.}}</span>{{end}}</h4>
+{{template "stock-table" .Rows}}
+{{with .More}}<p class="more-rows">The first {{$.NoNumber.Shown}} of {{$.NoNumber.Total}}. <a class="swap" href="{{.}}" data-focus="stock-nonum">Show all</a></p>
+{{end}}</div></div>
 </div>
 {{end}}{{if .Tags}}{{with .Next}}<p class="more-cands">This page shows {{len $.Tags}} of {{$.Total}} candidates. <a class="swap" href="{{.}}">Next page</a></p>
 {{end}}{{end}}{{else}}<h2 id="fit-h" class="visually-hidden">Parts that fit</h2>

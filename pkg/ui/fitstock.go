@@ -17,58 +17,93 @@ import (
 // request asks for the stock of the sources loaded beside the catalog it
 // answers from (stockKinds), so every candidate arrives with its shelf's
 // and its yard's totals and first rows (contract.StockFirst), and its tag
-// ends in a strip that counts them. No other request asks for stock: the
-// part types' asks for none, and a page with no part type pressed asks
-// for no candidates. The strip is a link to the page with the candidate
-// open, the URL's third parameter, named as the fit request's fitment key
-// names it (fitment.number, with fitment.side for a fitment with a side),
-// so it works without a script and a link reopens it; the open
-// candidate's strip links to the page with none open. The open
-// candidate's rows are the ones its candidate arrived with; "Show all"
-// is the page with rows=all, which asks for the whole of its stock, a
-// fit from its fitment key with the same stock, a page at a time.
+// ends in a strip that counts them. No other request asks for stock but
+// to show more of it: the part types' asks for none, and a page with no
+// part type pressed asks for no candidates. The strip is a link to the
+// page with the candidate open, the URL's third parameter, named as the
+// fit request's fitment key names it (fitment.number; fitment.side for a
+// fitment with a side; fitment.type for one whose type is not the
+// pressed part type's, which a redirect reaches), so it works without a
+// script and a link reopens it; the open candidate's strip links to the
+// page with none open. The open candidate's rows are the ones its
+// candidate arrived with; "Show all" is the page with rows=all, which
+// asks for the whole of its stock, a fit from its fitment key with the
+// same stock, a page at a time.
 //
 // With shelf stock asked for, the candidates' answer also carries the
 // shelf rows with no number for the part type and the vehicle, which
-// belong to no candidate: they are listed once, after the candidates.
+// belong to no candidate. The answer pages them with the candidates, so
+// the page lists the first page's once, after the first page's
+// candidates, and their "Show all" is the page with rows=unnumbered,
+// which asks for every page of them. They never keep the candidates'
+// "Next page": candidatesNext asks the catalog alone whether more
+// candidates follow.
 
 const (
-	// numberParam and sideParam are the page's third parameter, the
-	// candidate whose stock is open: its number, and its side when it
-	// has one, as the fit request's fitment key names them.
+	// typeParam, numberParam and sideParam are the page's third
+	// parameter, the candidate whose stock is open, as the fit request's
+	// fitment key names it: its number; its side when it has one; and
+	// its type when it is not the pressed part type.
+	typeParam   = "fitment.type"
 	numberParam = "fitment.number"
 	sideParam   = "fitment.side"
-	// rowsParam, "all", shows every row of the open candidate's stock.
-	rowsParam = "rows"
-	// stockPanelID is the open candidate's rows, which its strip
-	// controls; stockRegionID their columns, the region that scrolls
-	// sideways on a narrow page, which "Show all" leaves the focus on.
-	stockPanelID  = "stock-rows"
-	stockRegionID = "stock-region"
+	// rowsParam shows every row of a stock panel: rowsAll the open
+	// candidate's, rowsUnnumbered the shelf rows with no number.
+	rowsParam      = "rows"
+	rowsAll        = "all"
+	rowsUnnumbered = "unnumbered"
 )
 
 // fitAsk is what the page's URL asks of the parts that fit: the part
 // type pressed and its candidates' page, the candidate whose stock is
-// open, whether every row of it is shown, and the kinds of stock loaded.
+// open (Type "" for the pressed part type), which panel shows every row,
+// and the kinds of stock loaded.
 type fitAsk struct {
-	Part, After  string
-	Number, Side string
-	All          bool
-	Stock        []string
+	Part, After        string
+	Type, Number, Side string
+	Rows               string
+	Stock              []string
 }
 
 // stockHref is the page with vin on the plate, part pressed from its
-// candidates' page after, and the candidate number and side open, every
-// row of its stock shown when all is set.
-func stockHref(vin, part, after, number, side string, all bool) string {
-	s := fitHref(vin, part, after) + "&" + numberParam + "=" + url.QueryEscape(number)
-	if side != "" {
-		s += "&" + sideParam + "=" + url.QueryEscape(side)
+// candidates' page after, the candidate k open when it has a number, and
+// every row of the panel rows names shown.
+func stockHref(vin, part, after string, k fitKey, rows string) string {
+	s := fitHref(vin, part, after)
+	if k.Number != "" {
+		if k.Type != part {
+			s += "&" + typeParam + "=" + url.QueryEscape(k.Type)
+		}
+		s += "&" + numberParam + "=" + url.QueryEscape(k.Number)
+		if k.Side != "" {
+			s += "&" + sideParam + "=" + url.QueryEscape(k.Side)
+		}
 	}
-	if all {
-		s += "&" + rowsParam + "=all"
+	if rows != "" {
+		s += "&" + rowsParam + "=" + rows
 	}
 	return s
+}
+
+// fitKey is a fitment key by its type, number and side, as the page's
+// URL names a candidate.
+type fitKey struct {
+	Type, Number, Side string
+}
+
+// key is ask's open candidate's fitment key, its type the pressed part
+// type's unless the URL names another.
+func (ask fitAsk) key() fitKey {
+	k := fitKey{Type: ask.Type, Number: ask.Number, Side: ask.Side}
+	if k.Type == "" {
+		k.Type = ask.Part
+	}
+	return k
+}
+
+// candidateKey is c's fitment key.
+func candidateKey(c contract.FitCandidate) fitKey {
+	return fitKey{Type: c.Fitment.Type, Number: c.Fitment.Number, Side: c.Fitment.Side}
 }
 
 // stockKinds are the kinds of stock loaded beside the catalog the page's
@@ -100,8 +135,10 @@ type stockStrip struct {
 	Open                         bool
 }
 
-// newStockStrip is c's strip, kinds the stock loaded: every kind's total,
-// or "none" when each is 0 and every source answered.
+// newStockStrip is c's strip, kinds the stock loaded: each kind's total,
+// or "unavailable" when none of its sources answered, so a 0 is always a
+// loaded source with none; "none" when every total is 0 and every source
+// answered.
 func newStockStrip(c contract.FitCandidate, kinds []string) stockStrip {
 	s := stockStrip{Number: c.Fitment.Number}
 	if len(kinds) == 0 {
@@ -115,8 +152,13 @@ func newStockStrip(c contract.FitCandidate, kinds []string) stockStrip {
 		if l == nil {
 			continue
 		}
-		words = append(words, strconv.Itoa(l.Total)+" "+kind)
-		some = some || l.Total > 0 || slices.ContainsFunc(l.Sources, func(s contract.StockSource) bool { return s.Status == contract.StockUnavailable })
+		down := slices.ContainsFunc(l.Sources, func(s contract.StockSource) bool { return s.Status == contract.StockUnavailable })
+		if len(l.Sources) > 0 && !slices.ContainsFunc(l.Sources, func(s contract.StockSource) bool { return s.Status != contract.StockUnavailable }) {
+			words = append(words, kind+" unavailable")
+		} else {
+			words = append(words, strconv.Itoa(l.Total)+" "+kind)
+		}
+		some = some || l.Total > 0 || down
 	}
 	if !some {
 		s.Kind, s.Text = "none", "Stock · none"
@@ -250,41 +292,57 @@ func sourcesText(sources []contract.StockSource) string {
 }
 
 // fitStock fills the candidates' strips and the open one's rows, from
-// fit, the candidates' answer, the page's tags (c.Tags, one a candidate,
-// in order); and the shelf rows with no number, named for the pressed
-// part type and vehicle. With every row asked for, the open candidate's
-// are its fitment key's whole stock, its first page's JSON in res.
-func (h *Handler) fitStock(ctx context.Context, c *fitCard, vin string, ask fitAsk, fit contract.Fit, vehicle string, res *result) error {
-	open := -1
+// fit, the answer to req, the candidates' request, the page's tags
+// (c.Tags, one a candidate, in order); and, on the candidates' first
+// page, the shelf rows with no number, named for the pressed part type
+// and vehicle. With every row asked for, the open candidate's are its
+// fitment key's whole stock, and the rows with no number every page of
+// req's, dec the VIN's decode; the first page's JSON goes in res.
+func (h *Handler) fitStock(ctx context.Context, c *fitCard, vin string, ask fitAsk, req contract.FitRequest, fit contract.Fit, dec *contract.VINDecode, vehicle string, res *result) error {
+	open, want := -1, ask.key()
 	for i, cand := range fit.Candidates {
 		s := newStockStrip(cand, ask.Stock)
 		s.ID = "stk-" + strconv.Itoa(i+1)
-		if open < 0 && s.Kind == "counts" && ask.Number != "" && cand.Fitment.Number == ask.Number && cand.Fitment.Side == ask.Side {
+		if open < 0 && s.Kind == "counts" && ask.Number != "" && candidateKey(cand) == want {
 			open, s.Open, s.Href = i, true, fitHref(vin, ask.Part, ask.After)
 		} else {
-			s.Href = stockHref(vin, ask.Part, ask.After, cand.Fitment.Number, cand.Fitment.Side, false)
+			s.Href = stockHref(vin, ask.Part, ask.After, candidateKey(cand), "")
 		}
 		c.Tags[i].Strip = s
 	}
-	if l := fit.ShelfByVehicle; l != nil && l.Total > 0 {
-		col := newStockColumn(contract.StockShelf, l, vin, "")
+	var key fitKey
+	if open >= 0 {
+		key = candidateKey(fit.Candidates[open])
+	}
+	rows := ""
+	if l := fit.ShelfByVehicle; ask.After == "" && l != nil && len(l.Rows) > 0 {
+		more := stockHref(vin, ask.Part, ask.After, key, rowsUnnumbered)
+		if ask.Rows == rowsUnnumbered {
+			var err error
+			if l, err = h.allUnnumbered(ctx, req, dec, res); err != nil {
+				return err
+			}
+			more, rows = "", rowsUnnumbered
+		}
+		col := newStockColumn(contract.StockShelf, l, vin, more)
 		col.ID = "stock-nonum"
 		c.NoNumber, c.NoNumberName = &col, "On the shelf with no number · "+c.Pressed+" · "+vehicle
 	}
 	if open < 0 {
+		c.Page = stockHref(vin, ask.Part, ask.After, key, rows)
 		return nil
 	}
 	cand := fit.Candidates[open]
-	c.Page = stockHref(vin, ask.Part, ask.After, cand.Fitment.Number, cand.Fitment.Side, ask.All)
 	lists := map[string]*contract.StockList{contract.StockShelf: cand.Shelf, contract.StockYard: cand.Yard}
-	more := stockHref(vin, ask.Part, ask.After, cand.Fitment.Number, cand.Fitment.Side, true)
-	if ask.All {
+	more := stockHref(vin, ask.Part, ask.After, key, rowsAll)
+	if ask.Rows == rowsAll {
 		var err error
-		if lists, err = h.allStock(ctx, contract.FitmentKey{Type: cand.Fitment.Type, Number: cand.Fitment.Number, Side: cand.Fitment.Side}, ask.Stock, res); err != nil {
+		if lists, err = h.allStock(ctx, key, ask.Stock, res); err != nil {
 			return err
 		}
-		more = ""
+		more, rows = "", rowsAll
 	}
+	c.Page = stockHref(vin, ask.Part, ask.After, key, rows)
 	p := &stockPanel{Number: cand.Fitment.Number, Col: open%3 + 1, MoreWide: len(c.Tags) > (open/3+1)*3, MoreNarrow: open < len(c.Tags)-1}
 	for _, kind := range ask.Stock {
 		if l := lists[kind]; l != nil {
@@ -295,11 +353,53 @@ func (h *Handler) fitStock(ctx context.Context, c *fitCard, vin string, ask fitA
 	return nil
 }
 
+// candidatesNext is the candidates' next page after fit, the answer to
+// req: fit's own Next, but with shelf stock asked for, the answer's Next
+// stays while the shelf rows with no number have more, and those are
+// listed on the first page alone, so the catalog alone, asked again
+// with no stock, says whether more candidates follow.
+func (h *Handler) candidatesNext(ctx context.Context, req contract.FitRequest, fit contract.Fit, dec *contract.VINDecode) (string, error) {
+	if fit.Next == "" || fit.ShelfByVehicle == nil {
+		return fit.Next, nil
+	}
+	if len(fit.Candidates) < req.Limit {
+		return "", nil
+	}
+	req.Stock = nil
+	again, _, err := h.fit(ctx, req, dec)
+	return again.Next, err
+}
+
+// allUnnumbered is every shelf row with no number for req's part type
+// and vehicle: req, the candidates' request, asked of the shelf alone
+// from its first page, every page of it, the first page's JSON in res.
+func (h *Handler) allUnnumbered(ctx context.Context, req contract.FitRequest, dec *contract.VINDecode, res *result) (*contract.StockList, error) {
+	req.Stock, req.Limit, req.After = []string{contract.StockShelf}, contract.MaxListLimit, ""
+	var out *contract.StockList
+	for {
+		fit, raw, err := h.fit(ctx, req, dec)
+		if err != nil {
+			return nil, err
+		}
+		if out == nil {
+			if err := h.fitJSON(res, "unnumbered-json", "The shelf rows with no number", "the shelf rows with no number's JSON", fit, raw); err != nil {
+				return nil, err
+			}
+			out = &contract.StockList{Total: fit.ShelfByVehicle.Total, Sources: fit.ShelfByVehicle.Sources}
+		}
+		out.Rows = append(out.Rows, fit.ShelfByVehicle.Rows...)
+		if fit.Next == "" || len(out.Rows) >= out.Total {
+			return out, nil
+		}
+		req.After = fit.Next
+	}
+}
+
 // allStock is every row of key's stock of kinds, by kind: a fit from the
 // fitment key with the same stock, every page of it, the first page's
 // JSON in res.
-func (h *Handler) allStock(ctx context.Context, key contract.FitmentKey, kinds []string, res *result) (map[string]*contract.StockList, error) {
-	req := contract.FitRequest{From: contract.FitFrom{Fitment: &key}, Stock: kinds, Limit: contract.MaxListLimit}
+func (h *Handler) allStock(ctx context.Context, k fitKey, kinds []string, res *result) (map[string]*contract.StockList, error) {
+	req := contract.FitRequest{From: contract.FitFrom{Fitment: &contract.FitmentKey{Type: k.Type, Number: k.Number, Side: k.Side}}, Stock: kinds, Limit: contract.MaxListLimit}
 	out := map[string]*contract.StockList{}
 	for {
 		fit, raw, err := h.fit(ctx, req, nil)

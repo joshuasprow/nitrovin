@@ -68,14 +68,15 @@ func TestSchema(t *testing.T) {
 	stockFiles, _ := filepath.Glob("../../testdata/vocab/stock/*.jsonl")
 	stockDrift, _ := filepath.Glob("../../testdata/vocab/stock/drift/*.jsonl")
 	stockLive, _ := filepath.Glob("../../testdata/vocab/stock/live/*.jsonl")
-	if len(stockFiles) == 0 || len(stockLive) == 0 {
-		t.Fatal("no testdata/vocab/stock/*.jsonl or testdata/vocab/stock/live/*.jsonl")
+	stockMore, _ := filepath.Glob("../../testdata/vocab/stock/more/*.jsonl")
+	if len(stockFiles) == 0 || len(stockLive) == 0 || len(stockMore) == 0 {
+		t.Fatal("no testdata/vocab/stock/*.jsonl, testdata/vocab/stock/live/*.jsonl or testdata/vocab/stock/more/*.jsonl")
 	}
 	demo, _ := filepath.Glob("../../pkg/ui/demo/*.jsonl")
 	if len(demo) == 0 {
 		t.Fatal("no pkg/ui/demo/*.jsonl")
 	}
-	for _, p := range slices.Concat(paths, drift, fitment, stockFiles, stockDrift, stockLive, demo) {
+	for _, p := range slices.Concat(paths, drift, fitment, stockFiles, stockDrift, stockLive, stockMore, demo) {
 		data, err := os.ReadFile(p)
 		if err != nil {
 			t.Fatal(err)

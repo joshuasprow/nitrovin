@@ -5,6 +5,8 @@ import (
 	"html"
 	"io"
 	"log"
+	"os"
+	"path/filepath"
 	"regexp"
 	"slices"
 	"strings"
@@ -223,6 +225,21 @@ func TestPageStock(t *testing.T) {
 		t.Errorf("DEMO-1002 open: %q\n%s", got, s)
 	}
 
+	// A candidate a redirect reaches is of another type than the part
+	// type pressed: its strip names its type, and only its whole key
+	// opens it.
+	const rears = "/?from.vin=1GCVKREC6EZ123456&part.id=brake-rotor-rear"
+	s = fitSection(t, h, rears)
+	if got := strip(s, "DEMO-2101"); !strings.Contains(got, `href="`+rears+`&fitment.type=brake-rotor-front&fitment.number=DEMO-2101"`) {
+		t.Errorf("the redirected rotor's strip: %s", got)
+	}
+	if got := openRows(fitSection(t, h, rears+"&fitment.type=brake-rotor-front&fitment.number=DEMO-2101")); len(got) != 3 || got[0][0] != "DEMO-2101" {
+		t.Errorf("the redirected rotor, its whole key: %q", got)
+	}
+	if got := openRows(fitSection(t, h, rears+"&fitment.number=DEMO-2101")); got != nil {
+		t.Errorf("the redirected rotor, opened as a rear rotor: %q", got)
+	}
+
 	// One source: the strip names it alone; with none for a candidate it
 	// says so and presses nothing, and a URL cannot open it.
 	asked = nil
@@ -240,6 +257,31 @@ func TestPageStock(t *testing.T) {
 	}
 	if got := openRows(fitSection(t, shelf, alternators+"&fitment.number=DEMO-1002")); got != nil {
 		t.Errorf("DEMO-1002, with none, opened: %q", got)
+	}
+
+	// A yard alone names the yard alone. With both sources loaded and
+	// nothing in either, the strip says none: the 2010 Ram's alternator.
+	yard := stockPages(demoStock(t, "demo-yard-stock"), &asked)
+	want = []string{"DEMO-1001 link: Stock · 2 yard", "DEMO-1002 link: Stock · 2 yard", "DEMO-1003 link: Stock · 2 yard"}
+	if got := strips(fitSection(t, yard, alternators)); !slices.Equal(got, want) {
+		t.Errorf("the alternators, a yard alone: %q; want %q", got, want)
+	}
+	if got := strips(fitSection(t, h, "/?from.vin=1D7RV1GT5AS123456&part.id=alternator")); !slices.Equal(got, []string{"DEMO-3001 words: Stock · none"}) {
+		t.Errorf("the Ram's alternator, both sources loaded: %q; want none", got)
+	}
+
+	// A yard that does not answer, a connector this build cannot reach:
+	// the strip says so, never a 0, and still opens, its column saying
+	// why.
+	down := stockPages(demoStockWith(t, []string{filepath.Join("..", "..", "testdata", "vocab", "stock", "live", "yard-stock.jsonl")}, "demo-shelf"), &asked)
+	s = fitSection(t, down, alternators)
+	want = []string{"DEMO-1001 link: Stock · 2 shelf · yard unavailable", "DEMO-1002 link: Stock · 0 shelf · yard unavailable", "DEMO-1003 link: Stock · 0 shelf · yard unavailable"}
+	if got := strips(s); !slices.Equal(got, want) {
+		t.Errorf("the alternators, a yard down: %q; want %q\n%s", got, want, s)
+	}
+	if got := openRows(fitSection(t, down, alternators+"&fitment.number=DEMO-1002")); len(got) != 3 ||
+		got[2][0] != "In the yard · 0 unavailable: this build reads stock files only: a connector needs the nitrovin binary" || len(got[2]) != 1 {
+		t.Errorf("DEMO-1002 open, a yard down: %q", got)
 	}
 
 	// No stock loaded: every strip says so and opens the Vocabularies
@@ -291,10 +333,12 @@ func TestPageStock(t *testing.T) {
 	}
 
 	// The shelf rows with no number: once, after the candidates, under a
-	// strip naming the part type and the vehicle.
+	// strip naming the part type and the vehicle in their own case, their
+	// count and as-of dates.
 	s = fitSection(t, fixture, "/?from.vin=1D7RV1GT5AS123456&part.id=mirror")
-	at := strings.Index(s, `<div class="nonum">`)
-	if at < strings.Index(s, "</ol>") || !strings.Contains(s, `<h3 class="nonum-tape" id="stock-nonum-h">On the shelf with no number · Door Mirror · 2010 Dodge Ram 1500</h3>`) {
+	at := strings.Index(s, `<div class="nonum" id="stock-nonum" tabindex="-1">`)
+	if at < 0 || at < strings.Index(s, "</ol>") || !strings.Contains(s, `<h3 class="nonum-tape" id="stock-nonum-h">On the shelf with no number · Door Mirror · 2010 Dodge Ram 1500</h3>`) ||
+		!strings.Contains(plain(s[at:]), "On the shelf · 2 shelf-annex as of 2026-10-30 · shelf-more as of 2026-11-02 · shelf-orphans as of 2026-11-01 · shelf-stock as of 2026-11-01T08:00:00Z") {
 		t.Fatalf("the mirrors' rows with no number:\n%s", s)
 	}
 	if got, want := stockRows(s[at:]), []string{"A-2 | east | stock_number C301", "S-4 | north | stock_number A103 · comments no number: tag reads 'left mirror'"}; !slices.Equal(got, want) || len(stockRows(s)) != 2 {
@@ -303,4 +347,73 @@ func TestPageStock(t *testing.T) {
 	if got := openRows(fitSection(t, fixture, "/?from.vin=1D7RV1GT5AS123456&part.id=mirror&fitment.number=MR-1001&fitment.side=right")); len(got) != 3 || got[0][0] != "MR-1001" || got[1][0] != "On the shelf · 0 shelf-annex as of 2026-10-30 · shelf-more as of 2026-11-02 · shelf-orphans as of 2026-11-01 · shelf-stock as of 2026-11-01T08:00:00Z" {
 		t.Errorf("the right mirror open: %q", got)
 	}
+
+	// They are the first page's alone, and never keep the candidates'
+	// "Next page": one rotor a page, three rows with no number, the first
+	// shown, and "Show all" a page with all three.
+	extra := filepath.Join(t.TempDir(), "shelf-loose.jsonl")
+	loose := `{"format":1,"kind":"stock","name":"shelf-loose","version":"1","source":"shelf","as_of":"2026-11-03","catalog":"parts-catalog"}` + "\n"
+	for _, id := range []string{"L-1", "L-2", "L-3"} {
+		loose += `{"id":"` + id + `","location":"west","part":{"spine":"part-types","id":"brake-rotor-front"},"vehicle":{"make":"Dodge","model":"Ram 1500"},"year":2010,"fields":{"stock_number":"` + id + `"}}` + "\n"
+	}
+	if err := os.WriteFile(extra, []byte(loose), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	paths := []string{fitmentPath("part-types"), fitmentPath("part-codes"), fitmentPath("catalog-models"), fitmentPath("catalog"), extra}
+	files, err := vocab.Open(paths...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tr, err := nitrovin.NewTranslator(embedded(t), files...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(tr.Close)
+	paged := stockPages(tr, &asked)
+	paged.candidates = 1
+	s = fitSection(t, paged, rotors)
+	at = strings.Index(s, `<div class="nonum"`)
+	if got := stockRows(s); at < 0 || !slices.Equal(got, []string{"L-1 | west | stock_number L-1"}) || strings.Contains(s, "more-cands") ||
+		!strings.Contains(plain(s[at:]), "On the shelf · 3 as of 2026-11-03") || !strings.Contains(plain(s[at:]), "The first 1 of 3. Show all") {
+		t.Errorf("one rotor, three rows with no number: %q\n%s", got, s)
+	}
+	m := regexp.MustCompile(`<p class="more-rows">[^<]*<a class="swap" href="([^"]*)" data-focus="stock-nonum">Show all</a>`).FindStringSubmatch(s)
+	if m == nil || html.UnescapeString(m[1]) != rotors+"&rows=unnumbered" {
+		t.Fatalf("the rows with no number's Show all: %q", m)
+	}
+	s = fitSection(t, paged, rotors+"&rows=unnumbered")
+	if got := stockRows(s); !slices.Equal(got, []string{"L-1 | west | stock_number L-1", "L-2 | west | stock_number L-2", "L-3 | west | stock_number L-3"}) || strings.Contains(s, "more-rows") || strings.Contains(s, "more-cands") {
+		t.Errorf("every row with no number: %q\n%s", got, s)
+	}
+	// Two mirrors, one a page: the first page's "Next page" is the
+	// candidates', and the second page lists no rows with no number.
+	paged = stockPages(stockServerOf(t, embedded(t), moreStockNames()), &asked)
+	paged.candidates = 1
+	s = fitSection(t, paged, "/?from.vin=1D7RV1GT5AS123456&part.id=mirror")
+	next := regexp.MustCompile(`<a class="swap" href="([^"]*)">Next page</a>`).FindStringSubmatch(s)
+	if next == nil || !strings.Contains(s, `<div class="nonum"`) {
+		t.Fatalf("the first mirror's page:\n%s", s)
+	}
+	s = fitSection(t, paged, html.UnescapeString(next[1]))
+	if got := tags(s); len(got) != 1 || strings.Contains(s, `class="nonum"`) || strings.Contains(s, "more-cands") {
+		t.Errorf("the second mirror's page: %q\n%s", got, s)
+	}
+}
+
+// demoStockWith is demoStock with the files at paths loaded besides.
+func demoStockWith(t *testing.T, paths []string, stock ...string) *nitrovin.Translator {
+	t.Helper()
+	files, err := vocab.Open(append([]string{demoDir}, paths...)...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	files = slices.DeleteFunc(files, func(f *vocab.File) bool {
+		return f.Kind == vocab.KindStock && f.Connector == nil && !slices.Contains(stock, f.Name)
+	})
+	tr, err := nitrovin.NewTranslator(embedded(t), files...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(tr.Close)
+	return tr
 }

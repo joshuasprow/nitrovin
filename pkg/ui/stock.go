@@ -298,13 +298,19 @@ func measureStock(m vocab.Month, f, catalog *vocab.File) []vocab.Finding {
 }
 
 // admitStock refuses f, a stock file picked as fileName, when this
-// browser cannot load it: a connector's, and a shelf whose catalog the
-// browser does not hold, linked, among cur's files.
+// browser cannot load it: a connector's; a yard while the server holds
+// the catalog, whose fit reads the server's stock; and a shelf whose
+// catalog the browser does not hold, linked, among cur's files.
 func (l *Library) admitStock(f *vocab.File, fileName string, cur *shelf) error {
 	if f.Connector != nil {
 		return &pageError{Status: http.StatusUnprocessableEntity, Message: fmt.Sprintf(
 			"%s declares a connector, reading %s from a database: connectors run on a server (ADR 0020), so it does not load in this browser. Load it with nitrovin serve --vocab, or pick a stock file whose lines are its rows.",
 			fileName, f.Connector.Relation)}
+	}
+	if f.Holds == vocab.StockYard && l.serverCatalog.Name != "" {
+		return &pageError{Status: http.StatusConflict, Message: fmt.Sprintf(
+			"%s is a yard, and this server has a catalog, %s, which stays on the server: its fit reads the server's stock, so a yard beside it loads there too, with nitrovin serve --vocab.",
+			fileName, l.serverCatalog.Name)}
 	}
 	if f.Holds != vocab.StockShelf || slices.ContainsFunc(cur.browser, func(h *held) bool { return h.catalog && h.linked() && h.name == f.StockCatalog }) {
 		return nil

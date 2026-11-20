@@ -23,9 +23,9 @@ import (
 // shareable URL. The page reads no other parameter of a decode: what it
 // asks of a VIN is always the same, the plain decode. It reads a few more,
 // the part type pressed among the parts that fit (part.id, fit.go), that
-// one's page of candidates (after), and the candidate whose stock is open
-// (fitment.number and fitment.side) and whether all of it shows (rows,
-// fitstock.go). Below the plate is the answer for
+// one's page of candidates (after), the candidate whose stock is open
+// (fitment.number, fitment.side and fitment.type) and which stock panel
+// shows every row (rows, fitstock.go). Below the plate is the answer for
 // whatever is typed so far, a partial VIN included: a card for each of the
 // VIN's groups, the vehicle's names in every vocabulary loaded, its
 // translation on vPIC's spine, and the parts that fit it in the catalog
@@ -204,8 +204,8 @@ func (h *Handler) home(r *http.Request) (view, error) {
 	}
 	d := newDiagram(cleanVIN(raw.Get("from.vin")))
 	d.Fit = h.idleFit(info)
-	ask := fitAsk{Part: raw.Get(partParam), After: raw.Get(afterParam), Number: raw.Get(numberParam), Side: raw.Get(sideParam), All: raw.Get(rowsParam) == "all"}
-	d.Fit.Part, d.Fit.After, d.Fit.Number, d.Fit.Side, d.Fit.All = ask.Part, ask.After, ask.Number, ask.Side, ask.All
+	ask := fitAsk{Part: raw.Get(partParam), After: raw.Get(afterParam), Type: raw.Get(typeParam), Number: raw.Get(numberParam), Side: raw.Get(sideParam), Rows: raw.Get(rowsParam)}
+	d.Fit.Part, d.Fit.After, d.Fit.Type, d.Fit.Number, d.Fit.Side, d.Fit.Rows = ask.Part, ask.After, ask.Type, ask.Number, ask.Side, ask.Rows
 	page := &homePage{Diagram: d, DataMonth: info.DataMonth, DecoderVersion: info.DecoderVersion, Links: h.links(info)}
 	for _, e := range exampleVINs {
 		page.Examples = append(page.Examples, example{Label: e.vin, Hint: e.hint, Href: vinHref(e.vin)})

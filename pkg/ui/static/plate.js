@@ -420,7 +420,7 @@
     const answer = document.getElementById('answer');
     const same = (key, param) => (answer.dataset[key] || '') === (q.get(param) || '');
     if (input.value === vin && answer && answer.dataset.vin === vin && same('part', 'part.id') && same('after', 'after') &&
-      same('number', 'fitment.number') && same('side', 'fitment.side') && same('rows', 'rows')) return;
+      same('type', 'fitment.type') && same('number', 'fitment.number') && same('side', 'fitment.side') && same('rows', 'rows')) return;
     input.value = vin;
     paint(vin, false);
     ask(location.pathname + location.search, '').catch(console.error);

@@ -349,6 +349,15 @@ func TestLibraryStockRefusals(t *testing.T) {
 	if _, err := l.Load(stockPicked(t, "shelf-annex"), quiet); err == nil || !strings.Contains(err.Error(), "shelf-annex.jsonl is a shelf of parts-catalog, this server's catalog, which stays on the server: stock beside it loads there too") {
 		t.Errorf("a shelf of the server's catalog: %v", err)
 	}
+	// So does a yard: the server's fit reads the server's stock. Its VINs
+	// go nowhere.
+	posted = len(s.posts)
+	if _, err := l.Load(stockPicked(t, "yard-stock"), quiet); err == nil || !strings.Contains(err.Error(), "yard-stock.jsonl is a yard, and this server has a catalog, parts-catalog, which stays on the server: its fit reads the server's stock, so a yard beside it loads there too") {
+		t.Errorf("a yard beside the server's catalog: %v", err)
+	}
+	if len(s.posts) != posted || len(l.Files()) != 0 {
+		t.Errorf("a yard beside the server's catalog: %d POSTs, stored %+v", len(s.posts)-posted, l.Files())
+	}
 }
 
 var (

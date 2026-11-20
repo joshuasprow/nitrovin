@@ -49,12 +49,12 @@ type fitCard struct {
 	// Catalog is the loaded catalog's name, "" with none loaded; Lines its
 	// lines' page.
 	Catalog, Lines string
-	// Part and After are the page's own part.id and after, and Number,
-	// Side and All its open candidate and whether every row of its stock
-	// is shown (fitstock.go), which plate.js tells its history by.
-	Part, After  string
-	Number, Side string
-	All          bool
+	// Part and After are the page's own part.id and after, and Type,
+	// Number, Side and Rows its open candidate and the panel it shows
+	// every row of (fitstock.go), which plate.js tells its history by.
+	Part, After        string
+	Type, Number, Side string
+	Rows               string
 	// Model and Year are what the strip says was asked: the catalog's
 	// vehicle the decode reached, and the year, "any year" without one.
 	Model, Year string
@@ -256,7 +256,6 @@ func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecod
 		c.NoneFit = "Nothing " + c.Catalog + " lists as " + strconv.Quote(part) + " fits this vehicle."
 		return nil
 	}
-	c.Page = fitHref(d.VIN, part, after)
 	limit := candidatesPage
 	if h.candidates != 0 {
 		limit = h.candidates
@@ -272,11 +271,15 @@ func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecod
 		c.Tags = append(c.Tags, newCandidateTag(cand, elements, names))
 	}
 	c.Total = fit.Total
-	if err := h.fitStock(ctx, c, d.VIN, ask, fit, vehicle, res); err != nil {
+	if err := h.fitStock(ctx, c, d.VIN, ask, req, fit, dec, vehicle, res); err != nil {
 		return err
 	}
-	if fit.Next != "" {
-		c.Next = fitHref(d.VIN, part, fit.Next)
+	next, err := h.candidatesNext(ctx, req, fit, dec)
+	if err != nil {
+		return err
+	}
+	if next != "" {
+		c.Next = fitHref(d.VIN, part, next)
 	}
 	if len(c.Tags) == 0 {
 		c.NoneFit = "Nothing " + c.Catalog + " lists as " + c.Pressed + " fits this vehicle."
