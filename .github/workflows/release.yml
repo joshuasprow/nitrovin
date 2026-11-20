@@ -10,9 +10,11 @@
 # identity at the tag, which also logs in to the registry.
 #
 # Beside it, the vocabulary benchmarks (bench/vocab) against the performance
-# budget (#142); their table is the release notes' footer. Reported, never a
-# gate: runner timings are too noisy to hold, so a failed bench job fails
-# only itself and the release goes out without the table.
+# budget (#142): on a tag, every one on one runner at go test's default
+# -benchtime. bench-table turns their output into the table that is the
+# release notes' footer. Reported, never a gate: runner timings are too
+# noisy to hold, so a failed bench job fails only itself and the release
+# goes out without the table.
 #
 # On a pull request that touches the release, and on dispatch without a tag,
 # the same build as a snapshot: no signing, no publishing, the images built
@@ -20,8 +22,10 @@
 # Debian, Fedora and Alpine, server.json validated by the registry and run
 # as it says, and the guide's recipe (docs/vocabularies.md, "At image build")
 # built from the image: a stage that compiles the synthetic catalog in RUN,
-# and one that serves it; the benchmarks, whose table is the bench job's
-# summary; and the tests of scripts/release.sh.
+# and one that serves it; the benchmarks, cut down to about three minutes
+# from eight: in two shards, each on its own runner (BenchmarkFit, and
+# every other), each at -benchtime 100ms, their table bench-table's summary;
+# and the tests of scripts/release.sh.
 #
 # Dispatched with a tag, from that tag (so its signatures are the tag's
 # identity), the release job completes the tag's existing release in parts
@@ -95,6 +99,11 @@ jobs:
   bench:
     # Not on a retry: the release's notes keep their table.
     if: ${{ !inputs.tag }}
+    # A tag's run is one shard, all. Anything else runs two, fit and rest:
+    # BenchmarkFit's fixtures and loads take half of all's eight minutes.
+    strategy:
+      matrix:
+        shard: ${{ fromJSON(github.event_name == 'push' && '["all"]' || '["fit", "rest"]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     continue-on-error: true
@@ -112,14 +121,74 @@ jobs:
           version=$(go list -m -f '{{.Version}}' github.com/joshuasprow/nitrovin-data)
           gh release download "$version" -R joshuasprow/nitrovin-data -p epa-vehicles.jsonl -D "$RUNNER_TEMP"
 
-      # Requests on one core, as the budget states them; load also on every core.
+      # Requests on one core, as the budget states them; load also on every
+      # core. A tag's measurements are all's: every benchmark at the default
+      # -benchtime. A shard's are only a pull request's check that each runs,
+      # and a rough number: 100ms gives a slow request's p99 a few samples.
       - name: Benchmark
         env:
           NITROVIN_EPA_VOCAB: ${{ runner.temp }}/epa-vehicles.jsonl
+          SHARD: ${{ matrix.shard }}
         run: |
           lscpu | grep -E 'Model name|^CPU\(s\)'
-          GOMAXPROCS=1 go test -run '^$' -bench . -timeout 20m ./bench/vocab | tee "$RUNNER_TEMP/bench.txt"
-          go test -run '^$' -bench Load -timeout 10m ./bench/vocab | tee -a "$RUNNER_TEMP/bench.txt"
+          out=$RUNNER_TEMP/bench-$SHARD.txt
+          case $SHARD in
+            all)
+              GOMAXPROCS=1 go test -run '^$' -bench . -timeout 20m ./bench/vocab | tee "$out"
+              go test -run '^$' -bench Load -timeout 10m ./bench/vocab | tee -a "$out"
+              ;;
+            fit)
+              GOMAXPROCS=1 go test -run '^$' -bench '^BenchmarkFit$' -benchtime 100ms -timeout 20m ./bench/vocab | tee "$out"
+              ;;
+            rest)
+              GOMAXPROCS=1 go test -run '^$' -bench . -skip '^BenchmarkFit$' -benchtime 100ms -timeout 20m ./bench/vocab | tee "$out"
+              go test -run '^$' -bench Load -benchtime 100ms -timeout 10m ./bench/vocab | tee -a "$out"
+              ;;
+            *) echo "release: no bench shard $SHARD" >&2; exit 1 ;;
+          esac
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: bench-${{ matrix.shard }}
+          path: ${{ runner.temp }}/bench-${{ matrix.shard }}.txt
+
+  # The shards' output, as one bench.txt, and its table: the release notes'
+  # footer, and this job's summary. A shard that failed uploaded nothing, so
+  # its rows are —; with none, this job fails and the release has no table.
+  bench-table:
+    needs: bench
+    if: ${{ !cancelled() && !inputs.tag }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/mise
+        with:
+          tools: go
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: bench-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/shards
+
+      - name: Table
+        run: |
+          shopt -s nullglob
+          files=("$RUNNER_TEMP"/shards/bench-*.txt)
+          ((${#files[@]})) || { echo "release: no bench shard finished, so there is no table" >&2; exit 1; }
+          if [[ $GITHUB_EVENT_NAME != push ]]; then
+            {
+              echo "Not a release's measurements: ${#files[@]} shards, each on its own runner and at \`-benchtime 100ms\`, so a row compares only roughly with a tag's, or with a row of the other shard."
+              echo
+              for f in "${files[@]}"; do
+                shard=${f##*/bench-}
+                echo "- ${shard%.txt}: $(sed -n 's/^cpu: *//p' "$f" | head -1)"
+              done
+              echo
+            } >>"$GITHUB_STEP_SUMMARY"
+          fi
+          cat "${files[@]}" >"$RUNNER_TEMP/bench.txt"
           go run ./bench/vocab/notes "$RUNNER_TEMP/bench.txt" | tee "$RUNNER_TEMP/bench.md" >>"$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@v7
@@ -261,9 +330,8 @@ jobs:
           echo "$image ${args[*]}: tools/list names decode_vin"
 
   release:
-    # After the benchmarks, for their table; whatever their result. A retry
-    # runs none.
-    needs: bench
+    # After the benchmarks' table, whatever its result. A retry runs none.
+    needs: bench-table
     if: ${{ !cancelled() && (github.event_name == 'push' || inputs.tag != '') }}
     runs-on: ubuntu-24.04
     # A retry builds twice.
