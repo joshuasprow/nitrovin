@@ -240,6 +240,14 @@ every response under `/v1/` and on `/mcp`, refusals included, carries
 Mcp-Protocol-Version, Mcp-Session-Id`) and `Access-Control-Max-Age: 86400`.
 `/`, `/ui/…` and `/healthz` never carry CORS headers.
 
+**Release.** Every response, refusals, `/mcp`, `/healthz` and the pages
+included, carries `Nitrovin-Release:
+<decoder_version>/<data_month>/<artifact_hash>`: the release answering,
+as `GET /v1/info` reports it. A cache in front of several servers, or of
+one during a rollout, stores an answer only under the release that answer
+names, as nitrovin.app's Worker does
+([`deploy/cloudflare`](../../deploy/cloudflare/README.md)).
+
 A VIN is never an error: whatever is wrong with it is in `error_codes`, and the
 status is 200. A refusal is an RFC 9457 `application/problem+json` body whose
 `type` is one of these, `pointer` naming the offending value when there is one:

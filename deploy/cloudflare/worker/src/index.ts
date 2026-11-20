@@ -36,6 +36,11 @@ const LOCATION: DurableObjectLocationHint = "enam";
 // (immutable, a year: their URL names the release, ADR 0013).
 const CACHE_CONTROL = "public, max-age=86400";
 
+// The header `nitrovin serve` names the release answering in, on every
+// response: decoder_version/data_month/artifact_hash, as RELEASE names one
+// (pkg/ui's ReleaseHeader).
+const RELEASE_HEADER = "Nitrovin-Release";
+
 export default {
 	async fetch(request, env): Promise<Response> {
 		const url = new URL(request.url);
@@ -61,9 +66,11 @@ export default {
 			}
 		}
 		const response = await container.fetch(forward(request, url));
-		// Store a 200 only from the release the key names: during a rollout
-		// the container can still be the previous one.
-		if (response.status !== 200 || !key || !(await serves(container, env.RELEASE))) {
+		// Store a 200 only when the answer names the release the key names:
+		// during a rollout, or with more than one container, the answer can
+		// be another release's. An answer naming none (a release before
+		// #370) is never stored.
+		if (response.status !== 200 || !key || response.headers.get(RELEASE_HEADER) !== env.RELEASE) {
 			return withHeaders(response, { "Cache-Control": cacheControl(response, "no-store"), "Cf-Cache-Status": "BYPASS" });
 		}
 		const out = withHeaders(response, { "Cache-Control": cacheControl(response, CACHE_CONTROL), "Cf-Cache-Status": "MISS" });
@@ -83,24 +90,6 @@ export default {
 /** The one Durable Object, created in LOCATION if this call creates it. */
 function nitrovin(env: Env): DurableObjectStub<Nitrovin> {
 	return env.NITROVIN.get(env.NITROVIN.idFromName(INSTANCE), { locationHint: LOCATION });
-}
-
-// The release this isolate has seen the container serve, once it was
-// RELEASE. An instance serves one image for its life and a rollout only
-// ends on this deploy's, while a new deploy is a new isolate: once seen, a
-// miss need not ask again (#126). Until then, every miss asks.
-let served: string | undefined;
-
-/** Whether the container serves release: asked of it until it once says so. */
-async function serves(container: DurableObjectStub<Nitrovin>, release: string): Promise<boolean> {
-	if (served === release) {
-		return true;
-	}
-	if ((await identity(container)) !== release) {
-		return false;
-	}
-	served = release;
-	return true;
 }
 
 /**
@@ -141,20 +130,6 @@ function cacheable(url: URL): boolean {
  */
 function cacheControl(response: Response, fallback: string): string {
 	return response.headers.get("Cache-Control") ?? fallback;
-}
-
-/**
- * The release the container serves, as RELEASE names one: decoder version,
- * data month and artifact hash from its /v1/info; undefined when it cannot
- * say.
- */
-async function identity(container: DurableObjectStub<Nitrovin>): Promise<string | undefined> {
-	const response = await container.fetch("http://localhost/v1/info");
-	if (!response.ok) {
-		return undefined;
-	}
-	const info = (await response.json()) as { decoder_version: string; data_month: string; artifact_hash: string };
-	return [info.decoder_version, info.data_month, info.artifact_hash].join("/");
 }
 
 /** The cache key: the release, then the path and query as sent. */

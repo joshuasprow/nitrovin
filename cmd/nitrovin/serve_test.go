@@ -930,6 +930,7 @@ var fitRefusals = []struct{ query, item string }{
 type faulty struct{}
 
 func (faulty) Info() contract.Info { panic("injected fault") }
+func (faulty) Release() string     { return "" }
 func (faulty) Decode(contract.Request) (contract.Decode, error) {
 	return contract.Decode{}, errors.New("injected fault")
 }
@@ -1250,6 +1251,68 @@ func TestServeCORS(t *testing.T) {
 	if got := resp.Header.Get("Access-Control-Allow-Origin"); resp.StatusCode != 500 || got != "*" {
 		t.Errorf("--cors *: GET /v1/info %d, Access-Control-Allow-Origin %q; want 500 (faulty) and *", resp.StatusCode, got)
 	}
+}
+
+// TestServeRelease: every response names the release answering in
+// Nitrovin-Release, as /v1/info's body reports it (decoder version, data
+// month and artifact hash, joined by "/"): the API's, refusals and /mcp
+// included, as well as the pages'. The Worker in front of nitrovin.app
+// stores an answer only under the release that answer names (#370). On
+// the embedded data: no artifact needed.
+func TestServeRelease(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("stops the server with SIGINT")
+	}
+	srv := startServe(t, nil, "--addr", "127.0.0.1:0")
+	base := "http://127.0.0.1:" + srv.port
+	resp, err := client.Get(base + "/v1/info")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var info contract.Info
+	err = json.NewDecoder(resp.Body).Decode(&info)
+	resp.Body.Close()
+	if err != nil || info.DecoderVersion == "" || info.DataMonth == "" || info.ArtifactHash == "" {
+		t.Fatalf("GET /v1/info: %+v, %v; want a decoder version, data month and artifact hash", info, err)
+	}
+	want := info.DecoderVersion + "/" + info.DataMonth + "/" + info.ArtifactHash
+	for _, c := range []struct {
+		method, target string
+		header         http.Header
+		body           string
+		status         int
+	}{
+		{method: "GET", target: "/v1/info", status: 200},
+		{method: "GET", target: "/v1/decode/1HGCM82633A004352", status: 200},
+		{method: "GET", target: "/v1/decode/1HGCM82633A0043521", status: 400},
+		{method: "POST", target: "/v1/decode", header: http.Header{"Content-Type": {"application/json"}}, body: `[{"vin":"1HGCM82633A004352"}]`, status: 200},
+		{method: "GET", target: "/v1/translate?from.make=476", status: 200},
+		{method: "GET", target: "/v1/nothing", status: 404},
+		{method: "PUT", target: "/v1/info", status: 405},
+		{method: "POST", target: "/mcp", header: mcpHeader, body: `{"jsonrpc":"2.0","id":1,"method":"tools/list"}`, status: 200},
+		{method: "GET", target: "/mcp", status: 405},
+		{method: "GET", target: "/healthz", status: 200},
+		{method: "GET", target: "/", status: 200},
+	} {
+		name := c.method + " " + c.target
+		req, err := http.NewRequest(c.method, base+c.target, strings.NewReader(c.body))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for k, vs := range c.header {
+			req.Header[k] = vs
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		io.Copy(io.Discard, resp.Body)
+		resp.Body.Close()
+		if got := resp.Header.Get("Nitrovin-Release"); resp.StatusCode != c.status || got != want {
+			t.Errorf("%s: %d, Nitrovin-Release %q; want %d and %q", name, resp.StatusCode, got, c.status, want)
+		}
+	}
+	srv.stop(t)
 }
 
 // TestServeFitNoCatalog: with no catalog loaded, as on nitrovin.app, GET
