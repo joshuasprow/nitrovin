@@ -90,3 +90,15 @@
    into the Parts that fit strip runs straight down to the tape. */
 .seg::before { display: none; }
 .seg::after { height: calc(var(--lead) + var(--prev) + 1px); }
+
+/* B, one shape at every width: the model and the year on the strip's
+   first row, where the names' lines come down to them, and the field under
+   them in the same tape, no wider than 24rem. */
+.proto-b .fitstrip { grid-template-rows: minmax(2.7rem, auto) auto; }
+.proto-b .fitstrip .seg { grid-row: 1; }
+.proto-b .fitstrip .pbcell { grid-row: 2; grid-column: 1 / -1; border-right: 0; border-bottom: 0; border-top: 1px solid rgb(255 255 255 / .18); }
+.proto-b .pfield { flex: 0 1 24rem; }
+@media (width >= 64rem) {
+  .proto-b .fitstrip .g-vds { grid-column: 2; }
+  .proto-b .fitstrip .g-year { grid-column: 3; }
+}
