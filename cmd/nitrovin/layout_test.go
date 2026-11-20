@@ -17,8 +17,8 @@ import (
 // (https://github.com/joshuasprow/nitrovin/issues/320), without JavaScript
 // and with it, on a server that loaded the fixture and three vocabularies
 // with no name for the VIN, four stacks in all. On a wide page (1280) the
-// six cards share one row, each holding its text, and nothing scrolls
-// sideways. On a narrow one (768, and a phone's 390) the cards and the
+// six cards share one row, each holding its text with every value under
+// its label, the stacks are one block, and nothing scrolls sideways. On a narrow one (768, and a phone's 390) the cards and the
 // names are one region that scrolls sideways, each part of a name under
 // its card, while a vocabulary's label stays put. The names block shows
 // three vocabularies, two on a phone, and the rest at a press of its
@@ -119,6 +119,12 @@ type laid struct {
 	// content drawn outside their own box.
 	Cards  []box    `json:"cards"`
 	Spills []string `json:"spills"`
+	// Ragged counts the cards' values that do not start under their label,
+	// at its leading edge.
+	Ragged int `json:"ragged"`
+	// Gaps are the room above each displayed stack's strip after the
+	// first, from the stack before it.
+	Gaps []float64 `json:"gaps"`
 	// Parts are the first name's make, model and years; Label its
 	// vocabulary's label.
 	Parts []box `json:"parts"`
@@ -157,6 +163,8 @@ const layoutJS = `(() => {
 				return r.left < own.left - 1 || r.right > own.right + 1 || r.bottom > own.bottom + 1;
 			});
 		}).map(c => c.dataset.group),
+		ragged: cards.flatMap(c => [...c.querySelectorAll("dl")]).flatMap(dl => [...dl.querySelectorAll("dd")].filter(dd => { const v = dd.getBoundingClientRect(), k = dd.previousElementSibling.getBoundingClientRect(); return Math.abs(v.left - k.left) > 1 || v.top < k.bottom - 1; })).length,
+		gaps: stacks.filter(s => s.checkVisibility()).slice(1).map(s => s.querySelector(".tagplate").getBoundingClientRect().top - s.previousElementSibling.getBoundingClientRect().bottom),
 		parts: ["wmi", "vds", "year"].map(g => box(plate.querySelector(".seg.g-" + g))),
 		label: box(plate.querySelector(".lbl")),
 		regionWidth: hang.clientWidth, regionScroll: hang.scrollWidth,
@@ -186,6 +194,9 @@ func (tb *tab) oneRow(step string, l laid) {
 	if len(l.Spills) > 0 {
 		tb.t.Errorf("%s: cards %q draw text outside their own box", step, l.Spills)
 	}
+	if l.Ragged > 0 {
+		tb.t.Errorf("%s: %d of the cards' values are not under their label, at its leading edge", step, l.Ragged)
+	}
 }
 
 // wide: at 1280 the cards are one row across the page and nothing scrolls
@@ -203,6 +214,13 @@ func (tb *tab) wide() {
 	}
 	if first, last := l.Cards[0], l.Cards[5]; first.Left < 0 || last.Right > l.Window {
 		tb.t.Errorf("%s: cards from %v to %v in a window of %v; want all six in it", step, first.Left, last.Right, l.Window)
+	}
+	// The stacks are one block: a blank strip stands 8px off it, and
+	// nothing stands further.
+	for i, g := range l.Gaps {
+		if g > 8 {
+			tb.t.Errorf("%s: %vpx above stack %d; want the stacks one block, no more than 8px between them", step, g, i+2)
+		}
 	}
 	tb.more(step, l, 3, "1 more vocabulary")
 	tb.audit(step)

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"net/http/httptest"
 	"os"
 	"testing"
@@ -17,8 +18,8 @@ var moreStockFixture = abs("../../testdata/vocab/stock/more")
 // candidate's rows, a link without JavaScript and an answer swapped in
 // place with it, and pressing another closes the first; the URL carries
 // the open candidate, so a reload draws the same page and Back the one
-// before. At 390 wide the shelf and the yard are one row that scrolls
-// sideways. On the fitment fixture, a rotor with more rows than the page
+// before. At 390 wide the candidates are one row that scrolls
+// sideways, the open one's rows under its tag. On the fitment fixture, a rotor with more rows than the page
 // shows: "Show all" loads every row, in place where scripts run. axe
 // audits each state. CI (CI set) needs the browser; a machine without
 // one skips.
@@ -95,24 +96,52 @@ func TestStockStrip(t *testing.T) {
 			}
 			demo.take()
 
-			// 390 wide: the shelf and the yard are one row that scrolls
-			// sideways, the yard's column at the edge, and the page does
-			// not.
+			// 390 wide: the candidates are one row that scrolls sideways
+			// from one edge of the window to the other, the open one's
+			// rows under its tag, in its column, shelf over yard, and the
+			// page does not scroll.
 			tb.window(390, 844)
 			tb.do(chromedp.Navigate(srv.URL + first))
 			tb.wait(`#stock-region`)
 			demo.take()
 			m := measure[[]float64](tb, `(() => {
-				const r = document.getElementById("stock-region"), box = r.getBoundingClientRect();
-				const before = r.children[1].getBoundingClientRect().left;
-				r.scrollTo({left: r.scrollWidth, behavior: "instant"});
-				const after = r.children[1].getBoundingClientRect();
-				return [r.scrollWidth, r.clientWidth, before, after.left, after.right, box.left, box.right, document.documentElement.scrollWidth, innerWidth];
+				const c = document.querySelector(".cands"), box = c.getBoundingClientRect();
+				const rows = document.getElementById("stock-rows"), tag = rows.previousElementSibling;
+				tag.scrollIntoView({block: "nearest", inline: "start", behavior: "instant"});
+				const t = tag.getBoundingClientRect(), r = rows.getBoundingClientRect();
+				const cols = [...document.getElementById("stock-region").children].map(e => e.getBoundingClientRect());
+				return [c.scrollWidth, c.clientWidth, box.left, box.right, t.left, t.right, t.bottom, r.left, r.right, r.top, cols[0].bottom, cols[1].top, cols[0].left, cols[1].left, document.documentElement.scrollWidth, innerWidth];
 			})()`)
-			scrollW, clientW, before, left, right, boxL, boxR, pageW, winW := m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8]
-			if scrollW <= clientW || before < boxR-3*16 || before >= boxR || left < boxL || right > boxR+1 || pageW > winW {
-				t.Errorf("390 wide: the columns hold %v in %v, the yard's from %v to %v–%v in %v–%v, the page %v in %v; want the yard at the edge, then scrolled in, and the page not to scroll",
-					scrollW, clientW, before, left, right, boxL, boxR, pageW, winW)
+			scrollW, clientW, boxL, boxR, tagL, tagR, tagB, rowsL, rowsR, rowsT := m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8], m[9]
+			shelfB, yardT, shelfL, yardL, pageW, winW := m[10], m[11], m[12], m[13], m[14], m[15]
+			if scrollW <= clientW || boxL > 0 || boxR < winW || pageW > winW {
+				t.Errorf("390 wide: the candidates hold %v in %v, from %v to %v, the page %v in %v; want one row that scrolls, from edge to edge of a page that does not", scrollW, clientW, boxL, boxR, pageW, winW)
+			}
+			if math.Abs(rowsL-tagL) > 1 || math.Abs(rowsR-tagR) > 1 || rowsT < tagB || tagR >= winW {
+				t.Errorf("390 wide: the tag from %v to %v, down to %v, its rows from %v to %v, from %v; want the rows under their tag, in its column, and the next tag at the edge", tagL, tagR, tagB, rowsL, rowsR, rowsT)
+			}
+			if yardT < shelfB || math.Abs(yardL-shelfL) > 1 {
+				t.Errorf("390 wide: the shelf at %v down to %v, the yard at %v from %v; want the shelf over the yard", shelfL, shelfB, yardL, yardT)
+			}
+			// The vehicle's line is carried from the names, which scroll,
+			// to the strip of parts, which does not: under the row it
+			// comes down where the row left it, wherever the row is.
+			carried := measure[[]float64](tb, `(async () => {
+				if (!CSS.supports("animation-timeline: --a") || !CSS.supports("timeline-scope: --a")) return [];
+				const hang = document.querySelector(".hang"), out = [];
+				for (const to of [0, 120, hang.scrollWidth]) {
+					hang.scrollTo({left: to, behavior: "instant"});
+					await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+					const carry = document.querySelector(".carry"), piece = getComputedStyle(carry.firstElementChild, "::before");
+					const stacks = document.querySelector("#aka .stacks"), aka = stacks.getBoundingClientRect(), line = getComputedStyle(stacks, "::before");
+					out.push(carry.getBoundingClientRect().left + parseFloat(piece.left), aka.left + parseFloat(line.left));
+				}
+				return out;
+			})()`)
+			for i := 0; i+1 < len(carried); i += 2 {
+				if math.Abs(carried[i]-carried[i+1]) > 1.5 {
+					t.Errorf("390 wide: under the row the vehicle's line is at %v, and in the row at %v; want one line, wherever the row is scrolled", carried[i], carried[i+1])
+				}
 			}
 			tb.audit(name + ", 390 wide")
 			tb.window(1280, 900)

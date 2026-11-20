@@ -470,8 +470,19 @@
     const id = a.dataset.focus || a.id;
     const dialog = a.closest('[popover]');
     if (dialog) dialog.hidePopover();
+    // On a phone the candidates are a row that scrolls sideways: the
+    // answer that replaces it keeps its place, and shows the candidate
+    // whose rows it opened.
+    const row = a.closest('.cands');
+    const left = row ? row.scrollLeft : 0;
     const u = new URL(a.href);
     ask(u.pathname + u.search, 'push').then(() => {
+      const cands = row && document.querySelector('#answer .cands');
+      if (cands) {
+        cands.scrollLeft = left;
+        const open = cands.querySelector('.cand:has(+ .rows)');
+        if (open) open.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
       const number = part && document.getElementById('from-number');
       if (number) {
         number.focus({ preventScroll: true });

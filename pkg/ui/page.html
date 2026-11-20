@@ -178,8 +178,8 @@ is open and the panel shown whole, which plate.js tells a history entry by. */}}
 </div>
 {{- end}}
 
-{{/* card is a bracket's card: its rows, each a label and its value on a
-line, or its one large value, there but empty until its characters are
+{{/* card is a bracket's card: its rows, each a label over its value,
+or its one large value, there but empty until its characters are
 typed. The check digit's opens its arithmetic, a popover; the year's
 carries the codes around it, one run of small text. */}}
 {{define "card" -}}
@@ -212,8 +212,9 @@ carries the codes around it, one run of small text. */}}
 {{- end}}
 
 {{/* aka is "Also known as", the first derived card, with no box of its
-own: the maker's, the vehicle's and the year's lines run on down through
-its stacks, one for each vocabulary loaded. A stack is the vocabulary's
+own: the maker's, the vehicle's and the year's lines run on down into
+its stacks, one for each vocabulary loaded, which on a wide page are one
+block, strip against strip. A stack is the vocabulary's
 names as plates (aka-tag), the first on top and the rest under it, their
 edges showing. The vocabulary's name on the top plate is the stack's
 switch, the label of a checkbox (no script): on, the stack is one plate,
@@ -277,8 +278,10 @@ names), the vehicle's part types as the second tape, each a link that
 presses it, two rows of them and "N more" (#324), which opens the part
 types dialog, every part type under the headings of a part vocabulary,
 and the pressed one's candidates as manila tags on two rails
-of pinstripe tape: Vehicle's and Model year's, down from the pressed part
-type (.risers) and along (.rails) to each eyelet (ui.css). A tag's
+of pinstripe tape: Vehicle's and Model year's, carried from the names to
+the strip on a narrow page (.carry), out of the strip (.stems), along
+(.runs) and into the pressed part type (.drops), then down from it
+(.risers) and along (.rails) to each eyelet (ui.css). A tag's
 number is a strip of label tape across it; its rows are the catalog's
 words, verbatim; its marks are ink on it: a solid stamp checked, a dashed
 one not, plain words for what has nothing checked. Its bottom edge is its
@@ -290,7 +293,8 @@ Vocabularies dialog's button or a link on. Every link here is the page's
 own, which plate.js swaps in place (swap). */}}
 {{define "fit" -}}
 <section class="fit" id="fit" aria-labelledby="fit-h">
-{{if .Types}}<div class="fitstrip">
+{{if .Types}}<span class="carry" aria-hidden="true"><span></span><span></span><span></span></span>
+<div class="fitstrip">
 <h2 id="fit-h" class="stamp">Parts that fit · {{.Catalog}}</h2>
 <span class="seg g-vds"><span class="w">{{.Model}}</span></span>
 <span class="seg g-year"><span class="w">{{.Year}}</span></span>
@@ -303,10 +307,11 @@ own, which plate.js swaps in place (swap). */}}
 <li class="{{.Strip.KeyClass}}"><button type="button" id="more-types" popovertarget="part-types">{{range .Strip.Keys}}<span class="kn c{{.Cols}}">{{.N}} more<span class="visually-hidden"> {{if eq .N 1}}part type{{else}}part types{{end}}</span></span>{{end}}</button></li>
 </ul>
 </div>
-{{template "part-types-dialog" .Dialog}}
+{{if .Pressed}}<span class="stems" aria-hidden="true"></span><span class="runs" aria-hidden="true"></span><span class="drops" aria-hidden="true"></span>
+{{end}}{{template "part-types-dialog" .Dialog}}
 {{if .Invite}}<p class="blank"><span>Press a part type to see what fits this vehicle.</span></p>
 {{end}}{{with .NoneFit}}<p class="blank"><span>{{.}}</span></p>
-{{end}}{{if .Tags}}<ol class="cands" aria-label="Candidates: {{.Pressed}}">
+{{end}}{{if .Tags}}<ol class="cands" aria-label="Candidates: {{.Pressed}}" tabindex="0">
 {{range .Tags}}<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
 <p class="numtape"><b class="num">{{.Number}}</b>{{with .Years}} <span class="yrs">{{.}}</span>{{end}}</p>
 <dl>
