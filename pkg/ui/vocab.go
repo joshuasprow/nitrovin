@@ -670,7 +670,11 @@ type workerConfig struct {
 	// Catalog is the server's catalog, nil for none: it is not published,
 	// but while the server has one the browser compiles none (ADR 0023).
 	Catalog *workerFile `json:"catalog,omitempty"`
-	EPA     *Offer      `json:"epa,omitempty"`
+	// Stock are the server's stock sources, each its name and what it
+	// holds: never published, but the page's fit asks the server for
+	// their stock while the server holds the catalog (ADR 0019).
+	Stock []workerFile `json:"stock,omitempty"`
+	EPA   *Offer       `json:"epa,omitempty"`
 	// Elements are the data month's public elements, which the worker
 	// lays a VIN's decode out by and names a translation's unchecked
 	// qualifiers by; ErrorTexts its error codes' texts, by code.
@@ -683,7 +687,8 @@ type workerConfig struct {
 
 // workerFile is one of the server's files. Vehicles is the catalog's
 // vehicle vocabulary, or vpic, which the browser's lines page filters on
-// (catalogLines); "" for every other file.
+// (catalogLines); Holds is a stock source's kind, shelf or yard; each ""
+// for every other file.
 type workerFile struct {
 	Name     string `json:"name"`
 	Kind     string `json:"kind"`
@@ -691,6 +696,7 @@ type workerFile struct {
 	Blake3   string `json:"blake3"`
 	URL      string `json:"url,omitempty"`
 	Vehicles string `json:"vehicles,omitempty"`
+	Holds    string `json:"holds,omitempty"`
 }
 
 // BrowserConfig is what the server gives the browser's pages
@@ -707,8 +713,8 @@ type BrowserConfig struct {
 }
 
 // ReadWorkerConfig reads a worker's config, /sw.js's. The server's
-// catalog, which it does not publish, is among Info's vocabularies, of
-// kind catalog.
+// catalog and stock, which it does not publish, are among Info's
+// vocabularies, of kinds catalog and stock.
 func ReadWorkerConfig(config []byte) (BrowserConfig, error) {
 	var c workerConfig
 	if err := json.Unmarshal(config, &c); err != nil {
@@ -720,6 +726,10 @@ func ReadWorkerConfig(config []byte) (BrowserConfig, error) {
 	}
 	if f := c.Catalog; f != nil {
 		info.Vocabularies = append(info.Vocabularies, contract.VocabularyFile{Name: f.Name, Kind: string(vocab.KindCatalog), Version: f.Version, Blake3: f.Blake3, Vehicles: f.Vehicles})
+	}
+	for _, f := range c.Stock {
+		info.Vocabularies = append(info.Vocabularies, contract.VocabularyFile{Name: f.Name, Kind: string(vocab.KindStock), Version: f.Version, Blake3: f.Blake3,
+			StockCounts: &contract.StockCounts{Source: f.Holds}})
 	}
 	return BrowserConfig{Info: info, Offer: c.EPA, DataRelease: c.DataRelease, ErrorTexts: c.ErrorTexts}, nil
 }
@@ -744,7 +754,12 @@ func (h *Handler) serviceWorker(w http.ResponseWriter, info contract.Info) error
 			continue
 		}
 		if f.Kind == string(vocab.KindStock) {
-			continue // never published: a browser loads stock of its own
+			// Never published: a browser loads stock of its own. It only
+			// needs to know what the server's fit can ask of it.
+			if f.StockCounts != nil {
+				c.Stock = append(c.Stock, workerFile{Name: f.Name, Kind: f.Kind, Version: f.Version, Blake3: f.Blake3, Holds: f.Source})
+			}
+			continue
 		}
 		c.Files = append(c.Files, workerFile{Name: f.Name, Kind: f.Kind, Version: f.Version, Blake3: f.Blake3, URL: FilePath(info, f)})
 	}

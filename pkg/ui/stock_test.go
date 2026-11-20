@@ -30,8 +30,11 @@ var stockNames = []string{"shelf-annex", "shelf-orphans", "shelf-stock", "yard-s
 // stockPath is a stock fixture's path, by name.
 func stockPath(name string) string {
 	dir := filepath.Join("..", "..", "testdata", "vocab", "stock")
-	if name == "shelf-orphans" {
+	switch name {
+	case "shelf-orphans":
 		dir = filepath.Join(dir, "drift")
+	case "shelf-more":
+		dir = filepath.Join(dir, "more")
 	}
 	return filepath.Join(dir, name+".jsonl")
 }
@@ -54,11 +57,18 @@ func stockPicked(t *testing.T, names ...string) []Picked {
 // as JSON Lines, and the stock fixtures in the browser's order.
 func stockServer(t *testing.T, d *nitrovin.Decoder) *nitrovin.Translator {
 	t.Helper()
+	return stockServerOf(t, d, stockNames)
+}
+
+// stockServerOf is stockServer with the stock fixtures names, in the
+// browser's order: by name.
+func stockServerOf(t *testing.T, d *nitrovin.Decoder, names []string) *nitrovin.Translator {
+	t.Helper()
 	var paths []string
 	for _, n := range []string{"part-types", "part-codes", "catalog-models", "catalog"} {
 		paths = append(paths, fitmentPath(n))
 	}
-	for _, n := range stockNames {
+	for _, n := range names {
 		paths = append(paths, stockPath(n))
 	}
 	files, err := vocab.Open(paths...)
@@ -212,6 +222,68 @@ func TestLibraryStockFit(t *testing.T) {
 	}
 	if stored(openWith(t, s, disk))[len(stockNames)+1] != "yard-stock" {
 		t.Errorf("online again: %q", stored(openWith(t, s, disk)))
+	}
+}
+
+// stockTargets are pages of the fixture's stock: strips, a candidate
+// open, past ten rows and every row, a side, and rows with no number.
+var stockTargets = []string{
+	"/?from.vin=1D7RV1GT5AS123456&part.id=brake-rotor-front",
+	"/?from.vin=1D7RV1GT5AS123456&part.id=brake-rotor-front&fitment.number=BR-2001",
+	"/?from.vin=1D7RV1GT5AS123456&part.id=brake-rotor-front&fitment.number=BR-2001&rows=all",
+	"/?from.vin=1D7RV1GT5AS123456&part.id=mirror",
+	"/?from.vin=1D7RV1GT5AS123456&part.id=mirror&fitment.number=MR-1001&fitment.side=left",
+}
+
+// TestLibraryStockPage: the browser's library draws the stock strips and
+// rows as the server's pages do with the same files: from the stock it
+// holds beside its own catalog, and, while the server holds the catalog,
+// from the server's /v1/fit, asked for the server's stock, a candidate's
+// every row from its fitment key.
+func TestLibraryStockPage(t *testing.T) {
+	d := embedded(t)
+	names := moreStockNames()
+	var asked []contract.FitRequest
+	srv := stockPages(stockServerOf(t, d, names), &asked)
+
+	s, disk := newDecoderServer(t, d, "part-types", "part-codes"), newDisk()
+	l := browserStock(t, s, disk)
+	if _, err := l.Load(stockPicked(t, "shelf-more"), quiet); err != nil {
+		t.Fatal(err)
+	}
+	browser := NewInBrowser(l, BrowserConfig{}, log.New(io.Discard, "", 0))
+	for _, target := range stockTargets {
+		if want, got := fitSection(t, srv, target), fitSection(t, browser, target); got != want {
+			t.Errorf("%s in the browser:\n%s\nwant the server's\n%s", target, got, want)
+		}
+	}
+
+	// The server holds the catalog and the stock: the browser asks its
+	// /v1/fit for them.
+	s = newDecoderServer(t, d, "part-types", "part-codes", "catalog-models")
+	s.serve(t, "parts-catalog", fitmentFile(t, "catalog"))
+	for _, n := range names {
+		s.serve(t, n, mustRead(t, stockPath(n)))
+	}
+	s.fits = stockServerOf(t, d, names)
+	l = openWith(t, s, newDisk())
+	if got := len(l.ServerStock()); got != len(names) || len(l.Server()) != 3 {
+		t.Fatalf("the server's stock %d, its files %+v; want %d stock files, none of them read", got, l.Server(), len(names))
+	}
+	browser = NewInBrowser(l, BrowserConfig{}, log.New(io.Discard, "", 0))
+	for _, target := range stockTargets {
+		s.gets = nil
+		if want, got := fitSection(t, srv, target), fitSection(t, browser, target); got != want {
+			t.Errorf("%s in the browser, the server's catalog:\n%s\nwant the server's\n%s", target, got, want)
+		}
+		if !slices.ContainsFunc(s.gets, func(g string) bool {
+			return strings.HasPrefix(g, "/v1/fit?") && strings.Contains(g, "stock=shelf&stock=yard")
+		}) {
+			t.Errorf("%s: the browser asked %q; want the server's stock", target, s.gets)
+		}
+		if strings.HasSuffix(target, "rows=all") && !slices.ContainsFunc(s.gets, func(g string) bool { return strings.Contains(g, "from.fitment.number=BR-2001") }) {
+			t.Errorf("%s: the browser asked %q; want the fitment's stock", target, s.gets)
+		}
 	}
 }
 

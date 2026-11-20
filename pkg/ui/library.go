@@ -60,7 +60,11 @@ type Library struct {
 	// a zero Name when it has none: one catalog per nitrovin (ADR 0023),
 	// so the browser then compiles none.
 	serverCatalog contract.VocabularyFile
-	now           func() time.Time
+	// serverStock are the server's stock sources as its worker config
+	// names them, never published: the page's fit asks the server for
+	// their stock while the server holds the catalog (ADR 0019).
+	serverStock []contract.VocabularyFile
+	now         func() time.Time
 	// opened is how long each step of opening took, as Server-Timing
 	// metrics: what a cold start costs.
 	opened string
@@ -205,8 +209,9 @@ type held struct {
 // remote, and the stored files, from disk. A stored file is read from its
 // index when this release stored one, else parsed again and its index
 // stored; the stored catalog is opened in place (vocab.OpenCompiled). The
-// server's catalog, which info lists too, is not read: it only stops the
-// browser compiling one. The error is a Library that cannot answer at
+// server's catalog and stock, which info lists too, are not read: the
+// catalog only stops the browser compiling one, and the page's fit asks
+// the server for both. The error is a Library that cannot answer at
 // all: no spine bundle, or a stored list it cannot read.
 func OpenLibrary(info contract.Info, remote Remote, disk Disk) (*Library, error) {
 	var timings []string
@@ -233,8 +238,12 @@ func OpenLibrary(info contract.Info, remote Remote, disk Disk) (*Library, error)
 	l := &Library{info: info, month: month, disk: disk, remote: remote, now: time.Now, shelfDrift: map[string]*stockDrift{}}
 	s := &shelf{}
 	for _, v := range info.Vocabularies {
-		if v.Kind == string(vocab.KindCatalog) {
+		switch v.Kind {
+		case string(vocab.KindCatalog):
 			l.serverCatalog = v
+			continue
+		case string(vocab.KindStock):
+			l.serverStock = append(l.serverStock, v)
 			continue
 		}
 		h := &held{name: v.Name, server: true}
@@ -468,7 +477,9 @@ func (l *Library) LoadInfo() contract.Info { return l.infoWith(false) }
 // infoWith is Info, its drift measured when drift is set.
 func (l *Library) infoWith(drift bool) contract.Info {
 	info := l.info
-	info.Vocabularies = slices.DeleteFunc(slices.Clone(info.Vocabularies), func(v contract.VocabularyFile) bool { return v.Kind == string(vocab.KindCatalog) })
+	info.Vocabularies = slices.DeleteFunc(slices.Clone(info.Vocabularies), func(v contract.VocabularyFile) bool {
+		return v.Kind == string(vocab.KindCatalog) || v.Kind == string(vocab.KindStock)
+	})
 	s := l.state.Load()
 	for _, h := range s.browser {
 		if !h.linked() {
@@ -497,6 +508,9 @@ func (l *Library) infoWith(drift bool) contract.Info {
 // ServerCatalog is the server's catalog, its name and vehicle vocabulary,
 // a zero Name when it has none.
 func (l *Library) ServerCatalog() contract.VocabularyFile { return l.serverCatalog }
+
+// ServerStock are the server's stock sources, each its name and kind.
+func (l *Library) ServerStock() []contract.VocabularyFile { return l.serverStock }
 
 // Month is the data month of the release's spine bundle.
 func (l *Library) Month() string { return l.month.Name() }
@@ -650,13 +664,28 @@ func (l *Library) fit(ctx context.Context, req contract.FitRequest, dec *contrac
 
 // serverFit is req answered by the server's GET /v1/fit, and the body it
 // came in: the page's requests alone, from a VIN, with a part type of the
-// catalog's spine and a page; its refusal as the server gave it, and in
-// words when the server cannot be reached.
+// catalog's spine and a page, or from a fitment key, each with the stock
+// it asks for; its refusal as the server gave it, and in words when the
+// server cannot be reached.
 func (l *Library) serverFit(req contract.FitRequest) (contract.Fit, []byte, error) {
-	q := url.Values{"from.vin": {req.From.VIN}}
+	q := url.Values{}
+	what := "the fit of " + req.From.VIN
+	if k := req.From.Fitment; k != nil {
+		q.Set("from.fitment.type", k.Type)
+		q.Set("from.fitment.number", k.Number)
+		if k.Side != "" {
+			q.Set("from.fitment.side", k.Side)
+		}
+		what = "the stock of " + k.Number
+	} else {
+		q.Set("from.vin", req.From.VIN)
+	}
 	if p := req.Part; p != nil {
 		q.Set("part.spine", p.Spine)
 		q.Set("part.id", p.ID)
+	}
+	if len(req.Stock) > 0 {
+		q["stock"] = req.Stock
 	}
 	if req.Limit != 0 {
 		q.Set("limit", strconv.Itoa(req.Limit))
@@ -666,7 +695,7 @@ func (l *Library) serverFit(req contract.FitRequest) (contract.Fit, []byte, erro
 	}
 	status, body, err := l.remote.Get("/v1/fit?" + q.Encode())
 	if err != nil {
-		return contract.Fit{}, nil, &pageError{Status: http.StatusServiceUnavailable, Message: "Fitting the VIN " + req.From.VIN +
+		return contract.Fit{}, nil, &pageError{Status: http.StatusServiceUnavailable, Message: "Answering " + what +
 			" needs this nitrovin's server, whose catalog it is, and the server could not be reached: this browser may be offline."}
 	}
 	if status != http.StatusOK {
@@ -674,11 +703,11 @@ func (l *Library) serverFit(req contract.FitRequest) (contract.Fit, []byte, erro
 		if json.Unmarshal(body, &p) == nil && p.Status != 0 && p.Type != contract.Internal {
 			return contract.Fit{}, nil, &p
 		}
-		return contract.Fit{}, nil, &pageError{Status: http.StatusBadGateway, Message: fmt.Sprintf("The server answered HTTP %d to the fit of %s: %s", status, req.From.VIN, p.Detail)}
+		return contract.Fit{}, nil, &pageError{Status: http.StatusBadGateway, Message: fmt.Sprintf("The server answered HTTP %d to %s: %s", status, what, p.Detail)}
 	}
 	var w serverFitJSON
 	if err := json.Unmarshal(body, &w); err != nil {
-		return contract.Fit{}, nil, fmt.Errorf("reading the server's fit of %s: %w", req.From.VIN, err)
+		return contract.Fit{}, nil, fmt.Errorf("reading the server's answer to %s: %w", what, err)
 	}
 	fit, err := w.fit()
 	return fit, body, err
@@ -705,18 +734,53 @@ type serverFitJSON struct {
 			Unconfirmed []json.RawMessage    `json:"unconfirmed"`
 			Confirmed   []json.RawMessage    `json:"confirmed"`
 		} `json:"applications"`
+		Shelf *serverStockList `json:"shelf"`
+		Yard  *serverStockList `json:"yard"`
 	} `json:"candidates"`
-	Total          int       `json:"total"`
-	Next           string    `json:"next"`
-	Now            time.Time `json:"now"`
-	DataMonth      string    `json:"data_month"`
-	DecoderVersion string    `json:"decoder_version"`
+	Shelf          *serverStockList `json:"shelf"`
+	Yard           *serverStockList `json:"yard"`
+	ShelfByVehicle *serverStockList `json:"shelf_by_vehicle"`
+	Total          int              `json:"total"`
+	Next           string           `json:"next"`
+	Now            time.Time        `json:"now"`
+	DataMonth      string           `json:"data_month"`
+	DecoderVersion string           `json:"decoder_version"`
 }
 
 // serverFitModel is one of a server fit's models, as the page reads it.
 type serverFitModel struct {
 	Vehicle json.RawMessage `json:"vehicle"`
 	Name    string          `json:"name"`
+}
+
+// serverStockList is one of a server fit's stock lists, its rows'
+// catalog vehicles read by the catalog's kind.
+type serverStockList struct {
+	Rows []struct {
+		contract.StockRow
+		Vehicle json.RawMessage `json:"vehicle"`
+	} `json:"rows"`
+	Total   int                    `json:"total"`
+	Sources []contract.StockSource `json:"sources"`
+}
+
+// list is s as the page reads a stock list, nil for none.
+func (s *serverStockList) list(vpic bool) (*contract.StockList, error) {
+	if s == nil {
+		return nil, nil
+	}
+	out := &contract.StockList{Rows: make([]contract.StockRow, len(s.Rows)), Total: s.Total, Sources: s.Sources}
+	for i, r := range s.Rows {
+		out.Rows[i] = r.StockRow
+		if r.Vehicle != nil {
+			v, err := catalogVehicleJSON(r.Vehicle, vpic)
+			if err != nil {
+				return nil, err
+			}
+			out.Rows[i].Vehicle = &v
+		}
+	}
+	return out, nil
 }
 
 // fit is w as the page reads a fit.
@@ -729,6 +793,16 @@ func (w serverFitJSON) fit() (contract.Fit, error) {
 			return contract.Fit{}, err
 		}
 		out.Models = append(out.Models, contract.FitModel{Vehicle: v, Name: m.Name})
+	}
+	var err error
+	if out.Shelf, err = w.Shelf.list(vpic); err != nil {
+		return contract.Fit{}, err
+	}
+	if out.Yard, err = w.Yard.list(vpic); err != nil {
+		return contract.Fit{}, err
+	}
+	if out.ShelfByVehicle, err = w.ShelfByVehicle.list(vpic); err != nil {
+		return contract.Fit{}, err
 	}
 	for _, c := range w.Candidates {
 		fc := contract.FitCandidate{Fitment: c.Fitment, Reached: c.Reached}
@@ -746,6 +820,12 @@ func (w serverFitJSON) fit() (contract.Fit, error) {
 				return contract.Fit{}, err
 			}
 			fc.Applications = append(fc.Applications, contract.FitApplication{Vehicle: v, First: a.First, Last: a.Last, Options: a.Options, Unconfirmed: un, Confirmed: con})
+		}
+		if fc.Shelf, err = c.Shelf.list(vpic); err != nil {
+			return contract.Fit{}, err
+		}
+		if fc.Yard, err = c.Yard.list(vpic); err != nil {
+			return contract.Fit{}, err
 		}
 		out.Candidates = append(out.Candidates, fc)
 	}

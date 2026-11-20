@@ -357,7 +357,9 @@ location), with rows by number, by a retired number, and with no number by
 a part vocabulary's entry and by a spine entry; and a yard (`yard-stock`)
 with a precomputed decode, a VIN nitrovin decodes, and the catalog's own
 vehicles. It loads clean beside the catalog; `testdata/vocab/stock/drift/`
-adds a third shelf with an orphan. A fit reads stock through
+adds a third shelf with an orphan, and `testdata/vocab/stock/more/` a
+fourth (`shelf-more`), twelve more rows of one rotor, so a candidate has
+more than the ten rows the page shows before "Show all". A fit reads stock through
 `stock.Source` (`pkg/stock`), the interface a connector (ADR 0020)
 implements too: three lookups, one per list kind, each taking a context
 and returning the release and `as_of` it read; `stock.NewFile` is the

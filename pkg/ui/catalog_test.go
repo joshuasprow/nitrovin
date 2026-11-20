@@ -152,7 +152,7 @@ func (s *decoderServer) Post(path string, body []byte) (int, []byte, error) {
 }
 
 // serve has s serve data as its file name, a catalog naming its vehicle
-// vocabulary as /v1/info does.
+// vocabulary and a stock file what it holds, as /v1/info does.
 func (s *decoderServer) serve(t *testing.T, name string, data []byte) {
 	t.Helper()
 	f, err := vocab.Read(name+".jsonl", bytes.NewReader(data))
@@ -162,6 +162,9 @@ func (s *decoderServer) serve(t *testing.T, name string, data []byte) {
 	v := contract.VocabularyFile{Name: name, Kind: string(f.Kind), Blake3: hex.EncodeToString(f.Hash[:])}
 	if c := f.Catalog(); c != nil {
 		v.Spine, v.Vehicles = c.Info().Spine, c.Info().Vehicles
+	}
+	if f.Kind == vocab.KindStock {
+		v.StockCounts = &contract.StockCounts{Source: string(f.Holds)}
 	}
 	s.info.Vocabularies = append(s.info.Vocabularies, v)
 	s.files[FilePath(s.info, v)] = data
