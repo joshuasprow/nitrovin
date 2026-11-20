@@ -117,7 +117,9 @@ text field laid over them.
 - **A typed character stamps** into its cell (scale 1.6 to 1, 0.18 s).
 - **Narrow windows keep the plate.** Under 34 rem the cells wrap to two rows of
   nine, breaking after the check digit, so a cell stays wide enough for a
-  finger. Under a coarse pointer the selection handles are the cells' own.
+  finger. Under a coarse pointer the selection handles are the cells' own,
+  and a long press selects the whole VIN, drawn on the cells; the phone
+  draws no handles of its own over them.
 - **The second mode changes none of this.** In VIN mode the plate, its
   cells, its field and its answer are as above. The one addition is the
   switch over the plate's leading edge (the plate's second mode, below).
