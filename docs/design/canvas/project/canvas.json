@@ -24,7 +24,7 @@
       "y": 0
     },
     "Controls.dc.html": {
-      "h": 2850,
+      "h": 3800,
       "title": "Dialogs, forms and inputs, light",
       "w": 1280,
       "x": 5440,
@@ -35,28 +35,28 @@
       "title": "The VIN input, both modes, dark",
       "w": 1280,
       "x": 0,
-      "y": 3730
+      "y": 3920
     },
     "Materials-Dark.dc.html": {
       "h": 1820,
       "title": "Materials and elevation, dark",
       "w": 1280,
       "x": 1360,
-      "y": 3730
+      "y": 3920
     },
     "Diagram-Dark.dc.html": {
       "h": 1940,
       "title": "Cards, brackets and lines, dark",
       "w": 1280,
       "x": 2720,
-      "y": 3730
+      "y": 3920
     },
     "Controls-Dark.dc.html": {
-      "h": 2850,
+      "h": 3800,
       "title": "Dialogs, forms and inputs, dark",
       "w": 1280,
       "x": 5440,
-      "y": 3730
+      "y": 3920
     },
     "Fitment.dc.html": {
       "h": 3610,
@@ -70,7 +70,7 @@
       "title": "The fitment card, dark",
       "w": 1280,
       "x": 4080,
-      "y": 3730
+      "y": 3920
     },
     "States.dc.html": {
       "h": 3540,
@@ -84,7 +84,7 @@
       "title": "States, dark",
       "w": 1280,
       "x": 6800,
-      "y": 3730
+      "y": 3920
     }
   },
   "createdOnFiles": {

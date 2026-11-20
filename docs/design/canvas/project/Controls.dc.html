@@ -46,13 +46,30 @@ dl.snippets dd{margin: 0; min-width: 0}
 dl.snippets .copyable{margin: 0}
 table{border-collapse: collapse; width: 100%}
 th, td{text-align: left; vertical-align: top; padding: .3rem .75rem .3rem 0; border-bottom: 1px solid var(--line)}
+thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase; border-bottom: 3px solid var(--steel)}
 pre{margin: 0; padding: .5rem .75rem; border: 1px solid var(--line); border-radius: 2px; overflow-x: auto; font-size: 13px; background: color-mix(in srgb, var(--fg) 6%, var(--card-bg)); box-shadow: inset 0 2px 3px rgb(0 0 0 / .18)}
 pre.wrap{white-space: pre-wrap; overflow-wrap: anywhere; max-height: 16rem; overflow-y: auto}
 .copyable{display: flex; gap: .5rem; align-items: flex-start; margin: .25rem 0}
 .copyable > pre{flex: 1; min-width: 0}
 button.copy{flex: none}
+details{border: 1px solid var(--line); border-radius: 2px; padding: .25rem .75rem; margin: .5rem 0}
+summary{cursor: pointer; font-weight: 600; padding: .25rem 0}
 .wide, .scroll{overflow-x: auto}
 .scroll{margin: .5rem 0 1rem}
+table.catalog th[scope=row]{white-space: nowrap}
+table.catalog details{border: 0; padding: 0; margin: 0}
+table.catalog summary{font-weight: 400; padding: 0}
+table.catalog .row-details summary{color: var(--link); cursor: pointer}
+table.catalog dl{margin: .25rem 0 0; display: grid; grid-template-columns: auto 1fr; gap: .1rem .6rem}
+table.catalog dt{font-weight: 600}
+table.catalog dd{margin: 0; overflow-wrap: anywhere}
+.loaders{display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: .75rem; margin: .75rem 0}
+.load, .offer{display: grid; gap: .4rem; align-content: start; justify-items: start}
+.offer{border: 2px solid var(--line); border-radius: 2px; padding: 1rem}
+.load p, .offer p{margin: 0; font-size: 13px}
+.load input[type=file]{max-width: 100%}
+.dropzone{border: 2px dashed var(--steel); border-radius: 2px; padding: 1rem}
+details.more{margin: .75rem 0}
 .g-wmi{--c: var(--c-wmi); --cm: #c8102e}
 .g-vds{--c: var(--c-vds); --cm: #0b4fa8}
 .g-check{--c: var(--c-check); --cm: #5b2d8e}
@@ -172,10 +189,10 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}
 .sheet .vp.pad{padding:0 var(--gutter)}
 .sheet .vp header,.sheet .vp main{margin-bottom:0}
 .sheet .vp .popover.is-open{display:block !important;position:relative !important;inset:auto !important;margin:0 !important;max-height:none !important;overflow:visible !important}
-
+.sheet .vp .tagplate > .note.is-open{position:absolute !important;top:calc(100% + 10px) !important;right:0 !important;left:auto !important;width:30rem;z-index:2}
 </style>
 </helmet>
-<div class="root sheet" data-scheme="light" style="width: 1280px; height: 2850px; color: var(--fg); background: var(--bg)">
+<div class="root sheet" data-scheme="light" style="width: 1280px; height: 3800px; color: var(--fg); background: var(--bg)">
 <div><h1 class="sh-h1">Dialogs, forms and inputs</h1><p class="sh-intro">Everything behind a button is a popover. A dialog is a panel under a head of metal; a menu hangs from its button; a note has no head.</p></div>
 <h2 class="sh-h2">Dialogs</h2>
 <section>
@@ -237,7 +254,7 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 <p class="ptnone" hidden=""></p>
 <section class="ptgroup ptrecent" aria-labelledby="ptrecent-h">
 <div class="pthead"><h3 id="ptrecent-h">Opened recently</h3><button class="linkish clear-parts" type="button">Clear recent</button></div>
-<ul class="ptlist"><li data-part="headlamp"><a class="ptype swap" href="#" aria-current="true"><span class="nm">Headlamp Assembly</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li data-part="fog-lamp"><a class="ptype swap" href="#"><span class="nm">Fog Lamp</span> <span class="n">3<span class="visually-hidden"> candidates</span></span></a></li><li data-part="starter"><a class="ptype swap" href="#"><span class="nm">Starter Motor</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="alternator"><a class="ptype swap" href="#"><span class="nm">Alternator</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="brake-rotor-rear"><a class="ptype swap" href="#"><span class="nm">Brake Rotor, Rear</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li></ul>
+<ul class="ptlist"><li data-part="headlamp"><a class="ptype swap" href="#" aria-current="true"><span class="nm">Headlamp Assembly</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li data-part="fog-lamp"><a class="ptype swap" href="#"><span class="nm">Fog Lamp</span> <span class="n">3<span class="visually-hidden"> candidates</span></span></a></li><li data-part="starter"><a class="ptype swap" href="#"><span class="nm">Starter Motor</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li></ul>
 </section>
 <div class="ptgroups" id="ptgroups">
 <section class="ptgroup" aria-labelledby="ptg-0">
@@ -277,7 +294,7 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 <div class="sh-row">
 <section>
 <p class="sh-cap">Note <span>How a name on the tape was reached.</span></p>
-<div class="vp vp-wide pad" style="width: 700px; --vw: 1280px">
+<div class="vp vp-wide pad" style="width: 760px; --vw: 1280px; padding-bottom: 80px">
 
 <main id="ui-main" class="is-fw">
 <div id="answer" class="stage" data-vin="1FTEW1EG7FFA12345" data-label="2015 FORD F-150" data-complete="" data-done="wmi vds check year plant serial ">
@@ -308,11 +325,11 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 </section>
 <section>
 <p class="sh-cap">Menu <span>Recent VINs, then the examples.</span></p>
-<div class="vp vp-tab pad" style="width: 420px; --vw: 768px">
+<div class="vp vp-tab pad" style="width: 400px; --vw: 768px">
 
 <main id="ui-main" class="is-fw">
 <div id="vins" class="menu is-open popover" aria-label="VINs to try">
-<ul id="recent" class="examples" aria-label="Recent"><li><a class="example recent" href="#" title="1FTEW1EG7FFA12345">2015 FORD F-150</a></li><li><a class="example recent" href="#" title="1GCVKREC6EZ123456">2014 CHEVROLET Silverado</a></li><li><a class="example recent" href="#" title="4T1B11HK7JU512345">2018 TOYOTA Camry</a></li><li><a class="example recent" href="#" title="1FTEW1EG7FFO12345">2015 FORD F-150</a></li></ul>
+<ul id="recent" class="examples" aria-label="Recent"><li><a class="example recent" href="#" title="1FTEW1EG7FFA12345">2015 FORD F-150</a></li><li><a class="example recent" href="#" title="1GCVKREC6EZ123456">2014 CHEVROLET Silverado</a></li><li><a class="example recent" href="#" title="4T1B11HK7JU512345">2018 TOYOTA Camry</a></li></ul>
 <ul id="examples" class="examples" aria-label="Examples" hidden="">
 <li><a class="example" href="#" title="a 2015 Ford F-150">1FTEW1EG7FFA12345</a></li>
 <li><a class="example" href="#" title="a 2019 Honda CR-V">2HKRW2H53KH612345</a></li>
@@ -360,6 +377,129 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 
 </div>
 </section>
+<section>
+<p class="sh-cap">Vocabularies <span>A dashed box around a native file input, beside what the server holds; then a table of label-face headers over a steel rule, each row with a disclosure.</span></p>
+<div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px">
+
+<dialog id="vocabularies" aria-labelledby="browser-h" class="is-fw is-open popover" open="">
+<section id="browser" data-worker="/sw.js" data-release="(devel)/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19" data-state="ready" data-left-bytes="0" class="is-fw">
+<div class="dialog-head is-fw">
+<h2 id="browser-h">Vocabularies</h2>
+<button class="is-fw" type="button">Close</button>
+</div>
+<p id="browser-status" class="hint" role="status" aria-live="polite">Files stay in this browser</p><button id="update-now" hidden="" type="button">Update now</button>
+<p id="load-status" role="status" aria-live="polite"></p>
+<div id="browser-files">
+<div class="loaders">
+<div class="load dropzone">
+<label for="vocab-files">Drop or choose .jsonl files</label>
+<input type="file" id="vocab-files" multiple="" accept=".jsonl,application/jsonl" aria-describedby="vocab-files-hint">
+<p id="vocab-files-hint" class="hint">Kept in this browser · same name replaces · catalog on server: demo-catalog · no personal data in stock</p>
+</div>
+<div class="offer demo">
+<p id="demo-refused">The demo brings its own catalog, and this server has one, demo-catalog: one catalog per nitrovin, so the demo cannot load here.</p>
+</div>
+</div>
+<div class="scroll"><table class="catalog">
+<thead><tr><th scope="col">Name</th><th scope="col">Holds</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+<tbody>
+<tr data-where="vpic"><th scope="row"><a href="#">vpic</a></th>
+<td>spine of vehicles
+<details class="row-details"><summary>Details<span class="visually-hidden"> of vpic</span></summary><dl>
+<dt>Version</dt><dd class="version">2026_11</dd>
+<dt>Kept in</dt><dd>built in</dd>
+<dt>Status</dt><dd>the data month</dd>
+</dl></details></td>
+<td><div class="actions"></div></td></tr>
+<tr data-where="server"><th scope="row"><a href="#">demo-classics</a></th>
+<td>extension set of vehicles → vpic
+<details class="row-details"><summary>Details<span class="visually-hidden"> of demo-classics</span></summary><dl>
+<dt>Version</dt><dd class="version">2026.11-demo</dd>
+<dt>Kept in</dt><dd>this server</dd>
+<dt>Status</dt><dd>linked, no drift</dd>
+</dl></details></td>
+<td><div class="actions"></div></td></tr>
+<tr data-where="server"><th scope="row"><a href="#">demo-part-codes</a></th>
+<td>vocabulary of parts: code → demo-part-types
+<details class="row-details"><summary>Details<span class="visually-hidden"> of demo-part-codes</span></summary><dl>
+<dt>Version</dt><dd class="version">2026.11-demo</dd>
+<dt>Kept in</dt><dd>this server</dd>
+<dt>Status</dt><dd>linked, no drift</dd>
+</dl></details></td>
+<td><div class="actions"></div></td></tr>
+<tr data-where="server"><th scope="row"><a href="#">demo-part-types</a></th>
+<td>spine of parts
+<details class="row-details"><summary>Details<span class="visually-hidden"> of demo-part-types</span></summary><dl>
+<dt>Version</dt><dd class="version">2026.11-demo</dd>
+<dt>Kept in</dt><dd>this server</dd>
+<dt>Status</dt><dd>linked, no drift</dd>
+</dl></details></td>
+<td><div class="actions"></div></td></tr>
+<tr data-where="server"><th scope="row"><a href="#">demo-vehicles</a></th>
+<td>vocabulary of vehicles: make, model → vpic
+<details class="row-details"><summary>Details<span class="visually-hidden"> of demo-vehicles</span></summary><dl>
+<dt>Version</dt><dd class="version">2026.11-demo</dd>
+<dt>Kept in</dt><dd>this server</dd>
+<dt>Status</dt><dd>linked, no drift</dd>
+</dl></details></td>
+<td><div class="actions"></div></td></tr>
+</tbody>
+</table></div>
+<details class="more"><summary>Details</summary>
+<p id="storage-usage" class="hint">This site keeps 19.7 MB in this browser, of the 10,757 MB the browser allows it; the browser may clear it when it runs short of space.</p>
+<p class="hint">Release <code>(devel)/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19</code> · data 2026_11</p>
+</details></div>
+</section>
+</dialog>
+
+</div>
+</section>
+<section>
+<p class="sh-cap">Vocabularies, none loaded <span>The offer: one key and a hint.</span></p>
+<div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px">
+
+<dialog id="vocabularies" aria-labelledby="browser-h" class="is-fw is-open popover" open="">
+<section id="browser" data-worker="/sw.js" data-release="(devel)/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19" data-state="ready" data-left-bytes="0" class="is-fw">
+<div class="dialog-head is-fw">
+<h2 id="browser-h">Vocabularies</h2>
+<button class="is-fw" type="button">Close</button>
+</div>
+<p id="browser-status" class="hint" role="status" aria-live="polite">Files stay in this browser</p><button id="update-now" hidden="" type="button">Update now</button>
+<p id="load-status" role="status" aria-live="polite"></p>
+<div id="browser-files">
+<div class="loaders">
+<div class="load dropzone">
+<label for="vocab-files">Drop or choose .jsonl files</label>
+<input type="file" id="vocab-files" multiple="" accept=".jsonl,application/jsonl" aria-describedby="vocab-files-hint">
+<p id="vocab-files-hint" class="hint">Kept in this browser · same name replaces · a catalog alone compiles here · no personal data in stock</p>
+</div>
+<div class="offer demo">
+<button id="load-demo" data-demo="{&quot;files&quot;:[{&quot;name&quot;:&quot;demo-catalog&quot;,&quot;file&quot;:&quot;demo-catalog.jsonl&quot;,&quot;kind&quot;:&quot;catalog&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/e65ba8664ef7dcef854cd29e952ef345e6c4a552160a02bb8746ba783b5f4079/demo-catalog.jsonl&quot;},{&quot;name&quot;:&quot;demo-classics&quot;,&quot;file&quot;:&quot;demo-classics.jsonl&quot;,&quot;kind&quot;:&quot;extension-set&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/b75f776e4ede65f61375f37906d6a60a0726b38c25dfb65cd6f6c1cb29fcee7f/demo-classics.jsonl&quot;},{&quot;name&quot;:&quot;demo-part-codes&quot;,&quot;file&quot;:&quot;demo-part-codes.jsonl&quot;,&quot;kind&quot;:&quot;vocabulary&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/c62294a6a36622503671551fe135163b068ffdc693bd3c7b48c539bb1b408c9e/demo-part-codes.jsonl&quot;},{&quot;name&quot;:&quot;demo-part-types&quot;,&quot;file&quot;:&quot;demo-part-types.jsonl&quot;,&quot;kind&quot;:&quot;spine&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/eb39ef39d09ea8d73fea9bd94c26a3d9024be90592f083d70ceaf6dab86d1d58/demo-part-types.jsonl&quot;},{&quot;name&quot;:&quot;demo-shelf&quot;,&quot;file&quot;:&quot;demo-shelf.jsonl&quot;,&quot;kind&quot;:&quot;stock&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/5b6c41e794662b2b02fdf251e6ff3ec37d0c26f77cb27681035f86b71eb3a5c4/demo-shelf.jsonl&quot;},{&quot;name&quot;:&quot;demo-vehicles&quot;,&quot;file&quot;:&quot;demo-vehicles.jsonl&quot;,&quot;kind&quot;:&quot;vocabulary&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/ae4bc8b7d1760ff631f835f82cfa74447a08850e5b5c8a557d1542dbe66e4aaf/demo-vehicles.jsonl&quot;},{&quot;name&quot;:&quot;demo-yard-stock&quot;,&quot;file&quot;:&quot;demo-yard-stock.jsonl&quot;,&quot;kind&quot;:&quot;stock&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/f84819b72926ec25c06ff336475a4112eed4914e9d76a5b322a2511e69189b3b/demo-yard-stock.jsonl&quot;}],&quot;remove&quot;:[]}" aria-describedby="load-demo-hint" type="button">Load demo</button>
+<p id="load-demo-hint" class="hint">2026.11-demo · 15 kB · invented data</p>
+</div>
+</div>
+<div class="scroll"><table class="catalog">
+<thead><tr><th scope="col">Name</th><th scope="col">Holds</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+<tbody>
+<tr data-where="vpic"><th scope="row"><a href="#">vpic</a></th>
+<td>spine of vehicles
+<details class="row-details"><summary>Details<span class="visually-hidden"> of vpic</span></summary><dl>
+<dt>Version</dt><dd class="version">2026_11</dd>
+<dt>Kept in</dt><dd>built in</dd>
+<dt>Status</dt><dd>the data month</dd>
+</dl></details></td>
+<td><div class="actions"></div></td></tr>
+</tbody>
+</table></div>
+<details class="more"><summary>Details</summary>
+<p id="storage-usage" class="hint">This site keeps 19.7 MB in this browser, of the 10,757 MB the browser allows it; the browser may clear it when it runs short of space.</p>
+<p class="hint">Release <code>(devel)/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19</code> · data 2026_11</p>
+</details></div>
+</section>
+</dialog>
+
+</div>
+</section>
 <h2 class="sh-h2">Forms and inputs</h2>
 <section>
 <p class="sh-cap">Filter and Recent <span>A recessed field leads the strip; a part type opened recently leads it too, under a stamp. N more opens the dialog.</span></p>
@@ -376,8 +516,8 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 <div class="ptwrap live" data-spine="demo-part-types" data-fit="{&quot;tape&quot;:46,&quot;digit&quot;:7.7,&quot;stamp&quot;:56,&quot;slack&quot;:2,&quot;grids&quot;:[{&quot;cols&quot;:5,&quot;cell&quot;:171,&quot;char&quot;:9.52,&quot;lead&quot;:1},{&quot;cols&quot;:4,&quot;cell&quot;:164,&quot;char&quot;:9.52,&quot;lead&quot;:1},{&quot;cols&quot;:3,&quot;cell&quot;:164,&quot;char&quot;:9.52,&quot;lead&quot;:1},{&quot;cols&quot;:2,&quot;cell&quot;:167,&quot;char&quot;:8.84,&quot;lead&quot;:0}]}">
 <ul class="ptypes" id="ptypes" aria-label="Part types">
 <li class="ptf"><label class="visually-hidden" for="ptf-strip">Filter part types</label><input type="search" id="ptf-strip" class="ptfind" placeholder="Filter part types" aria-controls="ptypes" value=""></li>
-<li data-part="starter" class="s5 s4 s3 s2" data-at="5"><span class="rstamp">Recent</span><a class="ptype swap" href="#"><span class="nm">Starter Motor</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="headlamp" class="s5 s4 s3 s2 x2" data-at="4"><span class="rstamp">Recent</span><a class="ptype swap" href="#"><span class="nm">Headlamp Assembly</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li data-part="alternator" data-at="0" class="x3 x2"><a class="ptype swap" href="#"><span class="nm">Alternator</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="brake-rotor-front" class="s5 s4 s3 s2 x2 x4 x3" data-at="1"><a class="ptype swap" href="#"><span class="nm">Brake Rotor, Front</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="brake-rotor-rear" class="s5 s4 s3 s2 x2 x5 x4 x3" data-at="2"><a class="ptype swap" href="#"><span class="nm">Brake Rotor, Rear</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="fog-lamp" class="x3 x2 x5 x4" data-at="3"><a class="ptype swap" href="#"><span class="nm">Fog Lamp</span> <span class="n">3<span class="visually-hidden"> candidates</span></span></a></li><li class="ptnone" hidden=""></li>
-<li class="ptkey k4 k3 k2 k5"><button id="more-types" type="button"><span class="kn c5">2 more<span class="visually-hidden"> part types</span></span><span class="kn c4">3 more<span class="visually-hidden"> part types</span></span><span class="kn c3">4 more<span class="visually-hidden"> part types</span></span><span class="kn c2">5 more<span class="visually-hidden"> part types</span></span></button></li>
+<li data-part="starter" class="s5 s4 s3 s2" data-at="5"><span class="rstamp">Recent</span><a class="ptype swap" href="#"><span class="nm">Starter Motor</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="alternator" data-at="0"><a class="ptype swap" href="#"><span class="nm">Alternator</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="brake-rotor-front" class="s5 s4 s3 s2 x2 x3" data-at="1"><a class="ptype swap" href="#"><span class="nm">Brake Rotor, Front</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="brake-rotor-rear" class="s5 s4 s3 s2 x2 x4 x3" data-at="2"><a class="ptype swap" href="#"><span class="nm">Brake Rotor, Rear</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="fog-lamp" class="x3 x2 x5 x4" data-at="3"><a class="ptype swap" href="#"><span class="nm">Fog Lamp</span> <span class="n">3<span class="visually-hidden"> candidates</span></span></a></li><li data-part="headlamp" class="s5 s4 x4 s3 x3 s2 x2 x5" data-at="4"><a class="ptype swap" href="#"><span class="nm">Headlamp Assembly</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li class="ptnone" hidden=""></li>
+<li class="ptkey k4 k3 k2 k5"><button id="more-types" type="button"><span class="kn c5">2 more<span class="visually-hidden"> part types</span></span><span class="kn c4">3 more<span class="visually-hidden"> part types</span></span><span class="kn c3">4 more<span class="visually-hidden"> part types</span></span><span class="kn c2">4 more<span class="visually-hidden"> part types</span></span></button></li>
 </ul>
 </div>
 </section>
@@ -411,7 +551,7 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 </section>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2850}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3800}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};
