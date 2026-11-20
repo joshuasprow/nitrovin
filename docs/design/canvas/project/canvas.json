@@ -2,26 +2,12 @@
   "v": 3,
   "attachments": {},
   "boards": {
-    "Main.dc.html": {
-      "h": 2100,
-      "title": "The VIN input, both modes, light",
+    "Controls-Dark.dc.html": {
+      "h": 3800,
+      "title": "Dialogs, forms and inputs, dark",
       "w": 1280,
-      "x": 0,
-      "y": 0
-    },
-    "Materials.dc.html": {
-      "h": 1820,
-      "title": "Materials and elevation, light",
-      "w": 1280,
-      "x": 1360,
-      "y": 0
-    },
-    "Diagram.dc.html": {
-      "h": 1940,
-      "title": "Cards, brackets and lines, light",
-      "w": 1280,
-      "x": 2720,
-      "y": 0
+      "x": 5440,
+      "y": 3920
     },
     "Controls.dc.html": {
       "h": 3800,
@@ -30,20 +16,6 @@
       "x": 5440,
       "y": 0
     },
-    "Main-Dark.dc.html": {
-      "h": 2100,
-      "title": "The VIN input, both modes, dark",
-      "w": 1280,
-      "x": 0,
-      "y": 3920
-    },
-    "Materials-Dark.dc.html": {
-      "h": 1820,
-      "title": "Materials and elevation, dark",
-      "w": 1280,
-      "x": 1360,
-      "y": 3920
-    },
     "Diagram-Dark.dc.html": {
       "h": 1940,
       "title": "Cards, brackets and lines, dark",
@@ -51,18 +23,11 @@
       "x": 2720,
       "y": 3920
     },
-    "Controls-Dark.dc.html": {
-      "h": 3800,
-      "title": "Dialogs, forms and inputs, dark",
+    "Diagram.dc.html": {
+      "h": 1940,
+      "title": "Cards, brackets and lines, light",
       "w": 1280,
-      "x": 5440,
-      "y": 3920
-    },
-    "Fitment.dc.html": {
-      "h": 3610,
-      "title": "The fitment card, light",
-      "w": 1280,
-      "x": 4080,
+      "x": 2720,
       "y": 0
     },
     "Fitment-Dark.dc.html": {
@@ -72,11 +37,87 @@
       "x": 4080,
       "y": 3920
     },
-    "States.dc.html": {
-      "h": 3540,
-      "title": "States, light",
+    "Fitment.dc.html": {
+      "h": 3610,
+      "title": "The fitment card, light",
       "w": 1280,
-      "x": 6800,
+      "x": 4080,
+      "y": 0
+    },
+    "Main-Dark.dc.html": {
+      "h": 2100,
+      "title": "The VIN input, both modes, dark",
+      "w": 1280,
+      "x": 0,
+      "y": 3920
+    },
+    "Main.dc.html": {
+      "h": 2100,
+      "title": "The VIN input, both modes, light",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "Materials-Dark.dc.html": {
+      "h": 1820,
+      "title": "Materials and elevation, dark",
+      "w": 1280,
+      "x": 1360,
+      "y": 3920
+    },
+    "Materials.dc.html": {
+      "h": 1820,
+      "title": "Materials and elevation, light",
+      "w": 1280,
+      "x": 1360,
+      "y": 0
+    },
+    "Proposal-PartType-1280-Dark.dc.html": {
+      "h": 2200,
+      "page": "proposals",
+      "title": "Proposal: the part type field in the strip, 1280 wide, dark",
+      "w": 1280,
+      "x": 0,
+      "y": 2890
+    },
+    "Proposal-PartType-1280.dc.html": {
+      "h": 2200,
+      "page": "proposals",
+      "title": "Proposal: the part type field in the strip, 1280 wide, light",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "Proposal-PartType-390-Dark.dc.html": {
+      "h": 2770,
+      "page": "proposals",
+      "title": "Proposal: the part type field in the strip, 390 wide, dark",
+      "w": 470,
+      "x": 2288,
+      "y": 2890
+    },
+    "Proposal-PartType-390.dc.html": {
+      "h": 2770,
+      "page": "proposals",
+      "title": "Proposal: the part type field in the strip, 390 wide, light",
+      "w": 470,
+      "x": 2288,
+      "y": 0
+    },
+    "Proposal-PartType-768-Dark.dc.html": {
+      "h": 2620,
+      "page": "proposals",
+      "title": "Proposal: the part type field in the strip, 768 wide, dark",
+      "w": 848,
+      "x": 1360,
+      "y": 2890
+    },
+    "Proposal-PartType-768.dc.html": {
+      "h": 2620,
+      "page": "proposals",
+      "title": "Proposal: the part type field in the strip, 768 wide, light",
+      "w": 848,
+      "x": 1360,
       "y": 0
     },
     "States-Dark.dc.html": {
@@ -86,53 +127,12 @@
       "x": 6800,
       "y": 3920
     },
-    "Proposal-PartType-1280.dc.html": {
-      "h": 2200,
-      "title": "Proposal: the part type field in the strip, 1280 wide, light",
+    "States.dc.html": {
+      "h": 3540,
+      "title": "States, light",
       "w": 1280,
-      "x": 0,
-      "y": 0,
-      "page": "proposals"
-    },
-    "Proposal-PartType-1280-Dark.dc.html": {
-      "h": 2200,
-      "title": "Proposal: the part type field in the strip, 1280 wide, dark",
-      "w": 1280,
-      "x": 0,
-      "y": 2890,
-      "page": "proposals"
-    },
-    "Proposal-PartType-768.dc.html": {
-      "h": 2620,
-      "title": "Proposal: the part type field in the strip, 768 wide, light",
-      "w": 848,
-      "x": 1360,
-      "y": 0,
-      "page": "proposals"
-    },
-    "Proposal-PartType-768-Dark.dc.html": {
-      "h": 2620,
-      "title": "Proposal: the part type field in the strip, 768 wide, dark",
-      "w": 848,
-      "x": 1360,
-      "y": 2890,
-      "page": "proposals"
-    },
-    "Proposal-PartType-390.dc.html": {
-      "h": 2770,
-      "title": "Proposal: the part type field in the strip, 390 wide, light",
-      "w": 470,
-      "x": 2288,
-      "y": 0,
-      "page": "proposals"
-    },
-    "Proposal-PartType-390-Dark.dc.html": {
-      "h": 2770,
-      "title": "Proposal: the part type field in the strip, 390 wide, dark",
-      "w": 470,
-      "x": 2288,
-      "y": 2890,
-      "page": "proposals"
+      "x": 6800,
+      "y": 0
     }
   },
   "createdOnFiles": {
@@ -150,7 +150,7 @@
   "notes": {
     "heading": {
       "kind": "title1",
-      "maxW": 8080,
+      "maxW": 8000,
       "text": "The page as built: what DESIGN.md describes",
       "w": 240,
       "x": 0,
@@ -159,11 +159,11 @@
     "proposal-part-type": {
       "kind": "title1",
       "maxW": 2758,
+      "page": "proposals",
       "text": "Proposal (#366): the part type in the strip",
       "w": 240,
       "x": 0,
-      "y": -300,
-      "page": "proposals"
+      "y": -300
     }
   },
   "order": [
