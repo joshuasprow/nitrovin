@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/joshuasprow/nitrovin/pkg/contract"
-	"github.com/joshuasprow/nitrovin/pkg/vocab"
 )
 
 // The page (ADR 0013). GET / is nitrovin's one page for browsers: the VIN
@@ -30,7 +29,9 @@ import (
 // VIN's groups, the vehicle's names in every vocabulary loaded, its
 // translation on vPIC's spine, and the parts that fit it in the catalog
 // loaded. A VIN the decoder refuses is the page
-// still, with what is wrong said below the plate. The vocabularies loaded
+// still, with what is wrong said below the plate. A switch on the plate
+// turns it to a part type and a number, part-number mode (part.go),
+// whose answer is what a part fits and its stock. The vocabularies loaded
 // are behind the header's Vocabularies button, in a dialog of their own
 // (vocab.go), which the layout holds beside the page's main, so no answer
 // replaces it; what developers need, the answer's JSON included, is
@@ -51,15 +52,22 @@ const (
 )
 
 // homePage is what the page's template renders: the plate and everything
-// hanging off it (diagram.go), the chips to try, and what the Developers
-// dialog shows.
+// hanging off it (diagram.go), or, in part-number mode, the plate with a
+// part type and a number and the part below it (part.go); the chips to
+// try, and what the Developers dialog shows.
 type homePage struct {
-	Diagram  *diagram
+	Diagram *diagram
+	// Part is the page in part-number mode, nil in VIN mode, which then
+	// draws no Diagram.
+	Part     *partPage
 	Examples []example
-	// Result is the decode's own request and JSON, nil before a decode.
+	// Result is the decode's own request and JSON, or the part's, nil
+	// before either.
 	Result                    *result
 	DataMonth, DecoderVersion string
 	Links                     pageLinks
+	// PartMode is the switch's link to part-number mode.
+	PartMode string
 }
 
 // example is a VIN to try: a link to the page with it on the plate.
@@ -188,7 +196,8 @@ func (h *Handler) moved(r *http.Request) (view, error) {
 // decoded as far as it goes (three characters name the maker), so the page
 // answers every keystroke plate.js sends as it answers the form. A refusal
 // is the page still, with its status. ?surprise moves to one of the
-// curated VINs.
+// curated VINs. A fitment key in the query is part-number mode instead
+// (partHome).
 func (h *Handler) home(r *http.Request) (view, error) {
 	info := h.info()
 	raw, malformed := url.ParseQuery(r.URL.RawQuery)
@@ -202,25 +211,29 @@ func (h *Handler) home(r *http.Request) (view, error) {
 	if raw.Has("surprise") {
 		return view{location: vinHref(surpriseVINs[rand.IntN(len(surpriseVINs))]), status: http.StatusSeeOther}, nil
 	}
+	page := &homePage{DataMonth: info.DataMonth, DecoderVersion: info.DecoderVersion, Links: h.links(info), PartMode: partModeHref}
+	for _, e := range exampleVINs {
+		page.Examples = append(page.Examples, example{Label: e.vin, Hint: e.hint, Href: vinHref(e.vin)})
+	}
+	if partMode(raw) {
+		// A URL is one mode: one naming both offers each.
+		if raw.Has("from.vin") {
+			return h.mixedHome(raw, info, page)
+		}
+		return h.partHome(r, raw, info, page)
+	}
 	d := newDiagram(cleanVIN(raw.Get("from.vin")))
 	d.Fit = h.idleFit(info)
 	ask := fitAsk{Part: raw.Get(partParam), After: raw.Get(afterParam), Type: raw.Get(typeParam), Number: raw.Get(numberParam), Side: raw.Get(sideParam), Rows: raw.Get(rowsParam)}
 	d.Fit.Part, d.Fit.After, d.Fit.Type, d.Fit.Number, d.Fit.Side, d.Fit.Rows = ask.Part, ask.After, ask.Type, ask.Number, ask.Side, ask.Rows
-	page := &homePage{Diagram: d, DataMonth: info.DataMonth, DecoderVersion: info.DecoderVersion, Links: h.links(info)}
-	for _, e := range exampleVINs {
-		page.Examples = append(page.Examples, example{Label: e.vin, Hint: e.hint, Href: vinHref(e.vin)})
-	}
+	page.Diagram = d
 	v := view{title: homeTitle, template: "home", data: page, target: mainTarget, vocabDialog: true}
 	refuse := func(err error) (view, error) {
-		if e, ok := errors.AsType[*pageError](err); ok {
-			v.status, d.Error = e.Status, e.Message
-			return v, nil
+		status, words, fault := refusal(err)
+		if fault != nil {
+			return view{}, fault
 		}
-		p := contract.AsProblem(err)
-		if p.Type == contract.Internal {
-			return view{}, err // a fault in nitrovin: the error page, logged
-		}
-		v.status, d.Error = p.Status, p.Detail
+		v.status, d.Error = status, words
 		return v, nil
 	}
 	if malformed != nil {
@@ -256,13 +269,7 @@ func (h *Handler) home(r *http.Request) (view, error) {
 
 	// Also known as: the VIN in every vocabulary loaded on vPIC's spine,
 	// once its model is known.
-	var to []string
-	for _, c := range cat {
-		if c.Kind == "vocabulary" && c.Spine == vocab.Reserved {
-			to = append(to, c.Name)
-		}
-	}
-	slices.Sort(to)
+	to := vehicleVocabularies(cat)
 	d.Names.None = len(to) == 0
 	if !d.Names.Waiting && !d.Names.None {
 		req, err := contract.ParseTranslateQuery(url.Values{"from.vin": {d.VIN}, "to": to})
@@ -295,6 +302,20 @@ func (h *Handler) home(r *http.Request) (view, error) {
 		res.URL = requestOrigin(r) + d.Fit.Page
 	}
 	return v, nil
+}
+
+// refusal is err as the page says it below the plate: its status and its
+// words; or, when err is a fault in nitrovin, fault, which is the error
+// page, logged.
+func refusal(err error) (status int, words string, fault error) {
+	if e, ok := errors.AsType[*pageError](err); ok {
+		return e.Status, e.Message, nil
+	}
+	p := contract.AsProblem(err)
+	if p.Type == contract.Internal {
+		return 0, "", err
+	}
+	return p.Status, p.Detail, nil
 }
 
 // translate answers req, in the browser over dec, the VIN's decode the

@@ -333,24 +333,38 @@ func (h *Handler) fitStock(ctx context.Context, c *fitCard, vin string, ask fitA
 		return nil
 	}
 	cand := fit.Candidates[open]
-	lists := map[string]*contract.StockList{contract.StockShelf: cand.Shelf, contract.StockYard: cand.Yard}
-	more := stockHref(vin, ask.Part, ask.After, key, rowsAll)
 	if ask.Rows == rowsAll {
-		var err error
-		if lists, err = h.allStock(ctx, key, ask.Stock, res); err != nil {
-			return err
-		}
-		more, rows = "", rowsAll
+		rows = rowsAll
 	}
 	c.Page = stockHref(vin, ask.Part, ask.After, key, rows)
-	p := &stockPanel{Number: cand.Fitment.Number, Col: open%3 + 1, MoreWide: len(c.Tags) > (open/3+1)*3, MoreNarrow: open < len(c.Tags)-1}
-	for _, kind := range ask.Stock {
+	cols, err := h.stockColumns(ctx, key, cand, ask.Stock, ask.Rows == rowsAll, stockHref(vin, ask.Part, ask.After, key, rowsAll), vin, res)
+	if err != nil {
+		return err
+	}
+	c.Tags[open].Panel = &stockPanel{Number: cand.Fitment.Number, Col: open%3 + 1, MoreWide: len(c.Tags) > (open/3+1)*3, MoreNarrow: open < len(c.Tags)-1, Columns: cols}
+	return nil
+}
+
+// stockColumns are an open candidate's or part's rows, a column for each
+// of kinds: the rows cand arrived with, the page with every row more; or,
+// all asked for, the whole of key's stock (allStock), with no more. vin
+// is the VIN on the plate, "" for none.
+func (h *Handler) stockColumns(ctx context.Context, key fitKey, cand contract.FitCandidate, kinds []string, all bool, more, vin string, res *result) ([]stockColumn, error) {
+	lists := map[string]*contract.StockList{contract.StockShelf: cand.Shelf, contract.StockYard: cand.Yard}
+	if all {
+		var err error
+		if lists, err = h.allStock(ctx, key, kinds, res); err != nil {
+			return nil, err
+		}
+		more = ""
+	}
+	var cols []stockColumn
+	for _, kind := range kinds {
 		if l := lists[kind]; l != nil {
-			p.Columns = append(p.Columns, newStockColumn(kind, l, vin, more))
+			cols = append(cols, newStockColumn(kind, l, vin, more))
 		}
 	}
-	c.Tags[open].Panel = p
-	return nil
+	return cols, nil
 }
 
 // candidatesNext is the candidates' next page after fit, the answer to

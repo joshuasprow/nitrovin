@@ -99,7 +99,7 @@ h3 { font: 900 12px var(--label-font); letter-spacing: .08em; text-transform: up
 a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible, pre:focus-visible, .hang:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
 code, pre, .mono { font-family: var(--cell-font); }
 .hint { color: var(--muted); font-weight: 400; }
-.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.visually-hidden, .plbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .error { color: var(--bad); margin: .5rem 0; }
 /* A button is a key of the plate's metal (--key): raised, and pressed
    flush. It is pressed while it is held, while it is on, and while the
@@ -572,7 +572,13 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
 .ptlist { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0 0 6px; }
 /* An empty place: the page's blank strip, a dashed outline in the faint
    colour with its sentence, and in it a key of metal or a link on. */
-.fit .blank { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; box-sizing: border-box; min-height: 46px; margin: 30px 0 0; padding: .5rem .75rem; color: var(--muted); border: 3px dashed var(--faint); border-radius: 2px; }
+:is(.fit, .part, .choice) .blank { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; box-sizing: border-box; min-height: 46px; margin: 30px 0 0; padding: .5rem .75rem; color: var(--muted); border: 3px dashed var(--faint); border-radius: 2px; }
+/* A link naming a VIN and a part number: the choice of each, in the
+   names' place under the empty cards, as a blank strip with its links. */
+.choice { margin: 0 16px; }
+@media (width < 64rem) {
+  .choice { margin: 0; }
+}
 .fit .ptwrap ~ .blank { margin-top: 14px; }
 /* The candidates: manila tags as the cards are (.cand-in, its stock its
    ::before), three to a row, hung on two rails of pinstripe tape, the
@@ -605,7 +611,7 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
 .marks { display: flex; flex-wrap: wrap; gap: .4rem .5rem; margin: .6rem 0 .8rem; }
 .mk { display: inline-flex; align-items: center; gap: 5px; padding: .2rem .45rem; border-radius: 3px; font: 900 10px/1.4 var(--label-font); letter-spacing: .06em; text-transform: uppercase; color: var(--on-manila); }
 .mk svg { flex: none; width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2.2; }
-.mk.checked, .mk.redirect { border: 2px solid var(--on-manila); transform: rotate(-1.5deg); }
+.mk.checked, .mk.redirect, .mk.replaces { border: 2px solid var(--on-manila); transform: rotate(-1.5deg); }
 .mk.unchecked { border: 2px dashed var(--on-manila); }
 .mk.text, .mk.none { padding-left: 0; color: var(--manila-muted); }
 .more-cands { margin: 1rem 0 0; }
@@ -626,8 +632,8 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
    after it fill first (dense); the rails run on down past it to the next
    row of tags. Shelf and yard are its two equal halves. */
 .rows { position: relative; grid-column: 1 / -1; min-width: 0; margin-top: -24px; }
-.rows, .stock-panel { background: var(--card-bg); border: 2px solid var(--steel); border-radius: 4px; box-shadow: 0 3px 0 var(--steel-dark), 0 8px 16px rgb(0 0 0 / .25); }
-.rows .notch { position: absolute; top: -10px; left: calc(50% - 9px); width: 16px; height: 16px; background: var(--card-bg); border-left: 2px solid var(--steel); border-top: 2px solid var(--steel); transform: rotate(45deg); }
+.rows, .stock-panel, .prows, .vehicles { background: var(--card-bg); border: 2px solid var(--steel); border-radius: 4px; box-shadow: 0 3px 0 var(--steel-dark), 0 8px 16px rgb(0 0 0 / .25); }
+:is(.rows, .prows) .notch { position: absolute; top: -10px; left: calc(50% - 9px); width: 16px; height: 16px; background: var(--card-bg); border-left: 2px solid var(--steel); border-top: 2px solid var(--steel); transform: rotate(45deg); }
 .rows::before, .rows::after { position: absolute; top: -18px; box-sizing: border-box; width: 5px; pointer-events: none; border: 0 solid var(--c-vds); border-left-width: 5px; filter: var(--stripe-lift); }
 .rows::before { z-index: 0; left: calc(var(--rail-x) - 24px); bottom: -16px; }
 .rows::after { z-index: 1; left: calc(var(--rail-x) + 9px - 24px); bottom: -27px; border-color: var(--c-year); }
@@ -709,6 +715,120 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
     .cands:not(:has(> .cand:nth-child(4 of .cand)))::before, .cands:not(:has(> .cand:nth-child(4 of .cand)))::after { display: none; }
     .cands:not(:has(> .cand:nth-child(4 of .cand))) > .cand:nth-child(1 of .cand) .hook::before, .cands:not(:has(> .cand:nth-child(4 of .cand))) > .cand:nth-child(1 of .cand) .hook::after { top: -40px; height: 40px; }
   }
+}
+
+/* ---- Part-number mode (#325) ------------------------------------------
+   The switch over the plate is two keys of metal joined, a rivet each,
+   the pressed one flush. In part-number mode the plate is the VIN plate
+   unchanged, holding two fields on a grid of three (one for the part
+   type, two for the number), under labels and brackets in the Serial
+   group's colour, as the part's line below it: the number is the nearest
+   thing to a serial. The part type is a strip of the second tape stuck to
+   the plate, raised as a control; the number is struck into the metal in
+   the VIN's lettering over an underline in the Serial group's mark. Under
+   the plate the number's bracket opens upward, and one line runs from it
+   (.pleader, in the 1020-unit box of the VIN's leader lines: 340 a third)
+   to the eyelet of the part's tag, which hangs in the first third (a
+   half, on a narrow page), its rows under it, beside the page's own table
+   of its vehicles. Nothing is measured: the line's ends are where the
+   grid puts the bracket and the eyelet, each width its own path. */
+.modes { display: inline-flex; margin: 0 0 14px; }
+.mode { --key: var(--metal); display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 34px; padding: 0 1rem 0 1.6rem; font: 900 11px var(--label-font); letter-spacing: .1em; text-transform: uppercase; text-decoration: none; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8);
+  border: 1px solid var(--steel); box-shadow: var(--raised); background: radial-gradient(circle at .8rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--key); }
+.mode:first-child { border-radius: 3px 0 0 3px; }
+.mode + .mode { margin-left: -1px; border-radius: 0 3px 3px 0; }
+.mode:active, .mode[aria-current] { --key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed); }
+.plabels, .pplate, .punder { display: grid; grid-template-columns: 1fr 2fr; }
+.part-form, .part-answer { --plate-pad: 16px; }
+.plabels { padding: 0 var(--plate-pad); margin-bottom: 7px; }
+.plabels .lab, .pfield { margin: 0 6px; min-width: 0; }
+.pplate { align-items: center; padding-block: 14px 16px; }
+.ptpick { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 56px; padding: 0 14px; font: 900 clamp(14px, 2.3cqw, 21px) var(--cell-font); letter-spacing: .04em; text-align: left; text-transform: none;
+  text-shadow: var(--emboss); background: var(--alu); border-top-color: #fff; border-bottom-color: var(--steel-dark); border-radius: 2px; }
+.ptpick .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ptpick svg { flex: none; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+.ptpick:active, body:has(#part-types:popover-open) .ptpick { background: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed); }
+.pplate .pnum input { display: block; box-sizing: border-box; width: 100%; height: clamp(2.6rem, 9cqw, 4.2rem); margin: 0; padding: 0 2px; font: 700 clamp(22px, 5.6cqw, 50px)/1 var(--cell-font); letter-spacing: .08em; text-transform: none;
+  color: var(--on-metal); text-shadow: var(--emboss); background: transparent; border: 0; border-bottom: 4px solid var(--cm); border-radius: 0; box-shadow: none; outline: 0; }
+.pnum { --cm: #3d4650; }
+.pplate .pnum input::placeholder { color: var(--steel-dark); font: 900 clamp(13px, 2.2cqw, 20px) var(--label-font); letter-spacing: .14em; text-transform: uppercase; text-shadow: var(--emboss); }
+.pplate:has(.pnum input:focus-visible) { outline: 3px solid var(--link); outline-offset: 3px; }
+.punder { padding: 0 var(--plate-pad); }
+.punder .brk { grid-column: 2; margin-inline: 9px; }
+.pleader { display: block; width: 100%; height: 36px; overflow: visible; padding: 0 var(--plate-pad); box-sizing: border-box; }
+.pleader path { fill: none; stroke: var(--c); stroke-width: 5; stroke-linejoin: round; filter: var(--stripe-lift); }
+.pleader .narrow { display: none; }
+.part { margin: 0 var(--plate-pad); }
+.part > .blank { margin-top: 18px; }
+.part > .error { margin: 18px 0 0; }
+.pgrid { display: grid; grid-template-columns: 1fr 2fr; align-items: start; }
+.pcol { margin: 0 12px; min-width: 0; }
+/* The tag hangs by its eyelet: the line runs on down into it. */
+.ptag { position: relative; }
+.ptag::before { content: ""; position: absolute; z-index: 1; top: 0; left: calc(50% - 2.5px); width: 5px; height: 11px; pointer-events: none; background: var(--c-serial); filter: var(--stripe-lift); }
+.ptag .cand-in { min-height: 12rem; }
+.ptag dl { margin-bottom: .8rem; }
+.numtape .ptn { font: 700 12px var(--cell-font); }
+/* The open part's rows, under its tag, notched up at it: a column, shelf
+   over yard, a row's fields under its id and location. */
+.prows { position: relative; margin-top: 18px; }
+.prows .stock-cols { grid-template-columns: minmax(0, 1fr); }
+.prows .stock-col + .stock-col { border-left: 0; border-top: 1px solid var(--line); }
+.prows .stock-col table, .prows .stock-col tbody { display: block; }
+.prows .stock-col tr { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; padding: 7px 0; border-top: 1px solid var(--line); }
+.prows .stock-col :is(th, td) { padding: 0; border: 0; }
+.prows .stock-col td:last-child { grid-column: 1 / -1; }
+/* The vehicles: the page's own table panel. Each name in a vocabulary is
+   a strip of label tape, stuck on, after the vocabulary's name. */
+.vehicles { min-width: 0; margin-left: 12px; padding: .25rem 1rem .75rem; overflow-x: auto; }
+.vehicles table { font-size: 14px; }
+.vehicles th, .vehicles td { padding: .55rem .9rem .55rem 0; }
+.vehicles thead th { padding-top: .75rem; vertical-align: bottom; }
+.vehicles thead .hint { display: block; font: 400 12px system-ui, sans-serif; letter-spacing: 0; text-transform: none; }
+.vehicles tbody th { font-weight: 700; }
+.vehicles .yrs { white-space: nowrap; }
+.vehicles .names .hint { font-size: 13px; }
+.vn { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; margin: 0 8px 4px 0; }
+.vn .voc { font-size: 12px; color: var(--muted); }
+.vtape { padding: .1rem .45rem; font: 700 13px var(--cell-font); color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 2px solid var(--tape-edge); border-radius: 1px; box-shadow: var(--lift-stuck); }
+.vehicles .more-cands { margin: .75rem 0 0; }
+/* A narrow page (under 64rem): the tag and the vehicles are halves, the
+   line running to the first's centre (.mid, 255 of 1020), and each
+   vehicle is a row of its own under the table's caption: its name and
+   years, then its options, then its names. */
+.pleader .mid { display: none; }
+@media (width < 64rem) {
+  .pgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pleader .wide { display: none; }
+  .pleader .mid { display: inline; }
+  .vehicles caption { position: static; display: block; width: auto; height: auto; overflow: visible; clip-path: none; padding: .7rem 0 .4rem; text-align: left; white-space: normal; font: 900 12px var(--label-font); letter-spacing: .04em; border-bottom: 3px solid var(--steel); }
+  .vehicles thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .vehicles table, .vehicles tbody { display: block; }
+  .vehicles tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; padding: .6rem 0; border-bottom: 1px solid var(--line); }
+  .vehicles tr:last-child { border-bottom: 0; }
+  .vehicles :is(th, td) { padding: 0; border: 0; }
+  .vehicles .opts, .vehicles .names { grid-column: 1 / -1; }
+}
+/* A small window: the plate's padding, as the VIN's. */
+@media (max-width: 46rem) {
+  .part-form, .part-answer { --plate-pad: 18px; }
+}
+/* A phone: the switch is the plate's width, the fields stack on the
+   plate, each under its own label struck into the metal, and the line
+   runs straight down from the plate's bracket to the tag, which the
+   vehicles follow. */
+@media (width <= 34rem) {
+  .modes { display: flex; }
+  .mode { flex: 1; }
+  .plabels { display: none; }
+  .pplate, .punder, .pgrid { grid-template-columns: minmax(0, 1fr); }
+  .pplate { row-gap: 12px; }
+  .plbl { position: static; display: block; width: auto; height: auto; overflow: visible; clip-path: none; margin: 0 0 4px; font: 900 10px var(--label-font); letter-spacing: .1em; text-transform: uppercase; color: var(--on-metal); text-shadow: var(--emboss); }
+  .punder .brk { grid-column: 1; }
+  .pleader .mid { display: none; }
+  .pleader .narrow { display: inline; }
+  .pcol { margin: 0; }
+  .vehicles { margin: 18px 0 0; padding-inline: .75rem; }
 }
 
 /* The VINs menu, under the header's button: recent VINs or the examples,

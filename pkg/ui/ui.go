@@ -251,8 +251,9 @@ type Handler struct {
 	dataRelease string
 	errorTexts  map[int]string
 	// candidates is how many candidates the page shows at a time,
-	// candidatesPage when 0.
-	candidates int
+	// candidatesPage when 0, and vehicles how many of a part's vehicles,
+	// vehiclesPage when 0.
+	candidates, vehicles int
 }
 
 // route answers one page: the view, or the error the page shows instead.

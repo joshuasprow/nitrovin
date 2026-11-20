@@ -664,7 +664,8 @@ func (l *Library) fit(ctx context.Context, req contract.FitRequest, dec *contrac
 
 // serverFit is req answered by the server's GET /v1/fit, and the body it
 // came in: the page's requests alone, from a VIN, with a part type of the
-// catalog's spine and a page, or from a fitment key, each with the stock
+// catalog's spine and a page, or from a fitment key, with the vehicle
+// vocabularies to name its vehicles in and a page, each with the stock
 // it asks for; its refusal as the server gave it, and in words when the
 // server cannot be reached.
 func (l *Library) serverFit(req contract.FitRequest) (contract.Fit, []byte, error) {
@@ -676,9 +677,12 @@ func (l *Library) serverFit(req contract.FitRequest) (contract.Fit, []byte, erro
 		if k.Side != "" {
 			q.Set("from.fitment.side", k.Side)
 		}
-		what = "the stock of " + k.Number
+		what = "part " + k.Number
 	} else {
 		q.Set("from.vin", req.From.VIN)
+	}
+	if len(req.To) > 0 {
+		q["to"] = req.To
 	}
 	if p := req.Part; p != nil {
 		q.Set("part.spine", p.Spine)
@@ -737,6 +741,27 @@ type serverFitJSON struct {
 		Shelf *serverStockList `json:"shelf"`
 		Yard  *serverStockList `json:"yard"`
 	} `json:"candidates"`
+	// Fitment, Reached, Retired and Vehicles are a fitment key's answer;
+	// its vehicles' names are read as far as the page reads them.
+	Fitment  *contract.Fitment    `json:"fitment"`
+	Reached  contract.FitReach    `json:"reached"`
+	Retired  *contract.FitRetired `json:"retired"`
+	Vehicles []struct {
+		Vehicle json.RawMessage      `json:"vehicle"`
+		First   contract.Null[int32] `json:"first"`
+		Last    contract.Null[int32] `json:"last"`
+		Options string               `json:"options"`
+		Spine   []struct {
+			contract.SpineRef
+			Name string `json:"name"`
+		} `json:"spine"`
+		To []struct {
+			Vocabulary string `json:"vocabulary"`
+			Entries    []struct {
+				Entry map[string]string `json:"entry"`
+			} `json:"entries"`
+		} `json:"to"`
+	} `json:"vehicles"`
 	Shelf          *serverStockList `json:"shelf"`
 	Yard           *serverStockList `json:"yard"`
 	ShelfByVehicle *serverStockList `json:"shelf_by_vehicle"`
@@ -785,7 +810,8 @@ func (s *serverStockList) list(vpic bool) (*contract.StockList, error) {
 
 // fit is w as the page reads a fit.
 func (w serverFitJSON) fit() (contract.Fit, error) {
-	out := contract.Fit{Status: w.Status, Catalog: w.Catalog, Vehicle: w.Vehicle, PartTypes: w.PartTypes, Total: w.Total, Next: w.Next, Now: w.Now, DataMonth: w.DataMonth, DecoderVersion: w.DecoderVersion}
+	out := contract.Fit{Status: w.Status, Catalog: w.Catalog, Vehicle: w.Vehicle, PartTypes: w.PartTypes, Fitment: w.Fitment, Reached: w.Reached, Retired: w.Retired,
+		Total: w.Total, Next: w.Next, Now: w.Now, DataMonth: w.DataMonth, DecoderVersion: w.DecoderVersion}
 	vpic := w.Catalog != nil && w.Catalog.Vehicles == vocab.Reserved
 	for _, m := range w.Models {
 		v, err := catalogVehicleJSON(m.Vehicle, vpic)
@@ -793,6 +819,24 @@ func (w serverFitJSON) fit() (contract.Fit, error) {
 			return contract.Fit{}, err
 		}
 		out.Models = append(out.Models, contract.FitModel{Vehicle: v, Name: m.Name})
+	}
+	for _, fv := range w.Vehicles {
+		v, err := catalogVehicleJSON(fv.Vehicle, vpic)
+		if err != nil {
+			return contract.Fit{}, err
+		}
+		out.Vehicles = append(out.Vehicles, contract.FitVehicle{Vehicle: v, First: fv.First, Last: fv.Last, Options: fv.Options})
+		names := &out.Vehicles[len(out.Vehicles)-1].FitNames
+		for _, s := range fv.Spine {
+			names.Spine = append(names.Spine, contract.SpineEntry{SpineRef: s.SpineRef, Name: s.Name})
+		}
+		for _, t := range fv.To {
+			tr := contract.Translated{Vocabulary: t.Vocabulary}
+			for _, e := range t.Entries {
+				tr.Entries = append(tr.Entries, contract.TranslatedEntry{Entry: e.Entry})
+			}
+			names.To = append(names.To, tr)
+		}
 	}
 	var err error
 	if out.Shelf, err = w.Shelf.list(vpic); err != nil {

@@ -58,10 +58,17 @@ func demoTranslator(t *testing.T, d *nitrovin.Decoder, catalog bool) *nitrovin.T
 // for it, which must answer 200.
 func fitSection(t *testing.T, h *Handler, target string) string {
 	t.Helper()
+	return sectionOf(t, h, target, `<section class="fit"`)
+}
+
+// sectionOf is the section of the page at target that open starts, as
+// htmx asks for it, which must answer 200.
+func sectionOf(t *testing.T, h *Handler, target, open string) string {
+	t.Helper()
 	status, _, body := response(t, h, "GET", target, htmx)
-	start := strings.Index(body, `<section class="fit"`)
+	start := strings.Index(body, open)
 	if status != 200 || start < 0 {
-		t.Fatalf("GET %s: %d, no parts that fit\n%s", target, status, body)
+		t.Fatalf("GET %s: %d, no %s\n%s", target, status, open, body)
 	}
 	// The section holds the dialog's sections: it ends at the close that
 	// balances its open.
@@ -76,7 +83,7 @@ func fitSection(t *testing.T, h *Handler, target string) string {
 			}
 		}
 	}
-	t.Fatalf("GET %s: the parts that fit never end\n%s", target, body)
+	t.Fatalf("GET %s: %s never ends\n%s", target, open, body)
 	return ""
 }
 

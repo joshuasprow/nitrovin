@@ -126,6 +126,23 @@ type partGroup struct {
 	Types   []partTypeLink
 }
 
+// ptDialog is the part types dialog: the line saying what it lists, its
+// groups, and the spine plate.js keeps its recent part types by, "" when
+// the strip beside it says (data-spine).
+type ptDialog struct {
+	Hint, Spine string
+	Groups      []partGroup
+}
+
+// Dialog is c's part types dialog: the vehicle's part types.
+func (c fitCard) Dialog() ptDialog {
+	hint := c.Vehicle + " in " + c.Catalog
+	if c.GroupedBy != "" {
+		hint += " · grouped by " + c.GroupedBy
+	}
+	return ptDialog{Hint: hint, Groups: c.Groups}
+}
+
 // candidateTag is one candidate as its tag shows it.
 type candidateTag struct {
 	Number, Side, Years, Note string

@@ -22,7 +22,12 @@
 // - whole VINs that decoded are kept in this browser (the last 8) and
 //   offered as chips in the examples' place;
 // - the part types a page pressed are kept too, and lead the strip of
-//   part types, which the visitor can filter as they type (strip).
+//   part types, which the visitor can filter as they type (strip);
+// - the plate's switch (page.html's modes), two links, swaps in the other
+//   mode's plate and answer in place, a history entry of its own; in
+//   part-number mode the page asks as the number is typed, as it does for
+//   a VIN, keeps the part type chosen in the dialog, and puts the caret
+//   back in the number, ready for the next.
 //
 // The listeners are the document's, so a page htmx swaps in needs no more
 // than init.
@@ -36,6 +41,19 @@
 
   const clean = (s) => s.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, LENGTH);
   const urlFor = (vin) => '/' + (vin ? '?' + new URLSearchParams({ 'from.vin': vin }) : '');
+  // partMode is whether q, a query, asks for part-number mode: any of the
+  // fitment key's parameters (part.go).
+  const partMode = (q) => ['from.fitment.type', 'from.fitment.number', 'from.fitment.side'].some((p) => q.has(p));
+  // partURL is the page with the part form's part type and number: the
+  // type first, as the form sends it, and the number always, so the URL
+  // stays in the mode.
+  const partURL = () => {
+    const q = new URLSearchParams();
+    const type = document.querySelector('#part-form input[name="from.fitment.type"]');
+    if (type && type.value) q.set('from.fitment.type', type.value);
+    q.set('from.fitment.number', document.getElementById('from-number').value.trim());
+    return '/?' + q;
+  };
 
   // paint shows vin in the cells; a cell just filled is stamped.
   const paint = (vin, stamp) => {
@@ -60,10 +78,21 @@
 
   // swap puts the answer and the Developers dialog of doc, a fragment the
   // server drew, in the page's place, and marks the groups it completes.
-  const swap = (doc) => {
+  // An answer in the other mode, or one a mode key asked for (plate),
+  // brings its plate and switch (#lookup); one in part-number mode, the
+  // part type on the plate, which the answer's dialog chose. The number
+  // on the plate is the visitor's, and stays.
+  const swap = (doc, plate) => {
     const old = document.getElementById('answer');
     const answer = doc.getElementById('answer');
     if (!old || !answer) return;
+    const lookup = document.getElementById('lookup');
+    const drawn = doc.getElementById('lookup');
+    const moved = !!(lookup && drawn) && (plate || !!lookup.querySelector('#part-form') !== !!drawn.querySelector('#part-form'));
+    const field = document.getElementById('part-type-field');
+    const chosen = doc.getElementById('part-type-field');
+    if (moved) lookup.replaceWith(drawn);
+    else if (field && chosen) field.replaceWith(chosen);
     const before = done(old);
     old.replaceWith(answer);
     for (const key of done(answer)) {
@@ -85,14 +114,16 @@
     }
     remember(answer);
     parts(answer);
+    if (moved) init();
   };
 
   let timer = 0;
   let pending = null;
   // ask asks the server for url's answer, the page with a VIN and perhaps
   // a part type pressed; how is the history's part: 'push', 'replace' or
-  // '' to leave it alone.
-  const ask = async (url, how) => {
+  // '' to leave it alone; plate, whether the answer's plate replaces the
+  // page's (swap).
+  const ask = async (url, how, plate) => {
     clearTimeout(timer);
     if (pending) pending.abort();
     const mine = pending = new AbortController();
@@ -105,7 +136,7 @@
       throw err;
     }
     if (pending === mine) pending = null;
-    swap(new DOMParser().parseFromString(html, 'text/html'));
+    swap(new DOMParser().parseFromString(html, 'text/html'), plate);
     const whole = (new URL(url, location.href).searchParams.get('from.vin') || '').length === LENGTH;
     // Asked again for the VIN the page is at (Enter on it), it is the
     // same entry: a second would make Back do nothing.
@@ -190,6 +221,34 @@
     e.preventDefault();
     const vin = clean(document.getElementById('from-vin').value);
     ask(urlFor(vin), how(vin)).catch(console.error);
+  });
+
+  // Part-number mode: the number is asked for as it is typed, each answer
+  // in the same history entry, and Look up (Enter) makes it one of its
+  // own. The type goes with it, the one the plate holds.
+  document.addEventListener('input', (e) => {
+    if (e.target.id !== 'from-number') return;
+    clearTimeout(timer);
+    timer = setTimeout(() => ask(partURL(), 'replace').catch(console.error), WAIT);
+  });
+  document.addEventListener('submit', (e) => {
+    if (e.target.id !== 'part-form') return;
+    e.preventDefault();
+    ask(partURL(), 'push').catch(console.error);
+  });
+
+  // The switch: the page in a mode with nothing on its plate, the plate
+  // and all swapped in place, whichever mode the page was in, and its
+  // field focused, as the page's own load focuses it.
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('.modes a.mode');
+    if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    const u = new URL(a.href);
+    ask(u.pathname + u.search, 'push', true).then(() => {
+      const field = document.getElementById('from-number') || document.getElementById('from-vin');
+      if (field) field.focus({ preventScroll: true });
+    }).catch(console.error);
   });
 
   // Enter sends the form: the field is a textarea (init), which would
@@ -398,7 +457,9 @@
   // is the strip's own; anything else the element of its id, else the
   // link in its place. "Show all", which the answer it brings has no
   // more, leaves the focus on what it names (data-focus), the rows it
-  // showed.
+  // showed. In part-number mode a part type chosen in the dialog fills
+  // the plate's field, and the focus is the number's, its caret at the
+  // end, for the next number.
   document.addEventListener('click', (e) => {
     const a = e.target.closest && e.target.closest('#answer a.swap');
     if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -411,6 +472,12 @@
     if (dialog) dialog.hidePopover();
     const u = new URL(a.href);
     ask(u.pathname + u.search, 'push').then(() => {
+      const number = part && document.getElementById('from-number');
+      if (number) {
+        number.focus({ preventScroll: true });
+        number.setSelectionRange(number.value.length, number.value.length);
+        return;
+      }
       const again = part ? document.querySelector('#answer .ptypes > li[data-part="' + CSS.escape(part) + '"] > a.ptype') : (id && document.getElementById(id)) || document.querySelectorAll('#answer a.swap:not(.ptype)')[i];
       if ((focused || dialog) && again) again.focus({ preventScroll: true });
     }).catch(console.error);
@@ -418,13 +485,27 @@
 
   window.addEventListener('popstate', () => {
     const q = new URLSearchParams(location.search);
+    const answer = document.getElementById('answer');
+    const inPart = !!document.getElementById('part-form');
+    // The other mode's entry brings its own plate (swap). One of part-
+    // number mode is the page's own unless its query is another: the
+    // number on the plate is the entry's.
+    if (partMode(q) !== inPart) {
+      ask(location.pathname + location.search, '').catch(console.error);
+      return;
+    }
+    if (inPart) {
+      if (answer && answer.dataset.q === location.search.slice(1)) return;
+      document.getElementById('from-number').value = q.get('from.fitment.number') || '';
+      ask(location.pathname + location.search, '').catch(console.error);
+      return;
+    }
     const vin = clean(q.get('from.vin') || '');
     const input = document.getElementById('from-vin');
     if (!input) return;
     // A move within the page (a link to a part of it, as "Check years"
     // is) is no other VIN, part type nor open candidate: the answer stays,
     // and what the link points at stays in it.
-    const answer = document.getElementById('answer');
     const same = (key, param) => (answer.dataset[key] || '') === (q.get(param) || '');
     if (input.value === vin && answer && answer.dataset.vin === vin && same('part', 'part.id') && same('after', 'after') &&
       same('type', 'fitment.type') && same('number', 'fitment.number') && same('side', 'fitment.side') && same('rows', 'rows')) return;
@@ -511,12 +592,23 @@
     }
   };
   const stripItems = (wrap) => [...wrap.querySelectorAll('.ptypes > li[data-part]')];
-  // keep keeps the part type answer presses, when its strip has it.
-  const keep = (answer) => {
+  // listed are the part types answer lists, and the spine they are kept
+  // by: its strip's, or, in part-number mode, where the dialog stands
+  // alone, the dialog's.
+  const listed = (answer) => {
     const wrap = answer && answer.querySelector('.ptwrap');
+    const dialog = answer && answer.querySelector('.ptdialog[data-spine]');
+    if (wrap) return { wrap, spine: wrap.dataset.spine, items: stripItems(wrap) };
+    if (dialog) return { spine: dialog.dataset.spine, items: [...dialog.querySelectorAll('.ptgroups li[data-part]')] };
+    return null;
+  };
+  // keep keeps the part type answer presses, when its strip has it, or
+  // the one the plate holds, in part-number mode.
+  const keep = (answer) => {
+    const list = listed(answer);
     const id = answer && answer.dataset.part;
-    if (!wrap || !id || !stripItems(wrap).some((li) => li.dataset.part === id)) return;
-    const spine = wrap.dataset.spine;
+    if (!list || !id || !list.items.some((li) => li.dataset.part === id)) return;
+    const spine = list.spine;
     const kept = [{ spine, id }, ...recentParts().filter((r) => r.spine !== spine || r.id !== id)].slice(0, KEPT);
     try {
       localStorage.setItem(PARTS, JSON.stringify(kept));
@@ -592,29 +684,31 @@
   });
   // strip draws answer's strip and dialog as this browser has them: the
   // filters shown, the recent part types first and in the dialog's head,
-  // and the counts laid.
+  // and the counts laid. In part-number mode there is the dialog alone.
   function strip(answer) {
-    const wrap = answer && answer.querySelector('.ptwrap');
-    if (!wrap) return;
-    wrap.classList.add('live');
+    const list = listed(answer);
+    if (!list) return;
+    const { wrap, items } = list;
     answer.querySelectorAll('.ptf').forEach((f) => { f.hidden = false; });
-    const items = stripItems(wrap);
-    items.forEach((li, i) => { li.dataset.at ??= i; });
     const has = new Set(items.map((li) => li.dataset.part));
-    const recent = recentParts().filter((r) => r.spine === wrap.dataset.spine && has.has(r.id)).map((r) => r.id);
-    const lead = recent.slice(0, LEAD);
-    const rank = (li) => (lead.includes(li.dataset.part) ? lead.indexOf(li.dataset.part) : LEAD + Number(li.dataset.at));
-    items.sort((a, b) => rank(a) - rank(b));
-    wrap.querySelector('.ptypes > .ptnone').before(...items);
-    for (const li of items) {
-      const stamp = li.querySelector('.rstamp');
-      if (lead.includes(li.dataset.part) && !stamp) {
-        const s = document.createElement('span');
-        s.className = 'rstamp';
-        s.textContent = 'Recent';
-        li.prepend(s);
-      } else if (!lead.includes(li.dataset.part) && stamp) {
-        stamp.remove();
+    const recent = recentParts().filter((r) => r.spine === list.spine && has.has(r.id)).map((r) => r.id);
+    if (wrap) {
+      wrap.classList.add('live');
+      items.forEach((li, i) => { li.dataset.at ??= i; });
+      const lead = recent.slice(0, LEAD);
+      const rank = (li) => (lead.includes(li.dataset.part) ? lead.indexOf(li.dataset.part) : LEAD + Number(li.dataset.at));
+      items.sort((a, b) => rank(a) - rank(b));
+      wrap.querySelector('.ptypes > .ptnone').before(...items);
+      for (const li of items) {
+        const stamp = li.querySelector('.rstamp');
+        if (lead.includes(li.dataset.part) && !stamp) {
+          const s = document.createElement('span');
+          s.className = 'rstamp';
+          s.textContent = 'Recent';
+          li.prepend(s);
+        } else if (!lead.includes(li.dataset.part) && stamp) {
+          stamp.remove();
+        }
       }
     }
     const dialog = answer.querySelector('.ptdialog');
@@ -624,7 +718,7 @@
       sec.hidden = recent.length === 0;
     }
     for (const input of answer.querySelectorAll('.ptfind')) if (input.value) filter(input);
-    lay(wrap);
+    if (wrap) lay(wrap);
   }
   const parts = (answer) => {
     keep(answer);
@@ -646,6 +740,18 @@
   });
 
   const init = () => {
+    // Part-number mode: its field is the form's own text field, struck
+    // into the plate, and needs only the page's listeners.
+    const part = document.getElementById('part-form');
+    if (part) {
+      part.classList.add('live');
+      const number = document.getElementById('from-number');
+      if (document.activeElement === number) number.setSelectionRange(number.value.length, number.value.length);
+      if (!history.state) history.replaceState({ whole: false }, '', location.href);
+      chips();
+      parts(document.getElementById('answer'));
+      return;
+    }
     const form = document.getElementById('vin-form');
     if (!form) return;
     // The field over the cells is a textarea in the input's place: its

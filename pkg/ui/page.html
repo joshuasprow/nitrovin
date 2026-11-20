@@ -9,16 +9,113 @@ names are one region (hang): on a page narrower than 64rem it scrolls
 sideways, six columns wide, the names under the cards they come from. The
 server draws it for whatever is typed so far; plate.js asks again as the
 visitor types, or presses a part type, and swaps #answer and #dev.
+Above the plate, a switch of two links (modes) turns it to part-number
+mode (part.go): the plate holds a part type and a number (part-plate),
+and the answer is the part's tag and its vehicles (part-answer).
 What developers need is behind the header's Developers button (developers,
 decode.html), and the VINs to try behind its VINs button (chips). No
 inline script or style: CSP refuses both, so every position is a class on
 a fixed grid of 17 columns. */}}
 {{define "home" -}}
-<h1 class="visually-hidden">VIN decoder</h1>
-{{template "plate" .}}
-{{template "answer" .Diagram}}
+<h1 class="visually-hidden">{{if .Part}}Part number lookup{{else}}VIN decoder{{end}}</h1>
+<div id="lookup" class="stage lookup">
+{{template "modes" .}}
+{{if .Part}}{{template "part-plate" .Part}}{{else}}{{template "plate" .}}{{end}}
+</div>
+{{if .Part}}{{template "part-answer" .Part}}{{else}}{{template "answer" .Diagram}}{{end}}
 {{template "chips" .}}
 <div id="dev">{{template "developers" .}}</div>
+{{- end}}
+
+{{/* modes is the plate's switch: two keys of metal, joined, each a link
+to the page in its mode with nothing on the plate, the mode the page is
+in pressed (aria-current). */}}
+{{define "modes" -}}
+<nav class="modes" aria-label="Look up by">
+<a class="mode" href="/"{{if not .Part}} aria-current="true"{{end}}>VIN</a><a class="mode" href="{{.PartMode}}"{{if .Part}} aria-current="true"{{end}}>Part number</a>
+</nav>
+{{- end}}
+
+{{/* part-plate is the plate in part-number mode (part.go): the same
+metal, its two fields under their labels and brackets in the Serial
+group's colour. The part type is a strip of the second tape that opens
+the part types dialog, a popover, so without a script too; its id goes
+with the form as a hidden field. The number is the form's text field,
+struck into the plate. Look up sends it without a script; with one,
+plate.js asks as it is typed. Without a catalog, the part type opens
+the Vocabularies dialog. Each field's label is the bracket's above it on
+a wide page, and its own on the plate on a narrow one, where the two
+stack. */}}
+{{define "part-plate" -}}
+<form id="part-form" class="plate-form part-form" method="get" action="/" aria-label="Look up a part number">
+<div class="plabels" aria-hidden="true"><span class="lab g-serial"><span>Part type</span></span><span class="lab g-serial"><span>Part number</span></span></div>
+<div class="plate pplate">
+<div class="pfield" id="part-type-field">
+<span class="plbl" id="ptype-l">Part type</span>
+<button type="button" class="ptpick" popovertarget="{{if .Catalog}}part-types{{else}}vocabularies{{end}}" aria-labelledby="ptype-l ptype-v"><span class="nm" id="ptype-v">{{if not .Catalog}}No catalog loaded{{else if .TypeName}}{{.TypeName}}{{else}}Choose a part type{{end}}</span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"/></svg></button>
+{{with .Type}}<input type="hidden" name="from.fitment.type" value="{{.}}">
+{{end}}</div>
+<div class="pfield pnum">
+<label class="plbl" for="from-number">Part number</label>
+<input type="text" id="from-number" name="from.fitment.number" value="{{.Number}}" placeholder="Type its number" autocomplete="off" spellcheck="false" autofocus aria-describedby="answer">
+</div>
+</div>
+<button type="submit" class="decode">Look up</button>
+</form>
+{{- end}}
+
+{{/* part-answer is what hangs off the plate in part-number mode: the
+number's bracket under it, and, when there is a part, one line of
+pinstripe tape from the bracket to its tag's eyelet; the tag, a manila
+parts tag as a candidate's, its stock strip along its bottom edge and
+its rows under it when open; and beside it the vehicles it fits, the
+page's own table. Where there is no part, the place is a blank strip
+with a sentence. data-q is the query it answers, and data-part the part
+type on the plate, which plate.js keeps as a recent part type. */}}
+{{define "part-answer" -}}
+<div id="answer" class="stage part-answer" data-mode="part" data-q="{{.Query}}"{{with .Type}} data-part="{{.}}"{{end}}>
+<div class="punder" aria-hidden="true"><span class="brk g-serial{{if .Number}} done{{end}}"></span></div>
+{{if .Tag}}<svg class="pleader" viewBox="0 0 1020 36" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+<path class="g-serial wide" d="M680 0V18H170V36" vector-effect="non-scaling-stroke"/>
+<path class="g-serial mid" d="M680 0V18H255V36" vector-effect="non-scaling-stroke"/>
+<path class="g-serial narrow" d="M510 0V36" vector-effect="non-scaling-stroke"/>
+</svg>
+{{end}}<section class="part" id="part" aria-labelledby="part-h">
+{{with .Tag}}<h2 id="part-h" class="visually-hidden">{{.TypeName}} {{.Number}}</h2>
+<div class="pgrid">
+<div class="pcol">
+<div class="ptag"><div class="cand-in">
+<p class="numtape"><b class="num">{{.Number}}</b> <span class="ptn">{{.TypeName}}</span></p>
+{{with .Replaces}}<p class="marks"><span class="mk replaces">Replaces {{.}}</span></p>
+{{end}}<dl>
+{{with .Side}}<div><dt>Side</dt><dd>{{.}}</dd></div>
+{{end}}<div><dt>Fits</dt><dd>{{.Fits}}</dd></div>
+{{with .Note}}<div><dt>Note</dt><dd>{{.}}</dd></div>
+{{end}}{{with .RetiredNote}}<div><dt>Retirement</dt><dd>{{.}}</dd></div>
+{{end}}</dl>
+{{template "stock-strip" .Strip}}
+</div></div>
+{{with .Panel}}<div class="prows" id="stock-rows"><span class="notch" aria-hidden="true"></span>
+{{template "stock-cols" .}}
+</div>
+{{end}}</div>
+<div class="vehicles">
+<table>
+<caption class="visually-hidden">The vehicles {{.Number}} fits, as {{$.Catalog}} names them</caption>
+<thead><tr><th scope="col">Vehicle <span class="hint">as {{$.Catalog}} names it</span></th><th scope="col">Years</th><th scope="col">Options</th>{{if $.Named}}<th scope="col">Also known as</th>{{end}}</tr></thead>
+<tbody>
+{{range $.Vehicles}}<tr><th scope="row">{{.Name}}</th><td class="yrs">{{.Years}}</td><td class="opts">{{.Options}}</td>{{if $.Named}}<td class="names">{{range .Names}}<span class="vn"><span class="voc">{{.Vocabulary}}</span> <span class="vtape">{{.Name}}</span></span>{{else}}<span class="hint">None</span>{{end}}</td>{{end}}</tr>
+{{end}}</tbody>
+</table>
+{{with $.Next}}<p class="more-cands">This page shows {{len $.Vehicles}} of {{$.Total}} vehicles. <a class="swap" href="{{.}}">Next page</a></p>
+{{end}}</div>
+</div>
+{{else}}<h2 id="part-h" class="visually-hidden">The part</h2>
+{{with .Error}}<p class="error" role="alert">{{.}}</p>
+{{else}}<p class="blank"><span>{{.Blank}}</span>{{if .Add}}<button type="button" popovertarget="vocabularies">Add a catalog</button>{{end}}{{range .Ways}}<a class="swap" href="{{.Href}}">{{.Text}}</a>{{end}}</p>
+{{end}}{{end}}{{if .Groups}}{{template "part-types-dialog" .Dialog}}
+{{end}}</section>
+</div>
 {{- end}}
 
 {{/* plate is the form: the groups' labels over their cells, the cells,
@@ -64,15 +161,16 @@ is open and the panel shown whole, which plate.js tells a history entry by. */}}
 <div class="cards">
 {{range .Groups}}{{template "card" .}}
 {{end}}</div>
-<svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+{{if not .Ways}}<svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
 <path class="g-wmi" pathLength="1" d="M85 0V18H215V28" vector-effect="non-scaling-stroke"/>
 <path class="g-vds" pathLength="1" d="M255 0V9H532.5V28" vector-effect="non-scaling-stroke"/>
 <path class="g-year" pathLength="1" d="M595 0V18H892.5V28" vector-effect="non-scaling-stroke"/>
 </svg>
 {{template "aka" .Names}}
-</div>
-{{template "fit" .Fit}}
-{{with .Error}}<p class="error" role="alert">{{.}}</p>{{end}}
+{{end}}</div>
+{{with .Ways}}<div class="choice"><p class="blank"><span>{{$.Error}}</span>{{range .}}<a href="{{.Href}}">{{.Text}}</a>{{end}}</p></div>
+{{else}}{{template "fit" .Fit}}
+{{with .Error}}<p class="error" role="alert">{{.}}</p>{{end}}{{end}}
 {{if or .Problems .Fix}}<div class="problems" role="status">
 {{range .Problems}}<p>{{.}}</p>
 {{end}}{{with .Fix}}<p><a class="fix" href="{{.}}">Use <span class="mono">{{$.FixV}}</span> instead</a></p>{{end}}
@@ -205,27 +303,7 @@ own, which plate.js swaps in place (swap). */}}
 <li class="{{.Strip.KeyClass}}"><button type="button" id="more-types" popovertarget="part-types">{{range .Strip.Keys}}<span class="kn c{{.Cols}}">{{.N}} more<span class="visually-hidden"> {{if eq .N 1}}part type{{else}}part types{{end}}</span></span>{{end}}</button></li>
 </ul>
 </div>
-<dialog id="part-types" class="ptdialog" popover aria-labelledby="part-types-h">
-<div class="dialog-head">
-<h2 id="part-types-h">Part types</h2>
-<button type="button" popovertarget="part-types" popovertargetaction="hide">Close</button>
-</div>
-<p class="ptf" hidden><label class="visually-hidden" for="ptf-dialog">Filter part types</label><input type="search" id="ptf-dialog" class="ptfind" placeholder="Filter part types" autocomplete="off" aria-controls="ptgroups"></p>
-<p class="hint">{{.Vehicle}} in {{.Catalog}}{{with .GroupedBy}} · grouped by {{.}}{{end}}</p>
-<p class="ptnone" hidden></p>
-<section class="ptgroup ptrecent" aria-labelledby="ptrecent-h" hidden>
-<div class="pthead"><h3 id="ptrecent-h">Opened recently</h3><button type="button" class="linkish clear-parts">Clear recent</button></div>
-<ul class="ptlist"></ul>
-</section>
-<div class="ptgroups" id="ptgroups">
-{{range $i, $g := .Groups}}<section class="ptgroup"{{if .Heading}} aria-labelledby="ptg-{{$i}}"{{end}}>
-{{with .Heading}}<div class="pthead"><h3 id="ptg-{{$i}}">{{.}}</h3></div>
-{{end}}<ul class="ptlist">
-{{range .Types}}<li data-part="{{.ID}}">{{template "ptype" .}}</li>
-{{end}}</ul>
-</section>
-{{end}}</div>
-</dialog>
+{{template "part-types-dialog" .Dialog}}
 {{if .Invite}}<p class="blank"><span>Press a part type to see what fits this vehicle.</span></p>
 {{end}}{{with .NoneFit}}<p class="blank"><span>{{.}}</span></p>
 {{end}}{{if .Tags}}<ol class="cands" aria-label="Candidates: {{.Pressed}}">
@@ -278,6 +356,14 @@ sources' dates; on a narrow page the columns are one row that scrolls
 sideways, the region that takes the focus. */}}
 {{define "stock-rows" -}}
 <li class="rows at{{.Col}}{{if .MoreWide}} more-wide{{end}}{{if .MoreNarrow}} more-narrow{{end}}" id="stock-rows"><span class="notch" aria-hidden="true"></span>
+{{template "stock-cols" .}}
+</li>
+{{- end}}
+
+{{/* stock-cols is a stock panel's columns, a kind of stock each, the
+region that takes the focus: a candidate's (stock-rows) or a part's
+(part-answer). */}}
+{{define "stock-cols" -}}
 <div class="stock-cols{{if eq (len .Columns) 1}} one{{end}}" id="stock-region" role="region" aria-label="Stock of {{.Number}}" tabindex="0">
 {{range $col := .Columns}}<div class="stock-col">
 <h3 id="{{.ID}}-h"><span>{{.Heading}}</span>{{with .AsOf}} <span class="asof">{{.}}</span>{{end}}</h3>
@@ -285,7 +371,6 @@ sideways, the region that takes the focus. */}}
 {{with .More}}<p class="more-rows">The first {{$col.Shown}} of {{$col.Total}}. <a class="swap" href="{{.}}" data-focus="stock-region">Show all</a></p>
 {{end}}</div>
 {{end}}</div>
-</li>
 {{- end}}
 
 {{/* stock-table is stock rows, one panel's table: a row's id in the
@@ -301,9 +386,42 @@ plate is. */}}
 
 {{/* ptype is a part type, the second tape: a link to the page with it
 pressed, or, pressed, with none, its name (cut with an ellipsis where its
-tape is too short, the link's name still whole) and its count in a pill. */}}
+tape is too short, the link's name still whole) and its count in a pill,
+when it has one: a vehicle's part types count its candidates, and the
+catalog's in part-number mode count nothing. */}}
 {{define "ptype" -}}
-<a class="ptype swap" href="{{.Href}}"{{if .Pressed}} aria-current="true"{{end}}><span class="nm">{{.Name}}</span> <span class="n">{{.Count}}<span class="visually-hidden"> {{if eq .Count 1}}candidate{{else}}candidates{{end}}</span></span></a>
+<a class="ptype swap" href="{{.Href}}"{{if .Pressed}} aria-current="true"{{end}}><span class="nm">{{.Name}}</span>{{if .Count}} <span class="n">{{.Count}}<span class="visually-hidden"> {{if eq .Count 1}}candidate{{else}}candidates{{end}}</span></span>{{end}}</a>
+{{- end}}
+
+{{/* part-types-dialog is the part types dialog (#324), a popover: a
+head of metal with Close, the filter (with a script), a line saying
+what it lists, the part types this browser opened recently (with a
+script), and every part type under the headings of a part vocabulary.
+On a VIN's page it lists the vehicle's, opened by "N more"; in
+part-number mode, the catalog's, opened by the plate's part type, and
+data-spine is the spine plate.js keeps them by. */}}
+{{define "part-types-dialog" -}}
+<dialog id="part-types" class="ptdialog" popover aria-labelledby="part-types-h"{{with .Spine}} data-spine="{{.}}"{{end}}>
+<div class="dialog-head">
+<h2 id="part-types-h">Part types</h2>
+<button type="button" popovertarget="part-types" popovertargetaction="hide">Close</button>
+</div>
+<p class="ptf" hidden><label class="visually-hidden" for="ptf-dialog">Filter part types</label><input type="search" id="ptf-dialog" class="ptfind" placeholder="Filter part types" autocomplete="off" aria-controls="ptgroups"></p>
+<p class="hint">{{.Hint}}</p>
+<p class="ptnone" hidden></p>
+<section class="ptgroup ptrecent" aria-labelledby="ptrecent-h" hidden>
+<div class="pthead"><h3 id="ptrecent-h">Opened recently</h3><button type="button" class="linkish clear-parts">Clear recent</button></div>
+<ul class="ptlist"></ul>
+</section>
+<div class="ptgroups" id="ptgroups">
+{{range $i, $g := .Groups}}<section class="ptgroup"{{if .Heading}} aria-labelledby="ptg-{{$i}}"{{end}}>
+{{with .Heading}}<div class="pthead"><h3 id="ptg-{{$i}}">{{.}}</h3></div>
+{{end}}<ul class="ptlist">
+{{range .Types}}<li data-part="{{.ID}}">{{template "ptype" .}}</li>
+{{end}}</ul>
+</section>
+{{end}}</div>
+</dialog>
 {{- end}}
 
 {{/* chips are what to try, the menu the header's VINs button opens (a
