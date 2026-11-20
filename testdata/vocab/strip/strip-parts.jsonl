@@ -1,0 +1,19 @@
+{"format":1,"kind":"spine","name":"strip-parts","version":"2026.11"}
+{"id":"alternator","name":"Alternator"}
+{"id":"battery","name":"Battery"}
+{"id":"brake-caliper-front","name":"Brake Caliper, Front"}
+{"id":"brake-pads-front","name":"Brake Pads, Front"}
+{"id":"brake-pads-rear","name":"Brake Pads, Rear"}
+{"id":"brake-rotor-front","name":"Brake Rotor, Front"}
+{"id":"brake-rotor-rear","name":"Brake Rotor, Rear"}
+{"id":"door-mirror","name":"Door Mirror"}
+{"id":"fog-lamp","name":"Fog Lamp"}
+{"id":"fuel-pump","name":"Fuel Pump"}
+{"id":"headlamp","name":"Headlamp Assembly"}
+{"id":"radiator","name":"Radiator"}
+{"id":"starter","name":"Starter Motor"}
+{"id":"tail-lamp","name":"Tail Lamp"}
+{"id":"thermostat","name":"Thermostat"}
+{"id":"transfer-case","name":"Transfer Case"}
+{"id":"water-pump","name":"Water Pump"}
+{"id":"wiper-motor","name":"Wiper Motor"}

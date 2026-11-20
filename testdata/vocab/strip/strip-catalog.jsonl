@@ -1,0 +1,25 @@
+{"format":1,"kind":"catalog","name":"strip-catalog","version":"2026.11","spine":"strip-parts","vehicles":"vpic"}
+{"fitment":{"type":"alternator","number":"ST-1001"},"applications":[{"vehicle":{"model":1801},"first":2015,"last":2017,"options":""}]}
+{"fitment":{"type":"alternator","number":"ST-1002"},"applications":[{"vehicle":{"model":1801},"first":2015,"last":2017,"options":"w/ heavy duty package"}]}
+{"fitment":{"type":"battery","number":"ST-1003"},"applications":[{"vehicle":{"model":1801},"first":2015,"last":2017,"options":""}]}
+{"fitment":{"type":"brake-caliper-front","number":"ST-1004"},"applications":[{"vehicle":{"model":1801},"first":2015,"last":2017,"options":""}]}
+{"fitment":{"type":"brake-pads-front","number":"ST-1005"},"applications":[{"vehicle":{"model":1801},"first":2015,"last":2017,"options":""}]}
+{"fitment":{"type":"brake-pads-rear","number":"ST-1006"},"applications":[{"vehicle":{"model":1801},"first":2015,"last":2017,"options":""}]}
+{"fitment":{"type":"brake-rotor-front","number":"ST-1007"},"applications":[{"vehicle":{"model":1801},"first":2015,"last":2017,"options":""}]}
+{"fitment":{"type":"brake-rotor-rear","number":"ST-1008"},"applications":[{"vehicle":{"model":1801},"first":2015,"last":2017,"options":""}]}
+{"fitment":{"type":"door-mirror","number":"ST-1009"},"applications":[{"vehicle":{"model":1801},"first":2015,"last":2017,"options":""}]}
+{"fitment":{"type":"fog-lamp","number":"ST-1010"},"applications":[{"vehicle":{"model":1801},"first":2015,"last":2017,"options":""}]}
+{"fitment":{"type":"fuel-pump","number":"ST-1011"},"applications":[{"vehicle":{"model":1801},"first":2015,"last":2017,"options":""}]}
+{"fitment":{"type":"headlamp","number":"ST-1012"},"applications":[{"vehicle":{"model":1801},"first":2015,"last":2017,"options":""}]}
+{"fitment":{"type":"radiator","number":"ST-1013"},"applications":[{"vehicle":{"model":1801},"first":2015,"last":2017,"options":""}]}
+{"fitment":{"type":"starter","number":"ST-1014"},"applications":[{"vehicle":{"model":1801},"first":2015,"last":2017,"options":""}]}
+{"fitment":{"type":"tail-lamp","number":"ST-1015"},"applications":[{"vehicle":{"model":1801},"first":2015,"last":2017,"options":""}]}
+{"fitment":{"type":"thermostat","number":"ST-1016"},"applications":[{"vehicle":{"model":1801},"first":2015,"last":2017,"options":""}]}
+{"fitment":{"type":"transfer-case","number":"ST-1017"},"applications":[{"vehicle":{"model":1801},"first":2015,"last":2017,"options":""}]}
+{"fitment":{"type":"water-pump","number":"ST-1018"},"applications":[{"vehicle":{"model":1801},"first":2015,"last":2017,"options":""}]}
+{"fitment":{"type":"wiper-motor","number":"ST-1019"},"applications":[{"vehicle":{"model":1801},"first":2015,"last":2017,"options":""}]}
+{"fitment":{"type":"alternator","number":"ST-2001"},"applications":[{"vehicle":{"model":1850},"first":2014,"last":2014,"options":""}]}
+{"fitment":{"type":"battery","number":"ST-2002"},"applications":[{"vehicle":{"model":1850},"first":2014,"last":2014,"options":""}]}
+{"fitment":{"type":"radiator","number":"ST-2003"},"applications":[{"vehicle":{"model":1850},"first":2014,"last":2014,"options":""}]}
+{"fitment":{"type":"starter","number":"ST-2004"},"applications":[{"vehicle":{"model":1850},"first":2014,"last":2014,"options":""}]}
+{"fitment":{"type":"water-pump","number":"ST-2005"},"applications":[{"vehicle":{"model":1850},"first":2014,"last":2014,"options":""}]}
