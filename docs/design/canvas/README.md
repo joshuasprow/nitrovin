@@ -47,14 +47,14 @@ running on a throwaway branch, which its row's title names by issue.
 
 | Frames | Proposes | Prototype |
 | --- | --- | --- |
-| `Proposal-PartType-1280`, `-768`, `-390` | #366: the row of part types and its dialog become one field in the "Parts that fit" strip | branch `prototype/part-types-366` |
+| `Proposal-PartType-1280`, `-768`, `-390` | #366: the row of part types and its dialog become one picker under the "Parts that fit" strip | branch `prototype/part-types-366` |
 
 The wireframes and texture frames that proposed the fitment slices (#320 to
 #325) are removed from the canvas. This folder's history holds them.
 
 ## This snapshot
 
-Canvas version `1795206708-1165`, published on 2026-11-20.
+Canvas version `1795207513-3bbe`, published on 2026-11-20.
 
 ## Rebuilding a canvas from a snapshot
 

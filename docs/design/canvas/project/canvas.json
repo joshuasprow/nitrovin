@@ -73,49 +73,49 @@
       "y": 0
     },
     "Proposal-PartType-1280-Dark.dc.html": {
-      "h": 2330,
+      "h": 2750,
       "page": "proposals",
-      "title": "Proposal: the part type field in the strip, 1280 wide, dark",
+      "title": "Proposal: the part type picker, 1280 wide, dark",
       "w": 1280,
       "x": 0,
-      "y": 2940
+      "y": 3220
     },
     "Proposal-PartType-1280.dc.html": {
-      "h": 2330,
+      "h": 2750,
       "page": "proposals",
-      "title": "Proposal: the part type field in the strip, 1280 wide, light",
+      "title": "Proposal: the part type picker, 1280 wide, light",
       "w": 1280,
       "x": 0,
       "y": 0
     },
     "Proposal-PartType-390-Dark.dc.html": {
-      "h": 2820,
+      "h": 3100,
       "page": "proposals",
-      "title": "Proposal: the part type field in the strip, 390 wide, dark",
+      "title": "Proposal: the part type picker, 390 wide, dark",
       "w": 470,
       "x": 2288,
-      "y": 2940
+      "y": 3220
     },
     "Proposal-PartType-390.dc.html": {
-      "h": 2820,
+      "h": 3100,
       "page": "proposals",
-      "title": "Proposal: the part type field in the strip, 390 wide, light",
+      "title": "Proposal: the part type picker, 390 wide, light",
       "w": 470,
       "x": 2288,
       "y": 0
     },
     "Proposal-PartType-768-Dark.dc.html": {
-      "h": 2670,
+      "h": 2950,
       "page": "proposals",
-      "title": "Proposal: the part type field in the strip, 768 wide, dark",
+      "title": "Proposal: the part type picker, 768 wide, dark",
       "w": 848,
       "x": 1360,
-      "y": 2940
+      "y": 3220
     },
     "Proposal-PartType-768.dc.html": {
-      "h": 2670,
+      "h": 2950,
       "page": "proposals",
-      "title": "Proposal: the part type field in the strip, 768 wide, light",
+      "title": "Proposal: the part type picker, 768 wide, light",
       "w": 848,
       "x": 1360,
       "y": 0
@@ -160,7 +160,7 @@
       "kind": "title1",
       "maxW": 2758,
       "page": "proposals",
-      "text": "Proposal (#366): the part type in the strip",
+      "text": "Proposal (#366): the part type picker",
       "w": 240,
       "x": 0,
       "y": -300

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Proposal: the part type field in the strip, 390 wide</title>
+<title>Proposal: the part type picker, 390 wide</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -226,19 +226,15 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 .proto .pclear{min-width: 32px; min-height: 32px; padding: 0 .5rem; font: 700 16px/1 var(--cell-font); letter-spacing: 0; border-radius: 0 2px 2px 0; margin-left: -1px}
 .proto .pfind{font: 14px/1.4 system-ui, sans-serif; padding: .3rem .5rem; width: 11rem; max-width: 100%; box-sizing: border-box; color: var(--fg); background: var(--card-bg); border: 1px solid var(--steel); border-radius: 2px; box-shadow: inset 0 2px 3px rgb(0 0 0 / .18)}
 .proto .plab{font: 900 10px var(--label-font); letter-spacing: .08em; text-transform: uppercase; color: var(--muted)}
-.proto-b .fitstrip .proto-off{position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%)}
-.proto-b .fitstrip .pbcell{align-self: stretch; display: flex; align-items: stretch; min-width: 0; padding: 5px 6px; border-right: 1px solid rgb(255 255 255 / .18)}
 .proto-b .pfield{flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: .5rem; align-items: center; min-height: 44px; padding: .25rem .6rem; text-align: left; --key: var(--alu); text-transform: none; letter-spacing: 0}
 .proto-b .pfield .plab{grid-column: 1 / -1; font: 700 9px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: inherit; opacity: .75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis}
 .proto-b .pfield .pval{font: 700 16px/1.2 var(--cell-font); overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
 .proto-b .pfield .pcount{font: 400 11px var(--cell-font); padding: 0 .4rem; border: 1px solid currentColor; border-radius: 999px; opacity: .8}
 .proto-b .pfield .pchev{font-size: 11px}
-.proto-b .pbcell .pclear{min-width: 40px; font-size: 18px}
 .proto-b .ptwrap{margin-top: 30px}
 .proto-B .panchor{display: block; width: 0; height: 0; margin-left: calc((var(--xv) + var(--xy)) / 2)}
 .proto-B .pbrecent{display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 0; position: relative; z-index: 3; width: fit-content; padding-right: 8px; background: var(--bg)}
 .proto-B .pbpanel{position: relative; z-index: 3; margin-top: 0}
-.proto-b .fitstrip .pbcell{grid-column: 1 / -1; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18)}
 .proto .pbpanel{margin-top: 10px; padding: .75rem; border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .3)}
 .proto .pcols{columns: 3 14rem; column-gap: 1.25rem; margin-top: .6rem}
 .proto .pg{break-inside: avoid; margin: 0 0 .75rem}
@@ -256,8 +252,17 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 .seg::after{height: calc(var(--lead) + var(--prev) + 1px)}
 .proto-b .fitstrip{grid-template-rows: minmax(2.7rem, auto) auto}
 .proto-b .fitstrip .seg{grid-row: 1}
-.proto-b .fitstrip .pbcell{grid-row: 2; grid-column: 1 / -1; border-right: 0; border-bottom: 0; border-top: 1px solid rgb(255 255 255 / .18)}
-.proto-b .pfield{flex: 0 1 24rem}}
+.proto-b .pfield{flex: 0 1 24rem}
+.proto-b .fitstrip{grid-template-rows: none}
+.proto-B .pbpick{position: relative; z-index: 4; width: min(24rem, 100%)}
+.proto-B .pbtape{display: flex; align-items: stretch; padding: 5px 6px; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-radius: 2px; box-shadow: var(--lift-stuck)}
+.proto-B .pbtape .pfield{flex: 1}
+.proto-B .pbtape .pclear{min-width: 40px; font-size: 18px}
+.proto-B .pbpick .pbpanel{position: absolute; left: 0; right: 0; top: calc(100% + 6px); margin: 0}
+.proto-B .pbpick .pbpanel.inflow{position: static; margin-top: 6px}
+.proto-B .pbpanel .pcols{columns: 1; margin-top: 0}
+.proto-B .pbpanel .pfind{width: 100%; margin-bottom: .6rem}
+.proto-B .pbrecent{margin-top: 10px}}
 .sheet{--bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint: #a9bccb; --card-bg: #ffffff; --link: #0b4fa8; --bad: #b91c1c; --c-wmi: #c8102e; --c-vds: #0b4fa8; --c-check: #5b2d8e; --c-year: #a34c09; --c-plant: #0f6b46; --c-serial: #3d4650; --on: #ffffff; --label-font: "Arial Black", "Helvetica Neue", system-ui, sans-serif; --cell-font: ui-monospace, monospace; --steel: #6f7b86; --steel-dark: #58626c; --on-metal: #232930; --metal: url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0 / 600px 120px, linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc); --emboss: 0 1px 0 rgb(255 255 255 / .9), 0 -1px 1px rgb(0 0 0 / .45); --lift-stuck: 0 2px 3px rgb(8 7 15 / .32); --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 9px rgb(8 7 15 / .38); --raised: inset 0 1px 0 #fff, var(--lift-raised); --pressed: inset 0 3px 4px rgb(8 7 15 / .4); --alu-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .12) 2px 3px), linear-gradient(#8e99a3, #aab4bd); --alu: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .07) 2px 3px), var(--metal); --tape: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .13) 2px 3px), linear-gradient(#30363d, #171a1e); --tape-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .2) 2px 3px), linear-gradient(#0c0e10, #1d2125); --tape-edge: #050607; --tape-lit: #69727c; --on-tape: #f6f8fa; --tape-emboss: -1px -1px 0 rgb(8 7 15 / .67), 1px 1px 0 rgb(255 255 255 / .33), 0 2px 2px rgb(8 7 15 / .53); --stripe-lift: drop-shadow(-1px -1px 0 rgb(255 255 255 / .4)) drop-shadow(1.5px 2px 1px rgb(8 7 15 / .3)); --manila: url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f); --on-manila: #2b2418; --manila-muted: #5c4c2e; --manila-patch: #c39a5c; --manila-bad: #a01414; --gutter: 1rem; font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 1rem var(--gutter) 3rem; color: var(--fg); background: var(--bg);--gutter: .5rem;}
 .sheet{box-sizing:border-box;margin:0;padding:40px;display:flex;flex-direction:column;gap:26px}
 .sheet .sh-h1{margin:0;font:900 21px/1.2 var(--label-font);letter-spacing:.04em;text-transform:uppercase;border:0;padding:0}
@@ -273,10 +278,10 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 
 </style>
 </helmet>
-<div class="root sheet" data-scheme="light" style="width: 470px; height: 2820px; color: var(--fg); background: var(--bg)">
-<div><h1 class="sh-h1">The part type in the strip</h1><p class="sh-intro">A proposal for #366. The row of part types and its "N more" dialog become one field in the "Parts that fit" strip: the model and the year, and under them the part type, from the catalog.</p></div>
+<div class="root sheet" data-scheme="light" style="width: 470px; height: 3100px; color: var(--fg); background: var(--bg)">
+<div><h1 class="sh-h1">The part type picker</h1><p class="sh-intro">A proposal for #366. The row of part types and its "N more" dialog become one picker under the "Parts that fit" strip.</p></div>
 <section>
-<p class="sh-cap">Nothing pressed <span>One shape at every width. The strip names the model and the year; under them, in the same tape, is the field, never wider than 24rem. It reads "Choose a part type" with the vehicle's count, and the list starts open under the strip, grouped by the part vocabulary, with a filter.</span></p>
+<p class="sh-cap">Nothing pressed <span>The strip is the page's own: the model and the year under the names. Under it the picker is its own piece of tape, never wider than 24rem. It reads "Choose a part type" with the vehicle's count, and its list starts open, hanging from it at its width.</span></p>
 <div class="vp vp-phone pad" style="width: 390px; --vw: 390px">
 
 <main id="ui-main" class="is-fw">
@@ -303,7 +308,7 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 <section class="fit proto-b" id="fit" aria-labelledby="fit-h">
 <span class="carry" aria-hidden="true"><span></span><span></span><span></span></span>
 <div class="fitstrip">
-<h2 id="fit-h" class="stamp proto-off">Parts that fit · demo-catalog</h2><div class="pbcell"><button class="pfield" aria-expanded="true" type="button"><span class="plab">Parts that fit · demo-catalog</span><span class="pval">Choose a part type</span><span class="pcount">8</span><span class="pchev">▴</span></button></div>
+<h2 id="fit-h" class="stamp">Parts that fit · demo-catalog</h2>
 <span class="seg g-vds"><span class="w">F150</span></span>
 <span class="seg g-year"><span class="w">2015</span></span>
 </div>
@@ -313,7 +318,7 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 <li data-part="alternator" data-at="0"><a class="ptype swap" href="#"><span class="nm">Alternator</span> <span class="n">3<span class="visually-hidden"> candidates</span></span></a></li><li data-part="brake-rotor-front" class="s5 s4 s3 s2 x2" data-at="1"><a class="ptype swap" href="#"><span class="nm">Brake Rotor, Front</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="brake-rotor-rear" class="s5 s4 s3 s2 x2 x3" data-at="2"><a class="ptype swap" href="#"><span class="nm">Brake Rotor, Rear</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="mirror" class="x3 x2" data-at="3"><a class="ptype swap" href="#"><span class="nm">Door Mirror</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li data-part="fog-lamp" class="x4 x3 x2" data-at="4"><a class="ptype swap" href="#"><span class="nm">Fog Lamp</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="headlamp" class="s5 s4 x4 s3 x3 s2 x2 x5" data-at="5"><a class="ptype swap" href="#"><span class="nm">Headlamp Assembly</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li data-part="starter" class="s5 x5 s4 x4 s3 x3 s2 x2" data-at="6"><a class="ptype swap" href="#"><span class="nm">Starter Motor</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="transfer-case" class="s5 x5 s4 x4 s3 x3 s2 x2" data-at="7"><a class="ptype swap" href="#"><span class="nm">Transfer Case</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li class="ptnone" hidden=""></li>
 <li class="ptkey k5 k4 k3 k2"><button id="more-types" type="button"><span class="kn c5">3 more<span class="visually-hidden"> part types</span></span><span class="kn c4">4 more<span class="visually-hidden"> part types</span></span><span class="kn c3">6 more<span class="visually-hidden"> part types</span></span><span class="kn c2">7 more<span class="visually-hidden"> part types</span></span></button></li>
 </ul>
-<div class="proto proto-B"><span class="panchor pp"></span><div class="pbpanel"><input class="pfind" type="search" placeholder="Filter part types" aria-label="Filter part types" value=""><div class="pcols"><section class="pg"><h4 class="pgh">DEMO-4X4</h4><ul class="pgl"><li><a class="prow" href="#"><span class="nm">Transfer Case</span><span class="n">2</span></a></li></ul></section><section class="pg"><h4 class="pgh">DEMO-ALT</h4><ul class="pgl"><li><a class="prow" href="#"><span class="nm">Alternator</span><span class="n">3</span></a></li></ul></section><section class="pg"><h4 class="pgh">DEMO-LMP</h4><ul class="pgl"><li><a class="prow" href="#"><span class="nm">Fog Lamp</span><span class="n">1</span></a></li><li><a class="prow" href="#"><span class="nm">Headlamp Assembly</span><span class="n">2</span></a></li></ul></section><section class="pg"><h4 class="pgh">DEMO-MIR</h4><ul class="pgl"><li><a class="prow" href="#"><span class="nm">Door Mirror</span><span class="n">2</span></a></li></ul></section><section class="pg"><h4 class="pgh">DEMO-ROT</h4><ul class="pgl"><li><a class="prow" href="#"><span class="nm">Brake Rotor, Front</span><span class="n">1</span></a></li><li><a class="prow" href="#"><span class="nm">Brake Rotor, Rear</span><span class="n">1</span></a></li></ul></section><section class="pg"><h4 class="pgh">DEMO-STR</h4><ul class="pgl"><li><a class="prow" href="#"><span class="nm">Starter Motor</span><span class="n">1</span></a></li></ul></section></div></div></div></div>
+<div class="proto proto-B"><span class="panchor pp"></span><div class="pbpick"><div class="pbtape"><button class="pfield" aria-expanded="true" type="button"><span class="plab">Part type</span><span class="pval">Choose a part type</span><span class="pcount">8</span><span class="pchev">▴</span></button></div><div class="pbpanel inflow"><input class="pfind" type="search" placeholder="Filter part types" aria-label="Filter part types" value=""><div class="pcols"><section class="pg"><h4 class="pgh">DEMO-4X4</h4><ul class="pgl"><li><a class="prow" href="#"><span class="nm">Transfer Case</span><span class="n">2</span></a></li></ul></section><section class="pg"><h4 class="pgh">DEMO-ALT</h4><ul class="pgl"><li><a class="prow" href="#"><span class="nm">Alternator</span><span class="n">3</span></a></li></ul></section><section class="pg"><h4 class="pgh">DEMO-LMP</h4><ul class="pgl"><li><a class="prow" href="#"><span class="nm">Fog Lamp</span><span class="n">1</span></a></li><li><a class="prow" href="#"><span class="nm">Headlamp Assembly</span><span class="n">2</span></a></li></ul></section><section class="pg"><h4 class="pgh">DEMO-MIR</h4><ul class="pgl"><li><a class="prow" href="#"><span class="nm">Door Mirror</span><span class="n">2</span></a></li></ul></section><section class="pg"><h4 class="pgh">DEMO-ROT</h4><ul class="pgl"><li><a class="prow" href="#"><span class="nm">Brake Rotor, Front</span><span class="n">1</span></a></li><li><a class="prow" href="#"><span class="nm">Brake Rotor, Rear</span><span class="n">1</span></a></li></ul></section><section class="pg"><h4 class="pgh">DEMO-STR</h4><ul class="pgl"><li><a class="prow" href="#"><span class="nm">Starter Motor</span><span class="n">1</span></a></li></ul></section></div></div></div></div></div>
 <p class="blank"><span>Press a part type to see what fits this vehicle.</span></p>
 </section>
 </div>
@@ -322,7 +327,7 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 </div>
 </section>
 <section>
-<p class="sh-cap">A part type pressed <span>The field names it with its count; × beside it clears. The Vehicle and Model year lines meet under the strip and drop to the candidates. Up to three part types opened recently sit under the strip.</span></p>
+<p class="sh-cap">A part type pressed <span>The picker names it with its count; × beside it clears. The Vehicle and Model year lines meet under the strip and drop to the candidates. Up to three part types opened recently sit under the picker.</span></p>
 <div class="vp vp-phone pad" style="width: 390px; --vw: 390px">
 
 <main id="ui-main" class="is-fw">
@@ -349,7 +354,7 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 <section class="fit proto-b" id="fit" aria-labelledby="fit-h">
 <span class="carry" aria-hidden="true"><span></span><span></span><span></span></span>
 <div class="fitstrip">
-<h2 id="fit-h" class="stamp proto-off">Parts that fit · demo-catalog</h2><div class="pbcell"><button class="pfield" aria-expanded="false" type="button"><span class="plab">Parts that fit · demo-catalog</span><span class="pval">Alternator</span><span class="pcount">3</span><span class="pchev">▾</span></button><button class="pclear" aria-label="Clear Alternator" type="button">×</button></div>
+<h2 id="fit-h" class="stamp">Parts that fit · demo-catalog</h2>
 <span class="seg g-vds"><span class="w">F150</span></span>
 <span class="seg g-year"><span class="w">2015</span></span>
 </div>
@@ -359,7 +364,7 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 <li data-part="alternator" data-at="0" class="s5 s4 s3 s2"><span class="rstamp">Recent</span><a class="ptype swap" href="#" aria-current="true"><span class="nm">Alternator</span> <span class="n">3<span class="visually-hidden"> candidates</span></span></a></li><li data-part="brake-rotor-front" class="s5 s4 s3 s2 x2" data-at="1"><a class="ptype swap" href="#"><span class="nm">Brake Rotor, Front</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="brake-rotor-rear" class="s5 s4 s3 s2 x2 x4 x3" data-at="2"><a class="ptype swap" href="#"><span class="nm">Brake Rotor, Rear</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="mirror" class="x3 x2 x4" data-at="3"><a class="ptype swap" href="#"><span class="nm">Door Mirror</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li data-part="fog-lamp" class="x4 x3 x2" data-at="4"><a class="ptype swap" href="#"><span class="nm">Fog Lamp</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="headlamp" class="s5 s4 x4 s3 x3 s2 x2 x5" data-at="5"><a class="ptype swap" href="#"><span class="nm">Headlamp Assembly</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li data-part="starter" class="s5 x5 s4 x4 s3 x3 s2 x2" data-at="6"><a class="ptype swap" href="#"><span class="nm">Starter Motor</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="transfer-case" class="s5 x5 s4 x4 s3 x3 s2 x2" data-at="7"><a class="ptype swap" href="#"><span class="nm">Transfer Case</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li class="ptnone" hidden=""></li>
 <li class="ptkey k5 k4 k3 k2"><button id="more-types" type="button"><span class="kn c5">3 more<span class="visually-hidden"> part types</span></span><span class="kn c4">6 more<span class="visually-hidden"> part types</span></span><span class="kn c3">6 more<span class="visually-hidden"> part types</span></span><span class="kn c2">7 more<span class="visually-hidden"> part types</span></span></button></li>
 </ul>
-<div class="proto proto-B"><span class="panchor pp"></span><div class="pbrecent"><span class="plab">Recent</span><a class="pc pr" href="#"><span class="nm">Door Mirror</span><span class="n">2</span></a><a class="pc pr" href="#"><span class="nm">Starter Motor</span><span class="n">1</span></a></div></div></div>
+<div class="proto proto-B"><span class="panchor pp"></span><div class="pbpick"><div class="pbtape"><button class="pfield" aria-expanded="false" type="button"><span class="plab">Part type</span><span class="pval">Alternator</span><span class="pcount">3</span><span class="pchev">▾</span></button><button class="pclear" aria-label="Clear Alternator" type="button">×</button></div></div><div class="pbrecent"><span class="plab">Recent</span><a class="pc pr" href="#"><span class="nm">Door Mirror</span><span class="n">2</span></a><a class="pc pr" href="#"><span class="nm">Starter Motor</span><span class="n">1</span></a></div></div></div>
 <span class="stems" aria-hidden="true"></span><span class="runs" aria-hidden="true"></span><span class="drops" aria-hidden="true"></span>
 <ol class="cands" aria-label="Candidates: Alternator" tabindex="0">
 <li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
@@ -401,8 +406,8 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 </div>
 </section>
 <section>
-<p class="sh-cap">The list open <span>Pressing the field opens the list. Part types keep the vocabulary's order and never move. The pressed one is black tape; pressing it again does nothing.</span></p>
-<div class="vp vp-phone pad" style="width: 390px; --vw: 390px">
+<p class="sh-cap">The list open <span>Pressing the picker opens its list over the candidates, a dropdown at the picker's width. Part types keep the vocabulary's order and never move. The pressed one is black tape; pressing it again does nothing.</span></p>
+<div class="vp vp-phone pad" style="width: 390px; --vw: 390px; padding-bottom: 300px">
 
 <main id="ui-main" class="is-fw">
 <div id="answer" class="stage" data-vin="1FTEW1EG7FFA12345" data-label="2015 FORD F-150" data-complete="" data-done="wmi vds check year plant serial " data-part="alternator">
@@ -428,7 +433,7 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 <section class="fit proto-b" id="fit" aria-labelledby="fit-h">
 <span class="carry" aria-hidden="true"><span></span><span></span><span></span></span>
 <div class="fitstrip">
-<h2 id="fit-h" class="stamp proto-off">Parts that fit · demo-catalog</h2><div class="pbcell"><button class="pfield" aria-expanded="true" type="button"><span class="plab">Parts that fit · demo-catalog</span><span class="pval">Alternator</span><span class="pcount">3</span><span class="pchev">▴</span></button><button class="pclear" aria-label="Clear Alternator" type="button">×</button></div>
+<h2 id="fit-h" class="stamp">Parts that fit · demo-catalog</h2>
 <span class="seg g-vds"><span class="w">F150</span></span>
 <span class="seg g-year"><span class="w">2015</span></span>
 </div>
@@ -438,7 +443,7 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 <li data-part="alternator" data-at="0" class="s5 s4 s3 s2"><span class="rstamp">Recent</span><a class="ptype swap" href="#" aria-current="true"><span class="nm">Alternator</span> <span class="n">3<span class="visually-hidden"> candidates</span></span></a></li><li data-part="brake-rotor-front" class="s5 s4 s3 s2 x2" data-at="1"><a class="ptype swap" href="#"><span class="nm">Brake Rotor, Front</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="brake-rotor-rear" class="s5 s4 s3 s2 x2 x4 x3" data-at="2"><a class="ptype swap" href="#"><span class="nm">Brake Rotor, Rear</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="mirror" class="x3 x2 x4" data-at="3"><a class="ptype swap" href="#"><span class="nm">Door Mirror</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li data-part="fog-lamp" class="x4 x3 x2" data-at="4"><a class="ptype swap" href="#"><span class="nm">Fog Lamp</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="headlamp" class="s5 s4 x4 s3 x3 s2 x2 x5" data-at="5"><a class="ptype swap" href="#"><span class="nm">Headlamp Assembly</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li data-part="starter" class="s5 x5 s4 x4 s3 x3 s2 x2" data-at="6"><a class="ptype swap" href="#"><span class="nm">Starter Motor</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="transfer-case" class="s5 x5 s4 x4 s3 x3 s2 x2" data-at="7"><a class="ptype swap" href="#"><span class="nm">Transfer Case</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li class="ptnone" hidden=""></li>
 <li class="ptkey k5 k4 k3 k2"><button id="more-types" type="button"><span class="kn c5">3 more<span class="visually-hidden"> part types</span></span><span class="kn c4">6 more<span class="visually-hidden"> part types</span></span><span class="kn c3">6 more<span class="visually-hidden"> part types</span></span><span class="kn c2">7 more<span class="visually-hidden"> part types</span></span></button></li>
 </ul>
-<div class="proto proto-B"><span class="panchor pp"></span><div class="pbpanel"><input class="pfind" type="search" placeholder="Filter part types" aria-label="Filter part types" value=""><div class="pcols"><section class="pg"><h4 class="pgh">DEMO-4X4</h4><ul class="pgl"><li><a class="prow" href="#"><span class="nm">Transfer Case</span><span class="n">2</span></a></li></ul></section><section class="pg"><h4 class="pgh">DEMO-ALT</h4><ul class="pgl"><li><a class="prow pp" href="#" aria-current="true"><span class="nm">Alternator</span><span class="n">3</span></a><button class="pclear" aria-label="Clear Alternator" type="button">×</button></li></ul></section><section class="pg"><h4 class="pgh">DEMO-LMP</h4><ul class="pgl"><li><a class="prow" href="#"><span class="nm">Fog Lamp</span><span class="n">1</span></a></li><li><a class="prow" href="#"><span class="nm">Headlamp Assembly</span><span class="n">2</span></a></li></ul></section><section class="pg"><h4 class="pgh">DEMO-MIR</h4><ul class="pgl"><li><a class="prow pr" href="#"><span class="nm">Door Mirror</span><span class="n">2</span></a></li></ul></section><section class="pg"><h4 class="pgh">DEMO-ROT</h4><ul class="pgl"><li><a class="prow" href="#"><span class="nm">Brake Rotor, Front</span><span class="n">1</span></a></li><li><a class="prow" href="#"><span class="nm">Brake Rotor, Rear</span><span class="n">1</span></a></li></ul></section><section class="pg"><h4 class="pgh">DEMO-STR</h4><ul class="pgl"><li><a class="prow pr" href="#"><span class="nm">Starter Motor</span><span class="n">1</span></a></li></ul></section></div></div></div></div>
+<div class="proto proto-B"><span class="panchor pp"></span><div class="pbpick"><div class="pbtape"><button class="pfield" aria-expanded="true" type="button"><span class="plab">Part type</span><span class="pval">Alternator</span><span class="pcount">3</span><span class="pchev">▴</span></button><button class="pclear" aria-label="Clear Alternator" type="button">×</button></div><div class="pbpanel"><input class="pfind" type="search" placeholder="Filter part types" aria-label="Filter part types" value=""><div class="pcols"><section class="pg"><h4 class="pgh">DEMO-4X4</h4><ul class="pgl"><li><a class="prow" href="#"><span class="nm">Transfer Case</span><span class="n">2</span></a></li></ul></section><section class="pg"><h4 class="pgh">DEMO-ALT</h4><ul class="pgl"><li><a class="prow pp" href="#" aria-current="true"><span class="nm">Alternator</span><span class="n">3</span></a><button class="pclear" aria-label="Clear Alternator" type="button">×</button></li></ul></section><section class="pg"><h4 class="pgh">DEMO-LMP</h4><ul class="pgl"><li><a class="prow" href="#"><span class="nm">Fog Lamp</span><span class="n">1</span></a></li><li><a class="prow" href="#"><span class="nm">Headlamp Assembly</span><span class="n">2</span></a></li></ul></section><section class="pg"><h4 class="pgh">DEMO-MIR</h4><ul class="pgl"><li><a class="prow pr" href="#"><span class="nm">Door Mirror</span><span class="n">2</span></a></li></ul></section><section class="pg"><h4 class="pgh">DEMO-ROT</h4><ul class="pgl"><li><a class="prow" href="#"><span class="nm">Brake Rotor, Front</span><span class="n">1</span></a></li><li><a class="prow" href="#"><span class="nm">Brake Rotor, Rear</span><span class="n">1</span></a></li></ul></section><section class="pg"><h4 class="pgh">DEMO-STR</h4><ul class="pgl"><li><a class="prow pr" href="#"><span class="nm">Starter Motor</span><span class="n">1</span></a></li></ul></section></div></div></div></div></div>
 <span class="stems" aria-hidden="true"></span><span class="runs" aria-hidden="true"></span><span class="drops" aria-hidden="true"></span>
 <ol class="cands" aria-label="Candidates: Alternator" tabindex="0">
 <li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
@@ -481,7 +486,7 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 </section>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":470,"height":2820}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":470,"height":3100}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};
