@@ -1039,18 +1039,25 @@ button.linkish:active { transform: none; box-shadow: none; }
 
 /* A finger. A phone draws its own highlight and handles over a field's
    selected text, in sizes that are not the cells', and ::selection does
-   not reach them. So the field's text is collapsed to a point at the
-   plate's middle: one line, each character's advance taken back by the
-   letter-spacing, so the highlight has no width, and a caret colour all
-   but clear, which the phone's handles take. The text stays on the plate
-   because the phone opens its edit menu (Paste, Copy) where the text is.
-   plate.js places every touch from the cells, not from the text. The
-   handles are the cells': a bar at the first selected cell's left edge
-   with a knob above it, and one at the last's right edge with a knob
-   below. plate.js drags them; while there is a selection a touch on the
-   plate is the script's and scrolls nothing. */
+   not reach them. So the field's text is collapsed to a point, each
+   character's advance taken back by the letter-spacing, and that point
+   lies past the field's right edge (text-indent 200%), where the field
+   clips it: the phone takes the selection's ends for out of sight and
+   draws no handles, and a long press selects the whole VIN, the one word
+   the field holds (Android Chrome; #352). The edit menu (Cut, Copy,
+   Paste) still opens. An empty field's caret can't be put out of sight
+   (Chrome keeps it in the field), so it stands at the first cell, where
+   the cells draw it, and the placeholder alone is centred. The caret
+   colour is all but clear, which the phone's handles take. plate.js
+   places every tap from the cells, not from the text. The handles are
+   the cells': a bar at the first selected cell's left edge with a knob
+   above it, and one at the last's right edge with a knob below. plate.js
+   drags them; while there is a selection a touch on the plate is the
+   script's and scrolls nothing. */
 @media (pointer: coarse) {
-  .live .plate textarea { letter-spacing: -1ch; text-align: center; white-space: pre; caret-color: rgb(255 255 255 / .01); }
+  .live .plate textarea { letter-spacing: -1ch; text-align: left; text-indent: 200%; white-space: pre; caret-color: rgb(255 255 255 / .01); }
+  .live .plate textarea:placeholder-shown { text-indent: 0; text-align: left; }
+  .live .plate textarea::placeholder { text-align: center; }
   .live.selecting .plate { touch-action: none; }
   .live .cell.hs, .live .cell.he { position: relative; z-index: 1; }
   .live .cell.hs::before, .live .cell.he::after { content: ""; position: absolute; width: 18px; pointer-events: none; }
