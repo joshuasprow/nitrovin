@@ -161,16 +161,16 @@ is open and the panel shown whole, which plate.js tells a history entry by. */}}
 <div class="cards">
 {{range .Groups}}{{template "card" .}}
 {{end}}</div>
-<svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+{{if not .Ways}}<svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
 <path class="g-wmi" pathLength="1" d="M85 0V18H215V28" vector-effect="non-scaling-stroke"/>
 <path class="g-vds" pathLength="1" d="M255 0V9H532.5V28" vector-effect="non-scaling-stroke"/>
 <path class="g-year" pathLength="1" d="M595 0V18H892.5V28" vector-effect="non-scaling-stroke"/>
 </svg>
 {{template "aka" .Names}}
-</div>
-{{template "fit" .Fit}}
-{{with .Error}}<p class="error" role="alert">{{.}}</p>{{end}}{{with .Ways}}
-<p class="ways">{{range $i, $w := .}}{{if $i}} · {{end}}<a href="{{$w.Href}}">{{$w.Text}}</a>{{end}}</p>{{end}}
+{{end}}</div>
+{{with .Ways}}<div class="choice"><p class="blank"><span>{{$.Error}}</span>{{range .}}<a href="{{.Href}}">{{.Text}}</a>{{end}}</p></div>
+{{else}}{{template "fit" .Fit}}
+{{with .Error}}<p class="error" role="alert">{{.}}</p>{{end}}{{end}}
 {{if or .Problems .Fix}}<div class="problems" role="status">
 {{range .Problems}}<p>{{.}}</p>
 {{end}}{{with .Fix}}<p><a class="fix" href="{{.}}">Use <span class="mono">{{$.FixV}}</span> instead</a></p>{{end}}

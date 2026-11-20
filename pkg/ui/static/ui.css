@@ -572,7 +572,13 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
 .ptlist { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0 0 6px; }
 /* An empty place: the page's blank strip, a dashed outline in the faint
    colour with its sentence, and in it a key of metal or a link on. */
-:is(.fit, .part) .blank { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; box-sizing: border-box; min-height: 46px; margin: 30px 0 0; padding: .5rem .75rem; color: var(--muted); border: 3px dashed var(--faint); border-radius: 2px; }
+:is(.fit, .part, .choice) .blank { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; box-sizing: border-box; min-height: 46px; margin: 30px 0 0; padding: .5rem .75rem; color: var(--muted); border: 3px dashed var(--faint); border-radius: 2px; }
+/* A link naming a VIN and a part number: the choice of each, in the
+   names' place under the empty cards, as a blank strip with its links. */
+.choice { margin: 0 16px; }
+@media (width < 64rem) {
+  .choice { margin: 0; }
+}
 .fit .ptwrap ~ .blank { margin-top: 14px; }
 /* The candidates: manila tags as the cards are (.cand-in, its stock its
    ::before), three to a row, hung on two rails of pinstripe tape, the

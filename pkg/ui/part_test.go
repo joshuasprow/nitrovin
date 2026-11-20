@@ -256,21 +256,30 @@ func TestPagePartMode(t *testing.T) {
 	}
 
 	// A URL is one mode: a VIN beside a part number is refused, on the
-	// VIN's plate, empty, with a link to each. The part type is named
+	// VIN's plate, empty, its cards there but empty, and under them the
+	// choice of each, a blank strip with a link to each: no placeholder
+	// waits for a model, and nothing is an error. The part type is named
 	// as the catalog names it.
 	status, _, body = response(t, h, "GET", "/?from.vin=1FTEW1EG7FFA12345&from.fitment.type=alternator&from.fitment.number=DEMO-4001", htmx)
+	choice := `<div class="choice"><p class="blank"><span>This link names a VIN, 1FTEW1EG7FFA12345, and a part number, Alternator DEMO-4001.</span>` +
+		`<a href="/?from.vin=1FTEW1EG7FFA12345">Open the VIN</a><a href="/?from.fitment.type=alternator&amp;from.fitment.number=DEMO-4001">Open the part number</a></p></div>`
 	for _, want := range []string{
-		`<p class="error" role="alert">This link names a VIN, 1FTEW1EG7FFA12345, and a part number, Alternator DEMO-4001.</p>`,
-		`<p class="ways"><a href="/?from.vin=1FTEW1EG7FFA12345">Open the VIN</a> · <a href="/?from.fitment.type=alternator&amp;from.fitment.number=DEMO-4001">Open the part number</a></p>`,
+		choice,
 		`<input type="text" id="from-vin" name="from.vin" value=""`,
 		`<a class="mode" href="/" aria-current="true">VIN</a>`,
+		`<div class="cards">`,
 	} {
 		if status != http.StatusBadRequest || !strings.Contains(body, want) {
 			t.Errorf("a VIN and a part number: %d, lacks %s\n%s", status, want, body)
 		}
 	}
-	if strings.Contains(body, `id="part-form"`) || strings.Contains(body, "No catalog loaded") {
-		t.Errorf("a VIN and a part number: the part plate, or no catalog, with one loaded\n%s", body)
+	if strings.Index(body, `<div class="cards">`) > strings.Index(body, choice) {
+		t.Errorf("a VIN and a part number: the choice comes before the empty cards\n%s", body)
+	}
+	for _, not := range []string{`id="part-form"`, "No catalog loaded", "turn up once the model is known", `id="aka"`, `id="fit"`, `class="joins"`, `class="error"`} {
+		if strings.Contains(body, not) {
+			t.Errorf("a VIN and a part number: has %s\n%s", not, body)
+		}
 	}
 
 	// A side the fit request does not know is refused in its words.

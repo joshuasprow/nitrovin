@@ -138,9 +138,11 @@ mode is in the URL, and nothing is remembered between visits.
   `from.fitment.type`, `from.fitment.number` and, for a sided part,
   `from.fitment.side`, as the VIN's is `from.vin`, and the request is the
   fit request's own query, refused in its words. A URL is one mode: one
-  naming a VIN beside a fitment key is the VIN's plate, empty, saying
-  both ("This link names a VIN, …, and a part number, …") over a link to
-  each mode with its own.
+  naming a VIN beside a fitment key is the VIN's plate, empty, over its
+  empty cards, and under them, in the names' place, a blank strip saying
+  both ("This link names a VIN, …, and a part number, …") with a link to
+  each mode with its own. Nothing there waits for a model: no names or
+  parts that fit are drawn, nor the lines to them.
 - **The plate** is the VIN plate unchanged: its metal, its screws, its
   ledge, its focus ring. It holds two fields on a grid of three, the part
   type in the first and the number in the other two, under labels and
