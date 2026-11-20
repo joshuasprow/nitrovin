@@ -290,39 +290,60 @@ func yearsText(first, last contract.Null[int32]) string {
 }
 
 // unconfirmedText is what applied but could not be checked, by element
-// name: "Not checked: Drive Type, model year".
+// name: "Not checked: Drive Type, model year". A candidate's stamp
+// (candidateMarks) names the same elements by elementNames, as a stamp's
+// label and list.
 func unconfirmedText(u contract.Unconfirmed, elements contract.Elements) string {
 	if u.IsZero() {
 		return ""
 	}
-	var parts []string
-	for _, id := range u.Elements {
-		if e, ok := elements.Find(id); ok && e.Variable != "" {
-			parts = append(parts, e.Variable)
-		} else {
-			parts = append(parts, "element "+strconv.Itoa(int(id)))
-		}
-	}
+	parts := elementNames(u.Elements, elements)
 	if u.ModelYear {
 		parts = append(parts, "model year")
 	}
 	return "Not checked: " + strings.Join(parts, ", ")
 }
 
-// entriesPage is one page of /ui/vocabularies/{name}.
+// elementNames are elements' names as the decode gives them ("Drive
+// Type"), "element 34" for one the data month does not name.
+func elementNames(ids []int32, elements contract.Elements) []string {
+	var out []string
+	for _, id := range ids {
+		if e, ok := elements.Find(id); ok && e.Variable != "" {
+			out = append(out, e.Variable)
+		} else {
+			out = append(out, "element "+strconv.Itoa(int(id)))
+		}
+	}
+	return out
+}
+
+// entriesPage is one page of /ui/vocabularies/{name}: a file's entries,
+// or the loaded catalog's fitment lines, a row to an application. One and
+// Many count its rows; Intro says what they are, "" for entries.
 type entriesPage struct {
-	Name    string
-	Columns []string
-	Rows    []entryRow
+	Name, Intro string
+	One, Many   string
+	Columns     []string
+	Rows        []entryRow
 	// Next is the next page's URL, "" on the last.
 	Next string
-	// Filter is the box filtering on the first field, nil for a spine.
+	// Filter is the boxes filtering on the first field, or a catalog's on
+	// its part type and its vehicle's fields; nil for a spine.
 	Filter *entryFilter
 }
 
-// entryFilter is the entry list's filter: GET where.{Field}={Value}.
+// entryFilter is the entry list's filter: GET where.{Field}={Value} for
+// each of its fields. Any says one of them filters.
 type entryFilter struct {
-	Field, Value string
+	Fields []filterField
+	Any    bool
+}
+
+// filterField is one of a filter's boxes: its id, the field it filters,
+// what it is in words, and its value.
+type filterField struct {
+	ID, Field, Label, Value string
 }
 
 // entryRow is one listed entry: its cells, and a link to what it lists
@@ -352,22 +373,33 @@ func (h *Handler) entries(r *http.Request) (view, error) {
 	if err != nil {
 		return view{}, err
 	}
-	if err := h.notHere([]string{name}, cat); err != nil {
-		return view{}, err
+	// The loaded catalog is not in what list names, but /v1/info's.
+	catalog := h.loadedCatalog(h.info())
+	lines := name != "" && name == catalog.Name
+	if !lines {
+		if err := h.notHere([]string{name}, cat); err != nil {
+			return view{}, err
+		}
 	}
 	l, err := h.p.List(req)
 	if err != nil {
 		return view{}, err
 	}
-	p := entriesPage{Name: name}
+	p := entriesPage{Name: name, One: "entry", Many: "entries"}
+	if lines {
+		catalogLines(&p, l, catalog.Vehicles, cat, q)
+	}
 	var fields []string
 	if i := slices.IndexFunc(cat, func(c contract.CatalogEntry) bool { return c.Name == name }); i >= 0 {
 		fields = cat[i].Fields
 	}
-	if len(fields) > 0 {
+	switch {
+	case lines:
+	case len(fields) > 0:
 		p.Columns = append(slices.Clone(fields), "maps to")
-		p.Filter = &entryFilter{Field: fields[0], Value: q.Get("where." + fields[0])}
-	} else {
+		v := q.Get("where." + fields[0])
+		p.Filter = &entryFilter{Fields: []filterField{{ID: "entry-filter", Field: fields[0], Label: fields[0], Value: v}}, Any: v != ""}
+	default:
 		p.Columns = []string{"entry", "name", "under"}
 	}
 	for _, e := range l.Entries {
@@ -420,6 +452,63 @@ func (h *Handler) entries(r *http.Request) (view, error) {
 	return view{title: name, template: "entries", data: p, vocabDialog: true}, nil
 }
 
+// catalogLines draws l, a page of the loaded catalog's fitment lines, in
+// p: a row to an application, its part type, number, side, vehicle, years
+// and option text as the file has them, filtered on the part type and the
+// vehicle's fields (ADR 0018's amendment of 2026-11-19), so a vehicle's
+// rows are exactly its applications. vehicles is the catalog's vehicle
+// vocabulary, as /v1/info names it, and cat names its fields; a vpic
+// catalog's boxes are make, model and ext, of which list takes one, and
+// two submitted are refused with list's problem.
+func catalogLines(p *entriesPage, l contract.List, vehicles string, cat []contract.CatalogEntry, q url.Values) {
+	p.Intro = "The catalog's fitment lines, in key order: a row to each application of a part to a vehicle, as the file has it."
+	p.One, p.Many = "application", "applications"
+	p.Columns = []string{"part type", "number", "side", "vehicle", "years", "options"}
+	vehicleFields := []string{"make", "model", "ext"}
+	if vehicles != vocab.Reserved {
+		vehicleFields = nil
+		if i := slices.IndexFunc(cat, func(e contract.CatalogEntry) bool { return e.Name == vehicles }); i >= 0 {
+			vehicleFields = cat[i].Fields
+		}
+	}
+	f := &entryFilter{}
+	for _, field := range append([]string{"type"}, vehicleFields...) {
+		label := field
+		if field == "type" {
+			label = "part type"
+		}
+		v := q.Get("where." + field)
+		f.Fields = append(f.Fields, filterField{ID: "entry-filter-" + field, Field: field, Label: label, Value: v})
+		f.Any = f.Any || v != ""
+	}
+	f.Fields[0].ID = "entry-filter"
+	p.Filter = f
+	for _, e := range l.Entries {
+		line, ok := e.(contract.FitmentLine)
+		if !ok {
+			continue
+		}
+		for _, a := range line.Applications {
+			p.Rows = append(p.Rows, entryRow{Cells: []string{line.Fitment.Type, line.Fitment.Number, line.Fitment.Side, vehicleText(a.Vehicle, vehicleFields), yearsText(a.First, a.Last), a.Options}})
+		}
+	}
+}
+
+// vehicleText is a catalog's vehicle in words: its entry's fields in
+// order, or its vPIC make, model or extension.
+func vehicleText(v contract.CatalogVehicle, fields []string) string {
+	if v.Entry == nil {
+		return refText(contract.SpineRef{Make: v.Make, Model: v.Model, Ext: v.Ext})
+	}
+	var words []string
+	for _, f := range fields {
+		if s := v.Entry[f]; s != "" {
+			words = append(words, s)
+		}
+	}
+	return strings.Join(words, " ")
+}
+
 // filesPanel is /ui/files, which fills the page's dialog: the merged
 // catalog with the browser's files' removal, a remove it refused, the
 // demo set and EPA's vocabulary to load.
@@ -454,7 +543,7 @@ func (h *Handler) panel() (filesPanel, error) {
 	if err != nil {
 		return filesPanel{}, err
 	}
-	p := filesPanel{Catalog: catalogTable{Rows: h.rows(cat), Manage: true}, Demo: h.demoPanel(), DataMonth: h.lib.Month(), Release: Release(h.lib.Info()), ServerCatalog: h.lib.ServerCatalog()}
+	p := filesPanel{Catalog: catalogTable{Rows: h.rows(cat), Manage: true}, Demo: h.demoPanel(), DataMonth: h.lib.Month(), Release: Release(h.lib.Info()), ServerCatalog: h.lib.ServerCatalog().Name}
 	if o := h.offered(); o != nil {
 		p.Offer = &offerView{Offer: o}
 		for _, f := range h.lib.Files() {
@@ -592,13 +681,16 @@ type workerConfig struct {
 	DataRelease string `json:"data_release,omitempty"`
 }
 
-// workerFile is one of the server's files.
+// workerFile is one of the server's files. Vehicles is the catalog's
+// vehicle vocabulary, or vpic, which the browser's lines page filters on
+// (catalogLines); "" for every other file.
 type workerFile struct {
-	Name    string `json:"name"`
-	Kind    string `json:"kind"`
-	Version string `json:"version"`
-	Blake3  string `json:"blake3"`
-	URL     string `json:"url,omitempty"`
+	Name     string `json:"name"`
+	Kind     string `json:"kind"`
+	Version  string `json:"version"`
+	Blake3   string `json:"blake3"`
+	URL      string `json:"url,omitempty"`
+	Vehicles string `json:"vehicles,omitempty"`
 }
 
 // BrowserConfig is what the server gives the browser's pages
@@ -627,7 +719,7 @@ func ReadWorkerConfig(config []byte) (BrowserConfig, error) {
 		info.Vocabularies = append(info.Vocabularies, contract.VocabularyFile{Name: f.Name, Kind: f.Kind, Version: f.Version, Blake3: f.Blake3})
 	}
 	if f := c.Catalog; f != nil {
-		info.Vocabularies = append(info.Vocabularies, contract.VocabularyFile{Name: f.Name, Kind: string(vocab.KindCatalog), Version: f.Version, Blake3: f.Blake3})
+		info.Vocabularies = append(info.Vocabularies, contract.VocabularyFile{Name: f.Name, Kind: string(vocab.KindCatalog), Version: f.Version, Blake3: f.Blake3, Vehicles: f.Vehicles})
 	}
 	return BrowserConfig{Info: info, Offer: c.EPA, DataRelease: c.DataRelease, ErrorTexts: c.ErrorTexts}, nil
 }
@@ -646,8 +738,9 @@ func (h *Handler) serviceWorker(w http.ResponseWriter, info contract.Info) error
 	}
 	for _, f := range info.Vocabularies {
 		if f.Kind == string(vocab.KindCatalog) {
-			// Not published: the browser only needs to know there is one.
-			c.Catalog = &workerFile{Name: f.Name, Kind: f.Kind, Version: f.Version, Blake3: f.Blake3}
+			// Not published: the browser only needs to know there is one,
+			// and which vehicle fields its lines take.
+			c.Catalog = &workerFile{Name: f.Name, Kind: f.Kind, Version: f.Version, Blake3: f.Blake3, Vehicles: f.Vehicles}
 			continue
 		}
 		if f.Kind == string(vocab.KindStock) {

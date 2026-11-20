@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -48,8 +49,9 @@ func (b backend) Decode(req contract.Request) (contract.Decode, error) {
 
 func (backend) ErrorTexts() map[int]string { return nil }
 
-// Translate and List answer from no files: the catalog is vPIC alone, a
-// VIN reaches nothing on it, and nothing else translates.
+// Translate, List and Fit answer from no files: the catalog is vPIC
+// alone, a VIN reaches nothing on it, nothing else translates, and no
+// catalog is loaded.
 func (backend) Translate(req contract.TranslateRequest) (contract.Translation, error) {
 	if req.From.VIN != "" {
 		return contract.Translation{From: contract.TranslationFrom{VIN: req.From.VIN, Status: contract.FromUnknown}, Spine: []contract.SpineEntry{}, To: []contract.Translated{}}, nil
@@ -59,6 +61,10 @@ func (backend) Translate(req contract.TranslateRequest) (contract.Translation, e
 
 func (backend) List(contract.ListRequest) (contract.List, error) {
 	return contract.List{Entries: []contract.ListEntry{contract.CatalogEntry{Name: "vpic", Kind: "spine", Version: "2026_10", Subject: "vehicle"}}}, nil
+}
+
+func (backend) Fit(context.Context, contract.FitRequest) (contract.Fit, error) {
+	return contract.Fit{Status: contract.FitNoCatalog}, nil
 }
 
 func (b backend) SpineBundle() ([]byte, error) {

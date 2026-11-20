@@ -43,12 +43,14 @@ func fitmentFile(t *testing.T, name string) []byte {
 
 // decoderServer is a server of the embedded data month, as the browser
 // reaches it: its spine bundle and the fitment fixture's files names, and
-// /v1/decode answered by the embedded decoder, as `nitrovin serve` does.
+// /v1/decode answered by the embedded decoder, as `nitrovin serve` does;
+// and /v1/fit answered by fits, the server's own files, when it has them.
 type decoderServer struct {
 	*fakeServer
 	d *nitrovin.Decoder
 	// decodesDown fails every POST /v1/decode, as a server out of reach.
 	decodesDown bool
+	fits        *nitrovin.Translator
 }
 
 func newDecoderServer(t *testing.T, d *nitrovin.Decoder, names ...string) *decoderServer {
@@ -74,6 +76,24 @@ func newDecoderServer(t *testing.T, d *nitrovin.Decoder, names ...string) *decod
 }
 
 func (s *decoderServer) Get(path string) (int, []byte, error) {
+	if query, ok := strings.CutPrefix(path, "/v1/fit?"); ok && s.fits != nil {
+		s.gets = append(s.gets, path)
+		q, err := url.ParseQuery(query)
+		if err != nil {
+			return 0, nil, err
+		}
+		req, err := contract.ParseFitQuery(q)
+		if err == nil {
+			var fit contract.Fit
+			if fit, err = s.fits.Fit(context.Background(), req); err == nil {
+				b, err := json.Marshal(fit)
+				return http.StatusOK, b, err
+			}
+		}
+		p := contract.AsProblem(err)
+		b, _ := json.Marshal(p)
+		return p.Status, b, nil
+	}
 	rest, ok := strings.CutPrefix(path, "/v1/decode/")
 	if !ok {
 		return s.fakeServer.Get(path)
@@ -131,7 +151,8 @@ func (s *decoderServer) Post(path string, body []byte) (int, []byte, error) {
 	return p.Status, b, nil
 }
 
-// serve has s serve data as its file name.
+// serve has s serve data as its file name, a catalog naming its vehicle
+// vocabulary as /v1/info does.
 func (s *decoderServer) serve(t *testing.T, name string, data []byte) {
 	t.Helper()
 	f, err := vocab.Read(name+".jsonl", bytes.NewReader(data))
@@ -139,6 +160,9 @@ func (s *decoderServer) serve(t *testing.T, name string, data []byte) {
 		t.Fatal(err)
 	}
 	v := contract.VocabularyFile{Name: name, Kind: string(f.Kind), Blake3: hex.EncodeToString(f.Hash[:])}
+	if c := f.Catalog(); c != nil {
+		v.Spine, v.Vehicles = c.Info().Spine, c.Info().Vehicles
+	}
 	s.info.Vocabularies = append(s.info.Vocabularies, v)
 	s.files[FilePath(s.info, v)] = data
 }
@@ -376,8 +400,8 @@ func TestLibraryCatalogRefusals(t *testing.T) {
 	s.info.Vocabularies = append(s.info.Vocabularies, contract.VocabularyFile{Name: "their-catalog", Kind: "catalog", Blake3: "ab12"})
 	disk := newDisk()
 	l := openWith(t, s, disk)
-	if l.ServerCatalog() != "their-catalog" || slices.ContainsFunc(s.gets, func(p string) bool { return strings.Contains(p, "their-catalog") }) {
-		t.Errorf("server catalog %q, asked for %q", l.ServerCatalog(), s.gets)
+	if l.ServerCatalog().Name != "their-catalog" || slices.ContainsFunc(s.gets, func(p string) bool { return strings.Contains(p, "their-catalog") }) {
+		t.Errorf("server catalog %q, asked for %q", l.ServerCatalog().Name, s.gets)
 	}
 	if _, err := compileFixture(t, l, catalog); err == nil || !strings.Contains(err.Error(), "This server has a catalog, their-catalog; one catalog per nitrovin") {
 		t.Errorf("with the server's catalog: %v", err)

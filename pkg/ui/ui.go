@@ -35,6 +35,7 @@ package ui
 
 import (
 	"bytes"
+	"context"
 	"embed"
 	"errors"
 	"fmt"
@@ -126,12 +127,13 @@ var static = func() map[string]asset {
 
 // Pages is what the pages answer from, on the server and in the browser's
 // Service Worker alike. Info is GET /v1/info's answer, whose release
-// names the assets' URLs; Translate and List answer as /v1/translate and
-// /v1/vocabularies do.
+// names the assets' URLs; Translate, List and Fit answer as
+// /v1/translate, /v1/vocabularies and /v1/fit do.
 type Pages interface {
 	Info() contract.Info
 	Translate(contract.TranslateRequest) (contract.Translation, error)
 	List(contract.ListRequest) (contract.List, error)
+	Fit(context.Context, contract.FitRequest) (contract.Fit, error)
 }
 
 // loadInfoer is a Pages whose Info measures drift on its first call, which
@@ -248,6 +250,9 @@ type Handler struct {
 	// the error codes' texts in the browser, the Backend's on the server.
 	dataRelease string
 	errorTexts  map[int]string
+	// candidates is how many candidates the page shows at a time,
+	// candidatesPage when 0.
+	candidates int
 }
 
 // route answers one page: the view, or the error the page shows instead.

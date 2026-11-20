@@ -311,7 +311,7 @@ func (l *Library) admitStock(f *vocab.File, fileName string, cur *shelf) error {
 	}
 	msg := fmt.Sprintf("%s is a shelf of catalog %q, which this browser does not hold: a shelf loads beside the catalog its numbers belong to.", fileName, f.StockCatalog)
 	switch i := slices.IndexFunc(cur.browser, func(h *held) bool { return h.catalog && h.linked() }); {
-	case f.StockCatalog == l.serverCatalog:
+	case f.StockCatalog == l.serverCatalog.Name:
 		msg = fmt.Sprintf("%s is a shelf of %s, this server's catalog, which stays on the server: stock beside it loads there too, with nitrovin serve --vocab.", fileName, f.StockCatalog)
 	case i >= 0:
 		msg += fmt.Sprintf(" This browser holds %s.", cur.browser[i].name)

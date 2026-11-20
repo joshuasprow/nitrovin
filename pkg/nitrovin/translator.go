@@ -126,7 +126,7 @@ func NewTranslatorWith(d *Decoder, c TranslatorConfig, files ...*vocab.File) (*T
 			}
 			if c := f.Catalog(); c != nil {
 				ci := c.Info()
-				v.Release, v.FiledUnder = ci.Release, ci.FiledUnder
+				v.Release, v.FiledUnder, v.Spine, v.Vehicles = ci.Release, ci.FiledUnder, ci.Spine, ci.Vehicles
 				v.CatalogCounts = &contract.CatalogCounts{Fitments: ci.Fitments, Applications: ci.Applications, Redirects: ci.Redirects, Retired: ci.Retired, Filings: ci.Filings}
 			}
 			if cc := f.Compiled(); cc != nil {

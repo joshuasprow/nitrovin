@@ -322,7 +322,10 @@ its part types with counts, with a `part` its candidates, with `related`
 the vehicles that share its fitments, and from a fitment key its vehicles.
 Nothing to fit is a status, `no-catalog` included. `list` with `of` the
 catalog's name pages its fitment lines, `where.type` keeping one part
-type. The synthetic catalog's `part-codes.jsonl` is a part vocabulary on
+type and the catalog's vehicle fields (`where.make`, `where.model`) one
+vehicle's lines, each with only that vehicle's applications; a catalog
+whose vehicles are vPIC's takes one of `where.make`, `where.model` and
+`where.ext`, since its vehicle is exactly one of them. The synthetic catalog's `part-codes.jsonl` is a part vocabulary on
 its spine, whose `ROT` code files both rotors under one code, so a fit
 can name a part type in a parts system's words. As the catalog's
 `filed_under` vocabulary, its entry as `part` also keeps only the direct

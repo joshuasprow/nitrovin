@@ -32,12 +32,13 @@ Manage, the worker's panel, adds a Remove to each of the browser's files. */}}
 {{define "entries" -}}
 <h1>{{.Name}}</h1>
 <p><a href="/">VIN decoder</a></p>
-{{with .Filter}}<form method="get" action="/ui/vocabularies/{{$.Name}}" class="filter" role="search">
-<label for="entry-filter">Show only this {{.Field}}</label>
-<input type="search" id="entry-filter" name="where.{{.Field}}" value="{{.Value}}" autocomplete="off">
-<button type="submit">Filter</button>{{if .Value}} <a href="/ui/vocabularies/{{$.Name}}">Show all</a>{{end}}
+{{with .Intro}}<p>{{.}}</p>
+{{end}}{{with .Filter}}<form method="get" action="/ui/vocabularies/{{$.Name}}" class="filter" role="search">
+{{range .Fields}}<div class="field"><label for="{{.ID}}">Show only this {{.Label}}</label>
+<input type="search" id="{{.ID}}" name="where.{{.Field}}" value="{{.Value}}" autocomplete="off"></div>
+{{end}}<button type="submit">Filter</button>{{if .Any}} <a href="/ui/vocabularies/{{$.Name}}">Show all</a>{{end}}
 </form>{{end}}
-<p>{{len .Rows}} {{if eq (len .Rows) 1}}entry{{else}}entries{{end}}{{if .Next}} on this page{{end}}.</p>
+<p>{{len .Rows}} {{if eq (len .Rows) 1}}{{.One}}{{else}}{{.Many}}{{end}}{{if .Next}} on this page{{end}}.</p>
 <div class="wide"><table>
 <thead><tr>{{range .Columns}}<th scope="col">{{.}}</th>{{end}}</tr></thead>
 <tbody>

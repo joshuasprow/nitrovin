@@ -89,11 +89,15 @@ const bytes = (v) => (v === undefined ? null : new Uint8Array(v));
 // partsOf is the key range of file key's parts.
 const partsOf = (key) => IDBKeyRange.bound([key, 0], [key, Infinity]);
 
-// names is the stored files' names, read once per script and kept in step
-// with every change.
+// names is the stored files' names, the compiled catalog's among them,
+// read once per script and kept in step with every change.
 let names = null;
 async function storedNames() {
-  if (!names) names = new Set((await tx(['files'], 'readonly', (t) => request(t.objectStore('files').getAllKeys()))));
+  if (!names) {
+    const files = await tx(['files'], 'readonly', (t) => request(t.objectStore('files').getAllKeys()));
+    const c = await tx(['catalog'], 'readonly', (t) => request(t.objectStore('catalog').get('catalog')), catalogDB);
+    names = new Set(c ? files.concat(c.record.name) : files);
+  }
   return names;
 }
 // forget makes the next storedNames read them again.

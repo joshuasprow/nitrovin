@@ -675,6 +675,128 @@ func TestListCatalog(t *testing.T) {
 	}
 }
 
+// TestListCatalogVehicle: list with of the catalog and its vehicle fields
+// in where pages the fitments of the vehicles holding every one, each
+// line with only their applications, by part type too, matching as the
+// vocabulary folds case; no such vehicle is an empty page, and a field
+// neither type nor a vehicle field is refused.
+func TestListCatalogVehicle(t *testing.T) {
+	tr := catalogTranslator(t)
+	ram := "Dodge/Ram 1500"
+	silverado := "Chevrolet/Silverado 1500"
+	for _, c := range []struct {
+		name  string
+		where map[string]string
+		want  []string
+	}{
+		{"make and model", map[string]string{"make": "Dodge", "model": "Ram 1500"}, []string{
+			"brake-rotor-front BR-2001  " + ram, "brake-rotor-front BR-2002  " + ram, "engine EN-57  " + ram,
+			"mirror MR-1001 left " + ram + "," + ram, "mirror MR-1001 right " + ram,
+		}},
+		{"model alone", map[string]string{"model": "Silverado 1500"}, []string{"brake-rotor-front BR-2001  " + silverado}},
+		{"with type", map[string]string{"make": "Dodge", "model": "Ram 1500", "type": "mirror"}, []string{
+			"mirror MR-1001 left " + ram + "," + ram, "mirror MR-1001 right " + ram,
+		}},
+		{"case folded", map[string]string{"make": " CHEVROLET", "model": "silverado   1500"}, []string{"brake-rotor-front BR-2001  " + silverado}},
+		{"no such vehicle", map[string]string{"make": "Dodge", "model": "Dakota"}, nil},
+		{"no such type", map[string]string{"make": "Chevrolet", "type": "engine"}, nil},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			got := listedLines(t, tr, contract.ListRequest{Of: "parts-catalog", Where: c.where, Limit: 1})
+			if !slices.Equal(got, c.want) {
+				t.Errorf("paged %q; want %q", got, c.want)
+			}
+		})
+	}
+	_, err := tr.List(contract.ListRequest{Of: "parts-catalog", Where: map[string]string{"make": "Dodge", "number": "MR-1001"}})
+	if p := contract.AsProblem(err); p == nil || p.Pointer != "/where/number" || !strings.Contains(p.Detail, "make, model") {
+		t.Errorf("where.number beside where.make: %v; want a refusal at /where/number naming make, model", err)
+	}
+}
+
+// listedLines pages req through tr one page at a time, each line as its
+// part type, number, side and its applications' vehicles.
+func listedLines(t *testing.T, tr *Translator, req contract.ListRequest) []string {
+	t.Helper()
+	var got []string
+	for {
+		l, err := tr.List(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		conforms(t, "List", l)
+		for _, e := range l.Entries {
+			line := e.(contract.FitmentLine)
+			var vs []string
+			for _, a := range line.Applications {
+				vs = append(vs, vehicleText(a.Vehicle))
+			}
+			got = append(got, fmt.Sprintf("%s %s %s %s", line.Fitment.Type, line.Fitment.Number, line.Fitment.Side, strings.Join(vs, ",")))
+		}
+		if l.Next == "" {
+			return got
+		}
+		req.After = l.Next
+	}
+}
+
+// TestListCatalogVPIC: a catalog whose vehicles are vPIC's lists the lines
+// of one make, model or extension, exactly that vehicle (a make keeps its
+// own lines, not its models'), in both forms; a second vehicle field, which
+// no vPIC vehicle could hold with the first, and an id that is no number
+// are refused at their pointers.
+func TestListCatalogVPIC(t *testing.T) {
+	d := embeddedDecoder(t)
+	dir := t.TempDir()
+	write(t, dir, "catalog.jsonl",
+		`{"format":1,"kind":"catalog","name":"vpic-parts","version":"1","data_month":"`+d.month.Name()+`","spine":"part-types","vehicles":"vpic"}`,
+		`{"fitment":{"type":"engine","number":"E-1"},"applications":[{"vehicle":{"model":1850},"options":""},{"vehicle":{"model":1938},"options":""}]}`,
+		`{"fitment":{"type":"mirror","number":"M-1","side":"left"},"applications":[{"vehicle":{"make":467},"options":""},{"vehicle":{"model":1850},"first":2010,"options":""}]}`,
+		`{"fitment":{"type":"mirror","number":"M-2","side":"left"},"applications":[{"vehicle":{"model":1938},"options":""}]}`)
+	files, err := vocab.Open("../../testdata/vocab/fitment/part-types.jsonl", dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tr, err := NewTranslator(d, files...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, f := range []struct {
+		name string
+		tr   *Translator
+	}{{"JSON Lines", tr}, {"compiled", compiledTwin(t, tr)}} {
+		for _, c := range []struct {
+			name  string
+			where map[string]string
+			want  []string
+		}{
+			{"make", map[string]string{"make": "467"}, []string{"mirror M-1 left make:467"}},
+			{"model", map[string]string{"model": "1850"}, []string{"engine E-1  model:1850", "mirror M-1 left model:1850"}},
+			{"model with type", map[string]string{"model": "1938", "type": "mirror"}, []string{"mirror M-2 left model:1938"}},
+			{"no such vehicle", map[string]string{"model": "1"}, nil},
+		} {
+			got := listedLines(t, f.tr, contract.ListRequest{Of: "vpic-parts", Where: c.where, Limit: 1})
+			if !slices.Equal(got, c.want) {
+				t.Errorf("%s, %s: paged %q; want %q", f.name, c.name, got, c.want)
+			}
+		}
+		for _, c := range []struct {
+			where           map[string]string
+			pointer, detail string
+		}{
+			{map[string]string{"make": "467", "model": "1850"}, "/where/model", "one of make, model and ext"},
+			{map[string]string{"ext": "ext:x/1", "make": "467"}, "/where/make", "one of make, model and ext"},
+			{map[string]string{"make": "Chevrolet"}, "/where/make", `"Chevrolet" is not a vPIC make id`},
+			{map[string]string{"model": "Silverado", "type": "engine"}, "/where/model", `"Silverado" is not a vPIC model id`},
+		} {
+			_, err := f.tr.List(contract.ListRequest{Of: "vpic-parts", Where: c.where})
+			if p := contract.AsProblem(err); p == nil || p.Type != contract.InvalidRequest || p.Pointer != c.pointer || !strings.Contains(p.Detail, c.detail) {
+				t.Errorf("%s, where %v: %v; want a refusal at %s saying %s", f.name, c.where, err, c.pointer, c.detail)
+			}
+		}
+	}
+}
+
 // modelsTranslator loads a catalog whose vehicle vocabulary maps two
 // entries, Ram A and Ram B, to one vPIC model (1938), and Other to 1850:
 // a vehicle reaching two catalog models; a rear rotor listed directly for
