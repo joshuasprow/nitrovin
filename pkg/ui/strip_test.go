@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -56,8 +57,9 @@ func partVocabulary(t *testing.T, name, spine string, ids ...string) string {
 }
 
 var (
-	stripNameRE = regexp.MustCompile(`<li data-part="[^"]*"><a class="ptype swap" href="[^"]*"( aria-current="true")?><span class="nm">([^<]*)</span>`)
-	keyRE       = regexp.MustCompile(`<span class="kn c(\d)" data-slots="(\d+)">(\d+) more<span class="visually-hidden"> ([^<]*)</span></span>`)
+	stripNameRE = regexp.MustCompile(`<li data-part="[^"]*"(?: class="([^"]*)")?><a class="ptype swap" href="[^"]*"( aria-current="true")?><span class="nm">([^<]*)</span>`)
+	keyClassRE  = regexp.MustCompile(`<li class="([^"]*)"><button type="button" id="more-types"`)
+	keyRE       = regexp.MustCompile(`<span class="kn c(\d)">(\d+) more<span class="visually-hidden"> ([^<]*)</span></span>`)
 	headingRE   = regexp.MustCompile(`<h3 id="ptg-\d+">([^<]*)</h3>`)
 )
 
@@ -69,8 +71,8 @@ func stripOf(s string) []string {
 	}
 	var out []string
 	for _, m := range stripNameRE.FindAllStringSubmatch(s, -1) {
-		name := html.UnescapeString(m[2])
-		if m[1] != "" {
+		name := html.UnescapeString(m[3])
+		if m[2] != "" {
 			name = "*" + name
 		}
 		out = append(out, name)
@@ -78,12 +80,37 @@ func stripOf(s string) []string {
 	return out
 }
 
-// keyOf is a section's "N more" at each width: "columns: N more noun,
-// slots beside the filter".
-func keyOf(s string) []string {
+// laidOf is a section's strip as cols columns draw it without a script:
+// the part types not past its two rows, " ×2" after one that takes two
+// cells, then the key, "N more noun", where it is drawn.
+func laidOf(s string, cols int) []string {
+	c := strconv.Itoa(cols)
+	if i := strings.Index(s, `<ul class="ptypes"`); i >= 0 {
+		s = s[i : i+strings.Index(s[i:], "</ul>")]
+	}
+	has := func(classes, class string) bool { return slices.Contains(strings.Fields(classes), class) }
 	var out []string
+	for _, m := range stripNameRE.FindAllStringSubmatch(s, -1) {
+		if has(m[1], "x"+c) {
+			continue
+		}
+		name := html.UnescapeString(m[3])
+		if has(m[1], "s"+c) {
+			name += " ×2"
+		}
+		out = append(out, name)
+	}
+	key := keyClassRE.FindStringSubmatch(s)
 	for _, m := range keyRE.FindAllStringSubmatch(s, -1) {
-		out = append(out, m[1]+": "+m[3]+" more "+m[4]+", "+m[2])
+		if m[1] != c {
+			continue
+		}
+		switch drawn := key != nil && has(key[1], "k"+c); {
+		case drawn:
+			out = append(out, m[2]+" more "+m[3])
+		case m[2] != "0":
+			out = append(out, "a key of "+m[2]+" not drawn")
+		}
 	}
 	return out
 }
@@ -118,16 +145,17 @@ func dialogOf(s string) []string {
 
 // TestPartTypeStrip: a vehicle with more part types than two rows of the
 // strip hold (#324). The strip has every one, by name, the pressed one
-// first, and its key says how many two rows of the strip have no room for
-// at each width: of 5, 4, 3 and 2 columns, 2c − 1 part types and the key,
-// or every part type and no key where they fit in 2c. The dialog the key
-// opens holds every part type under the headings of a part vocabulary on
-// the catalog's spine (the one the catalog files its fitments under, else
-// the first loaded): under each entry that maps to it, so under two
-// entries for a type two map to, and under "Other" for one none does; by
-// name with none loaded. Without a script nothing on the page is dead:
-// the filters and the recent part types are hidden until plate.js shows
-// them, and no part type is marked recent.
+// first. At each width, of 5, 4, 3 and 2 columns, a tape takes two cells
+// where its name does not fit one, one that does not fit at a row's end
+// starts the next row, and two rows hold what they hold in that order:
+// every part type, or as many as fit with the key, whose N is the rest.
+// The dialog the key opens holds every part type under the headings of a
+// part vocabulary on the catalog's spine (the one the catalog files its
+// fitments under, else the first loaded): under each entry that maps to
+// it, so under two entries for a type two map to, and under "Other" for
+// one none does; by name with none loaded. Without a script nothing on
+// the page is dead: the filters and the recent part types are hidden
+// until plate.js shows them, and no part type is marked recent.
 func TestPartTypeStrip(t *testing.T) {
 	const pickup = "/?from.vin=1FTEW1EG7FFA12345"
 	byName := []string{
@@ -139,17 +167,30 @@ func TestPartTypeStrip(t *testing.T) {
 	// groups: the first loaded is the one the headings come from.
 	later := partVocabulary(t, "later-groups", "strip-parts", "alternator", "battery")
 	h := pagesOver(t, stripPath("strip-parts"), stripPath("strip-groups"), later, stripPath("strip-catalog"))
+	laid := func(what, s string, want map[int][]string) {
+		t.Helper()
+		for _, cols := range []int{5, 4, 3, 2} {
+			if got := laidOf(s, cols); !slices.Equal(got, want[cols]) {
+				t.Errorf("%s at %d columns:\n%s\nwant\n%s", what, cols, strings.Join(got, "\n"), strings.Join(want[cols], "\n"))
+			}
+		}
+	}
 
 	s := fitSection(t, h, pickup)
 	if got := stripOf(s); !slices.Equal(got, byName) {
 		t.Errorf("the strip:\n%s\nwant\n%s", strings.Join(got, "\n"), strings.Join(byName, "\n"))
 	}
-	// Eighteen: 9 of 10 cells and the key at 5 columns, 7 at 4, 5 at 3, 3
-	// at 2; beside the script's filter, which takes a cell but on a
-	// phone, one cell fewer.
-	keys := []string{"5: 9 more part types, 9", "4: 11 more part types, 7", "3: 13 more part types, 5", "2: 15 more part types, 4"}
-	if got := keyOf(s); !slices.Equal(got, keys) {
-		t.Errorf("the key: %q; want %q", got, keys)
+	// Names of twelve characters fit a cell of 5 columns, eleven of 4 or
+	// 3, twelve of 2. Brake Pads, Front does not fit the first row's end
+	// at 5 columns, and starts the second, a cell left empty.
+	laid("the pickup", s, map[int][]string{
+		5: {"Alternator", "Battery", "Brake Caliper, Front ×2", "Brake Pads, Front ×2", "Brake Pads, Rear ×2", "13 more part types"},
+		4: {"Alternator", "Battery", "Brake Caliper, Front ×2", "Brake Pads, Front ×2", "14 more part types"},
+		3: {"Alternator", "Battery", "Brake Caliper, Front ×2", "15 more part types"},
+		2: {"Alternator", "Battery", "16 more part types"},
+	})
+	if !strings.Contains(s, ` data-fit="{&#34;tape&#34;:46,`) {
+		t.Errorf("the strip lacks the measure plate.js packs it by\n%s", s)
 	}
 	groups := []string{
 		"Brakes: Brake Caliper, Front / Brake Pads, Front / Brake Pads, Rear / Brake Rotor, Front / Brake Rotor, Rear",
@@ -162,7 +203,7 @@ func TestPartTypeStrip(t *testing.T) {
 		t.Errorf("the dialog:\n%s\nwant\n%s", strings.Join(got, "\n"), strings.Join(groups, "\n"))
 	}
 	for _, want := range []string{
-		`<li class="ptkey"><button type="button" id="more-types" popovertarget="part-types"><span class="kn c5" data-slots="9">9 more<span class="visually-hidden"> part types</span></span>`,
+		`<li class="ptkey k5 k4 k3 k2"><button type="button" id="more-types" popovertarget="part-types"><span class="kn c5">13 more<span class="visually-hidden"> part types</span></span>`,
 		`<dialog id="part-types" class="ptdialog" popover aria-labelledby="part-types-h">`,
 		`<p class="hint">2015 F-150 / Ford in strip-catalog · grouped by strip-groups</p>`,
 		// Without a script: no filter, and no recent part types.
@@ -188,21 +229,46 @@ func TestPartTypeStrip(t *testing.T) {
 	if got := dialogOf(s); len(got) != len(groups) || got[1] != "Cooling: Radiator / Thermostat / *Water Pump" {
 		t.Errorf("Water Pump pressed, the dialog:\n%s", strings.Join(got, "\n"))
 	}
+	laid("Water Pump pressed", s, map[int][]string{
+		5: {"Water Pump", "Alternator", "Battery", "Brake Caliper, Front ×2", "Brake Pads, Front ×2", "Brake Pads, Rear ×2", "12 more part types"},
+		4: {"Water Pump", "Alternator", "Battery", "Brake Caliper, Front ×2", "14 more part types"},
+		3: {"Water Pump", "Alternator", "Battery", "Brake Caliper, Front ×2", "14 more part types"},
+		2: {"Water Pump", "Alternator", "Battery", "15 more part types"},
+	})
 
-	// The Silverado's six fit two rows of 5, 4 and 3 columns: no width
-	// but a phone's draws a key, whose count is never 1, as a strip one
-	// over shows its last part type in the key's place.
+	// The Silverado's six fit two rows of 5 and 4 columns, where no key
+	// is drawn; its long name takes two cells, and still ends in "…".
 	s = fitSection(t, h, "/?from.vin=1GCVKREC6EZ123456")
-	keys = []string{"5: 0 more part types, 9", "4: 0 more part types, 7", "3: 0 more part types, 5", "2: 3 more part types, 4"}
-	if got := keyOf(s); !slices.Equal(got, keys) {
-		t.Errorf("the Silverado's key: %q; want %q", got, keys)
+	long := "Battery Cable, Positive, with Fusible Link and Terminal ×2"
+	all := []string{"Alternator", "Battery", long, "Radiator", "Starter Motor ×2", "Water Pump"}
+	laid("the Silverado", s, map[int][]string{
+		5: all, 4: all,
+		3: {"Alternator", "Battery", long, "3 more part types"},
+		2: {"Alternator", "Battery", "4 more part types"},
+	})
+	if !strings.Contains(s, `<li class="ptkey k3 k2">`) {
+		t.Errorf("the Silverado's key is drawn but at 3 and 2 columns\n%s", s)
 	}
-	for n := range 30 {
-		for _, k := range stripKeys(n) {
-			if k.N == 1 || (k.N == 0) != (n <= 2*k.Cols) {
-				t.Errorf("%d part types at %d columns: %d more", n, k.Cols, k.N)
-			}
+
+	// A tape of two cells starts the next row when one is left: the key
+	// takes that cell, and its N may be 1.
+	for _, c := range []struct {
+		spans            []int
+		cols, lead, want int
+	}{
+		{[]int{1, 1, 1, 1, 2}, 3, 0, 5},
+		{[]int{1, 1, 1, 1, 1, 2}, 3, 0, 5},
+		{[]int{2, 2, 1}, 3, 0, 3},
+		{[]int{2, 2, 2}, 3, 0, 2},
+		{[]int{1, 2, 1, 1, 1}, 3, 1, 2},
+		{[]int{2, 1, 2}, 2, 0, 2},
+	} {
+		if got := packRows(c.spans, c.cols, c.lead); got != c.want {
+			t.Errorf("%v in two rows of %d after %d: %d; want %d", c.spans, c.cols, c.lead, got, c.want)
 		}
+	}
+	if tapeSpan("Brake Rotor, Front", 1, false, stripFit.Grids[0]) != 2 || tapeSpan("Alternator", 3, false, stripFit.Grids[0]) != 1 || tapeSpan("Water Pump", 1, true, stripFit.Grids[3]) != 2 {
+		t.Errorf("a long name takes one cell, a short one two, or a Recent stamp is not counted")
 	}
 
 	// With no part vocabulary on the spine, the dialog is one list by

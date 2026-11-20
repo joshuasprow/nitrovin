@@ -303,12 +303,14 @@ catalog has for the vehicle, and the candidates of the one pressed.
   Vehicle and Model year that run on through the names. No line runs from a
   blank strip, or past the names' "more" switch. Narrow, the stamp is a line
   of its own above the two words and no line runs to it.
-- **The part types** are the second tape, each with its count, on a grid
-  of equal tapes. Each is a link to the page with it pressed (the URL's
-  `part.id`); the pressed one's link presses nothing. Nothing is pressed
-  without the parameter, and a blank strip asks for a press. A name too
-  long for its tape ends in "…" and keeps its count; the link's name is
-  whole, and the dialog shows it whole.
+- **The part types** are the second tape, each with its count, on a grid.
+  Each is a link to the page with it pressed (the URL's `part.id`); the
+  pressed one's link presses nothing. Nothing is pressed without the
+  parameter, and a blank strip asks for a press. A tape takes one cell,
+  or two where its name, its count and its Recent stamp do not fit one.
+  A name too long even for two cells, or for a phone's whole row, ends in
+  "…" and keeps its count; the link's name is whole, and the dialog shows
+  it whole.
 - **Their order:** the pressed one first, wherever it was, so a part type
   chosen in the dialog is beside its candidates; then, with JavaScript, up
   to two this browser opened recently that the vehicle has, newest first;
@@ -316,22 +318,30 @@ catalog has for the vehicle, and the candidates of the one pressed.
   "Recent" stamp of the same tape joined to its leading edge, pressed
   flush with it.
 - **Two rows, then "N more".** The grid has 5 columns from 64 rem, 4 above
-  46 rem, 3 above 34 rem and 2 on a phone. Two rows of c columns hold 2c
-  tapes: every part type when there are no more, otherwise 2c − 1 and
-  "N more", N the rest, which are not drawn and out of the keyboard's
-  reach. That is 9 and the key at 1280 px, 7 at 768 and 3 on a phone, and
-  N is never 1. "N more" is a key of metal, as high as the tape beside
-  it, which opens the part types dialog; its name says N as it reads
-  ("9 more part types"). The server writes N for each width and the width
-  shows its own, so it holds without a script, reading no position; where
-  every part type fits, the key is not drawn at all.
+  46 rem, 3 above 34 rem and 2 on a phone. The tapes go in strip order,
+  and one of two cells that does not fit at a row's end starts the next
+  row, leaving the cell empty, as the grid places it. Two rows hold every
+  part type, or as many as fit with "N more" after them, N the rest,
+  which are not drawn and out of the keyboard's reach; N varies with the
+  names. On the demo set's F-150 it is 6 and the key at 1280 px, 4 at
+  768, and 1 on a phone, whose next tape takes a whole row. "N more" is a
+  key of metal, as high as the tape beside it, which opens the part types
+  dialog; its name says N as it reads ("2 more part types"). The tape's
+  face is monospace, so the server knows each name's width: it packs the
+  two rows at each width, writes which tapes take two cells, which are
+  past the rows and N, and each width shows its own, so it holds without
+  a script, reading no position. Its measure assumes the narrowest window
+  of each width and a phone of at least 360 px, and a little wider type
+  than any browser draws, so a one-cell name is never cut. Where every
+  part type fits, the key is not drawn at all.
 - **The filter**, with JavaScript only, is the page's recessed field. It
-  takes the first cell (8 part types and the key at 1280, 6 at 768), and
-  on a phone it is a row of its own above the two. Typing narrows the
-  strip by name across every part type, keeping the pressed one, which the
-  rails hang from; the key counts the matches its rows have no room for,
-  from the cells each width has, and is not drawn when they fit. None
-  matching says so in the row, beside the pressed one, where no rail runs.
+  takes the first cell, and on a phone it is a row of its own above the
+  two. Typing narrows the strip by name across every part type, keeping
+  the pressed one, which the rails hang from. The script packs the rows
+  again as the server does, from the measure the server gives it
+  (`data-fit`), beside the filter and the Recent stamps, and draws no
+  key when the matches fit. None matching says so beside the filter,
+  above the pressed one, where no rail runs.
 - **Recent part types** are kept in the browser as recent VINs are, the last
   eight, newest first, and nothing is kept when storage fails. The VINs
   menu's "Clear recent" forgets both; the dialog's forgets part types only

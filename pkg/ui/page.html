@@ -197,12 +197,12 @@ own, which plate.js swaps in place (swap). */}}
 <span class="seg g-vds"><span class="w">{{.Model}}</span></span>
 <span class="seg g-year"><span class="w">{{.Year}}</span></span>
 </div>
-<div class="ptwrap" data-spine="{{.Spine}}">
+<div class="ptwrap" data-spine="{{.Spine}}" data-fit="{{.Strip.Fit}}">
 <ul class="ptypes" id="ptypes" aria-label="Part types">
 <li class="ptf" hidden><label class="visually-hidden" for="ptf-strip">Filter part types</label><input type="search" id="ptf-strip" class="ptfind" placeholder="Filter part types" autocomplete="off" aria-controls="ptypes"></li>
-{{range .Types}}<li data-part="{{.ID}}">{{template "ptype" .}}</li>
+{{range .Types}}<li data-part="{{.ID}}"{{with .Class}} class="{{.}}"{{end}}>{{template "ptype" .}}</li>
 {{end}}<li class="ptnone" hidden></li>
-<li class="ptkey"><button type="button" id="more-types" popovertarget="part-types">{{range .Keys}}<span class="kn c{{.Cols}}" data-slots="{{.Slots}}">{{.N}} more<span class="visually-hidden"> {{if eq .N 1}}part type{{else}}part types{{end}}</span></span>{{end}}</button></li>
+<li class="{{.Strip.KeyClass}}"><button type="button" id="more-types" popovertarget="part-types">{{range .Strip.Keys}}<span class="kn c{{.Cols}}">{{.N}} more<span class="visually-hidden"> {{if eq .N 1}}part type{{else}}part types{{end}}</span></span>{{end}}</button></li>
 </ul>
 </div>
 <dialog id="part-types" class="ptdialog" popover aria-labelledby="part-types-h">

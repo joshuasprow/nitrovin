@@ -25,25 +25,48 @@ const (
 	longName       = "Battery Cable, Positive, with Fusible Link and Terminal"
 )
 
-// stripWidth is a window the strip is laid out in, and how many part
-// types its two rows show beside the key, without the script's filter and
-// with it: of 5 columns at 1280, 4 at 768 and 2 at 390, 2c − 1, and a
-// cell fewer for the filter but on a phone, where it is a row of its own.
-type stripWidth struct {
-	width, height int64
-	shown, beside int
-}
+// stripWidth is a window the strip is laid out in.
+type stripWidth struct{ width, height int64 }
 
-var stripWidths = []stripWidth{{1280, 900, 9, 8}, {768, 1024, 7, 6}, {390, 844, 3, 3}}
+var stripWidths = []stripWidth{{1280, 900}, {768, 1024}, {390, 844}}
+
+// stripShown is how many part types two rows show beside the key at each
+// of stripWidths, without a script and with one, as strip.go packs them:
+// a tape takes two cells where its name does not fit one, the script's
+// filter takes the first cell but on a phone, and its Recent stamp
+// widens a tape. 0 is a strip that holds them all, with no key.
+type stripShown struct{ off, on [3]int }
+
+var (
+	// The pickup's: Brake Caliper, Front and the brake pads take two
+	// cells each.
+	pickupShown = stripShown{[3]int{5, 4, 2}, [3]int{5, 3, 2}}
+	// Water Pump pressed first, with a script stamped Recent.
+	pumpShown = stripShown{[3]int{6, 4, 3}, [3]int{5, 4, 2}}
+	// The Silverado's six fit two rows of 5 columns, and of 4 without the
+	// filter.
+	silveradoShown = stripShown{[3]int{0, 0, 2}, [3]int{0, 4, 2}}
+)
+
+// at is the count s says for width i of stripWidths, with a script or
+// without.
+func (s stripShown) at(js bool, i int) int {
+	if js {
+		return s.on[i]
+	}
+	return s.off[i]
+}
 
 // TestPartTypeStrip runs the strip of part types (#324) in a browser, on a
 // server that loaded the strip fixture, without JavaScript and with it.
-// At 1280, 768 and 390 the F-150's eighteen part types are two rows of
-// equal tapes and "N more": the part types past them are not drawn and
-// out of the keyboard's reach, and the key is drawn, on top, the next
-// stop after the last part type, its name saying N. Where every part type
-// fits, as the Silverado's do at 1280 and 768, there is no key to see or
-// reach. A name too long for its tape ends in "…" and keeps its count.
+// At 1280, 768 and 390 the F-150's eighteen part types are two rows and
+// "N more", a tape taking two cells where its name does not fit one: the
+// part types past them are not drawn and out of the keyboard's reach, and
+// the key is drawn, on top, the next stop after the last part type, its
+// name saying N. Where every part type fits, as the Silverado's do at 1280
+// and at 768 without the filter, there is no key to see or reach. A name
+// too long even for two cells ends in "…" and keeps its count. On the demo
+// set's F-150 no name is cut at 1280 or 768.
 // "N more" opens the part types dialog; a part type chosen there leads the
 // strip, pressed, and the rails hang from it at every width. Without
 // JavaScript there is no filter and nothing is recent. With it, typing
@@ -69,18 +92,35 @@ func TestPartTypeStrip(t *testing.T) {
 		name := map[bool]string{false: "js-off", true: "js-on"}[js]
 		t.Run(name, func(t *testing.T) {
 			tb := newTab(t, path, srv.URL, &requestLog{}, js)
-			for _, w := range stripWidths {
+			for i, w := range stripWidths {
 				tb.window(w.width, w.height)
 				tb.strip(stripPickup)
-				tb.capped(fmt.Sprintf("%s, %d", name, w.width), w)
+				tb.capped(fmt.Sprintf("%s, %d", name, w.width), pickupShown.at(js, i))
 				tb.strip(stripSilverado)
-				if w.width == 390 {
-					tb.capped(fmt.Sprintf("%s, the Silverado, %d", name, w.width), w)
-					tb.longName(fmt.Sprintf("%s, the Silverado, %d", name, w.width))
+				if n := silveradoShown.at(js, i); n > 0 {
+					tb.capped(fmt.Sprintf("%s, the Silverado, %d", name, w.width), n)
 				} else {
 					tb.fits(fmt.Sprintf("%s, the Silverado, %d", name, w.width))
 				}
 			}
+			if js {
+				// Before any part type is recent, plate.js packs as the
+				// server does from the same numbers: the same tapes take
+				// two cells at every width, and on a phone, where its
+				// filter takes no cell, the same are past the rows.
+				tb.strip(stripPickup)
+				if got := eval[string](tb, `fetch(location.href).then((r) => r.text()).then((html) => {
+					const served = new DOMParser().parseFromString(html, 'text/html');
+					const marks = (doc) => [...doc.querySelectorAll('.ptypes > li[data-part]')].map((li) =>
+						li.dataset.part + ':' + [...li.classList].filter((c) => /^(s[2-5]|x2)$/.test(c)).sort().join(','));
+					const a = marks(served).join(' '), b = marks(document).join(' ');
+					return a === b ? '' : 'served ' + a + '\nlaid ' + b;
+				})`); got != "" {
+					t.Errorf("plate.js packs the strip unlike the server:\n%s", got)
+				}
+			}
+			tb.strip(stripSilverado + "&part.id=battery-cable")
+			tb.longName(name + ", the Silverado, 390")
 			tb.audit(name + ", the Silverado at 390")
 			tb.window(1280, 900)
 			tb.strip(stripPickup)
@@ -99,10 +139,10 @@ func TestPartTypeStrip(t *testing.T) {
 			if n := tb.count("#part-types:popover-open"); n != 0 {
 				t.Errorf("chosen in the dialog, the dialog is still open")
 			}
-			for _, w := range stripWidths {
+			for i, w := range stripWidths {
 				tb.window(w.width, w.height)
 				tb.strip(stripPickup + "&part.id=water-pump")
-				tb.capped(fmt.Sprintf("%s, Water Pump pressed, %d", name, w.width), w)
+				tb.capped(fmt.Sprintf("%s, Water Pump pressed, %d", name, w.width), pumpShown.at(js, i))
 				tb.hangs(fmt.Sprintf("%s, Water Pump pressed, %d", name, w.width))
 			}
 			tb.window(1280, 900)
@@ -130,7 +170,7 @@ func TestPartTypeStrip(t *testing.T) {
 			}
 			tb.audit("js-on, the strip filtered")
 			typeIn(tb, "#ptf-strip", "")
-			tb.capped("js-on, the filter emptied", stripWidths[0])
+			tb.capped("js-on, the filter emptied", pumpShown.on[0])
 
 			// Matching nothing, at 390, the strip says so beside the
 			// pressed part type, where no rail runs.
@@ -231,6 +271,30 @@ func TestPartTypeStrip(t *testing.T) {
 			}
 		})
 	}
+
+	// On the demo set's F-150 no name drawn is cut at 1280 or 768, pressed
+	// or not, stamped Recent or not; without a script both brake rotors
+	// are drawn, in full. With one, the Recent stamps leading the strip
+	// can take the second's place at 768.
+	demo := httptest.NewServer(vocabServer(t, nil, demoDir))
+	t.Cleanup(demo.Close)
+	for _, js := range []bool{false, true} {
+		name := map[bool]string{false: "demo, js-off", true: "demo, js-on"}[js]
+		t.Run(map[bool]string{false: "demo-js-off", true: "demo-js-on"}[js], func(t *testing.T) {
+			tb := newTab(t, path, demo.URL, &requestLog{}, js)
+			for _, w := range stripWidths[:2] {
+				tb.window(w.width, w.height)
+				for _, target := range []string{stripPickup, stripPickup + "&part.id=brake-rotor-front", stripPickup + "&part.id=alternator"} {
+					tb.strip(target)
+					want := []string{"Brake Rotor, Front", "Brake Rotor, Rear"}
+					if js {
+						want = nil
+					}
+					tb.uncut(fmt.Sprintf("%s, %d, %s", name, w.width, target), want...)
+				}
+			}
+		})
+	}
 }
 
 // strip opens target and waits for its strip, laid by the plate's script
@@ -246,9 +310,9 @@ func (tb *tab) strip(target string) {
 
 // laidStrip is the strip as a visitor has it: the part types drawn, of
 // all of them; the rows the part types and the key are drawn in; whether
-// the key is drawn, the element at its centre is the key, its one label
-// shown and every other part type is not drawn; and where Tab goes from
-// the last part type drawn.
+// the key is drawn, the element at its centre is the key, and its one
+// label shown; the part types drawn after one that is not, which strip
+// order forbids; and where Tab goes from the last part type drawn.
 type laidStrip struct {
 	Drawn, Total, Rows int
 	Key, OnTop         bool
@@ -274,7 +338,7 @@ func (tb *tab) layStrip() laidStrip {
 			onTop = key.contains(document.elementFromPoint((k.left + k.right) / 2, (k.top + k.bottom) / 2));
 		}
 		const labels = [...key.querySelectorAll('.kn')].filter((s) => s.getClientRects().length > 0);
-		const stray = items.filter((li) => !drawn.includes(li) && getComputedStyle(li).display !== 'none').map((li) => li.dataset.part).join(' ');
+		const stray = items.filter((li, i) => drawn.includes(li) && items.slice(0, i).some((before) => !drawn.includes(before))).map((li) => li.dataset.part).join(' ');
 		drawn.at(-1).querySelector('.ptype').focus();
 		return {
 			Drawn: drawn.length, Total: items.length,
@@ -297,17 +361,17 @@ func (tb *tab) layStrip() laidStrip {
 	return got
 }
 
-// capped checks the strip at w shows two rows: w's part types and the key
-// on top, the next stop after them, its one label "N more part types",
-// N the rest, which are not drawn.
-func (tb *tab) capped(step string, w stripWidth) {
+// capped checks the strip shows two rows: the first want part types and
+// the key on top, the next stop after them, its one label "N more part
+// types", N the rest, which are not drawn.
+func (tb *tab) capped(step string, want int) {
 	tb.t.Helper()
-	want := w.shown
-	if tb.js {
-		want = w.beside
-	}
 	got := tb.layStrip()
-	label := fmt.Sprintf("%d more part types", got.Total-want)
+	noun := "part types"
+	if got.Total-want == 1 {
+		noun = "part type"
+	}
+	label := fmt.Sprintf("%d more %s", got.Total-want, noun)
 	if got.Drawn != want || got.Rows != 2 || !got.Key || !got.OnTop || got.Label != label || got.Stray != "" || got.Next != "more-types" {
 		tb.t.Errorf("%s: %d of %d part types drawn in %d rows, the key drawn %t, on top %t, labelled %q, %q drawn past it, Tab goes on to %q; want %d in 2 rows and the key, on top, labelled %q, the next stop",
 			step, got.Drawn, got.Total, got.Rows, got.Key, got.OnTop, got.Label, got.Stray, got.Next, want, label)
@@ -345,6 +409,32 @@ func (tb *tab) longName(step string) {
 	})()`)
 	if !got.Cut || got.Overflow != "ellipsis" || !got.Inside || !strings.HasPrefix(got.Name, longName+" ") {
 		tb.t.Errorf("%s: the long name cut %t with %q, its count inside its tape %t, the link's text %q; want it cut with an ellipsis, the count inside and the name whole", step, got.Cut, got.Overflow, got.Inside, got.Name)
+	}
+}
+
+// uncut checks no name drawn on the strip is cut, and that each of names
+// is drawn.
+func (tb *tab) uncut(step string, names ...string) {
+	tb.t.Helper()
+	type tape struct {
+		Name string
+		Cut  bool
+	}
+	got := measure[[]tape](tb, `[...document.querySelectorAll('.ptypes > li[data-part]')].filter((li) => li.getClientRects().length > 0).map((li) => {
+		const nm = li.querySelector('.nm');
+		return {Name: nm.textContent, Cut: nm.scrollWidth > nm.clientWidth};
+	})`)
+	var drawn []string
+	for _, g := range got {
+		drawn = append(drawn, g.Name)
+		if g.Cut {
+			tb.t.Errorf("%s: %q is cut", step, g.Name)
+		}
+	}
+	for _, n := range names {
+		if !slices.Contains(drawn, n) {
+			tb.t.Errorf("%s: %q is not drawn, of %q", step, n, drawn)
+		}
 	}
 }
 

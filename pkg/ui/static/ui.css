@@ -502,15 +502,16 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
 .ptype:active, .ptype[aria-current] { transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed); }
 .ptypes .ptype[aria-current] { anchor-name: --fit-part; }
 /* Two rows of part types, then "N more" (#324), held without a script:
-   the strip is a grid of equal tapes, 5 columns from 64rem, 4 above 46rem,
-   3 above 34rem and 2 on a phone (fit.go's stripColumns). Two rows of c
-   columns hold 2c tapes: every part type when there are no more, else
-   2c − 1 and the key, the rest not drawn, so out of reach. The server
-   writes N for each width (.kn.cN) and the width shows its own; where
-   every part type fits, the key is not drawn either. The filter, with a
-   script, takes the first cell (a row of its own on a phone), and the
-   counts are of the part types it leaves. A name too long for its tape
-   ends in "…"; the link's name is still whole. */
+   the strip is a grid, 5 columns from 64rem, 4 above 46rem, 3 above 34rem
+   and 2 on a phone. A tape takes one cell, or two where its name does
+   not fit one (.sN at N columns), in strip order; one that does not fit
+   at a row's end starts the next row. The server packs the two rows at
+   each width (strip.go) and marks the part types past them (.xN), which
+   are not drawn, so out of reach; the key, drawn where any are (.kN),
+   says how many (.kn.cN), and each width shows its own. plate.js packs
+   them again, by the same numbers (data-fit), beside its filter and
+   Recent stamps. A name too long even for two cells ends in "…"; the
+   link's name is still whole. */
 .ptwrap { position: relative; z-index: 3; margin: 14px 0 0; }
 .ptwrap .ptypes { --cols: 5; display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 10px; }
 .ptypes > li { display: flex; min-width: 0; }
@@ -522,50 +523,39 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
 .ptkey #more-types { flex: 1; min-width: 0; min-height: 44px; padding: 0 .5rem; }
 .fit:has(#part-types:popover-open) #more-types { --key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed); }
 @media (width >= 64rem) {
-  .kn:not(.c5) { display: none; }
-  .ptypes:not(:has(> .ptf:not([hidden]))):has(> li:nth-child(11 of [data-part]:not([hidden]))) > li:nth-child(n+10 of [data-part]:not([hidden])),
-  .ptypes:has(> .ptf:not([hidden])):has(> li:nth-child(10 of [data-part]:not([hidden]))) > li:nth-child(n+9 of [data-part]:not([hidden])),
-  .ptypes:not(:has(> .ptf:not([hidden]))):not(:has(> li:nth-child(11 of [data-part]:not([hidden])))) > .ptkey,
-  .ptypes:has(> .ptf:not([hidden])):not(:has(> li:nth-child(10 of [data-part]:not([hidden])))) > .ptkey { display: none; }
+  .kn:not(.c5), .ptypes > li.x5, .ptypes > .ptkey:not(.k5) { display: none; }
+  .ptypes > li.s5 { grid-column: span 2; }
 }
 @media (46rem < width < 64rem) {
   .ptwrap .ptypes { --cols: 4; }
-  .kn:not(.c4) { display: none; }
-  .ptypes:not(:has(> .ptf:not([hidden]))):has(> li:nth-child(9 of [data-part]:not([hidden]))) > li:nth-child(n+8 of [data-part]:not([hidden])),
-  .ptypes:has(> .ptf:not([hidden])):has(> li:nth-child(8 of [data-part]:not([hidden]))) > li:nth-child(n+7 of [data-part]:not([hidden])),
-  .ptypes:not(:has(> .ptf:not([hidden]))):not(:has(> li:nth-child(9 of [data-part]:not([hidden])))) > .ptkey,
-  .ptypes:has(> .ptf:not([hidden])):not(:has(> li:nth-child(8 of [data-part]:not([hidden])))) > .ptkey { display: none; }
+  .kn:not(.c4), .ptypes > li.x4, .ptypes > .ptkey:not(.k4) { display: none; }
+  .ptypes > li.s4 { grid-column: span 2; }
 }
 @media (34rem < width <= 46rem) {
   .ptwrap .ptypes { --cols: 3; }
-  .kn:not(.c3) { display: none; }
-  .ptypes:not(:has(> .ptf:not([hidden]))):has(> li:nth-child(7 of [data-part]:not([hidden]))) > li:nth-child(n+6 of [data-part]:not([hidden])),
-  .ptypes:has(> .ptf:not([hidden])):has(> li:nth-child(6 of [data-part]:not([hidden]))) > li:nth-child(n+5 of [data-part]:not([hidden])),
-  .ptypes:not(:has(> .ptf:not([hidden]))):not(:has(> li:nth-child(7 of [data-part]:not([hidden])))) > .ptkey,
-  .ptypes:has(> .ptf:not([hidden])):not(:has(> li:nth-child(6 of [data-part]:not([hidden])))) > .ptkey { display: none; }
+  .kn:not(.c3), .ptypes > li.x3, .ptypes > .ptkey:not(.k3) { display: none; }
+  .ptypes > li.s3 { grid-column: span 2; }
 }
 @media (width <= 34rem) {
   .ptwrap .ptypes { --cols: 2; }
-  .kn:not(.c2) { display: none; }
-  .ptypes:has(> li:nth-child(5 of [data-part]:not([hidden]))) > li:nth-child(n+4 of [data-part]:not([hidden])),
-  .ptypes:not(:has(> li:nth-child(5 of [data-part]:not([hidden])))) > .ptkey { display: none; }
+  .kn:not(.c2), .ptypes > li.x2, .ptypes > .ptkey:not(.k2) { display: none; }
+  .ptypes > li.s2 { grid-column: span 2; }
   .ptypes > .ptf { grid-column: 1 / -1; }
 }
 /* With a script: the filter, the page's recessed field, leads the first
    row; recent part types lead the rest, each with a "Recent" stamp of
    the same tape joined to its leading edge, flush with it when it is
-   pressed. A filter matching nothing says so in the row, beside the
+   pressed. A filter matching nothing says so beside it, above the
    pressed part type, where no rail runs. */
 .ptfind { width: 100%; min-height: 44px; }
 .rstamp { display: flex; align-items: center; padding: 0 8px; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-metal); text-shadow: var(--emboss);
   background: var(--alu); border: 1px solid var(--steel); border-top-color: #fff; border-bottom-color: var(--steel-dark); border-right-color: rgb(35 41 48 / .3); border-radius: 2px 0 0 2px; box-shadow: var(--raised); }
 .rstamp + .ptype { border-left: 0; border-radius: 0 2px 2px 0; }
 .rstamp:has(+ .ptype:is(:active, [aria-current])) { transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed); }
-.ptypes > .ptnone { grid-column: 2 / -1; align-self: center; color: var(--muted); }
-.ptypes:has(> li:not([hidden]) > .ptype[aria-current]) > .ptnone { grid-column: 3 / -1; }
+.ptypes > .ptf { order: -2; }
+.ptypes > .ptnone { order: -1; grid-column: 2 / -1; align-self: center; color: var(--muted); }
 @media (width <= 34rem) {
   .ptypes > .ptnone { grid-column: 1 / -1; }
-  .ptypes:has(> li:not([hidden]) > .ptype[aria-current]) > .ptnone { grid-column: 2 / -1; }
 }
 /* The part types dialog: the filter, what it lists, the recent part
    types, then every part type under its vocabulary's headings, two

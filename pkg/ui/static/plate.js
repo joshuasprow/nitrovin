@@ -495,9 +495,10 @@
   // - each filter narrows its list as it is typed, by name: the strip's,
   //   across every part type, the pressed one kept, which the rails hang
   //   from; the dialog's, the dialog;
-  // - the key says, at each width, how many part types the filter leaves
-  //   that the two rows have no room for, counted from the cells the
-  //   server says two rows have there: no position is read (ADR 0027).
+  // - the two rows are packed again at each width, as the server packs
+  //   them (strip.go), from the numbers it gives (data-fit): beside the
+  //   filter, with the Recent stamps, of the part types the filter
+  //   leaves. No position is read (ADR 0027).
   //
   // Nothing is kept when storage fails.
   const PARTS = 'nitrovin.recent-parts';
@@ -524,14 +525,45 @@
     }
     chips();
   };
-  // lay writes the key's count at each width (page.html's .kn, one a
-  // width): the part types shown past the two rows' cells there, beside
-  // the filter, which the stylesheet does not draw, nor the key with none.
+  // lay packs the part types shown into two rows at each width of the
+  // strip's measure (strip.go's stripFit, data-fit): a tape takes two
+  // cells where its name, count and Recent stamp do not fit one, and one
+  // that does not fit at a row's end starts the next row. It marks the
+  // tapes that take two (sN) and those past the rows (xN), draws the key
+  // where any are (kN), and writes how many (.kn.cN).
   const lay = (wrap) => {
-    const shown = stripItems(wrap).filter((li) => !li.hidden).length;
-    for (const kn of wrap.querySelectorAll('#more-types .kn')) {
-      const slots = Number(kn.dataset.slots);
-      const n = shown > slots ? shown - (slots - 1) : 0;
+    const fit = JSON.parse(wrap.dataset.fit);
+    const items = stripItems(wrap);
+    const shown = items.filter((li) => !li.hidden);
+    const filtered = !!wrap.querySelector('.ptf:not([hidden])');
+    const key = wrap.querySelector('.ptkey');
+    for (const g of fit.grids) {
+      const spans = shown.map((li) => {
+        const w = fit.tape + fit.slack + g.char * [...li.querySelector('.nm').textContent].length +
+          fit.digit * li.querySelector('.n').firstChild.nodeValue.length + (li.querySelector('.rstamp') ? fit.stamp : 0);
+        return w <= g.cell ? 1 : 2;
+      });
+      const lead = filtered ? g.lead : 0;
+      const fits = (k, withKey) => {
+        let row = 0;
+        let col = lead;
+        const place = (s) => {
+          if (col + s > g.cols) [row, col] = [row + 1, 0];
+          col += s;
+          return row < 2;
+        };
+        return spans.slice(0, k).every(place) && (!withKey || place(1));
+      };
+      let k = shown.length;
+      if (!fits(k, false)) for (k--; k > 0 && !fits(k, true); k--);
+      for (const li of items) {
+        const i = shown.indexOf(li);
+        li.classList.toggle('s' + g.cols, i >= 0 && spans[i] === 2);
+        li.classList.toggle('x' + g.cols, i >= k);
+      }
+      const n = shown.length - k;
+      key.classList.toggle('k' + g.cols, n > 0);
+      const kn = key.querySelector('.kn.c' + g.cols);
       kn.firstChild.nodeValue = n + ' more';
       kn.lastChild.textContent = n === 1 ? ' part type' : ' part types';
     }
