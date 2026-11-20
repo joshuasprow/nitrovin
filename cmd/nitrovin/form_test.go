@@ -40,6 +40,8 @@ func (v versioned) LoadInfo() contract.Info {
 	return info
 }
 
+func (v versioned) Release() string { return ui.Release(v.LoadInfo()) }
+
 // formServer serves the API on the embedded data, as serve does; a version
 // other than "" is the one the decoder reports.
 func formServer(t *testing.T, version string) (*httptest.Server, *nitrovin.Decoder) {

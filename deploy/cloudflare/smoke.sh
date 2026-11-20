@@ -8,9 +8,10 @@
 #
 # <image> is the image the host should be running (a local tag or
 # ghcr.io/joshuasprow/nitrovin:<tag>@<digest>): /v1/info must report its
-# release, and a decode through the host must equal the image's own decode
-# of the same request, byte for byte. NOW (default: now, to the second) is
-# the decode's frozen clock, which makes its URL new, so its first GET is a
+# release, in its body and its Nitrovin-Release header, and a decode
+# through the host must equal the image's own decode of the same request,
+# byte for byte. NOW (default: now, to the second) is the decode's frozen
+# clock, which makes its URL new, so its first GET is a
 # MISS and its second a HIT; FIRST and SECOND name others (HIT: the cache
 # was filled already; BYPASS: the container is not the release the Worker
 # was deployed with, so nothing is stored). Both GETs go over one
@@ -149,7 +150,10 @@ status=$(req info "$base/v1/info")
 [[ $status == 200 ]] || fail "GET /v1/info: $status"
 got=$(identity "$tmp/info.b")
 [[ $got == "$want" ]] || fail "GET /v1/info: $got; the image reports $want"
-pass "GET /v1/info: $got"
+release=$(jq -r '[.decoder_version, .data_month, .artifact_hash] | join("/")' "$tmp/want-info.json")
+[[ $(header info nitrovin-release) == "$release" ]] ||
+	fail "GET /v1/info: Nitrovin-Release '$(header info nitrovin-release)'; the image is $release"
+pass "GET /v1/info: $got, Nitrovin-Release $release"
 
 # A decode: the image's bytes, a MISS (or FIRST), then a HIT (or SECOND).
 docker_run decode --now "$now" "$vin" >"$tmp/want-decode.json"

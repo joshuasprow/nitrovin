@@ -159,6 +159,10 @@ type loaded struct {
 
 func (l loaded) Info() contract.Info { return l.Translator.Info() }
 
+// Release is the data's release: its decoder version, data month and
+// artifact hash (ui.Release).
+func (l loaded) Release() string { return ui.Release(l.Decoder.Info()) }
+
 // SpineBundle is the data month's spine bundle.
 func (l loaded) SpineBundle() ([]byte, error) {
 	var b bytes.Buffer
@@ -230,6 +234,9 @@ func errorTexts(data []byte) (map[int]string, error) {
 // ui.Backend.
 type decodeService interface {
 	Info() contract.Info
+	// Release is the release answering, as ui.Release names it; "" when
+	// there is none to name.
+	Release() string
 	Decode(contract.Request) (contract.Decode, error)
 	DecodeBatch([]contract.Request) ([]contract.Decode, error)
 	Translate(contract.TranslateRequest) (contract.Translation, error)
@@ -244,11 +251,16 @@ type decodeService interface {
 // api serves the routes of docs/api/openapi.yaml, /mcp among them, and the
 // pages for browsers (pkg/ui): the page at /, the Service Worker at
 // /sw.js, everything under /ui, and /vocab, which moved to the page. Every refusal but the pages'
-// and the MCP transport's is an RFC 9457 problem. CORS headers are set
-// only with a cors origin, and only under /v1/ and on /mcp.
+// and the MCP transport's is an RFC 9457 problem. Every response names the
+// release answering (ui.ReleaseHeader), so a cache in front of several
+// servers stores an answer only under its own release (#370). CORS headers
+// are set only with a cors origin, and only under /v1/ and on /mcp.
 type api struct {
 	d   decodeService
 	log *log.Logger
+	// release is d's Release, named on every response
+	// (ui.ReleaseHeader); "" names none.
+	release string
 	// mcp is `nitrovin mcp`'s server over Streamable HTTP, stateless.
 	mcp http.Handler
 	// ui serves the pages, their errors included.
@@ -281,7 +293,7 @@ func newAPI(d decodeService, log *log.Logger, stderr io.Writer, errorTexts map[i
 	if w := embeddedWorker(); w != nil {
 		h.WithWorker(*w)
 	}
-	return &api{d: d, log: log, mcp: handler, ui: h, cors: cors}, nil
+	return &api{d: d, log: log, mcp: handler, ui: h, cors: cors, release: d.Release()}, nil
 }
 
 // corsAllowHeaders are the request headers a preflight allows: a POST's
@@ -298,6 +310,9 @@ func (a *api) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			a.problem(w, contract.NewProblem(contract.Internal, "", fmt.Sprint("panic: ", v)))
 		}
 	}()
+	if a.release != "" {
+		w.Header().Set(ui.ReleaseHeader, a.release)
+	}
 	path := r.URL.EscapedPath()
 	if path == "/" || path == "/vocab" || path == "/sw.js" || path == "/ui" || strings.HasPrefix(path, "/ui/") {
 		a.ui.ServeHTTP(w, r)

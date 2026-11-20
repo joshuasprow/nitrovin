@@ -4,7 +4,7 @@
     "title": "nitrovin HTTP API",
     "version": "v1",
     "summary": "Offline VIN decoding that answers like NHTSA's vPIC.",
-    "description": "`nitrovin serve`. Every route answers with the artifact and the\nvocabularies (`--vocab`) the server loaded at startup; the server is\nready when it is alive. Wire types live in `decode.schema.json`; the\nrules this document cannot express (layouts, item order, the clock,\ntranslation and listing, versioning) are in `README.md` beside it.\n\nWithin `/v1` changes are additive only: new fields, routes and optional\nparameters. Element names and codes change with data months; that is data,\nnot a breaking change. Pin `element_id` for anything long-lived.\n",
+    "description": "`nitrovin serve`. Every route answers with the artifact and the\nvocabularies (`--vocab`) the server loaded at startup; the server is\nready when it is alive. Wire types live in `decode.schema.json`; the\nrules this document cannot express (layouts, item order, the clock,\ntranslation and listing, versioning) are in `README.md` beside it.\n\nWithin `/v1` changes are additive only: new fields, routes and optional\nparameters. Element names and codes change with data months; that is data,\nnot a breaking change. Pin `element_id` for anything long-lived.\n\nEvery response, refusals and `/mcp` included, carries\n`Nitrovin-Release: <decoder_version>/<data_month>/<artifact_hash>`, the\nrelease answering, as `GET /v1/info` reports it.\n",
     "license": {
       "name": "MIT",
       "identifier": "MIT"

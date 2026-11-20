@@ -44,10 +44,11 @@ flowchart LR
   which `deploy.yml` reads from the image it deploys, so a hit never
   reaches the container and a new data month is a new key, never last
   month's answer. A miss is stored only when the container answered 200
-  and its own `/v1/info` is that release: during a rollout the old
-  container's answers pass through uncached (`BYPASS`). Each Worker
-  isolate asks `/v1/info` on its misses only until it once answers the
-  release, which then holds for the deploy. Cached answers carry
+  and that answer's own `Nitrovin-Release` header, which `serve` sets on
+  every response, names that release: an answer from another release,
+  during a rollout or from another container, passes through uncached
+  (`BYPASS`), and the check holds however many containers answer
+  ([#370](https://github.com/joshuasprow/nitrovin/issues/370)). Cached answers carry
   `Cf-Cache-Status` (`MISS`, `HIT`, `BYPASS`) and `Cache-Control: public,
   max-age=86400`, except the assets, which keep the container's
   `public, max-age=31536000, immutable`: their URL names the release, so a
@@ -100,6 +101,11 @@ gh workflow run deploy.yml -R joshuasprow/nitrovin -f tag=v0.1.6   # deploy (or 
 gh workflow run deploy.yml -R joshuasprow/nitrovin -f tag=<previous tag>   # roll back, container included
 cd deploy/cloudflare/worker && npx wrangler rollback               # roll back the Worker version alone
 ```
+
+A release before [#370](https://github.com/joshuasprow/nitrovin/issues/370)
+names its release on the pages alone, not on `/v1`: deployed with today's
+Worker, its decodes and `/v1/info` are never cached (`BYPASS`), and
+`smoke.sh` fails on them, though the site answers.
 
 A weekly `drift` job fails when `terraform plan` is not empty.
 
