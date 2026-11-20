@@ -110,7 +110,7 @@ jobs:
             "pkg/nitrovin "{TestCatalogLoads,TestCatalogDrift,TestModelYearsCounts}
             "cmd/nitrovin "{TestVocabCheck,TestVocabLoad,TestServeVocabularies,TestVocabCheckCatalog,TestTranslate,TestTranslateRefused,TestList,TestListRefused}
             "cmd/nitrovin "{TestStdioOps,TestMCPVocabSession,TestWorker,TestWorkerCatalog,TestWorkerCatalogParts,TestWorkerStock,TestVocabPage,TestVocabTranslate}
-            "cmd/nitrovin "{TestDemoCheck,TestDemoHints,TestWorkerDemo,TestFitCard,TestStockStrip,TestPartTypeStrip,TestPartMode}
+            "cmd/nitrovin "{TestDemoCheck,TestDemoHints,TestWorkerDemo,TestFitCard,TestStockStrip,TestPartTypeStrip,TestPartMode,TestReveal}
             "pkg/nitrovin TestFitConfirmed" "cmd/nitrovin TestFitConfirmed"
             "pkg/nitrovin "{TestListCatalogVehicle,TestListCatalogVPIC}
             "pkg/ui "{TestLibraryDemoFit,TestDemoPanel,TestPageFit,TestCatalogEntries,TestLibraryPageFit,TestPageStock,TestLibraryStockPage,TestPartTypeStrip,TestPagePartMode,TestLibraryPartMode}

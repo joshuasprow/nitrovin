@@ -520,6 +520,11 @@ catalog has for the vehicle, and the candidates of the one pressed.
   2 px dashed rule, and presses nothing; with none loaded it is "Stock ·
   not loaded" with "Add stock" underlined, and opens the Vocabularies
   dialog.
+- **A press shows what it opened.** A part type's candidates and a strip's
+  rows open under the control pressed, often below the window. Where
+  scripts run the page scrolls down just far enough to bring them in, never
+  so far that the part types or the candidate's tag leave the top, and
+  never up. It scrolls smoothly unless the visitor asks for less motion.
 - **The open candidate's rows.** A strip is a link to the page with its
   candidate open (the URL's `fitment.number`, with `fitment.side` for a
   sided fitment and `fitment.type` for one whose type is not the pressed

@@ -460,6 +460,22 @@
   // showed. In part-number mode a part type chosen in the dialog fills
   // the plate's field, and the focus is the number's, its caret at the
   // end, for the next number.
+  // reveal scrolls the page down just far enough to show what a press
+  // opened, when it opened below the window's bottom edge: the candidates
+  // under a pressed part type, the rows under a candidate's stock strip.
+  // It never scrolls what was pressed (from) off the top, so the part type
+  // or the candidate's tag stays in sight above its answer, and it never
+  // scrolls up. Following the link's focus would do as much for a
+  // keyboard; a pointer has no focus to follow.
+  const reveal = (what, from) => {
+    if (!what) return;
+    const pad = 16;
+    const over = what.getBoundingClientRect().bottom + pad - window.innerHeight;
+    const room = (from || what).getBoundingClientRect().top - pad;
+    const by = Math.min(over, room);
+    if (by > 0) window.scrollBy({ top: by, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  };
+
   document.addEventListener('click', (e) => {
     const a = e.target.closest && e.target.closest('#answer a.swap');
     if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -470,6 +486,7 @@
     const id = a.dataset.focus || a.id;
     const dialog = a.closest('[popover]');
     if (dialog) dialog.hidePopover();
+    const opens = a.classList.contains('stk') && a.getAttribute('aria-expanded') === 'false';
     // On a phone the candidates are a row that scrolls sideways: the
     // answer that replaces it keeps its place, and shows the candidate
     // whose rows it opened.
@@ -482,6 +499,15 @@
         cands.scrollLeft = left;
         const open = cands.querySelector('.cand:has(+ .rows)');
         if (open) open.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
+      // What the press opened is shown: a strip's rows under its tag, a
+      // part type's candidates, or the sentence in their place, under it.
+      const fit = document.getElementById('fit');
+      if (opens) {
+        const strip = id && document.getElementById(id);
+        reveal(document.getElementById('stock-rows'), strip && (strip.closest('.cand') || strip.closest('.ptag')));
+      } else if (part && fit && fit.querySelector('.ptype[aria-current]')) {
+        reveal(fit.querySelector('.cands') || fit.querySelector('p.blank'), fit.querySelector('.ptwrap'));
       }
       const number = part && document.getElementById('from-number');
       if (number) {

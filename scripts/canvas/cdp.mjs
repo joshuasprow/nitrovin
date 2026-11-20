@@ -18,13 +18,25 @@ function chromePath() {
 const CHROME = chromePath();
 
 export async function launch() {
-  const dir = mkdtempSync(join(tmpdir(), 'cdp-'));
-  const proc = spawn(CHROME, ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${dir}`, '--no-first-run', '--hide-scrollbars', 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
-  const wsURL = await new Promise((res, rej) => {
-    let buf = '';
-    proc.stderr.on('data', d => { buf += d; const m = buf.match(/DevTools listening on (ws:\/\/\S+)/); if (m) res(m[1]); });
-    setTimeout(() => rej(new Error('chrome did not start: ' + buf)), 15000);
-  });
+  // A cold runner's Chrome can take longer than one wait to say where its
+  // DevTools listens: three tries of 30 seconds, each a fresh profile.
+  let proc, wsURL, timer, said = '';
+  for (let attempt = 1; !wsURL; attempt++) {
+    const dir = mkdtempSync(join(tmpdir(), 'cdp-'));
+    proc = spawn(CHROME, ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${dir}`, '--no-first-run', '--hide-scrollbars', 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
+    wsURL = await new Promise((res) => {
+      let buf = '';
+      proc.stderr.on('data', d => { buf += d; const m = buf.match(/DevTools listening on (ws:\/\/\S+)/); if (m) res(m[1]); });
+      proc.on('exit', () => { said = buf; res(null); });
+      timer = setTimeout(() => { said = buf; res(null); }, 30000);
+    });
+    clearTimeout(timer);
+    if (!wsURL) {
+      proc.kill('SIGKILL');
+      if (attempt === 3) throw new Error('canvas: Chrome did not start in three tries: ' + said.slice(0, 2000));
+      console.error(`canvas: Chrome did not start (try ${attempt}); trying again`);
+    }
+  }
   const port = new URL(wsURL).port;
   const targets = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
   const page = targets.find(t => t.type === 'page');
