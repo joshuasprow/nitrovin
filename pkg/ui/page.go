@@ -21,9 +21,11 @@ import (
 // decoder, drawn as the VIN's diagram (diagram.go). Its form, the plate,
 // asks the page itself with a VIN's from (from.vin), so every answer is a
 // shareable URL. The page reads no other parameter of a decode: what it
-// asks of a VIN is always the same, the plain decode. It reads one more,
-// the part type pressed among the parts that fit (part.id, fit.go), and
-// that one's page of candidates (after). Below the plate is the answer for
+// asks of a VIN is always the same, the plain decode. It reads a few more,
+// the part type pressed among the parts that fit (part.id, fit.go), that
+// one's page of candidates (after), the candidate whose stock is open
+// (fitment.number, fitment.side and fitment.type) and which stock panel
+// shows every row (rows, fitstock.go). Below the plate is the answer for
 // whatever is typed so far, a partial VIN included: a card for each of the
 // VIN's groups, the vehicle's names in every vocabulary loaded, its
 // translation on vPIC's spine, and the parts that fit it in the catalog
@@ -202,7 +204,8 @@ func (h *Handler) home(r *http.Request) (view, error) {
 	}
 	d := newDiagram(cleanVIN(raw.Get("from.vin")))
 	d.Fit = h.idleFit(info)
-	d.Fit.Part, d.Fit.After = raw.Get(partParam), raw.Get(afterParam)
+	ask := fitAsk{Part: raw.Get(partParam), After: raw.Get(afterParam), Type: raw.Get(typeParam), Number: raw.Get(numberParam), Side: raw.Get(sideParam), Rows: raw.Get(rowsParam)}
+	d.Fit.Part, d.Fit.After, d.Fit.Type, d.Fit.Number, d.Fit.Side, d.Fit.Rows = ask.Part, ask.After, ask.Type, ask.Number, ask.Side, ask.Rows
 	page := &homePage{Diagram: d, DataMonth: info.DataMonth, DecoderVersion: info.DecoderVersion, Links: h.links(info)}
 	for _, e := range exampleVINs {
 		page.Examples = append(page.Examples, example{Label: e.vin, Hint: e.hint, Href: vinHref(e.vin)})
@@ -284,7 +287,8 @@ func (h *Handler) home(r *http.Request) (view, error) {
 	if d.Names.Waiting {
 		return v, nil
 	}
-	if err := h.fitVIN(r.Context(), d, vd, cat, info.Elements, raw.Get(partParam), raw.Get(afterParam), res); err != nil {
+	ask.Stock = h.stockKinds(info)
+	if err := h.fitVIN(r.Context(), d, vd, cat, info.Elements, ask, res); err != nil {
 		return refuse(err)
 	}
 	if d.Fit.Page != "" {

@@ -676,3 +676,20 @@ page starts, as decided, and a Service Worker's events stay short.
   all its files together. The server loads no demo; `serve --vocab
   pkg/ui/demo` serves the same files. With the demo loaded, Chrome retained
   19.9 MiB of Go heap and 53.4 MiB of WebAssembly memory, within 64 MiB.
+
+## Amendment (2026-11-20): the server's stock is named, and its fit asked for it
+
+The page's candidates carry their stock ([#323](https://github.com/joshuasprow/nitrovin/issues/323)),
+so the browser must know which stock a fit can ask for. While the server holds the
+catalog, the browser fits through the server's `/v1/fit`, and that fit reads the
+server's stock. So `/sw.js` now names the server's stock sources too, as it names
+its catalog: each one's name, version, blake3 and what it holds (`shelf` or
+`yard`), all of which `/v1/info` already returns, and never a file, a row, a
+connector's relation or its status. The browser lists none of them among its own
+files. The page's candidates request asks the server for the kinds named, with
+`stock`; a candidate's "Show all" asks the server's `/v1/fit` from the
+candidate's fitment key (`from.fitment.*`) with the same stock; and the shelf
+rows with no number come with the candidates. While the server holds the
+catalog, the browser refuses to load a yard as it refuses a shelf: its fit would
+never read it. With the browser's own catalog, the page asks its own stock, as
+before.

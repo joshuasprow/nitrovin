@@ -387,10 +387,13 @@
   });
   document.addEventListener('pointerdown', () => ghost(-1));
 
-  // A part type pressed, or the next page of its candidates, is a link
-  // to the page (page.html's fit): its answer is swapped in place, as a
-  // VIN's is, and is a history entry of its own. The link the visitor
-  // followed keeps the focus, in the answer that replaced it.
+  // A part type pressed, the next page of its candidates, or a
+  // candidate's stock strip, is a link to the page (page.html's fit): its
+  // answer is swapped in place, as a VIN's is, and is a history entry of
+  // its own. The link the visitor followed keeps the focus, in the answer
+  // that replaced it: the element of its id, else the link in its place.
+  // "Show all", which the answer it brings has no more, leaves the focus
+  // on what it names (data-focus), the rows it showed.
   document.addEventListener('click', (e) => {
     const a = e.target.closest && e.target.closest('#answer a.swap');
     if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -398,9 +401,10 @@
     const kind = a.classList.contains('ptype') ? 'a.ptype' : 'a.swap:not(.ptype)';
     const i = [...document.querySelectorAll('#answer ' + kind)].indexOf(a);
     const focused = document.activeElement === a;
+    const id = a.dataset.focus || a.id;
     const u = new URL(a.href);
     ask(u.pathname + u.search, 'push').then(() => {
-      const again = document.querySelectorAll('#answer ' + kind)[i];
+      const again = (id && document.getElementById(id)) || document.querySelectorAll('#answer ' + kind)[i];
       if (focused && again) again.focus({ preventScroll: true });
     }).catch(console.error);
   });
@@ -411,11 +415,12 @@
     const input = document.getElementById('from-vin');
     if (!input) return;
     // A move within the page (a link to a part of it, as "Check years"
-    // is) is no other VIN nor part type: the answer stays, and what the
-    // link points at stays in it.
+    // is) is no other VIN, part type nor open candidate: the answer stays,
+    // and what the link points at stays in it.
     const answer = document.getElementById('answer');
-    if (input.value === vin && answer && answer.dataset.vin === vin &&
-      (answer.dataset.part || '') === (q.get('part.id') || '') && (answer.dataset.after || '') === (q.get('after') || '')) return;
+    const same = (key, param) => (answer.dataset[key] || '') === (q.get(param) || '');
+    if (input.value === vin && answer && answer.dataset.vin === vin && same('part', 'part.id') && same('after', 'after') &&
+      same('type', 'fitment.type') && same('number', 'fitment.number') && same('side', 'fitment.side') && same('rows', 'rows')) return;
     input.value = vin;
     paint(vin, false);
     ask(location.pathname + location.search, '').catch(console.error);

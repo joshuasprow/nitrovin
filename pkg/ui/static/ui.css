@@ -516,10 +516,12 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
    leading edge, to the riser or the last eyelet, whichever is further;
    several rows' run along to the tags' leading edge and down it (each
    row's first tag's Γ, ::before and ::after, which reaches the next
-   row's bar). Where the two cross, the year's lies over the vehicle's. */
-.cands { --gap: 12px; anchor-name: --fit-tags; list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px var(--gap); margin: 14px 0 0; padding: 40px 0 0 22px; }
+   row's bar). Where the two cross, the year's lies over the vehicle's.
+   The open candidate's rows are an item of the list after its tag
+   (.rows), so a tag's place in its row counts tags alone (of .cand). */
+.cands { --gap: 12px; anchor-name: --fit-tags; list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: row dense; gap: 40px var(--gap); margin: 14px 0 0; padding: 40px 0 0 22px; }
 .cand { position: relative; min-width: 0; }
-.cand-in { position: relative; isolation: isolate; box-sizing: border-box; height: 100%; padding: 28px .7rem .8rem; overflow-wrap: anywhere; color: var(--on-manila); filter: drop-shadow(0 4px 5px rgb(8 7 15 / .28)); }
+.cand-in { position: relative; isolation: isolate; display: flex; flex-direction: column; box-sizing: border-box; height: 100%; padding: 28px .7rem .8rem; overflow-wrap: anywhere; color: var(--on-manila); filter: drop-shadow(0 4px 5px rgb(8 7 15 / .28)); }
 .numtape { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0 .5rem; margin: 0 -.7rem .6rem; padding: .3rem .7rem; color: var(--on-tape); text-shadow: var(--tape-emboss);
   background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 3px solid var(--tape-edge); }
 .numtape .num { font: 900 18px var(--cell-font); letter-spacing: .06em; }
@@ -531,13 +533,56 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
    askew, with a tick for what was checked and an arrow for a redirect; a
    dashed one with a warning triangle for what could not be; plain muted
    words for what has nothing checked. */
-.marks { display: flex; flex-wrap: wrap; gap: .4rem .5rem; margin: .6rem 0 0; }
+.marks { display: flex; flex-wrap: wrap; gap: .4rem .5rem; margin: .6rem 0 .8rem; }
 .mk { display: inline-flex; align-items: center; gap: 5px; padding: .2rem .45rem; border-radius: 3px; font: 900 10px/1.4 var(--label-font); letter-spacing: .06em; text-transform: uppercase; color: var(--on-manila); }
 .mk svg { flex: none; width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2.2; }
 .mk.checked, .mk.redirect { border: 2px solid var(--on-manila); transform: rotate(-1.5deg); }
 .mk.unchecked { border: 2px dashed var(--on-manila); }
 .mk.text, .mk.none { padding-left: 0; color: var(--manila-muted); }
 .more-cands { margin: 1rem 0 0; }
+/* A candidate's stock strip, along its tag's bottom edge, edge to edge:
+   the second tape, a name that is pressed. It casts no shadow off the
+   tag, so it stands raised by its edges alone, a lit top and a heavy
+   dark bottom; pushed in, open, it is darker, its bottom edge thin and
+   its chevron up. With nothing to open it is no tape: muted ink over a
+   dashed rule, the page's mark of an empty place. */
+.stk { display: flex; align-items: center; justify-content: space-between; gap: 8px; box-sizing: border-box; min-height: 40px; margin: auto -.7rem -.8rem; padding: 0 .7rem; font: 900 12px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-align: left; text-decoration: none; cursor: pointer;
+  color: var(--on-metal); text-shadow: var(--emboss); background: var(--alu); border: 0; border-top: 1px solid #fff; border-bottom: 3px solid var(--steel-dark); border-radius: 0; box-shadow: inset 0 1px 0 rgb(255 255 255 / .6); }
+.stk svg { flex: none; width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+.stk u { text-transform: none; letter-spacing: 0; }
+.stk:not(.none):active, .stk[aria-expanded=true] { transform: none; padding-top: 2px; background: var(--alu-in); border-bottom-width: 1px; box-shadow: var(--pressed); }
+.stk.none { cursor: auto; color: var(--manila-muted); text-shadow: none; background: none; border: 0; border-top: 2px dashed var(--manila-muted); box-shadow: none; }
+/* The open candidate's rows: the page's table panel, notched up at its
+   tag. On a wide page it is the row under the tag's, which the tags
+   after it fill first (dense); the rails run on down past it to the next
+   row of tags. Shelf and yard are its two equal halves. */
+.rows { position: relative; grid-column: 1 / -1; min-width: 0; margin-top: -24px; }
+.rows, .stock-panel { background: var(--card-bg); border: 2px solid var(--steel); border-radius: 4px; box-shadow: 0 3px 0 var(--steel-dark), 0 8px 16px rgb(0 0 0 / .25); }
+.rows .notch { position: absolute; top: -10px; left: calc(50% - 9px); width: 16px; height: 16px; background: var(--card-bg); border-left: 2px solid var(--steel); border-top: 2px solid var(--steel); transform: rotate(45deg); }
+.rows::before, .rows::after { position: absolute; top: -18px; box-sizing: border-box; width: 5px; pointer-events: none; border: 0 solid var(--c-vds); border-left-width: 5px; filter: var(--stripe-lift); }
+.rows::before { z-index: 0; left: calc(var(--rail-x) - 24px); bottom: -16px; }
+.rows::after { z-index: 1; left: calc(var(--rail-x) + 9px - 24px); bottom: -27px; border-color: var(--c-year); }
+.stock-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.stock-cols.one { grid-template-columns: minmax(0, 1fr); }
+.stock-cols:focus-visible, .nonum:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
+.stock-col { min-width: 0; padding: 12px 16px 14px; }
+.stock-col + .stock-col { border-left: 1px solid var(--line); }
+.stock-col :is(h3, h4) { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 .75rem; margin: 0 0 6px; padding: 0; border: 0; font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase; }
+.stock-col .asof { font: 400 12px system-ui, sans-serif; letter-spacing: 0; text-transform: none; color: var(--muted); }
+.stock-col table { font-size: 14px; }
+.stock-col th, .stock-col td { padding: 7px 8px 7px 0; font-weight: 400; overflow-wrap: anywhere; border-bottom: 0; border-top: 1px solid var(--line); }
+.stock-col th.id { font: 700 13px var(--cell-font); white-space: nowrap; }
+.stock-col th + td { white-space: nowrap; }
+.stock-col .fk, .stock-none { color: var(--muted); }
+.stock-col .note { display: block; font-size: 12px; color: var(--muted); }
+.stock-col .note strong { color: var(--fg); }
+.stock-none, .more-rows { margin: 8px 0 0; font-size: 13px; }
+/* The shelf rows with no number, after the candidates: a strip of label
+   tape, stuck on, naming the part type and the vehicle, over a panel. */
+.nonum { margin: 30px 0 0 22px; }
+.nonum-tape { display: flex; align-items: center; box-sizing: border-box; min-height: 2.6rem; margin: 0; padding: .3rem .7rem; color: var(--on-tape); font: 700 12px var(--cell-font); letter-spacing: .04em; text-transform: none; text-shadow: var(--tape-emboss);
+  background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck); }
+.stock-panel { margin-top: 10px; }
 /* The rails' pieces, each 5px of pinstripe tape: the vehicle's bar 9px
    into the 40px above a row, the year's 20px, their drops 4.5px either
    side of the eyelet's centre. */
@@ -551,19 +596,19 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
 .hook::before, .hook::after { top: -31px; height: 31px; border-left-width: 5px; }
 .hook::before { left: calc(50% - 7px); }
 .hook::after { top: -20px; height: 20px; left: calc(50% + 2px); }
-.cand:first-child .hook { anchor-name: --fit-first; }
-.cand:last-child .hook { anchor-name: --fit-last; }
-.cand:only-child .hook { anchor-name: --fit-first, --fit-last; }
+.cand:nth-child(1 of .cand) .hook { anchor-name: --fit-first; }
+.cand:nth-last-child(1 of .cand) .hook { anchor-name: --fit-last; }
+.cand:nth-child(1 of .cand):nth-last-child(1 of .cand) .hook { anchor-name: --fit-first, --fit-last; }
 /* Each row ends at its last tag's drops; each row's first tag starts at
    the leading edge, and, but in the last row, runs on down it to the
    next. One row starts at its first tag's drops instead (below, and in
    the narrow page's). */
-.cand:is(:nth-child(3n), :last-child)::before { right: calc(50% + 2px); }
-.cand:is(:nth-child(3n), :last-child)::after { right: calc(50% - 7px); }
-.cand:nth-child(3n+1)::before { left: calc(var(--rail-x) - 22px); }
-.cand:nth-child(3n+1)::after { left: calc(var(--rail-x) + 9px - 22px); }
-.cand:nth-child(3n+1):not(:nth-last-child(-n+3))::before { bottom: -14px; border-left-width: 5px; }
-.cand:nth-child(3n+1):not(:nth-last-child(-n+3))::after { bottom: -25px; border-left-width: 5px; }
+.cand:is(:nth-child(3n of .cand), :nth-last-child(1 of .cand))::before { right: calc(50% + 2px); }
+.cand:is(:nth-child(3n of .cand), :nth-last-child(1 of .cand))::after { right: calc(50% - 7px); }
+.cand:nth-child(3n+1 of .cand)::before { left: calc(var(--rail-x) - 22px); }
+.cand:nth-child(3n+1 of .cand)::after { left: calc(var(--rail-x) + 9px - 22px); }
+.cand:nth-child(3n+1 of .cand):not(:nth-last-child(-n+3 of .cand))::before { bottom: -14px; border-left-width: 5px; }
+.cand:nth-child(3n+1 of .cand):not(:nth-last-child(-n+3 of .cand))::after { bottom: -25px; border-left-width: 5px; }
 /* From the pressed part type: a riser down from it to each rail's bar
    (.risers), and a run along that bar (.rails) from the leading edge to
    the riser, or, in one row, between the riser and the eyelets. Without
@@ -576,10 +621,15 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
 .rails::before { top: calc(anchor(--fit-tags top) + 9px); left: calc(anchor(--fit-tags left) + var(--rail-x)); right: calc(anchor(--fit-part center) + 2px); }
 .rails::after { top: calc(anchor(--fit-tags top) + 20px); left: calc(anchor(--fit-tags left) + var(--rail-x) + 9px); right: calc(anchor(--fit-part center) - 7px); }
 @media (width > 34rem) {
-  .cands:not(:has(> .cand:nth-child(4))) > .cand:first-child::before { left: calc(50% - 7px); }
-  .cands:not(:has(> .cand:nth-child(4))) > .cand:first-child::after { left: calc(50% + 2px); }
-  .cands:not(:has(> .cand:nth-child(4))) ~ .rails::before { left: calc(min(anchor(--fit-part center), anchor(--fit-first center)) - 7px); right: calc(min(anchor(--fit-part center), anchor(--fit-last center)) + 2px); }
-  .cands:not(:has(> .cand:nth-child(4))) ~ .rails::after { left: calc(min(anchor(--fit-part center), anchor(--fit-first center)) + 2px); right: calc(min(anchor(--fit-part center), anchor(--fit-last center)) - 7px); }
+  .cands:not(:has(> .cand:nth-child(4 of .cand))) > .cand:nth-child(1 of .cand)::before { left: calc(50% - 7px); }
+  .cands:not(:has(> .cand:nth-child(4 of .cand))) > .cand:nth-child(1 of .cand)::after { left: calc(50% + 2px); }
+  .cands:not(:has(> .cand:nth-child(4 of .cand))) ~ .rails::before { left: calc(min(anchor(--fit-part center), anchor(--fit-first center)) - 7px); right: calc(min(anchor(--fit-part center), anchor(--fit-last center)) + 2px); }
+  .cands:not(:has(> .cand:nth-child(4 of .cand))) ~ .rails::after { left: calc(min(anchor(--fit-part center), anchor(--fit-first center)) + 2px); right: calc(min(anchor(--fit-part center), anchor(--fit-last center)) - 7px); }
+  /* The rows' notch is at their tag's column; the rails run past them
+     when a row of tags follows. */
+  .rows.at1 .notch { left: calc((100% - 2 * var(--gap)) / 6 - 9px); }
+  .rows.at3 .notch { left: calc(100% - (100% - 2 * var(--gap)) / 6 - 9px); }
+  .rows.more-wide::before, .rows.more-wide::after { content: ""; }
 }
 @supports not (anchor-name: --a) {
   .rails, .risers { display: none; }
@@ -587,8 +637,8 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
   .cands::before, .cands::after { content: ""; position: absolute; top: 0; height: 14px; left: var(--rail-x); border-left: 5px solid var(--c-vds); filter: var(--stripe-lift); }
   .cands::after { left: calc(var(--rail-x) + 9px); height: 25px; border-left-color: var(--c-year); }
   @media (width > 34rem) {
-    .cands:not(:has(> .cand:nth-child(4)))::before, .cands:not(:has(> .cand:nth-child(4)))::after { display: none; }
-    .cands:not(:has(> .cand:nth-child(4))) > .cand:first-child .hook::before, .cands:not(:has(> .cand:nth-child(4))) > .cand:first-child .hook::after { top: -40px; height: 40px; }
+    .cands:not(:has(> .cand:nth-child(4 of .cand)))::before, .cands:not(:has(> .cand:nth-child(4 of .cand)))::after { display: none; }
+    .cands:not(:has(> .cand:nth-child(4 of .cand))) > .cand:nth-child(1 of .cand) .hook::before, .cands:not(:has(> .cand:nth-child(4 of .cand))) > .cand:nth-child(1 of .cand) .hook::after { top: -40px; height: 40px; }
   }
 }
 
@@ -747,18 +797,29 @@ button.linkish:active { transform: none; box-shadow: none; }
      and branch to each eyelet; a lone tag's start at its drops, as one
      row's do on a wide page. */
   .cands { grid-template-columns: minmax(0, 1fr); }
-  .cand::before, .cand:is(:nth-child(3n), :last-child)::before { left: calc(var(--rail-x) - 22px); right: calc(50% + 2px); }
-  .cand::after, .cand:is(:nth-child(3n), :last-child)::after { left: calc(var(--rail-x) + 9px - 22px); right: calc(50% - 7px); }
-  .cand:not(:last-child)::before { bottom: -14px; border-left-width: 5px; }
-  .cand:not(:last-child)::after { bottom: -25px; border-left-width: 5px; }
-  .cand:only-child::before { left: calc(50% - 7px); }
-  .cand:only-child::after { left: calc(50% + 2px); }
-  .cands:has(> .cand:only-child) ~ .rails::before { left: calc(min(anchor(--fit-part center), anchor(--fit-first center)) - 7px); right: calc(min(anchor(--fit-part center), anchor(--fit-last center)) + 2px); }
-  .cands:has(> .cand:only-child) ~ .rails::after { left: calc(min(anchor(--fit-part center), anchor(--fit-first center)) + 2px); right: calc(min(anchor(--fit-part center), anchor(--fit-last center)) - 7px); }
+  .cand::before, .cand:is(:nth-child(3n of .cand), :nth-last-child(1 of .cand))::before { left: calc(var(--rail-x) - 22px); right: calc(50% + 2px); }
+  .cand::after, .cand:is(:nth-child(3n of .cand), :nth-last-child(1 of .cand))::after { left: calc(var(--rail-x) + 9px - 22px); right: calc(50% - 7px); }
+  .cand:not(:nth-last-child(1 of .cand))::before { bottom: -14px; border-left-width: 5px; }
+  .cand:not(:nth-last-child(1 of .cand))::after { bottom: -25px; border-left-width: 5px; }
+  .cand:nth-child(1 of .cand):nth-last-child(1 of .cand)::before { left: calc(50% - 7px); }
+  .cand:nth-child(1 of .cand):nth-last-child(1 of .cand)::after { left: calc(50% + 2px); }
+  .cands:not(:has(> .cand:nth-child(2 of .cand))) ~ .rails::before { left: calc(min(anchor(--fit-part center), anchor(--fit-first center)) - 7px); right: calc(min(anchor(--fit-part center), anchor(--fit-last center)) + 2px); }
+  .cands:not(:has(> .cand:nth-child(2 of .cand))) ~ .rails::after { left: calc(min(anchor(--fit-part center), anchor(--fit-first center)) + 2px); right: calc(min(anchor(--fit-part center), anchor(--fit-last center)) - 7px); }
   @supports not (anchor-name: --a) {
-    .cands:has(> .cand:only-child)::before, .cands:has(> .cand:only-child)::after { display: none; }
-    .cand:only-child .hook::before, .cand:only-child .hook::after { top: -40px; height: 40px; }
+    .cands:not(:has(> .cand:nth-child(2 of .cand)))::before, .cands:not(:has(> .cand:nth-child(2 of .cand)))::after { display: none; }
+    .cand:nth-child(1 of .cand):nth-last-child(1 of .cand) .hook::before, .cand:nth-child(1 of .cand):nth-last-child(1 of .cand) .hook::after { top: -40px; height: 40px; }
   }
+  /* The open candidate's rows are directly under its tag, the rails
+     running on past them to the next; shelf and yard are one row that
+     scrolls sideways, the next column showing at the edge. */
+  .rows.more-narrow::before, .rows.more-narrow::after { content: ""; }
+  .stock-cols:not(.one) { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: calc(100% - 2.5rem); overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; }
+  .stock-col { scroll-snap-align: start; }
+  /* A row's id and location share a line, its fields under them. */
+  .stock-col table, .stock-col tbody { display: block; }
+  .stock-col tr { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; padding: 7px 0; border-top: 1px solid var(--line); }
+  .stock-col th, .stock-col td { padding: 0; border: 0; }
+  .stock-col td:last-child { grid-column: 1 / -1; }
   .ptype { font-size: 13px; padding-inline: 10px; }
   .labels, .cells, .under { grid-template-columns: repeat(9, minmax(0, 1fr)); }
   .cells { row-gap: 8px; }

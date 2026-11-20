@@ -1,0 +1,13 @@
+{"format":1,"kind":"stock","name":"shelf-more","version":"2026.11.01","source":"shelf","as_of":"2026-11-02","catalog":"parts-catalog"}
+{"id":"M-01","location":"north","type":"brake-rotor-front","number":"BR-2001","fields":{"stock_number":"D401","condition":"A"}}
+{"id":"M-02","location":"south","type":"brake-rotor-front","number":"BR-2001","fields":{"stock_number":"D402","condition":"B"}}
+{"id":"M-03","location":"east","type":"brake-rotor-front","number":"BR-2001","fields":{"stock_number":"D403","condition":"C"}}
+{"id":"M-04","location":"north","type":"brake-rotor-front","number":"BR-2001","fields":{"stock_number":"D404","condition":"A"}}
+{"id":"M-05","location":"south","type":"brake-rotor-front","number":"BR-2001","fields":{"stock_number":"D405","condition":"B"}}
+{"id":"M-06","location":"east","type":"brake-rotor-front","number":"BR-2001","fields":{"stock_number":"D406","condition":"C"}}
+{"id":"M-07","location":"north","type":"brake-rotor-front","number":"BR-2001","fields":{"stock_number":"D407","condition":"A"}}
+{"id":"M-08","location":"south","type":"brake-rotor-front","number":"BR-2001","fields":{"stock_number":"D408","condition":"B"}}
+{"id":"M-09","location":"east","type":"brake-rotor-front","number":"BR-2001","fields":{"stock_number":"D409","condition":"C"}}
+{"id":"M-10","location":"north","type":"brake-rotor-front","number":"BR-2001","fields":{"stock_number":"D410","condition":"A"}}
+{"id":"M-11","location":"south","type":"brake-rotor-front","number":"BR-2001","fields":{"stock_number":"D411","condition":"B"}}
+{"id":"M-12","location":"east","type":"brake-rotor-front","number":"BR-2001","fields":{"stock_number":"D412","condition":"C"}}

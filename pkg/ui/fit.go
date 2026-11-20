@@ -49,9 +49,12 @@ type fitCard struct {
 	// Catalog is the loaded catalog's name, "" with none loaded; Lines its
 	// lines' page.
 	Catalog, Lines string
-	// Part and After are the page's own part.id and after, which plate.js
-	// tells its history by.
-	Part, After string
+	// Part and After are the page's own part.id and after, and Type,
+	// Number, Side and Rows its open candidate and the panel it shows
+	// every row of (fitstock.go), which plate.js tells its history by.
+	Part, After        string
+	Type, Number, Side string
+	Rows               string
 	// Model and Year are what the strip says was asked: the catalog's
 	// vehicle the decode reached, and the year, "any year" without one.
 	Model, Year string
@@ -75,6 +78,10 @@ type fitCard struct {
 	// pressed part type has no candidate.
 	Invite  bool
 	NoneFit string
+	// NoNumber are the shelf rows with no number for the pressed part
+	// type and the vehicle, nil for none, under their strip, NoNumberName.
+	NoNumber     *stockColumn
+	NoNumberName string
 }
 
 // wayOn is a link on from an empty place.
@@ -96,6 +103,9 @@ type candidateTag struct {
 	// Options are its applications' option texts, verbatim, each once.
 	Options []string
 	Marks   []fitMark
+	// Strip is its stock strip; Panel its rows, when it is open.
+	Strip stockStrip
+	Panel *stockPanel
 }
 
 // fitMark is one mark on a tag: Kind is "checked", "unchecked", "text",
@@ -165,10 +175,12 @@ func (h *Handler) fit(ctx context.Context, req contract.FitRequest, dec *contrac
 }
 
 // fitVIN fills d's card for its VIN, whose model is known: its part
-// types, and part's candidates, from their page after, when part is
-// pressed. cat is what is loaded, which names the catalog's vehicles'
-// fields. Its answers' JSON goes in res.
-func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecode, cat []contract.CatalogEntry, elements contract.Elements, part, after string, res *result) error {
+// types, and, when ask presses one, its candidates from their page
+// after, each with the stock loaded, the one ask opens with its rows. cat
+// is what is loaded, which names the catalog's vehicles' fields. Its
+// answers' JSON goes in res.
+func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecode, cat []contract.CatalogEntry, elements contract.Elements, ask fitAsk, res *result) error {
+	part, after := ask.Part, ask.After
 	c := &d.Fit
 	if c.Catalog == "" {
 		return nil
@@ -219,6 +231,10 @@ func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecod
 	}
 	c.Blank = ""
 	c.Model, c.Year = strings.Join(modelNames(fit.Models, fields, false), " / "), year
+	vehicle := strings.Join(modelNames(fit.Models, fields, true), " / ")
+	if year != "any year" {
+		vehicle = year + " " + vehicle
+	}
 	slices.SortStableFunc(types, func(a, b contract.FitPartType) int {
 		return strings.Compare(strings.ToLower(partTypeName(a)), strings.ToLower(partTypeName(b)))
 	})
@@ -240,12 +256,11 @@ func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecod
 		c.NoneFit = "Nothing " + c.Catalog + " lists as " + strconv.Quote(part) + " fits this vehicle."
 		return nil
 	}
-	c.Page = fitHref(d.VIN, part, after)
 	limit := candidatesPage
 	if h.candidates != 0 {
 		limit = h.candidates
 	}
-	req = contract.FitRequest{From: contract.FitFrom{VIN: d.VIN}, Part: &contract.FitPart{Spine: fit.Catalog.Spine, ID: part}, Limit: limit, After: after}
+	req = contract.FitRequest{From: contract.FitFrom{VIN: d.VIN}, Part: &contract.FitPart{Spine: fit.Catalog.Spine, ID: part}, Stock: ask.Stock, Limit: limit, After: after}
 	if fit, raw, err = h.fit(ctx, req, dec); err != nil {
 		return err
 	}
@@ -256,8 +271,15 @@ func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecod
 		c.Tags = append(c.Tags, newCandidateTag(cand, elements, names))
 	}
 	c.Total = fit.Total
-	if fit.Next != "" {
-		c.Next = fitHref(d.VIN, part, fit.Next)
+	if err := h.fitStock(ctx, c, d.VIN, ask, req, fit, dec, vehicle, res); err != nil {
+		return err
+	}
+	next, err := h.candidatesNext(ctx, req, fit, dec)
+	if err != nil {
+		return err
+	}
+	if next != "" {
+		c.Next = fitHref(d.VIN, part, next)
 	}
 	if len(c.Tags) == 0 {
 		c.NoneFit = "Nothing " + c.Catalog + " lists as " + c.Pressed + " fits this vehicle."

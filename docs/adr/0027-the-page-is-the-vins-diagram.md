@@ -209,3 +209,17 @@ URL to the VIN.
   and loads each step as a page without it.
 - "Parts that fit" is a later PR on this page's patterns: counts that open
   rows in place, three levels at most, the open state in the URL.
+
+## Amendment (2026-11-20): the URL carries the parts that fit's open state
+
+"The URL carries the VIN only" no longer holds: as the consequences foresaw, the
+parts that fit keep their open state in the URL, so a link reopens what it
+showed and the page works without a script. Beside `from.vin` it carries
+`part.id`, the part type pressed (#322); `after`, its candidates' page (#322);
+`fitment.number`, with `fitment.side` for a fitment with a side and
+`fitment.type` for one whose type is not the part type pressed, the candidate
+whose stock is open (#323); and `rows`, `all` for every row of that
+candidate's stock or `unnumbered` for every shelf row with no number (#323).
+Each is named after the fit request's own parameter where it has one. The
+decode's options are still ignored, and a whole VIN, a part type pressed, a
+candidate opened and "Show all" are each a history entry.

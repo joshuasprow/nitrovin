@@ -207,10 +207,10 @@ its group's colour.
 
 ### The second tape
 
-A part type is both a name and a control. A name that can be pressed is the
-second tape: embossing tape in the plate's own metal. Black label tape stays
-for a name that does nothing, and a key of metal for a control that names
-nothing.
+A part type is both a name and a control, and so is a candidate's stock
+strip. A name that can be pressed is the second tape: embossing tape in the
+plate's own metal. Black label tape stays for a name that does nothing, and
+a key of metal for a control that names nothing.
 
 - **Body:** `--alu`, the tape's faint ridges over `--metal`, a 1 px `--steel`
   edge with a white top and a `--steel-dark` bottom.
@@ -221,6 +221,13 @@ nothing.
 - **Raised and pressed** as every control: `--raised` unpressed; pressed
   (`aria-current`, the part type the page shows), flush on `--alu-in` under
   `--pressed`.
+- **Along a tag's bottom edge** (a candidate's stock strip) it runs edge to
+  edge inside the tag and casts no shadow off it, so it stands raised by its
+  edges alone: a white top and 3 px of `--steel-dark` below. Pressed (open)
+  it is `--alu-in` under `--pressed`, its bottom edge 1 px, and its chevron
+  turns up. Its words are no vocabulary's name but the page's own count of
+  stock, so they are 12 px and upper case, as drawn, to sit as a footer
+  under the tag's rows, not as large as a part type's name.
 
 ### Pinstripe tape
 
@@ -253,7 +260,10 @@ A decoded card is a manila parts tag, hung by its eyelet from its leader line.
 - **A control on a tag is label tape, not metal.** The check digit's "Show
   the sum" is a short strip of ridged tape in the tag's own colour, `--cm`,
   with raised white letters. Aluminum clashed with the paper, and nothing
-  bolts metal to a tag.
+  bolts metal to a tag. A candidate's stock strip is the one metal on a
+  tag, and it is tape, not bolted: it names what it opens, so it is the
+  second tape, and it runs along the tag's bottom edge, its footer, rather
+  than sitting on the paper as a control.
 - **Not yet typed**, a card keeps its place as a 2 px dashed `--faint` outline
   with its muted title, and no stock.
 
@@ -328,6 +338,44 @@ catalog has for the vehicle, and the candidates of the one pressed.
   come first: Not checked, Catalog text only, No conditions, then Checked,
   then By redirect.
 - **More candidates** than a page holds (30) are a "Next page" link away.
+- **The stock strip** is the bottom edge of every tag, and the only part of
+  it that presses: the second tape, "Stock · 2 shelf · 2 yard", naming only
+  the kinds of stock loaded, with a chevron at its trailing end. Every
+  candidate arrives with its totals from the candidates' one request, which
+  asks for the stock loaded beside the catalog. A kind none of whose
+  sources answered reads "yard unavailable", never 0: a 0 is a loaded
+  source with none. The number above it stays black label tape. With stock
+  loaded and none for the candidate it is "Stock · none", muted ink over a
+  2 px dashed rule, and presses nothing; with none loaded it is "Stock ·
+  not loaded" with "Add stock" underlined, and opens the Vocabularies
+  dialog.
+- **The open candidate's rows.** A strip is a link to the page with its
+  candidate open (the URL's `fitment.number`, with `fitment.side` for a
+  sided fitment and `fitment.type` for one whose type is not the pressed
+  part type's); the open one's links to the page with none, so one is
+  open at a time. The rows are the page's table panel (panel ground, a
+  2 px `--steel` edge on 3 px of `--steel-dark` and a soft shadow), notched
+  up at its tag: on a wide page the row under the tag's row, the tags after
+  it filling theirs first; on a narrow one right under the tag. The rails
+  run on down its leading edge to the next row of tags. Shelf and yard are
+  two equal halves divided by a rule, one when one kind is loaded, each
+  under its count in the label face and, muted, its sources' as-of dates,
+  or why one did not answer. A row is its id in the monospace face, its
+  location, and its source's fields verbatim, each name muted before its
+  value. A shelf row tagged with a retired number says which in a muted
+  line under it; the yard's vehicle that is the VIN looked up says "This
+  VIN" in plain bold. Under 34 rem the halves are one row that scrolls
+  sideways, the next showing at the edge, a row's fields under its id and
+  location.
+- **Past ten rows** a column says how many it shows, and "Show all" is a
+  link to the page with every row (`rows=all`), swapped in place where
+  scripts run.
+- **Shelf rows with no number** belong to no candidate: after the first
+  page's candidates, a strip of label tape, stuck on, names the part type
+  and the vehicle in their own case, over the same panel, headed by their
+  count and as-of dates. Past the candidates' page of them, "Show all" is
+  the page with every one (`rows=unnumbered`). They never keep the
+  candidates' "Next page".
 
 ## Good enough: empty places
 
@@ -344,6 +392,9 @@ metal; a way on is a link.
   vehicle; nothing pressed; and a pressed part type with nothing for the
   vehicle.
 - **A card** not typed yet is a 2 px dashed outline (manila tags, above).
+- **A candidate's stock** with none for it is muted words over a dashed
+  rule on its tag, and a column of its rows with none says "None." (the
+  parts that fit, above).
 
 ## Good enough: where the brackets and lines run
 
@@ -420,8 +471,9 @@ Every other control is plain and small.
 - **Button:** a key of the plate's metal. The label face at 11 px, upper case,
   `--on-metal`, a 1 px `--steel` edge, `--raised`. Pressed, it is flush
   (ground rules: three heights). A button in the header or a row in the menu
-  adds a rivet. The one exception is a button on a manila tag, which is label
-  tape in the tag's colour.
+  adds a rivet. The exceptions are on a manila tag: a button there is label
+  tape in the tag's colour, and a candidate's "Stock · not loaded" is its
+  stock strip, the second tape.
 - **Link-like button** (`.linkish`, "Clear recent"): no metal. `--link`,
   underlined, in the body face.
 - **Text and search fields:** a recess. Panel ground, a 1 px `--steel` edge,
@@ -460,8 +512,9 @@ Every other control is plain and small.
 
 - A new control is a piece of metal. Reuse `--metal`, `--raised` and
   `--emboss`, and pick its fastener from the table above. On a manila tag it
-  is a strip of label tape in the tag's colour. Either way it stands at the
-  controls' one height, and pressed it is flush.
+  is a strip of label tape in the tag's colour, unless it names what it
+  opens and runs along the tag's edge, as the stock strip does. Either way
+  it stands at the controls' one height, and pressed it is flush.
 - A new static strip of tape is stuck on, with `--lift-stuck`, never raised.
 - A new name from a vocabulary is a strip of label tape; one that can be
   pressed is the second tape.
