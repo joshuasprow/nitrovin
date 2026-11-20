@@ -303,10 +303,64 @@ catalog has for the vehicle, and the candidates of the one pressed.
   Vehicle and Model year that run on through the names. No line runs from a
   blank strip, or past the names' "more" switch. Narrow, the stamp is a line
   of its own above the two words and no line runs to it.
-- **The part types** are the second tape, a wrapping row, by name A to Z,
-  each with its count. Each is a link to the page with it pressed (the URL's
-  `part.id`); the pressed one's link presses nothing. Nothing is pressed
-  without the parameter, and a blank strip asks for a press.
+- **The part types** are the second tape, each with its count, on a grid.
+  Each is a link to the page with it pressed (the URL's `part.id`); the
+  pressed one's link presses nothing. Nothing is pressed without the
+  parameter, and a blank strip asks for a press. A tape takes one cell,
+  or two where its name, its count and its Recent stamp do not fit one.
+  A name too long even for two cells, or for a phone's whole row, ends in
+  "…" and keeps its count; the link's name is whole, and the dialog shows
+  it whole.
+- **Their order:** the pressed one first, wherever it was, so a part type
+  chosen in the dialog is beside its candidates; then, with JavaScript, up
+  to two this browser opened recently that the vehicle has, newest first;
+  then the rest by name, A to Z. A recent one wears a small upper-case
+  "Recent" stamp of the same tape joined to its leading edge, pressed
+  flush with it.
+- **Two rows, then "N more".** The grid has 5 columns from 64 rem, 4 above
+  46 rem, 3 above 34 rem and 2 on a phone. The tapes go in strip order,
+  and one of two cells that does not fit at a row's end starts the next
+  row, leaving the cell empty, as the grid places it. Two rows hold every
+  part type, or as many as fit with "N more" after them, N the rest,
+  which are not drawn and out of the keyboard's reach; N varies with the
+  names. On the demo set's F-150 it is 6 and the key at 1280 px, 4 at
+  768, and 1 on a phone, whose next tape takes a whole row. "N more" is a
+  key of metal, as high as the tape beside it, which opens the part types
+  dialog; its name says N as it reads ("2 more part types"). The tape's
+  face is monospace, so the server knows each name's width: it packs the
+  two rows at each width, writes which tapes take two cells, which are
+  past the rows and N, and each width shows its own, so it holds without
+  a script, reading no position. Its measure assumes the narrowest window
+  of each width and a phone of at least 360 px, and a little wider type
+  than any browser draws, so a one-cell name is never cut. Where every
+  part type fits, the key is not drawn at all.
+- **The filter**, with JavaScript only, is the page's recessed field. It
+  takes the first cell, and on a phone it is a row of its own above the
+  two. Typing narrows the strip by name across every part type, keeping
+  the pressed one, which the rails hang from. The script packs the rows
+  again as the server does, from the measure the server gives it
+  (`data-fit`), beside the filter and the Recent stamps, and draws no
+  key when the matches fit. None matching says so beside the filter,
+  above the pressed one, where no rail runs.
+- **Recent part types** are kept in the browser as recent VINs are, the last
+  eight, newest first, and nothing is kept when storage fails. The VINs
+  menu's "Clear recent" forgets both; the dialog's forgets part types only
+  and leaves the focus on the dialog's filter.
+- **The part types dialog** is the page's own dialog, opened by "N more": a
+  head of metal with "Part types" struck in it and Close, the filter (with
+  JavaScript), a line naming the vehicle, the catalog and the part
+  vocabulary its headings come from, then, with JavaScript, the part types
+  this browser opened recently under "Opened recently" with its Clear
+  recent, then every part type, in two columns of headings (one under
+  34 rem). The headings are the entries of a part vocabulary on the
+  catalog's spine (the one the catalog files its fitments under, else the
+  first loaded), each over the part types it maps to, so a part type two
+  entries map to is under both, and "Other" last over the ones none maps
+  to; an entry mapping to none of the vehicle's has no heading. They are
+  the dialogs' section style in the entry's own case. With no part
+  vocabulary the dialog is one list by name. Its part types are the same
+  tape, the pressed one pressed; choosing one closes the dialog and leads
+  the strip with it.
 - **The candidates** are manila tags, three to a row, one to a row under
   34 rem, in the answer's order. A tag's number is a strip of label tape
   across it under the eyelet, where a card prints its band, with the years at
@@ -434,7 +488,7 @@ script. There are three sizes.
 
 | Kind | Used for | Width | Backdrop |
 | --- | --- | --- | --- |
-| Dialog (`dialog[popover]`) | Vocabularies, Developers, JSON, the check digit's sum | `min(56rem, 100vw - 2rem)` | `rgb(10 18 26 / .55)` |
+| Dialog (`dialog[popover]`) | Vocabularies, Developers, JSON, the check digit's sum, the part types | `min(56rem, 100vw - 2rem)` | `rgb(10 18 26 / .55)` |
 | Note (`.note[popover]`) | How a name on the tape was reached | up to `30rem` | `rgb(10 18 26 / .35)` |
 | Menu (`.menu[popover]`) | The VINs to try | `19rem` | none |
 | Header menu (`nav.top[popover]`) | The header's buttons and the release, at 46 rem and under | `16rem` | none |

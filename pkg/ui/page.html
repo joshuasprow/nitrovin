@@ -176,7 +176,9 @@ top plate (ui.css), with no script. */}}
 strip of label tape saying what was asked (the catalog, and the model and
 year it asked with, on the lines from Vehicle and Model year through the
 names), the vehicle's part types as the second tape, each a link that
-presses it, and the pressed one's candidates as manila tags on two rails
+presses it, two rows of them and "N more" (#324), which opens the part
+types dialog, every part type under the headings of a part vocabulary,
+and the pressed one's candidates as manila tags on two rails
 of pinstripe tape: Vehicle's and Model year's, down from the pressed part
 type (.risers) and along (.rails) to each eyelet (ui.css). A tag's
 number is a strip of label tape across it; its rows are the catalog's
@@ -195,9 +197,35 @@ own, which plate.js swaps in place (swap). */}}
 <span class="seg g-vds"><span class="w">{{.Model}}</span></span>
 <span class="seg g-year"><span class="w">{{.Year}}</span></span>
 </div>
-<ul class="ptypes" aria-label="Part types">
-{{range .Types}}<li><a class="ptype swap" href="{{.Href}}"{{if .Pressed}} aria-current="true"{{end}}>{{.Name}} <span class="n">{{.Count}}<span class="visually-hidden"> {{if eq .Count 1}}candidate{{else}}candidates{{end}}</span></span></a></li>
+<div class="ptwrap" data-spine="{{.Spine}}" data-fit="{{.Strip.Fit}}">
+<ul class="ptypes" id="ptypes" aria-label="Part types">
+<li class="ptf" hidden><label class="visually-hidden" for="ptf-strip">Filter part types</label><input type="search" id="ptf-strip" class="ptfind" placeholder="Filter part types" autocomplete="off" aria-controls="ptypes"></li>
+{{range .Types}}<li data-part="{{.ID}}"{{with .Class}} class="{{.}}"{{end}}>{{template "ptype" .}}</li>
+{{end}}<li class="ptnone" hidden></li>
+<li class="{{.Strip.KeyClass}}"><button type="button" id="more-types" popovertarget="part-types">{{range .Strip.Keys}}<span class="kn c{{.Cols}}">{{.N}} more<span class="visually-hidden"> {{if eq .N 1}}part type{{else}}part types{{end}}</span></span>{{end}}</button></li>
+</ul>
+</div>
+<dialog id="part-types" class="ptdialog" popover aria-labelledby="part-types-h">
+<div class="dialog-head">
+<h2 id="part-types-h">Part types</h2>
+<button type="button" popovertarget="part-types" popovertargetaction="hide">Close</button>
+</div>
+<p class="ptf" hidden><label class="visually-hidden" for="ptf-dialog">Filter part types</label><input type="search" id="ptf-dialog" class="ptfind" placeholder="Filter part types" autocomplete="off" aria-controls="ptgroups"></p>
+<p class="hint">{{.Vehicle}} in {{.Catalog}}{{with .GroupedBy}} · grouped by {{.}}{{end}}</p>
+<p class="ptnone" hidden></p>
+<section class="ptgroup ptrecent" aria-labelledby="ptrecent-h" hidden>
+<div class="pthead"><h3 id="ptrecent-h">Opened recently</h3><button type="button" class="linkish clear-parts">Clear recent</button></div>
+<ul class="ptlist"></ul>
+</section>
+<div class="ptgroups" id="ptgroups">
+{{range $i, $g := .Groups}}<section class="ptgroup"{{if .Heading}} aria-labelledby="ptg-{{$i}}"{{end}}>
+{{with .Heading}}<div class="pthead"><h3 id="ptg-{{$i}}">{{.}}</h3></div>
+{{end}}<ul class="ptlist">
+{{range .Types}}<li data-part="{{.ID}}">{{template "ptype" .}}</li>
 {{end}}</ul>
+</section>
+{{end}}</div>
+</dialog>
 {{if .Invite}}<p class="blank"><span>Press a part type to see what fits this vehicle.</span></p>
 {{end}}{{with .NoneFit}}<p class="blank"><span>{{.}}</span></p>
 {{end}}{{if .Tags}}<ol class="cands" aria-label="Candidates: {{.Pressed}}">
@@ -269,6 +297,13 @@ plate is. */}}
 <table><tbody>
 {{range .}}<tr><th scope="row" class="id">{{.ID}}</th><td>{{.Location}}</td><td>{{range $i, $f := .Fields}}{{if $i}} · {{end}}<span class="fk">{{.Name}}</span> {{.Value}}{{end}}{{with .Retired}}<span class="note">Tagged with a retired number, {{.}}</span>{{end}}{{if .ThisVIN}}<span class="note"><strong>This VIN</strong>: the vehicle being looked up</span>{{end}}</td></tr>
 {{end}}</tbody></table>
+{{- end}}
+
+{{/* ptype is a part type, the second tape: a link to the page with it
+pressed, or, pressed, with none, its name (cut with an ellipsis where its
+tape is too short, the link's name still whole) and its count in a pill. */}}
+{{define "ptype" -}}
+<a class="ptype swap" href="{{.Href}}"{{if .Pressed}} aria-current="true"{{end}}><span class="nm">{{.Name}}</span> <span class="n">{{.Count}}<span class="visually-hidden"> {{if eq .Count 1}}candidate{{else}}candidates{{end}}</span></span></a>
 {{- end}}
 
 {{/* chips are what to try, the menu the header's VINs button opens (a

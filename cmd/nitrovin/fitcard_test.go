@@ -38,7 +38,7 @@ func TestFitCard(t *testing.T) {
 			tb.do(chromedp.Navigate(srv.URL + pickup))
 			tb.wait(`#fit a.ptype`)
 			log.take()
-			if n := tb.count(`#fit a.ptype`); n != 8 || tb.count(`#fit [aria-current]`) != 0 || tb.count(`#fit .cand`) != 0 {
+			if n := tb.count(`#fit .ptypes a.ptype`); n != 8 || tb.count(`#fit [aria-current]`) != 0 || tb.count(`#fit .cand`) != 0 {
 				t.Errorf("%s: %d part types, %d pressed, %d candidates; want 8, none, none", pickup, n, tb.count(`#fit [aria-current]`), tb.count(`#fit .cand`))
 			}
 			tb.audit(name + ", the pickup's part types")

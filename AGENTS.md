@@ -187,7 +187,7 @@ UI that is not built yet is drawn on a Claude Design canvas before it is specifi
   | `NITROVIN_PSQL` (+ an artifact from the same dump) | the decoder's `*Postgres` oracle tests; the importer's `TestPostgres` (+ `NITROVIN_MONTH`) |
   | `NITROVIN_STOCK_PG_DSN` | `pkg/stock/pg`. **Only ever point it at a throwaway server.** The tests create and drop schema `stock` and role `nitrovin_stock`, the names [docs/vocabularies.md](docs/vocabularies.md) tells deployers to use. |
   | `NITROVIN_EPA_VOCAB` | the EPA benchmark set |
-  | Chrome present | `TestForm`, `TestWorker*`, `TestVocabPage`, `TestVocabTranslate`, `TestFitCard`, `TestStockStrip`. They skip locally without Chrome but **fail when `CI` is set**. `-short` skips the slow worker runs. |
+  | Chrome present | `TestForm`, `TestWorker*`, `TestVocabPage`, `TestVocabTranslate`, `TestFitCard`, `TestStockStrip`, `TestPartTypeStrip`. They skip locally without Chrome but **fail when `CI` is set**. `-short` skips the slow worker runs. |
 
 - **CI requires PASS, not skip.** Several workflows grep `--- PASS: <Test> ` for hard-coded lists:
   - `contract.yml`

@@ -63,19 +63,35 @@ func fitSection(t *testing.T, h *Handler, target string) string {
 	if status != 200 || start < 0 {
 		t.Fatalf("GET %s: %d, no parts that fit\n%s", target, status, body)
 	}
-	s := body[start:]
-	return s[:strings.Index(s, "</section>")+len("</section>")]
+	// The section holds the dialog's sections: it ends at the close that
+	// balances its open.
+	depth := 0
+	for i := range len(body) - start {
+		switch s := body[start+i:]; {
+		case strings.HasPrefix(s, "<section"):
+			depth++
+		case strings.HasPrefix(s, "</section>"):
+			if depth--; depth == 0 {
+				return body[start : start+i+len("</section>")]
+			}
+		}
+	}
+	t.Fatalf("GET %s: the parts that fit never end\n%s", target, body)
+	return ""
 }
 
 var (
-	partTypeRE = regexp.MustCompile(`<a class="ptype swap" href="([^"]*)"( aria-current="true")?>([^<]*) <span class="n">(\d+)`)
+	partTypeRE = regexp.MustCompile(`<a class="ptype swap" href="([^"]*)"( aria-current="true")?><span class="nm">([^<]*)</span> <span class="n">(\d+)`)
 	markRE     = regexp.MustCompile(`<span class="mk (\w+)">(?:<svg[^>]*><path[^>]*/></svg>)?([^<]*)</span>`)
 	numberRE   = regexp.MustCompile(`<b class="num">([^<]*)</b>`)
 )
 
-// partTypes are a section's part types: "name count", "*" before the
-// pressed one's name.
+// partTypes are a section's strip's part types: "name count", "*" before
+// the pressed one's name.
 func partTypes(s string) []string {
+	if i := strings.Index(s, `<ul class="ptypes"`); i >= 0 {
+		s = s[i : i+strings.Index(s[i:], "</ul>")]
+	}
 	var out []string
 	for _, m := range partTypeRE.FindAllStringSubmatch(s, -1) {
 		name := html.UnescapeString(m[3]) + " " + m[4]
@@ -122,7 +138,7 @@ func TestPageFit(t *testing.T) {
 		`<span class="seg g-vds"><span class="w">F150</span></span>`,
 		`<span class="seg g-year"><span class="w">2015</span></span>`,
 		`<a class="ptype swap" href="/?from.vin=1FTEW1EG7FFA12345&amp;part.id=alternator">`,
-		`<a class="ptype swap" href="/?from.vin=1FTEW1EG7FFA12345&amp;part.id=mirror">Door Mirror`,
+		`<a class="ptype swap" href="/?from.vin=1FTEW1EG7FFA12345&amp;part.id=mirror"><span class="nm">Door Mirror</span>`,
 		"Press a part type to see what fits this vehicle.",
 	} {
 		if !strings.Contains(s, want) {
@@ -184,7 +200,7 @@ func TestPageFit(t *testing.T) {
 	// verbatim and the note; the pressed part type's link takes it away.
 	s = fitSection(t, h, pickup+"&part.id=alternator")
 	for _, want := range []string{
-		`<a class="ptype swap" href="/?from.vin=1FTEW1EG7FFA12345" aria-current="true">Alternator <span class="n">3`,
+		`<a class="ptype swap" href="/?from.vin=1FTEW1EG7FFA12345" aria-current="true"><span class="nm">Alternator</span> <span class="n">3`,
 		`<ol class="cands" aria-label="Candidates: Alternator">`,
 		`<p class="numtape"><b class="num">DEMO-1001</b> <span class="yrs">2015–2017</span></p>`,
 		`<div><dt>Options</dt><dd>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</dd></div>`,

@@ -495,16 +495,85 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
    letters struck as the plate's are, in the monospace face and the name's
    own case, its count in a small outlined pill. A control: raised, and the
    pressed one flush (aria-current), as a key is. */
-.ptypes { position: relative; z-index: 3; list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0 0; padding: 0; }
+.ptypes { list-style: none; margin: 0; padding: 0; }
 .ptype { display: inline-flex; align-items: center; gap: 10px; box-sizing: border-box; min-height: 44px; padding: 0 14px; font: 900 14px var(--cell-font); letter-spacing: .06em; text-decoration: none; color: var(--on-metal); text-shadow: var(--emboss);
   background: var(--alu); border: 1px solid var(--steel); border-top-color: #fff; border-bottom-color: var(--steel-dark); border-radius: 2px; box-shadow: var(--raised); }
 .ptype .n { padding: 1px 7px; border: 1px solid rgb(35 41 48 / .55); border-radius: 9px; font-size: 11px; text-shadow: none; }
 .ptype:active, .ptype[aria-current] { transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed); }
-.ptype[aria-current] { anchor-name: --fit-part; }
+.ptypes .ptype[aria-current] { anchor-name: --fit-part; }
+/* Two rows of part types, then "N more" (#324), held without a script:
+   the strip is a grid, 5 columns from 64rem, 4 above 46rem, 3 above 34rem
+   and 2 on a phone. A tape takes one cell, or two where its name does
+   not fit one (.sN at N columns), in strip order; one that does not fit
+   at a row's end starts the next row. The server packs the two rows at
+   each width (strip.go) and marks the part types past them (.xN), which
+   are not drawn, so out of reach; the key, drawn where any are (.kN),
+   says how many (.kn.cN), and each width shows its own. plate.js packs
+   them again, by the same numbers (data-fit), beside its filter and
+   Recent stamps. A name too long even for two cells ends in "…"; the
+   link's name is still whole. */
+.ptwrap { position: relative; z-index: 3; margin: 14px 0 0; }
+.ptwrap .ptypes { --cols: 5; display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 10px; }
+.ptypes > li { display: flex; min-width: 0; }
+.ptypes > li[hidden] { display: none; }
+.ptwrap .ptype { flex: 1; min-width: 0; gap: 8px; padding-inline: 10px; }
+.ptwrap .rstamp { padding: 0 6px; }
+.ptype .n { flex: none; }
+.ptwrap .ptype .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ptkey #more-types { flex: 1; min-width: 0; min-height: 44px; padding: 0 .5rem; }
+.fit:has(#part-types:popover-open) #more-types { --key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed); }
+@media (width >= 64rem) {
+  .kn:not(.c5), .ptypes > li.x5, .ptypes > .ptkey:not(.k5) { display: none; }
+  .ptypes > li.s5 { grid-column: span 2; }
+}
+@media (46rem < width < 64rem) {
+  .ptwrap .ptypes { --cols: 4; }
+  .kn:not(.c4), .ptypes > li.x4, .ptypes > .ptkey:not(.k4) { display: none; }
+  .ptypes > li.s4 { grid-column: span 2; }
+}
+@media (34rem < width <= 46rem) {
+  .ptwrap .ptypes { --cols: 3; }
+  .kn:not(.c3), .ptypes > li.x3, .ptypes > .ptkey:not(.k3) { display: none; }
+  .ptypes > li.s3 { grid-column: span 2; }
+}
+@media (width <= 34rem) {
+  .ptwrap .ptypes { --cols: 2; }
+  .kn:not(.c2), .ptypes > li.x2, .ptypes > .ptkey:not(.k2) { display: none; }
+  .ptypes > li.s2 { grid-column: span 2; }
+  .ptypes > .ptf { grid-column: 1 / -1; }
+}
+/* With a script: the filter, the page's recessed field, leads the first
+   row; recent part types lead the rest, each with a "Recent" stamp of
+   the same tape joined to its leading edge, flush with it when it is
+   pressed. A filter matching nothing says so beside it, above the
+   pressed part type, where no rail runs. */
+.ptfind { width: 100%; min-height: 44px; }
+.rstamp { display: flex; align-items: center; padding: 0 8px; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-metal); text-shadow: var(--emboss);
+  background: var(--alu); border: 1px solid var(--steel); border-top-color: #fff; border-bottom-color: var(--steel-dark); border-right-color: rgb(35 41 48 / .3); border-radius: 2px 0 0 2px; box-shadow: var(--raised); }
+.rstamp + .ptype { border-left: 0; border-radius: 0 2px 2px 0; }
+.rstamp:has(+ .ptype:is(:active, [aria-current])) { transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed); }
+.ptypes > .ptf { order: -2; }
+.ptypes > .ptnone { order: -1; grid-column: 2 / -1; align-self: center; color: var(--muted); }
+@media (width <= 34rem) {
+  .ptypes > .ptnone { grid-column: 1 / -1; }
+}
+/* The part types dialog: the filter, what it lists, the recent part
+   types, then every part type under its vocabulary's headings, two
+   columns of them, in the dialogs' section style with the entry in its
+   own case. */
+.ptdialog .hint { margin: .6rem 0 1rem; font-size: 13px; }
+.ptdialog .ptnone { margin: 0 0 1rem; color: var(--muted); }
+.ptgroups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem 1.5rem; }
+.ptgroups:has(> .ptgroup:only-child:not(:has(.pthead))) { grid-template-columns: minmax(0, 1fr); }
+.ptrecent { margin-bottom: 1.1rem; }
+.ptgroup[hidden], .ptlist > li[hidden] { display: none; }
+.pthead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 .5rem; margin: 0 0 .6rem; border-bottom: 3px solid var(--c-vds); }
+.pthead h3 { margin: 0; padding: 0 0 3px; border: 0; letter-spacing: .04em; text-transform: none; }
+.ptlist { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0 0 6px; }
 /* An empty place: the page's blank strip, a dashed outline in the faint
    colour with its sentence, and in it a key of metal or a link on. */
 .fit .blank { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; box-sizing: border-box; min-height: 46px; margin: 30px 0 0; padding: .5rem .75rem; color: var(--muted); border: 3px dashed var(--faint); border-radius: 2px; }
-.fit .ptypes ~ .blank { margin-top: 14px; }
+.fit .ptwrap ~ .blank { margin-top: 14px; }
 /* The candidates: manila tags as the cards are (.cand-in, its stock its
    ::before), three to a row, hung on two rails of pinstripe tape, the
    vehicle's and the model year's. The rails come down from the pressed
@@ -821,6 +890,7 @@ button.linkish:active { transform: none; box-shadow: none; }
   .stock-col th, .stock-col td { padding: 0; border: 0; }
   .stock-col td:last-child { grid-column: 1 / -1; }
   .ptype { font-size: 13px; padding-inline: 10px; }
+  .ptgroups { grid-template-columns: minmax(0, 1fr); }
   .labels, .cells, .under { grid-template-columns: repeat(9, minmax(0, 1fr)); }
   .cells { row-gap: 8px; }
   .cell { font-size: 9cqw; margin: 0 2px; border-bottom-width: 4px; }
