@@ -38,6 +38,11 @@ import (
 	"github.com/joshuasprow/nitrovin/pkg/nitrovin"
 	"github.com/joshuasprow/nitrovin/pkg/stock/pg"
 	"github.com/joshuasprow/nitrovin/pkg/vocab"
+
+	// Mozilla's CA roots, used only where the system has none: the image is
+	// the binary on scratch, and serve's PostHog export and a stock
+	// connector's DSN may speak TLS from it (#358).
+	_ "golang.org/x/crypto/x509roots/fallback"
 )
 
 // command is one subcommand. Each lives in its own file, cmd/nitrovin/<name>.go,
