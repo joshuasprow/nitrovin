@@ -73,15 +73,15 @@
       "y": 0
     },
     "Proposal-PartType-1280-Dark.dc.html": {
-      "h": 2750,
+      "h": 2990,
       "page": "proposals",
       "title": "Proposal: the part type picker, 1280 wide, dark",
       "w": 1280,
       "x": 0,
-      "y": 3220
+      "y": 3540
     },
     "Proposal-PartType-1280.dc.html": {
-      "h": 2750,
+      "h": 2990,
       "page": "proposals",
       "title": "Proposal: the part type picker, 1280 wide, light",
       "w": 1280,
@@ -89,15 +89,15 @@
       "y": 0
     },
     "Proposal-PartType-390-Dark.dc.html": {
-      "h": 3100,
+      "h": 3420,
       "page": "proposals",
       "title": "Proposal: the part type picker, 390 wide, dark",
       "w": 470,
       "x": 2288,
-      "y": 3220
+      "y": 3540
     },
     "Proposal-PartType-390.dc.html": {
-      "h": 3100,
+      "h": 3420,
       "page": "proposals",
       "title": "Proposal: the part type picker, 390 wide, light",
       "w": 470,
@@ -105,15 +105,15 @@
       "y": 0
     },
     "Proposal-PartType-768-Dark.dc.html": {
-      "h": 2950,
+      "h": 3270,
       "page": "proposals",
       "title": "Proposal: the part type picker, 768 wide, dark",
       "w": 848,
       "x": 1360,
-      "y": 3220
+      "y": 3540
     },
     "Proposal-PartType-768.dc.html": {
-      "h": 2950,
+      "h": 3270,
       "page": "proposals",
       "title": "Proposal: the part type picker, 768 wide, light",
       "w": 848,
