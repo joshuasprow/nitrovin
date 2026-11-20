@@ -205,6 +205,34 @@ There are no CORS headers unless `--cors <origin>` (or `--cors '*'`) names
 the browsers that may call `/v1` and `/mcp`. SIGINT or SIGTERM drains
 requests in flight and exits 0.
 
+`serve` can also send its faults and log lines to
+[PostHog](https://posthog.com). It is off unless `NITROVIN_POSTHOG_TOKEN`
+is set, and then sends nothing else:
+
+```sh
+NITROVIN_POSTHOG_TOKEN=phc_… \
+NITROVIN_POSTHOG_PROPERTIES='{"app":"vin","service":"nitrovin","environment":"production"}' \
+  nitrovin serve
+```
+
+| Variable | Meaning |
+| --- | --- |
+| `NITROVIN_POSTHOG_TOKEN` | A project's public ingest token (`phc_…`); unset, nothing is sent. |
+| `NITROVIN_POSTHOG_HOST` | The ingest host; default `https://us.i.posthog.com`. |
+| `NITROVIN_POSTHOG_DISTINCT_ID` | The events' distinct id; default `nitrovin`. |
+| `NITROVIN_POSTHOG_PROPERTIES` | A JSON object of strings stamped on every event and log line. `app` names the issues (`<app>: panic`; default `nitrovin`), `service` is the logs' `service.name` (default `nitrovin`). |
+
+Every 500 `serve` answers, a recovered panic included, is a `$exception`
+with its Go stack (`<app>: internal`, `<app>: panic`), and so is the error
+`serve` stops with. Every line it logs also goes to PostHog Logs over
+OTLP/HTTP: its faults as `error`, the MCP server's diagnostics as `warn`
+and the line it starts with as `info`, each carrying the properties. Every
+event and line carries `decoder_version` too. The events are personless.
+Sending runs beside the requests in batches, about once a second, and never
+delays or fails one: a full queue drops (and says so on stderr), and so
+does a send that fails. A bad host or properties stop `serve` from
+starting.
+
 ### stdio (JSON lines)
 
 ```sh

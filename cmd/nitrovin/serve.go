@@ -92,8 +92,20 @@ func listenAddr(addr string, getenv func(string) string) string {
 // serve loads the data and the vocabularies beside it, then listens on
 // addr and serves the API until SIGINT or SIGTERM, when it stops accepting
 // and lets requests in flight finish. A cors origin other than "" lets
-// browsers there call /v1 and /mcp.
-func serve(e *env, addr, cors string) error {
+// browsers there call /v1 and /mcp. With NITROVIN_POSTHOG_TOKEN set
+// (newPostHog), its faults and log lines go to PostHog too, and so does
+// the error it stops with.
+func serve(e *env, addr, cors string) (err error) {
+	ph, err := newPostHog(e.getenv, e.stderr)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			ph.exception(fmt.Sprintf("%T", err), err.Error(), false, nil)
+		}
+		ph.close()
+	}()
 	t, data, err := e.load()
 	if err != nil {
 		return err
@@ -103,11 +115,12 @@ func serve(e *env, addr, cors string) error {
 	if err != nil {
 		return err
 	}
-	logger := log.New(e.stderr, "nitrovin: ", 0)
-	handler, err := newAPI(d, logger, e.stderr, texts, cors)
+	logger := log.New(ph.logTo(e.stderr, severityError), "nitrovin: ", 0)
+	handler, err := newAPI(d, logger, ph.logTo(e.stderr, severityWarn), texts, cors)
 	if err != nil {
 		return err
 	}
+	handler.ph = ph
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err
@@ -122,7 +135,8 @@ func serve(e *env, addr, cors string) error {
 	defer stop()
 	served := make(chan error, 1)
 	go func() { served <- srv.Serve(ln) }()
-	logger.Printf("serving data %s on http://%s", d.Decoder.Info().DataMonth, ln.Addr())
+	log.New(ph.logTo(e.stderr, severityInfo), "nitrovin: ", 0).
+		Printf("serving data %s on http://%s", d.Decoder.Info().DataMonth, ln.Addr())
 
 	select {
 	case err := <-served:
@@ -242,6 +256,8 @@ type api struct {
 	// cors is the origin browsers may call /v1 and /mcp from, * for any;
 	// "" sets no CORS header.
 	cors string
+	// ph receives every internal problem as a $exception; nil sends none.
+	ph *postHog
 }
 
 // newAPI is the API answering with d. The MCP server's diagnostics go to
@@ -554,10 +570,19 @@ func (a *api) ok(w http.ResponseWriter, v any) {
 }
 
 // problem writes p with its status. An internal problem is a fault in
-// nitrovin, so it is logged too.
+// nitrovin, so it is logged too, and sent to PostHog with the stack that
+// raised it: a recovered panic's from the panic.
 func (a *api) problem(w http.ResponseWriter, p *contract.Problem) {
 	if p.Status == http.StatusInternalServerError {
 		a.log.Print(p)
+		if a.ph != nil {
+			frames, panicking := callerStack(0)
+			typ := "internal"
+			if panicking {
+				typ = "panic"
+			}
+			a.ph.exception(typ, p.Detail, true, frames)
+		}
 	}
 	b, err := json.Marshal(p)
 	if err != nil { // a Problem is strings and an int: unreachable
