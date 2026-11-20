@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The fitment card, dark</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+@keyframes caret{ 50% { box-shadow: none; } }
+@keyframes blink{ 50% { opacity: 0; } }
+@keyframes bracket{ from { transform: scaleX(0); } }
+@keyframes draw{ from { stroke-dashoffset: 1; } }
+@keyframes pop{ from { transform: translateY(-8px) scale(.92); opacity: 0; } }
+@keyframes stamp{ from { transform: scale(1.6); opacity: .2; } }
+@property --hang-p{ syntax: "<number>"; inherits: true; initial-value: 0; }
+@keyframes hang-p{ to { --hang-p: 1; } }
+.vp{
+&{color-scheme: light dark}
+&{--bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint: #a9bccb; --card-bg: #ffffff; --link: #0b4fa8; --bad: #b91c1c; --c-wmi: #c8102e; --c-vds: #0b4fa8; --c-check: #5b2d8e; --c-year: #a34c09; --c-plant: #0f6b46; --c-serial: #3d4650; --on: #ffffff; --label-font: "Arial Black", "Helvetica Neue", system-ui, sans-serif; --cell-font: ui-monospace, monospace; --steel: #6f7b86; --steel-dark: #58626c; --on-metal: #232930; --metal: url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0 / 600px 120px, linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc); --emboss: 0 1px 0 rgb(255 255 255 / .9), 0 -1px 1px rgb(0 0 0 / .45); --lift-stuck: 0 2px 3px rgb(8 7 15 / .32); --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 9px rgb(8 7 15 / .38); --raised: inset 0 1px 0 #fff, var(--lift-raised); --pressed: inset 0 3px 4px rgb(8 7 15 / .4); --alu-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .12) 2px 3px), linear-gradient(#8e99a3, #aab4bd); --alu: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .07) 2px 3px), var(--metal); --tape: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .13) 2px 3px), linear-gradient(#30363d, #171a1e); --tape-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .2) 2px 3px), linear-gradient(#0c0e10, #1d2125); --tape-edge: #050607; --tape-lit: #69727c; --on-tape: #f6f8fa; --tape-emboss: -1px -1px 0 rgb(8 7 15 / .67), 1px 1px 0 rgb(255 255 255 / .33), 0 2px 2px rgb(8 7 15 / .53); --stripe-lift: drop-shadow(-1px -1px 0 rgb(255 255 255 / .4)) drop-shadow(1.5px 2px 1px rgb(8 7 15 / .3)); --manila: url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f); --on-manila: #2b2418; --manila-muted: #5c4c2e; --manila-patch: #c39a5c; --manila-bad: #a01414; --gutter: 1rem; font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 1rem var(--gutter) 3rem; color: var(--fg); background: var(--bg)}
+&{--bg: #16222d; --fg: #eef2f5; --muted: #a9b6c2; --line: #45566a; --faint: #3a4a5c; --card-bg: #1f2d3a; --link: #8ec5ff; --bad: #ff8a8a; --c-wmi: #ff6b81; --c-vds: #7db4ff; --c-check: #c9a2ff; --c-year: #ffb067; --c-plant: #6fdcab; --c-serial: #b8c4cf; --on: #14181d; --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 10px rgb(0 0 0 / .7)}
+a{color: var(--link)}
+header, main, #ui-error{max-width: 62rem; margin-inline: auto}
+h2{font-size: 1.1rem; margin: 1.5rem 0 .5rem}
+h3{font: 900 12px var(--label-font); letter-spacing: .08em; text-transform: uppercase; margin: 1.5rem 0 .5rem; padding-bottom: .2rem; border-bottom: 3px solid var(--c-vds)}
+a:is(:focus-visible,.is-fv), button:is(:focus-visible,.is-fv), summary:is(:focus-visible,.is-fv), input:is(:focus-visible,.is-fv), pre:is(:focus-visible,.is-fv), .hang:is(:focus-visible,.is-fv){outline: 3px solid var(--link); outline-offset: 2px}
+.hint{color: var(--muted); font-weight: 400}
+.visually-hidden, .plbl{position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap}
+button{--key: var(--metal); font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase; padding: .45rem .9rem; cursor: pointer; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); background: var(--key); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised)}
+button:is(:active,.is-active), button[aria-pressed=true], &:has(#vins.is-open) .open-vins, &:has(nav.top.is-open) .open-nav{--key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed)}
+input[type=text], input[type=search]{font: inherit; padding: .35rem .5rem; box-sizing: border-box; color: var(--fg); background: var(--card-bg); border: 1px solid var(--steel); border-radius: 2px; box-shadow: inset 0 2px 3px rgb(0 0 0 / .18)}
+label{font-weight: 600}
+table{border-collapse: collapse; width: 100%}
+th, td{text-align: left; vertical-align: top; padding: .3rem .75rem .3rem 0; border-bottom: 1px solid var(--line)}
+thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase; border-bottom: 3px solid var(--steel)}
+.wide, .scroll{overflow-x: auto}
+.g-wmi{--c: var(--c-wmi); --cm: #c8102e}
+.g-vds{--c: var(--c-vds); --cm: #0b4fa8}
+.g-year{--c: var(--c-year); --cm: #b3540a}
+.g-serial{--c: var(--c-serial); --cm: #3d4650}
+.stage{max-width: 62rem; margin-inline: auto}
+.brk{height: 9px; margin: 7px 3px 0; border: 3px solid var(--faint); border-top: 0; border-radius: 0 0 2px 2px}
+.brk.done{border-width: 4px; border-top: 0; border-color: var(--c); filter: var(--stripe-lift)}
+.card::before, .cand-in::before{content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(circle at 50% 14px, transparent 4px, var(--manila-patch) 4.5px 10px, transparent 10.5px), var(--manila); clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%, 0 16px); mask-image: radial-gradient(circle at 50% 14px, transparent 3.5px, #000 4px)}
+.aka{position: relative; isolation: isolate; display: flow-root; margin: 0 16px}
+.aka h2, .more-voc{padding: .2rem .5rem; font: 900 9px/1.2 var(--cell-font); letter-spacing: .14em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 2px solid var(--tape-edge); border-radius: 1px; box-shadow: var(--lift-stuck)}
+.aka h2{position: absolute; top: 6px; left: 0; margin: 0}
+ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
+.stack{position: relative; --under: 0px; --lead: 30px; --prev: 0px; --strip-shadow: var(--lift-stuck); padding-bottom: var(--under)}
+.stack:has(.fan:not(:checked)):not(:has(.seg:is(:target,.is-target))){& .tagplate.below { position: absolute; inset: 0 0 auto; margin: 0; visibility: hidden; } &.d1 { --under: 12px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), var(--lift-stuck); } &.d2 { --under: 22px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), var(--lift-stuck); } &.d3 { --under: 32px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), 0 30px 0 -15px #1e2226, 0 31px 0 -14px var(--tape-edge), var(--lift-stuck); } &.d1 + .stack { --prev: 12px; } &.d2 + .stack { --prev: 22px; } &.d3 + .stack { --prev: 32px; }}
+.tagplate{position: relative; display: grid; grid-template-columns: 130fr 170fr 465fr 255fr; align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape)}
+.tagplate::before{content: ""; grid-area: 1 / 1 / 2 / -1; align-self: stretch; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--strip-shadow)}
+.tagplate > .lbl, .tagplate > .seg{grid-row: 1}
+.tagplate > .lbl{grid-column: 1}
+.tagplate > .g-wmi{grid-column: 2}
+.tagplate > .g-vds{grid-column: 3}
+.tagplate > .g-year{grid-column: 4}
+.tagplate .g-wmi{--cm: #ff6b81}
+.tagplate .g-vds{--cm: #7db4ff}
+.tagplate .g-year{--cm: #ffb067}
+.lbl{align-self: stretch; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 4px; padding: .3rem .5rem .3rem .7rem; border-right: 1px solid rgb(255 255 255 / .18); min-width: 0}
+.tagplate .stamp{display: flex; align-items: center; gap: .35rem; min-width: 0; max-width: 100%; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss)}
+.stamp .voc{min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis}
+.seg{position: relative; align-self: stretch; display: flex; align-items: center; justify-content: center; padding: .35rem .6rem; text-align: center; min-width: 0}
+.seg .w{font: 900 1.05rem/1.2 var(--cell-font); letter-spacing: .08em; text-shadow: var(--tape-emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere}
+.seg::before{content: ""; position: absolute; left: 8px; right: 8px; top: -13px; height: 5px; border: 4px solid var(--c); border-bottom: 0; border-radius: 2px 2px 0 0; filter: var(--stripe-lift)}
+.seg::after{content: ""; position: absolute; left: calc(50% - 2.5px); top: calc(-1px - var(--lead) - var(--prev)); height: calc(var(--lead) + var(--prev) - 12px); border-left: 5px solid var(--c); filter: var(--stripe-lift)}
+.seg:is(:target,.is-target){scroll-margin: 16rem 2rem 4rem}
+.seg:is(:target,.is-target) .w{outline: 2px solid var(--cm); outline-offset: 4px}
+.tagplate .info{position: absolute; right: .45rem; top: 50%; transform: translateY(-50%); width: 1.35rem; height: 1.35rem; padding: 0; border-radius: 50%; font: italic 700 12px Georgia, serif; text-transform: none; letter-spacing: 0}
+.tagplate .info:is(:active,.is-active){transform: translateY(calc(-50% + 2px))}
+.aka:has(.more:not(:checked)) .stack.rest{display: none}
+.more:checked ~ .more-voc .n, .more:not(:checked) ~ .more-voc .less{display: none}}
+.vp-wide{
+.stack:has(.fan:not(:checked)):not(:has(.seg:is(:target,.is-target))){&.d1 { --under: 7px; } &.d2 { --under: 12px; } &.d3 { --under: 17px; }}
+#answer:has(.fitstrip) .aka.done:not(:has(.stack:first-child .tagplate.blank))::before, #answer:has(.fitstrip) .aka.done:not(:has(.stack:first-child .tagplate.blank))::after{content: ""; position: absolute; z-index: -1; top: 40px; bottom: 0; left: calc(52.206% - 2.5px); border-left: 5px solid var(--c-vds); filter: var(--stripe-lift); pointer-events: none}
+#answer:has(.fitstrip) .aka.done:not(:has(.stack:first-child .tagplate.blank))::after{left: calc(87.5% - 2.5px); border-left-color: var(--c-year)}}
+.vp{
+.fit{--rail-x: 3px; position: relative; isolation: isolate; display: flow-root; margin: 0 16px}
+.fitstrip{--lead: 30px; --prev: 0px; display: grid; grid-template-columns: 300fr 465fr 255fr; align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck)}
+.fitstrip .stamp{align-self: stretch; display: flex; align-items: center; min-width: 0; margin: 0; padding: 0 .5rem 0 .7rem; border-right: 1px solid rgb(255 255 255 / .18); font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss)}
+.fitstrip .g-vds{--cm: #7db4ff}
+.fitstrip .g-year{--cm: #ffb067}
+.ptypes{list-style: none; margin: 0; padding: 0}
+.ptype{display: inline-flex; align-items: center; gap: 10px; box-sizing: border-box; min-height: 44px; padding: 0 14px; font: 900 14px var(--cell-font); letter-spacing: .06em; text-decoration: none; color: var(--on-metal); text-shadow: var(--emboss); background: var(--alu); border: 1px solid var(--steel); border-top-color: #fff; border-bottom-color: var(--steel-dark); border-radius: 2px; box-shadow: var(--raised)}
+.ptype .n{padding: 1px 7px; border: 1px solid rgb(35 41 48 / .55); border-radius: 9px; font-size: 11px; text-shadow: none}
+.ptype:is(:active,.is-active), .ptype[aria-current]{transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed)}
+.ptypes .ptype[aria-current]{anchor-name: --fit-part}
+.ptwrap{position: relative; z-index: 3; margin: 30px 0 0}
+.ptwrap .ptypes{--cols: 5; display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 10px}
+.ptypes > li{display: flex; min-width: 0}
+.ptypes > li[hidden]{display: none}
+.ptwrap .ptype{flex: 1; min-width: 0; gap: 8px; padding-inline: 10px}
+.ptwrap .rstamp{padding: 0 6px}
+.ptype .n{flex: none}
+.ptwrap .ptype .nm{min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
+.ptkey #more-types{flex: 1; min-width: 0; min-height: 44px; padding: 0 .5rem}}
+.vp-wide{
+.kn:not(.c5), .ptypes > li.x5, .ptypes > .ptkey:not(.k5){display: none}
+.ptypes > li.s5{grid-column: span 2}}
+.vp-tab{
+.ptwrap .ptypes{--cols: 4}
+.kn:not(.c4), .ptypes > li.x4, .ptypes > .ptkey:not(.k4){display: none}
+.ptypes > li.s4{grid-column: span 2}}
+.vp-phone{
+.ptwrap .ptypes{--cols: 2}
+.kn:not(.c2), .ptypes > li.x2, .ptypes > .ptkey:not(.k2){display: none}
+.ptypes > li.s2{grid-column: span 2}
+.ptypes > .ptf{grid-column: 1 / -1}}
+.vp{
+.ptfind{width: 100%; min-height: 44px}
+.rstamp{display: flex; align-items: center; padding: 0 8px; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-metal); text-shadow: var(--emboss); background: var(--alu); border: 1px solid var(--steel); border-top-color: #fff; border-bottom-color: var(--steel-dark); border-right-color: rgb(35 41 48 / .3); border-radius: 2px 0 0 2px; box-shadow: var(--raised)}
+.rstamp + .ptype{border-left: 0; border-radius: 0 2px 2px 0}
+.rstamp:has(+ .ptype:is(:is(:active,.is-active), [aria-current])){transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed)}
+.ptypes > .ptf{order: -2}
+.ptypes > .ptnone{order: -1; grid-column: 2 / -1; align-self: center; color: var(--muted)}}
+.vp-phone{
+.ptypes > .ptnone{grid-column: 1 / -1}}
+.vp{
+.ptgroups:has(> .ptgroup:only-child:not(:has(.pthead))){grid-template-columns: minmax(0, 1fr)}
+.cands{--gap: 12px; anchor-name: --fit-tags; list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: row dense; gap: 40px var(--gap); margin: 14px 0 0; padding: 40px 0 0 22px}
+.cand{position: relative; min-width: 0}
+.cand-in{position: relative; isolation: isolate; display: flex; flex-direction: column; box-sizing: border-box; height: 100%; padding: 28px .7rem .8rem; overflow-wrap: anywhere; color: var(--on-manila); filter: drop-shadow(0 4px 5px rgb(8 7 15 / .28))}
+.numtape{display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0 .5rem; margin: 0 -.7rem .6rem; padding: .3rem .7rem; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 3px solid var(--tape-edge)}
+.numtape .num{font: 900 18px var(--cell-font); letter-spacing: .06em}
+.numtape .yrs{font: 700 12px var(--cell-font); white-space: nowrap}
+.cand-in dl{display: grid; gap: .35rem; margin: 0}
+.cand-in dt{font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--manila-muted)}
+.cand-in dd{margin: 0; font-weight: 600; line-height: 1.25}
+.marks{display: flex; flex-wrap: wrap; gap: .4rem .5rem; margin: .6rem 0 .8rem}
+.mk{display: inline-flex; align-items: center; gap: 5px; padding: .2rem .45rem; border-radius: 3px; font: 900 10px/1.4 var(--label-font); letter-spacing: .06em; text-transform: uppercase; color: var(--on-manila)}
+.mk svg{flex: none; width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2.2}
+.mk.checked, .mk.redirect, .mk.replaces{border: 2px solid var(--on-manila); transform: rotate(-1.5deg)}
+.mk.text, .mk.none{padding-left: 0; color: var(--manila-muted)}
+.stk{display: flex; align-items: center; justify-content: space-between; gap: 8px; box-sizing: border-box; min-height: 40px; margin: auto -.7rem -.8rem; padding: 0 .7rem; font: 900 12px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-align: left; text-decoration: none; cursor: pointer; color: var(--on-metal); text-shadow: var(--emboss); background: var(--alu); border: 0; border-top: 1px solid #fff; border-bottom: 3px solid var(--steel-dark); border-radius: 0; box-shadow: inset 0 1px 0 rgb(255 255 255 / .6)}
+.stk svg{flex: none; width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5}
+.stk:not(.none):is(:active,.is-active), .stk[aria-expanded=true]{transform: none; padding-top: 2px; background: var(--alu-in); border-bottom-width: 1px; box-shadow: var(--pressed)}
+.rows{position: relative; grid-column: 1 / -1; min-width: 0; margin-top: -24px}
+.rows, .stock-panel, .prows, .vehicles{background: var(--card-bg); border: 2px solid var(--steel); border-radius: 4px; box-shadow: 0 3px 0 var(--steel-dark), 0 8px 16px rgb(0 0 0 / .25)}
+:is(.rows, .prows) .notch{position: absolute; top: -10px; left: calc(50% - 9px); width: 16px; height: 16px; background: var(--card-bg); border-left: 2px solid var(--steel); border-top: 2px solid var(--steel); transform: rotate(45deg)}
+.rows::before, .rows::after{position: absolute; top: -18px; box-sizing: border-box; width: 5px; pointer-events: none; border: 0 solid var(--c-vds); border-left-width: 5px; filter: var(--stripe-lift)}
+.rows::before{z-index: 0; left: calc(var(--rail-x) - 24px); bottom: -16px}
+.rows::after{z-index: 1; left: calc(var(--rail-x) + 9px - 24px); bottom: -27px; border-color: var(--c-year)}
+.stock-cols{display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))}
+.stock-cols:is(:focus-visible,.is-fv), .nonum:is(:focus-visible,.is-fv){outline: 3px solid var(--link); outline-offset: 2px}
+.stock-col{min-width: 0; padding: 12px 16px 14px}
+.stock-col + .stock-col{border-left: 1px solid var(--line)}
+.stock-col :is(h3, h4){display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 .75rem; margin: 0 0 6px; padding: 0; border: 0; font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase}
+.stock-col .asof{font: 400 12px system-ui, sans-serif; letter-spacing: 0; text-transform: none; color: var(--muted)}
+.stock-col table{font-size: 14px}
+.stock-col th, .stock-col td{padding: 7px 8px 7px 0; font-weight: 400; overflow-wrap: anywhere; border-bottom: 0; border-top: 1px solid var(--line)}
+.stock-col th.id{font: 700 13px var(--cell-font); white-space: nowrap}
+.stock-col th + td{white-space: nowrap}
+.stock-col .fk, .stock-none{color: var(--muted)}
+.stock-col .note{display: block; font-size: 12px; color: var(--muted)}
+.stock-col .note strong{color: var(--fg)}
+.cand::before, .cand::after, .hook::before, .hook::after, .rails::before, .rails::after, .risers::before, .risers::after{content: ""; position: absolute; box-sizing: border-box; pointer-events: none; border: 0 solid var(--c-vds); filter: var(--stripe-lift)}
+.cand::before, .hook::before, .rails::before, .risers::before{z-index: 1}
+.cand::after, .hook::after, .rails::after, .risers::after{z-index: 2; border-color: var(--c-year)}
+.cand::before, .cand::after{left: calc(-1 * var(--gap)); right: 0; border-top-width: 5px}
+.cand::before{top: -31px}
+.cand::after{top: -20px}
+.hook{position: absolute; inset: 0; pointer-events: none}
+.hook::before, .hook::after{top: -31px; height: 31px; border-left-width: 5px}
+.hook::before{left: calc(50% - 7px)}
+.hook::after{top: -20px; height: 20px; left: calc(50% + 2px)}
+.cand:nth-child(1 of .cand) .hook{anchor-name: --fit-first}
+.cand:nth-last-child(1 of .cand) .hook{anchor-name: --fit-last}
+.cand:nth-child(1 of .cand):nth-last-child(1 of .cand) .hook{anchor-name: --fit-first, --fit-last}
+.risers::before, .risers::after{top: calc(anchor(--fit-part bottom) + 2px); width: 5px; border-left-width: 5px}
+.risers::before{bottom: calc(anchor(--fit-tags top) - 14px); left: calc(anchor(--fit-part center) - 7px)}
+.risers::after{bottom: calc(anchor(--fit-tags top) - 25px); left: calc(anchor(--fit-part center) + 2px)}
+.rails::before, .rails::after{height: 5px; border-top-width: 5px}
+.rails::before{top: calc(anchor(--fit-tags top) + 9px); left: calc(anchor(--fit-tags left) + var(--rail-x)); right: calc(anchor(--fit-part center) + 2px)}
+.rails::after{top: calc(anchor(--fit-tags top) + 20px); left: calc(anchor(--fit-tags left) + var(--rail-x) + 9px); right: calc(anchor(--fit-part center) - 7px)}}
+:is(.vp-wide,.vp-tab){
+.cand:is(:nth-child(3n of .cand), :nth-last-child(1 of .cand))::before{right: calc(50% + 2px)}
+.cand:is(:nth-child(3n of .cand), :nth-last-child(1 of .cand))::after{right: calc(50% - 7px)}
+.cand:nth-child(3n+1 of .cand)::before{left: calc(var(--rail-x) - 22px)}
+.cand:nth-child(3n+1 of .cand)::after{left: calc(var(--rail-x) + 9px - 22px)}
+.cands:not(:has(> .cand:nth-child(4 of .cand))) > .cand:nth-child(1 of .cand)::before{left: calc(50% - 7px)}
+.cands:not(:has(> .cand:nth-child(4 of .cand))) > .cand:nth-child(1 of .cand)::after{left: calc(50% + 2px)}
+.cands:not(:has(> .cand:nth-child(4 of .cand))) ~ .rails::before{left: calc(min(anchor(--fit-part center), anchor(--fit-first center)) - 7px); right: calc(min(anchor(--fit-part center), anchor(--fit-last center)) + 2px)}
+.cands:not(:has(> .cand:nth-child(4 of .cand))) ~ .rails::after{left: calc(min(anchor(--fit-part center), anchor(--fit-first center)) + 2px); right: calc(min(anchor(--fit-part center), anchor(--fit-last center)) - 7px)}
+.rows.at1 .notch{left: calc((100% - 2 * var(--gap)) / 6 - 9px)}}
+.vp{
+.stems, .runs, .drops, .carry{display: none}
+.fit{--xv: 52.206%; --xy: 87.5%}
+.fitstrip{anchor-name: --fit-strip}}
+.vp{@supports (anchor-name: --a){
+.stems, .runs, .drops{display: inline}
+.stems::before, .stems::after, .runs::before, .runs::after, .drops::before, .drops::after{content: ""; position: absolute; z-index: -1; box-sizing: border-box; pointer-events: none; border: 0 solid var(--c-vds); filter: var(--stripe-lift)}
+.stems::after, .runs::after, .drops::after{border-color: var(--c-year)}
+.stems::before, .stems::after{top: calc(anchor(--fit-strip bottom) - 2px); width: 5px; border-left-width: 5px}
+.stems::before{left: calc(var(--xv) - 2.5px); bottom: calc(anchor(--fit-strip bottom) - 14px)}
+.stems::after{left: calc(var(--xy) - 2.5px); bottom: calc(anchor(--fit-strip bottom) - 23px)}
+.runs::before, .runs::after{height: 5px; border-top-width: 5px}
+.runs::before{top: calc(anchor(--fit-strip bottom) + 9px); left: min(calc(var(--xv) - 2.5px), calc(anchor(--fit-part center) - 7px)); right: min(calc(100% - var(--xv) - 2.5px), calc(anchor(--fit-part center) + 2px))}
+.runs::after{top: calc(anchor(--fit-strip bottom) + 18px); left: min(calc(var(--xy) - 2.5px), calc(anchor(--fit-part center) + 2px)); right: min(calc(100% - var(--xy) - 2.5px), calc(anchor(--fit-part center) - 7px))}
+.drops::before, .drops::after{bottom: calc(anchor(--fit-part top) - 2px); width: 5px; border-left-width: 5px}
+.drops::before{top: calc(anchor(--fit-strip bottom) + 9px); left: calc(anchor(--fit-part center) - 7px)}
+.drops::after{top: calc(anchor(--fit-strip bottom) + 18px); left: calc(anchor(--fit-part center) + 2px)}}}
+.vp{@supports not (anchor-name: --a){
+.rails, .risers{display: none}
+.cands{position: relative}
+.cands::before, .cands::after{content: ""; position: absolute; top: 0; height: 14px; left: var(--rail-x); border-left: 5px solid var(--c-vds); filter: var(--stripe-lift)}
+.cands::after{left: calc(var(--rail-x) + 9px); height: 25px; border-left-color: var(--c-year)}}}
+:is(.vp-wide,.vp-tab){@supports not (anchor-name: --a){
+.cands:not(:has(> .cand:nth-child(4 of .cand)))::before, .cands:not(:has(> .cand:nth-child(4 of .cand)))::after{display: none}
+.cands:not(:has(> .cand:nth-child(4 of .cand))) > .cand:nth-child(1 of .cand) .hook::before, .cands:not(:has(> .cand:nth-child(4 of .cand))) > .cand:nth-child(1 of .cand) .hook::after{top: -40px; height: 40px}}}
+.vp{
+.plabels, .pplate, .punder{display: grid; grid-template-columns: 1fr 2fr}
+.part-form, .part-answer{--plate-pad: 16px}
+.punder{padding: 0 var(--plate-pad)}
+.punder .brk{grid-column: 2; margin-inline: 9px}
+.pleader{display: block; width: 100%; height: 36px; overflow: visible; padding: 0 var(--plate-pad); box-sizing: border-box}
+.pleader path{fill: none; stroke: var(--c); stroke-width: 5; stroke-linejoin: round; filter: var(--stripe-lift)}
+.pleader .narrow{display: none}
+.part{margin: 0 var(--plate-pad)}
+.pgrid{display: grid; grid-template-columns: 1fr 2fr; align-items: start}
+.pcol{margin: 0 12px; min-width: 0}
+.ptag{position: relative}
+.ptag::before{content: ""; position: absolute; z-index: 1; top: 0; left: calc(50% - 2.5px); width: 5px; height: 11px; pointer-events: none; background: var(--c-serial); filter: var(--stripe-lift)}
+.ptag .cand-in{min-height: 12rem}
+.ptag dl{margin-bottom: .8rem}
+.numtape .ptn{font: 700 12px var(--cell-font)}
+.prows{position: relative; margin-top: 18px}
+.prows .stock-cols{grid-template-columns: minmax(0, 1fr)}
+.prows .stock-col + .stock-col{border-left: 0; border-top: 1px solid var(--line)}
+.prows .stock-col table, .prows .stock-col tbody{display: block}
+.prows .stock-col tr{display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; padding: 7px 0; border-top: 1px solid var(--line)}
+.prows .stock-col :is(th, td){padding: 0; border: 0}
+.prows .stock-col td:last-child{grid-column: 1 / -1}
+.vehicles{min-width: 0; margin-left: 12px; padding: .25rem 1rem .75rem; overflow-x: auto}
+.vehicles table{font-size: 14px}
+.vehicles th, .vehicles td{padding: .55rem .9rem .55rem 0}
+.vehicles thead th{padding-top: .75rem; vertical-align: bottom}
+.vehicles thead .hint{display: block; font: 400 12px system-ui, sans-serif; letter-spacing: 0; text-transform: none}
+.vehicles tbody th{font-weight: 700}
+.vehicles .yrs{white-space: nowrap}
+.vn{display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; margin: 0 8px 4px 0}
+.vn .voc{font-size: 12px; color: var(--muted)}
+.vtape{padding: .1rem .45rem; font: 700 13px var(--cell-font); color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 2px solid var(--tape-edge); border-radius: 1px; box-shadow: var(--lift-stuck)}
+.pleader .mid{display: none}}
+:is(.vp-tab,.vp-phone){
+.hang{--col: 12.5rem; --lbl-h: 1.5rem; --gap: 12px; overflow-x: auto; overscroll-behavior-x: contain; margin: .75rem calc(-1 * var(--gutter)) 0; padding: 4px var(--gutter) 14px}
+.hang:is(:focus-visible,.is-fv){outline-offset: -3px}
+.aka{width: calc(6 * var(--col)); margin: 0}
+.aka h2, .more-voc, .tagplate.blank{position: sticky; left: calc(var(--gutter) + 4px)}
+.aka h2{top: auto; width: fit-content; margin: 14px 0 -6px 4px}
+.aka.done h2{position: absolute; left: auto; width: 1px; height: 1px; margin: 0; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap}
+.aka.done .stack:first-child .tagplate:first-child .stamp::before{content: "Also known as ·"; content: "Also known as ·" / ""; flex: none}
+.stack{--lead: calc(var(--gap) + var(--lbl-h) + 16px)}
+.tagplate{grid-template-columns: repeat(6, var(--col)); margin-top: var(--gap); min-height: 0}
+.tagplate::before{grid-area: 2 / 1 / 3 / 5; margin: 0 4px; min-height: 2.9rem}
+.tagplate > .seg{grid-row: 2; margin: 0 4px}
+.tagplate > .g-wmi{grid-column: 1}
+.tagplate > .g-vds{grid-column: 2}
+.tagplate > .g-year{grid-column: 4; padding-inline: 1.9rem}
+.tagplate > .lbl{grid-area: 1 / 1 / 2 / -1; justify-self: start; position: sticky; left: calc(var(--gutter) + 4px); z-index: 1; flex-direction: row; align-items: center; gap: .4rem; box-sizing: border-box; height: var(--lbl-h); max-width: calc(var(--vw) - 2 * var(--gutter) - 8px); margin: 0 0 16px 4px; padding: 0; border: 0}
+.lbl .stamp{flex-wrap: nowrap; padding: .2rem .5rem; background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 2px solid var(--tape-edge); border-radius: 1px; box-shadow: var(--lift-stuck)}
+.seg .w{font-size: .9rem; letter-spacing: .04em}
+.tagplate .info{right: auto; left: calc(4 * var(--col) - 4px - 1.7rem); top: auto; bottom: calc(1.45rem - .675rem); transform: none}
+.tagplate .info:is(:active,.is-active){transform: translateY(2px)}
+.fit{margin: 0}
+.fit{--xv: 25%; --xy: 75%}
+.fitstrip{grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 30px}
+.fitstrip .stamp{grid-column: 1 / -1; padding-block: .35rem; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18)}
+.fitstrip .seg::before, .fitstrip .seg::after{display: none}}
+:is(.vp-tab,.vp-phone){@supports (animation-timeline: --a) and (timeline-scope: --a){
+#answer{timeline-scope: --hang; --col: 12.5rem}
+.hang{scroll-timeline: --hang x}
+.aka.done .stacks{position: relative; --tail: 14px}
+#answer:has(.fitstrip) .aka.done:not(:has(.stack:first-child .tagplate.blank)) :is(.stacks, .stack:has(.tagplate.blank))::before, #answer:has(.fitstrip) .aka.done:not(:has(.stack:first-child .tagplate.blank)) :is(.stacks, .stack:has(.tagplate.blank))::after{content: ""; position: absolute; top: 100%; height: calc(var(--tail) - 2px); left: calc(1.5 * var(--col) - 2.5px); border-left: 5px solid var(--c-vds); filter: var(--stripe-lift); pointer-events: none}
+#answer:has(.fitstrip) .aka.done:not(:has(.stack:first-child .tagplate.blank)) :is(.stacks, .stack:has(.tagplate.blank))::after{left: calc(3.5 * var(--col) - 2.5px); border-left-color: var(--c-year)}
+#answer:not(:has(.stacks > .stack:first-child .tagplate.blank)) .carry{display: block; position: absolute; z-index: -1; top: -3px; left: calc(-1 * var(--gutter)); right: calc(-1 * var(--gutter)); height: 35px; overflow: clip; pointer-events: none; animation: hang-p linear both; animation-timeline: --hang; --w: calc(100% - 2 * var(--gutter)); --r: calc(6 * var(--col) - var(--w)); --mv: calc(var(--gutter) + 1.5 * var(--col) - round(var(--hang-p) * var(--r), .02px)); --my: calc(var(--gutter) + 3.5 * var(--col) - round(var(--hang-p) * var(--r), .02px)); --fv: calc(var(--gutter) + .25 * var(--w)); --fy: calc(var(--gutter) + .75 * var(--w))}
+.carry span{position: absolute; inset: 0}
+.carry span::before, .carry span::after{content: ""; position: absolute; box-sizing: border-box; border: 0 solid var(--c-vds); filter: var(--stripe-lift)}
+.carry span::after{border-color: var(--c-year)}
+.carry span:nth-child(1)::before, .carry span:nth-child(1)::after{top: 0; width: 5px; border-left-width: 5px}
+.carry span:nth-child(1)::before{left: calc(var(--mv) - 2.5px); height: 17px}
+.carry span:nth-child(1)::after{left: calc(var(--my) - 2.5px); height: 26px}
+.carry span:nth-child(2)::before, .carry span:nth-child(2)::after{height: 5px; border-top-width: 5px}
+.carry span:nth-child(2)::before{top: 12px; left: calc(min(var(--mv), var(--fv)) - 2.5px); right: calc(100% - max(var(--mv), var(--fv)) - 2.5px)}
+.carry span:nth-child(2)::after{top: 21px; left: calc(min(var(--my), var(--fy)) - 2.5px); right: calc(100% - max(var(--my), var(--fy)) - 2.5px)}
+.carry span:nth-child(3)::before, .carry span:nth-child(3)::after{bottom: 0; width: 5px; border-left-width: 5px}
+.carry span:nth-child(3)::before{top: 12px; left: calc(var(--fv) - 2.5px)}
+.carry span:nth-child(3)::after{top: 21px; left: calc(var(--fy) - 2.5px)}}}
+:is(.vp-tab,.vp-phone){
+.hang{scroll-behavior: smooth}}
+.vp-phone{
+&{--gutter: .5rem}
+.hang, #answer{--col: 9.5rem}
+.seg .w{font-size: .8rem; letter-spacing: .03em}
+.aka:has(.more:not(:checked)) .stack.third{display: none}
+.cands{grid-template-columns: none; grid-template-rows: auto auto; grid-auto-flow: column; grid-auto-columns: var(--tag); gap: 0 var(--gap); margin-inline: calc(-1 * var(--gutter)); padding: 40px var(--gutter) 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter)}
+.fit{--tag: calc(100% - 2.5rem)}
+.cands::before, .cands::after{content: none}
+.cands:is(:focus-visible,.is-fv){outline: 3px solid var(--link); outline-offset: -3px}
+.cand{grid-row: 1; scroll-snap-align: start}
+.cand:has(+ .rows){scroll-initial-target: nearest}
+.cand:nth-child(1 of .cand)::before{left: calc(50% - 7px)}
+.cand:nth-child(1 of .cand)::after{left: calc(50% + 2px)}
+.cand:nth-last-child(1 of .cand)::before{right: calc(50% + 2px)}
+.cand:nth-last-child(1 of .cand)::after{right: calc(50% - 7px)}
+.rails::before{left: min(calc(anchor(--fit-part center) - 7px), calc(var(--tag) / 2 - 7px)); right: min(calc(anchor(--fit-part center) + 2px), calc(var(--tag) / 2 + 2px))}
+.rails::after{left: min(calc(anchor(--fit-part center) + 2px), calc(var(--tag) / 2 + 2px)); right: min(calc(anchor(--fit-part center) - 7px), calc(var(--tag) / 2 - 7px))}
+.rows{grid-row: 2; grid-column: auto; margin-top: 16px}
+.rows .stock-cols:not(.one){grid-template-columns: minmax(0, 1fr)}
+.rows .stock-col + .stock-col{border-left: 0; border-top: 1px solid var(--line)}
+.stock-cols:not(.one){grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: calc(100% - 2.5rem); overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory}
+.rows .stock-cols:not(.one){grid-auto-flow: row; grid-auto-columns: auto; overflow-x: visible}
+.stock-col{scroll-snap-align: start}
+.stock-col table, .stock-col tbody{display: block}
+.stock-col tr{display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; padding: 7px 0; border-top: 1px solid var(--line)}
+.stock-col th, .stock-col td{padding: 0; border: 0}
+.stock-col td:last-child{grid-column: 1 / -1}
+.ptype{font-size: 13px; padding-inline: 10px}}
+.sheet{--bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint: #a9bccb; --card-bg: #ffffff; --link: #0b4fa8; --bad: #b91c1c; --c-wmi: #c8102e; --c-vds: #0b4fa8; --c-check: #5b2d8e; --c-year: #a34c09; --c-plant: #0f6b46; --c-serial: #3d4650; --on: #ffffff; --label-font: "Arial Black", "Helvetica Neue", system-ui, sans-serif; --cell-font: ui-monospace, monospace; --steel: #6f7b86; --steel-dark: #58626c; --on-metal: #232930; --metal: url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0 / 600px 120px, linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc); --emboss: 0 1px 0 rgb(255 255 255 / .9), 0 -1px 1px rgb(0 0 0 / .45); --lift-stuck: 0 2px 3px rgb(8 7 15 / .32); --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 9px rgb(8 7 15 / .38); --raised: inset 0 1px 0 #fff, var(--lift-raised); --pressed: inset 0 3px 4px rgb(8 7 15 / .4); --alu-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .12) 2px 3px), linear-gradient(#8e99a3, #aab4bd); --alu: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .07) 2px 3px), var(--metal); --tape: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .13) 2px 3px), linear-gradient(#30363d, #171a1e); --tape-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .2) 2px 3px), linear-gradient(#0c0e10, #1d2125); --tape-edge: #050607; --tape-lit: #69727c; --on-tape: #f6f8fa; --tape-emboss: -1px -1px 0 rgb(8 7 15 / .67), 1px 1px 0 rgb(255 255 255 / .33), 0 2px 2px rgb(8 7 15 / .53); --stripe-lift: drop-shadow(-1px -1px 0 rgb(255 255 255 / .4)) drop-shadow(1.5px 2px 1px rgb(8 7 15 / .3)); --manila: url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f); --on-manila: #2b2418; --manila-muted: #5c4c2e; --manila-patch: #c39a5c; --manila-bad: #a01414; --gutter: 1rem; font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 1rem var(--gutter) 3rem; color: var(--fg); background: var(--bg);--bg: #16222d; --fg: #eef2f5; --muted: #a9b6c2; --line: #45566a; --faint: #3a4a5c; --card-bg: #1f2d3a; --link: #8ec5ff; --bad: #ff8a8a; --c-wmi: #ff6b81; --c-vds: #7db4ff; --c-check: #c9a2ff; --c-year: #ffb067; --c-plant: #6fdcab; --c-serial: #b8c4cf; --on: #14181d; --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 10px rgb(0 0 0 / .7);--gutter: .5rem;}
+.sheet{box-sizing:border-box;margin:0;padding:40px;display:flex;flex-direction:column;gap:26px}
+.sheet .sh-h1{margin:0;font:900 21px/1.2 var(--label-font);letter-spacing:.04em;text-transform:uppercase;border:0;padding:0}
+.sheet .sh-intro{margin:6px 0 0;color:var(--muted);max-width:820px}
+.sheet .sh-h2{margin:0;padding-bottom:4px;font:900 14px/1.2 var(--label-font);letter-spacing:.08em;text-transform:uppercase;border-bottom:3px solid var(--steel)}
+.sheet .sh-cap{margin:0 0 10px;font:900 11px/1.3 var(--label-font);letter-spacing:.08em;text-transform:uppercase;color:var(--fg)}
+.sheet .sh-cap span{font:400 13px/1.3 system-ui,sans-serif;letter-spacing:0;text-transform:none;color:var(--muted);margin-left:10px}
+.sheet .sh-row{display:flex;gap:40px;align-items:flex-start}
+.sheet .vp{box-sizing:border-box;position:relative;margin:0;padding:0;min-height:0;background:none;anchor-scope:all;--vh:900px;overflow:clip;overflow-clip-margin:24px}
+.sheet .vp.pad{padding:0 var(--gutter)}
+.sheet .vp header,.sheet .vp main{margin-bottom:0}
+.sheet .vp .popover.is-open{display:block !important;position:relative !important;inset:auto !important;margin:0 !important;max-height:none !important;overflow:visible !important}
+
+</style>
+</helmet>
+<div class="root sheet" data-scheme="dark" style="width: 1280px; height: 3610px; color: var(--fg); background: var(--bg)">
+<div><h1 class="sh-h1">The fitment card</h1><p class="sh-intro">The parts that fit: a strip naming the catalog's vehicle, the part types on the second tape, and the candidates as manila tags on rails that come down from the pressed part type. A candidate's stock strip opens its shelf and yard rows.</p></div>
+<section>
+<p class="sh-cap">Part types, candidates, marks and stock <span>Alternator pressed; the first candidate's stock open under its row.</span></p>
+<div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px">
+
+<main id="ui-main" class="is-fw">
+<div id="answer" class="stage" data-vin="1FTEW1EG7FFA12345" data-label="2015 FORD F-150" data-complete="" data-done="wmi vds check year plant serial " data-part="alternator" data-number="DEMO-1001">
+<div class="hang" role="region" aria-label="Cards and names" tabindex="0">
+<section class="aka done" id="aka" aria-labelledby="aka-h">
+<h2 id="aka-h">Also known as</h2>
+<ol class="stacks">
+<li class="stack d0">
+<ol class="tags">
+<li class="tagplate">
+<span class="lbl"><span class="stamp" title="demo-vehicles"><span class="voc">demo-vehicles</span></span>
+</span>
+<span class="seg g-wmi" title="From the maker, positions 1–3"><span class="w">Ford</span></span>
+<span class="seg g-vds" title="From the vehicle, positions 4–8"><span class="w">F150</span></span>
+<span class="seg g-year" title="The years this name holds for"><span class="w">any year</span></span>
+<button class="info" aria-label="How Ford F150 was reached" type="button">i</button>
+</li>
+</ol>
+</li>
+</ol>
+</section>
+</div>
+<section class="fit" id="fit" aria-labelledby="fit-h">
+<span class="carry" aria-hidden="true"><span></span><span></span><span></span></span>
+<div class="fitstrip">
+<h2 id="fit-h" class="stamp">Parts that fit · demo-catalog</h2>
+<span class="seg g-vds"><span class="w">F150</span></span>
+<span class="seg g-year"><span class="w">2015</span></span>
+</div>
+<div class="ptwrap live" data-spine="demo-part-types" data-fit="{&quot;tape&quot;:46,&quot;digit&quot;:7.7,&quot;stamp&quot;:56,&quot;slack&quot;:2,&quot;grids&quot;:[{&quot;cols&quot;:5,&quot;cell&quot;:171,&quot;char&quot;:9.52,&quot;lead&quot;:1},{&quot;cols&quot;:4,&quot;cell&quot;:164,&quot;char&quot;:9.52,&quot;lead&quot;:1},{&quot;cols&quot;:3,&quot;cell&quot;:164,&quot;char&quot;:9.52,&quot;lead&quot;:1},{&quot;cols&quot;:2,&quot;cell&quot;:167,&quot;char&quot;:8.84,&quot;lead&quot;:0}]}">
+<ul class="ptypes" id="ptypes" aria-label="Part types">
+<li class="ptf"><label class="visually-hidden" for="ptf-strip">Filter part types</label><input type="search" id="ptf-strip" class="ptfind" placeholder="Filter part types" aria-controls="ptypes" value=""></li>
+<li data-part="alternator" data-at="0" class="s5 s4 s3 s2"><span class="rstamp">Recent</span><a class="ptype swap" href="#" aria-current="true"><span class="nm">Alternator</span> <span class="n">3<span class="visually-hidden"> candidates</span></span></a></li><li data-part="brake-rotor-rear" class="s5 s4 s3 s2 x2" data-at="2"><span class="rstamp">Recent</span><a class="ptype swap" href="#"><span class="nm">Brake Rotor, Rear</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="brake-rotor-front" class="s5 s4 s3 s2 x2 x4 x3" data-at="1"><a class="ptype swap" href="#"><span class="nm">Brake Rotor, Front</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="mirror" class="x3 x2 x4" data-at="3"><a class="ptype swap" href="#"><span class="nm">Door Mirror</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li data-part="fog-lamp" class="x4 x3 x2" data-at="4"><a class="ptype swap" href="#"><span class="nm">Fog Lamp</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="headlamp" class="s5 s4 x4 s3 x3 s2 x2 x5" data-at="5"><a class="ptype swap" href="#"><span class="nm">Headlamp Assembly</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li data-part="starter" class="s5 x5 s4 x4 s3 x3 s2 x2" data-at="6"><a class="ptype swap" href="#"><span class="nm">Starter Motor</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="transfer-case" class="s5 x5 s4 x4 s3 x3 s2 x2" data-at="7"><a class="ptype swap" href="#"><span class="nm">Transfer Case</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li class="ptnone" hidden=""></li>
+<li class="ptkey k5 k4 k3 k2"><button id="more-types" type="button"><span class="kn c5">3 more<span class="visually-hidden"> part types</span></span><span class="kn c4">6 more<span class="visually-hidden"> part types</span></span><span class="kn c3">6 more<span class="visually-hidden"> part types</span></span><span class="kn c2">7 more<span class="visually-hidden"> part types</span></span></button></li>
+</ul>
+</div>
+<span class="stems" aria-hidden="true"></span><span class="runs" aria-hidden="true"></span><span class="drops" aria-hidden="true"></span>
+<ol class="cands" aria-label="Candidates: Alternator" tabindex="0">
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1001</b> <span class="yrs">2015–2017</span></p>
+<dl>
+<div><dt>Options</dt><dd>3.5L V6 EcoBoost (VIN G, 8th digit)</dd></div>
+<div><dt>Note</dt><dd>demo: 200 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-1" href="#" aria-expanded="true" aria-controls="stock-rows"><span>Stock · 2 shelf · 2 yard<span class="visually-hidden">, DEMO-1001</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 10l5-5 5 5"></path></svg></a>
+</div></li>
+<li class="rows at1 more-narrow" id="stock-rows"><span class="notch" aria-hidden="true"></span>
+<div class="stock-cols" id="stock-region" role="region" aria-label="Stock of DEMO-1001" tabindex="0">
+<div class="stock-col">
+<h3 id="stock-shelf-h"><span>On the shelf · 2</span> <span class="asof">as of 2026-11-12</span></h3>
+<table><tbody>
+<tr><th scope="row" class="id">DEMO-S-01</th><td>demo-north</td><td><span class="fk">stock_number</span> DEMO-S-01 · <span class="fk">condition</span> demo: used, grade A</td></tr>
+<tr><th scope="row" class="id">DEMO-S-02</th><td>demo-south</td><td><span class="fk">stock_number</span> DEMO-S-02 · <span class="fk">condition</span> demo: used, grade B; tagged with its old number<span class="note">Tagged with a retired number, DEMO-0901</span></td></tr>
+</tbody></table>
+</div>
+<div class="stock-col">
+<h3 id="stock-yard-h"><span>In the yard · 2</span> <span class="asof">as of 2026-11-12</span></h3>
+<table><tbody>
+<tr><th scope="row" class="id">DEMO-Y-01</th><td>demo-north</td><td><span class="fk">stock_number</span> DEMO-Y-01 · <span class="fk">color</span> demo: white · <span class="fk">row</span> D-1<span class="note"><strong>This VIN</strong>: the vehicle being looked up</span></td></tr>
+<tr><th scope="row" class="id">DEMO-Y-02</th><td>demo-south</td><td><span class="fk">stock_number</span> DEMO-Y-02 · <span class="fk">color</span> demo: blue · <span class="fk">row</span> D-1</td></tr>
+</tbody></table>
+</div>
+</div>
+</li>
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1002</b> <span class="yrs">2015–2020</span></p>
+<dl>
+<div><dt>Options</dt><dd>5.0L V8 (VIN F, 8th digit)</dd></div>
+<div><dt>Note</dt><dd>demo: 200 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-2" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1002</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
+</div></li>
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1003</b> <span class="yrs">2015–2020</span></p>
+<dl>
+<div><dt>Options</dt><dd>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</dd></div>
+<div><dt>Note</dt><dd>demo: 240 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-3" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1003</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
+</div></li>
+</ol>
+<span class="rails" aria-hidden="true"></span><span class="risers" aria-hidden="true"></span>
+</section>
+</div>
+</main>
+
+</div>
+</section>
+<section>
+<p class="sh-cap">By redirect <span>One tag: the rails run from the riser to its eyelet. The mark names the part type the catalog lists it under.</span></p>
+<div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px">
+
+<main id="ui-main" class="is-fw">
+<div id="answer" class="stage" data-vin="1GCVKREC6EZ123456" data-label="2014 CHEVROLET Silverado" data-complete="" data-done="wmi vds check year plant serial " data-part="brake-rotor-rear">
+<div class="hang" role="region" aria-label="Cards and names" tabindex="0">
+<section class="aka done" id="aka" aria-labelledby="aka-h">
+<h2 id="aka-h">Also known as</h2>
+<ol class="stacks">
+<li class="stack d0">
+<ol class="tags">
+<li class="tagplate">
+<span class="lbl"><span class="stamp" title="demo-vehicles"><span class="voc">demo-vehicles</span></span>
+</span>
+<span class="seg g-wmi" title="From the maker, positions 1–3"><span class="w">Chevrolet</span></span>
+<span class="seg g-vds" title="From the vehicle, positions 4–8"><span class="w">Silverado 1500</span></span>
+<span class="seg g-year" title="The years this name holds for"><span class="w">any year</span></span>
+<button class="info" aria-label="How Chevrolet Silverado 1500 was reached" type="button">i</button>
+</li>
+</ol>
+</li>
+</ol>
+</section>
+</div>
+<section class="fit" id="fit" aria-labelledby="fit-h">
+<span class="carry" aria-hidden="true"><span></span><span></span><span></span></span>
+<div class="fitstrip">
+<h2 id="fit-h" class="stamp">Parts that fit · demo-catalog</h2>
+<span class="seg g-vds"><span class="w">Silverado 1500</span></span>
+<span class="seg g-year"><span class="w">2014</span></span>
+</div>
+<div class="ptwrap live" data-spine="demo-part-types" data-fit="{&quot;tape&quot;:46,&quot;digit&quot;:7.7,&quot;stamp&quot;:56,&quot;slack&quot;:2,&quot;grids&quot;:[{&quot;cols&quot;:5,&quot;cell&quot;:171,&quot;char&quot;:9.52,&quot;lead&quot;:1},{&quot;cols&quot;:4,&quot;cell&quot;:164,&quot;char&quot;:9.52,&quot;lead&quot;:1},{&quot;cols&quot;:3,&quot;cell&quot;:164,&quot;char&quot;:9.52,&quot;lead&quot;:1},{&quot;cols&quot;:2,&quot;cell&quot;:167,&quot;char&quot;:8.84,&quot;lead&quot;:0}]}">
+<ul class="ptypes" id="ptypes" aria-label="Part types">
+<li class="ptf"><label class="visually-hidden" for="ptf-strip">Filter part types</label><input type="search" id="ptf-strip" class="ptfind" placeholder="Filter part types" aria-controls="ptypes" value=""></li>
+<li data-part="brake-rotor-rear" class="s5 s4 s3 s2" data-at="0"><span class="rstamp">Recent</span><a class="ptype swap" href="#" aria-current="true"><span class="nm">Brake Rotor, Rear</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="alternator" data-at="1" class="s5 s4 s3 s2 x2"><span class="rstamp">Recent</span><a class="ptype swap" href="#"><span class="nm">Alternator</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="brake-rotor-front" class="s5 s4 s3 s2 x2 x4 x3" data-at="2"><a class="ptype swap" href="#"><span class="nm">Brake Rotor, Front</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="transfer-case" class="s5 s4 s3 x3 s2 x2 x4" data-at="3"><a class="ptype swap" href="#"><span class="nm">Transfer Case</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li class="ptnone" hidden=""></li>
+<li class="ptkey k3 k2 k4"><button id="more-types" type="button"><span class="kn c5">0 more<span class="visually-hidden"> part types</span></span><span class="kn c4">2 more<span class="visually-hidden"> part types</span></span><span class="kn c3">2 more<span class="visually-hidden"> part types</span></span><span class="kn c2">3 more<span class="visually-hidden"> part types</span></span></button></li>
+</ul>
+</div>
+<span class="stems" aria-hidden="true"></span><span class="runs" aria-hidden="true"></span><span class="drops" aria-hidden="true"></span>
+<ol class="cands" aria-label="Candidates: Brake Rotor, Rear" tabindex="0">
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-2101</b> <span class="yrs">2014–2018</span></p>
+<dl>
+</dl>
+<p class="marks"><span class="mk checked"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 7.5l3.5 3.5L12 3.5"></path></svg>Checked · Series</span>
+<span class="mk redirect"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 7h9M7.5 3.5L11 7l-3.5 3.5"></path></svg>By redirect · Brake Rotor, Front</span>
+</p>
+<a class="stk swap" id="stk-1" href="#" aria-expanded="false"><span>Stock · 0 shelf · 1 yard<span class="visually-hidden">, DEMO-2101</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
+</div></li>
+</ol>
+<span class="rails" aria-hidden="true"></span><span class="risers" aria-hidden="true"></span>
+</section>
+</div>
+</main>
+
+</div>
+</section>
+<div class="sh-row">
+<section>
+<p class="sh-cap">Narrow <span>Three tags across down to 34rem. The names scroll; the strip does not.</span></p>
+<div class="vp vp-tab pad" style="width: 768px; --vw: 768px">
+
+<main id="ui-main" class="is-fw">
+<div id="answer" class="stage" data-vin="1FTEW1EG7FFA12345" data-label="2015 FORD F-150" data-complete="" data-done="wmi vds check year plant serial " data-part="alternator">
+<div class="hang" role="region" aria-label="Cards and names" tabindex="0">
+<section class="aka done" id="aka" aria-labelledby="aka-h">
+<h2 id="aka-h">Also known as</h2>
+<ol class="stacks">
+<li class="stack d0">
+<ol class="tags">
+<li class="tagplate">
+<span class="lbl"><span class="stamp" title="demo-vehicles"><span class="voc">demo-vehicles</span></span>
+</span>
+<span class="seg g-wmi" title="From the maker, positions 1–3"><span class="w">Ford</span></span>
+<span class="seg g-vds" title="From the vehicle, positions 4–8"><span class="w">F150</span></span>
+<span class="seg g-year" title="The years this name holds for"><span class="w">any year</span></span>
+<button class="info" aria-label="How Ford F150 was reached" type="button">i</button>
+</li>
+</ol>
+</li>
+</ol>
+</section>
+</div>
+<section class="fit" id="fit" aria-labelledby="fit-h">
+<span class="carry" aria-hidden="true"><span></span><span></span><span></span></span>
+<div class="fitstrip">
+<h2 id="fit-h" class="stamp">Parts that fit · demo-catalog</h2>
+<span class="seg g-vds"><span class="w">F150</span></span>
+<span class="seg g-year"><span class="w">2015</span></span>
+</div>
+<div class="ptwrap live" data-spine="demo-part-types" data-fit="{&quot;tape&quot;:46,&quot;digit&quot;:7.7,&quot;stamp&quot;:56,&quot;slack&quot;:2,&quot;grids&quot;:[{&quot;cols&quot;:5,&quot;cell&quot;:171,&quot;char&quot;:9.52,&quot;lead&quot;:1},{&quot;cols&quot;:4,&quot;cell&quot;:164,&quot;char&quot;:9.52,&quot;lead&quot;:1},{&quot;cols&quot;:3,&quot;cell&quot;:164,&quot;char&quot;:9.52,&quot;lead&quot;:1},{&quot;cols&quot;:2,&quot;cell&quot;:167,&quot;char&quot;:8.84,&quot;lead&quot;:0}]}">
+<ul class="ptypes" id="ptypes" aria-label="Part types">
+<li class="ptf"><label class="visually-hidden" for="ptf-strip">Filter part types</label><input type="search" id="ptf-strip" class="ptfind" placeholder="Filter part types" aria-controls="ptypes" value=""></li>
+<li data-part="alternator" data-at="0" class="s5 s4 s3 s2"><span class="rstamp">Recent</span><a class="ptype swap" href="#" aria-current="true"><span class="nm">Alternator</span> <span class="n">3<span class="visually-hidden"> candidates</span></span></a></li><li data-part="brake-rotor-rear" class="s5 s4 s3 s2 x2" data-at="2"><span class="rstamp">Recent</span><a class="ptype swap" href="#"><span class="nm">Brake Rotor, Rear</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="brake-rotor-front" class="s5 s4 s3 s2 x2 x4 x3" data-at="1"><a class="ptype swap" href="#"><span class="nm">Brake Rotor, Front</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="mirror" class="x3 x2 x4" data-at="3"><a class="ptype swap" href="#"><span class="nm">Door Mirror</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li data-part="fog-lamp" class="x4 x3 x2" data-at="4"><a class="ptype swap" href="#"><span class="nm">Fog Lamp</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="headlamp" class="s5 s4 x4 s3 x3 s2 x2 x5" data-at="5"><a class="ptype swap" href="#"><span class="nm">Headlamp Assembly</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li data-part="starter" class="s5 x5 s4 x4 s3 x3 s2 x2" data-at="6"><a class="ptype swap" href="#"><span class="nm">Starter Motor</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="transfer-case" class="s5 x5 s4 x4 s3 x3 s2 x2" data-at="7"><a class="ptype swap" href="#"><span class="nm">Transfer Case</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li class="ptnone" hidden=""></li>
+<li class="ptkey k5 k4 k3 k2"><button id="more-types" type="button"><span class="kn c5">3 more<span class="visually-hidden"> part types</span></span><span class="kn c4">6 more<span class="visually-hidden"> part types</span></span><span class="kn c3">6 more<span class="visually-hidden"> part types</span></span><span class="kn c2">7 more<span class="visually-hidden"> part types</span></span></button></li>
+</ul>
+</div>
+<span class="stems" aria-hidden="true"></span><span class="runs" aria-hidden="true"></span><span class="drops" aria-hidden="true"></span>
+<ol class="cands" aria-label="Candidates: Alternator" tabindex="0">
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1001</b> <span class="yrs">2015–2017</span></p>
+<dl>
+<div><dt>Options</dt><dd>3.5L V6 EcoBoost (VIN G, 8th digit)</dd></div>
+<div><dt>Note</dt><dd>demo: 200 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-1" href="#" aria-expanded="false"><span>Stock · 2 shelf · 2 yard<span class="visually-hidden">, DEMO-1001</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
+</div></li>
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1002</b> <span class="yrs">2015–2020</span></p>
+<dl>
+<div><dt>Options</dt><dd>5.0L V8 (VIN F, 8th digit)</dd></div>
+<div><dt>Note</dt><dd>demo: 200 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-2" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1002</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
+</div></li>
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1003</b> <span class="yrs">2015–2020</span></p>
+<dl>
+<div><dt>Options</dt><dd>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</dd></div>
+<div><dt>Note</dt><dd>demo: 240 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-3" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1003</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
+</div></li>
+</ol>
+<span class="rails" aria-hidden="true"></span><span class="risers" aria-hidden="true"></span>
+</section>
+</div>
+</main>
+
+</div>
+</section>
+<section>
+<p class="sh-cap">Phone <span>One sideways row of tags; open rows sit under their tag, shelf over yard.</span></p>
+<div class="vp vp-phone pad" style="width: 390px; --vw: 390px">
+
+<main id="ui-main" class="is-fw">
+<div id="answer" class="stage" data-vin="1FTEW1EG7FFA12345" data-label="2015 FORD F-150" data-complete="" data-done="wmi vds check year plant serial " data-part="alternator" data-number="DEMO-1001">
+<div class="hang" role="region" aria-label="Cards and names" tabindex="0">
+<section class="aka done" id="aka" aria-labelledby="aka-h">
+<h2 id="aka-h">Also known as</h2>
+<ol class="stacks">
+<li class="stack d0">
+<ol class="tags">
+<li class="tagplate">
+<span class="lbl"><span class="stamp" title="demo-vehicles"><span class="voc">demo-vehicles</span></span>
+</span>
+<span class="seg g-wmi" title="From the maker, positions 1–3"><span class="w">Ford</span></span>
+<span class="seg g-vds" title="From the vehicle, positions 4–8"><span class="w">F150</span></span>
+<span class="seg g-year" title="The years this name holds for"><span class="w">any year</span></span>
+<button class="info" aria-label="How Ford F150 was reached" type="button">i</button>
+</li>
+</ol>
+</li>
+</ol>
+</section>
+</div>
+<section class="fit" id="fit" aria-labelledby="fit-h">
+<span class="carry" aria-hidden="true"><span></span><span></span><span></span></span>
+<div class="fitstrip">
+<h2 id="fit-h" class="stamp">Parts that fit · demo-catalog</h2>
+<span class="seg g-vds"><span class="w">F150</span></span>
+<span class="seg g-year"><span class="w">2015</span></span>
+</div>
+<div class="ptwrap live" data-spine="demo-part-types" data-fit="{&quot;tape&quot;:46,&quot;digit&quot;:7.7,&quot;stamp&quot;:56,&quot;slack&quot;:2,&quot;grids&quot;:[{&quot;cols&quot;:5,&quot;cell&quot;:171,&quot;char&quot;:9.52,&quot;lead&quot;:1},{&quot;cols&quot;:4,&quot;cell&quot;:164,&quot;char&quot;:9.52,&quot;lead&quot;:1},{&quot;cols&quot;:3,&quot;cell&quot;:164,&quot;char&quot;:9.52,&quot;lead&quot;:1},{&quot;cols&quot;:2,&quot;cell&quot;:167,&quot;char&quot;:8.84,&quot;lead&quot;:0}]}">
+<ul class="ptypes" id="ptypes" aria-label="Part types">
+<li class="ptf"><label class="visually-hidden" for="ptf-strip">Filter part types</label><input type="search" id="ptf-strip" class="ptfind" placeholder="Filter part types" aria-controls="ptypes" value=""></li>
+<li data-part="alternator" data-at="0" class="s5 s4 s3 s2"><span class="rstamp">Recent</span><a class="ptype swap" href="#" aria-current="true"><span class="nm">Alternator</span> <span class="n">3<span class="visually-hidden"> candidates</span></span></a></li><li data-part="brake-rotor-rear" class="s5 s4 s3 s2 x2" data-at="2"><span class="rstamp">Recent</span><a class="ptype swap" href="#"><span class="nm">Brake Rotor, Rear</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="brake-rotor-front" class="s5 s4 s3 s2 x2 x4 x3" data-at="1"><a class="ptype swap" href="#"><span class="nm">Brake Rotor, Front</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="mirror" class="x3 x2 x4" data-at="3"><a class="ptype swap" href="#"><span class="nm">Door Mirror</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li data-part="fog-lamp" class="x4 x3 x2" data-at="4"><a class="ptype swap" href="#"><span class="nm">Fog Lamp</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="headlamp" class="s5 s4 x4 s3 x3 s2 x2 x5" data-at="5"><a class="ptype swap" href="#"><span class="nm">Headlamp Assembly</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li data-part="starter" class="s5 x5 s4 x4 s3 x3 s2 x2" data-at="6"><a class="ptype swap" href="#"><span class="nm">Starter Motor</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="transfer-case" class="s5 x5 s4 x4 s3 x3 s2 x2" data-at="7"><a class="ptype swap" href="#"><span class="nm">Transfer Case</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li class="ptnone" hidden=""></li>
+<li class="ptkey k5 k4 k3 k2"><button id="more-types" type="button"><span class="kn c5">3 more<span class="visually-hidden"> part types</span></span><span class="kn c4">6 more<span class="visually-hidden"> part types</span></span><span class="kn c3">6 more<span class="visually-hidden"> part types</span></span><span class="kn c2">7 more<span class="visually-hidden"> part types</span></span></button></li>
+</ul>
+</div>
+<span class="stems" aria-hidden="true"></span><span class="runs" aria-hidden="true"></span><span class="drops" aria-hidden="true"></span>
+<ol class="cands" aria-label="Candidates: Alternator" tabindex="0">
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1001</b> <span class="yrs">2015–2017</span></p>
+<dl>
+<div><dt>Options</dt><dd>3.5L V6 EcoBoost (VIN G, 8th digit)</dd></div>
+<div><dt>Note</dt><dd>demo: 200 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-1" href="#" aria-expanded="true" aria-controls="stock-rows"><span>Stock · 2 shelf · 2 yard<span class="visually-hidden">, DEMO-1001</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 10l5-5 5 5"></path></svg></a>
+</div></li>
+<li class="rows at1 more-narrow" id="stock-rows"><span class="notch" aria-hidden="true"></span>
+<div class="stock-cols" id="stock-region" role="region" aria-label="Stock of DEMO-1001" tabindex="0">
+<div class="stock-col">
+<h3 id="stock-shelf-h"><span>On the shelf · 2</span> <span class="asof">as of 2026-11-12</span></h3>
+<table><tbody>
+<tr><th scope="row" class="id">DEMO-S-01</th><td>demo-north</td><td><span class="fk">stock_number</span> DEMO-S-01 · <span class="fk">condition</span> demo: used, grade A</td></tr>
+<tr><th scope="row" class="id">DEMO-S-02</th><td>demo-south</td><td><span class="fk">stock_number</span> DEMO-S-02 · <span class="fk">condition</span> demo: used, grade B; tagged with its old number<span class="note">Tagged with a retired number, DEMO-0901</span></td></tr>
+</tbody></table>
+</div>
+<div class="stock-col">
+<h3 id="stock-yard-h"><span>In the yard · 2</span> <span class="asof">as of 2026-11-12</span></h3>
+<table><tbody>
+<tr><th scope="row" class="id">DEMO-Y-01</th><td>demo-north</td><td><span class="fk">stock_number</span> DEMO-Y-01 · <span class="fk">color</span> demo: white · <span class="fk">row</span> D-1<span class="note"><strong>This VIN</strong>: the vehicle being looked up</span></td></tr>
+<tr><th scope="row" class="id">DEMO-Y-02</th><td>demo-south</td><td><span class="fk">stock_number</span> DEMO-Y-02 · <span class="fk">color</span> demo: blue · <span class="fk">row</span> D-1</td></tr>
+</tbody></table>
+</div>
+</div>
+</li>
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1002</b> <span class="yrs">2015–2020</span></p>
+<dl>
+<div><dt>Options</dt><dd>5.0L V8 (VIN F, 8th digit)</dd></div>
+<div><dt>Note</dt><dd>demo: 200 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-2" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1002</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
+</div></li>
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1003</b> <span class="yrs">2015–2020</span></p>
+<dl>
+<div><dt>Options</dt><dd>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</dd></div>
+<div><dt>Note</dt><dd>demo: 240 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-3" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1003</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
+</div></li>
+</ol>
+<span class="rails" aria-hidden="true"></span><span class="risers" aria-hidden="true"></span>
+</section>
+</div>
+</main>
+
+</div>
+</section>
+</div>
+<section>
+<p class="sh-cap">Part-number mode <span>The part's tag, its stock under it, and the vehicles it fits as the catalog names them.</span></p>
+<div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px">
+
+<main id="ui-main" class="is-fw">
+<div id="answer" class="stage part-answer" data-mode="part" data-q="from.fitment.type=alternator&amp;from.fitment.number=DEMO-1001&amp;fitment.number=DEMO-1001" data-part="alternator">
+<div class="punder" aria-hidden="true"><span class="brk g-serial done"></span></div>
+<svg class="pleader" viewBox="0 0 1020 36" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+<path class="g-serial wide" d="M680 0V18H170V36" vector-effect="non-scaling-stroke"></path>
+<path class="g-serial mid" d="M680 0V18H255V36" vector-effect="non-scaling-stroke"></path>
+<path class="g-serial narrow" d="M510 0V36" vector-effect="non-scaling-stroke"></path>
+</svg>
+<section class="part" id="part" aria-labelledby="part-h">
+<h2 id="part-h" class="visually-hidden">Alternator DEMO-1001</h2>
+<div class="pgrid">
+<div class="pcol">
+<div class="ptag"><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1001</b> <span class="ptn">Alternator</span></p>
+<dl>
+<div><dt>Fits</dt><dd>1 vehicle in demo-catalog</dd></div>
+<div><dt>Note</dt><dd>demo: 200 A</dd></div>
+</dl>
+<a class="stk swap" id="stk-part" href="#" aria-expanded="true" aria-controls="stock-rows"><span>Stock · 2 shelf · 2 yard<span class="visually-hidden">, DEMO-1001</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 10l5-5 5 5"></path></svg></a>
+</div></div>
+<div class="prows" id="stock-rows"><span class="notch" aria-hidden="true"></span>
+<div class="stock-cols" id="stock-region" role="region" aria-label="Stock of DEMO-1001" tabindex="0">
+<div class="stock-col">
+<h3 id="stock-shelf-h"><span>On the shelf · 2</span> <span class="asof">as of 2026-11-12</span></h3>
+<table><tbody>
+<tr><th scope="row" class="id">DEMO-S-01</th><td>demo-north</td><td><span class="fk">stock_number</span> DEMO-S-01 · <span class="fk">condition</span> demo: used, grade A</td></tr>
+<tr><th scope="row" class="id">DEMO-S-02</th><td>demo-south</td><td><span class="fk">stock_number</span> DEMO-S-02 · <span class="fk">condition</span> demo: used, grade B; tagged with its old number<span class="note">Tagged with a retired number, DEMO-0901</span></td></tr>
+</tbody></table>
+</div>
+<div class="stock-col">
+<h3 id="stock-yard-h"><span>In the yard · 2</span> <span class="asof">as of 2026-11-12</span></h3>
+<table><tbody>
+<tr><th scope="row" class="id">DEMO-Y-01</th><td>demo-north</td><td><span class="fk">stock_number</span> DEMO-Y-01 · <span class="fk">color</span> demo: white · <span class="fk">row</span> D-1</td></tr>
+<tr><th scope="row" class="id">DEMO-Y-02</th><td>demo-south</td><td><span class="fk">stock_number</span> DEMO-Y-02 · <span class="fk">color</span> demo: blue · <span class="fk">row</span> D-1</td></tr>
+</tbody></table>
+</div>
+</div>
+</div>
+</div>
+<div class="vehicles">
+<table>
+<caption class="visually-hidden">The vehicles DEMO-1001 fits, as demo-catalog names them</caption>
+<thead><tr><th scope="col">Vehicle <span class="hint">as demo-catalog names it</span></th><th scope="col">Years</th><th scope="col">Options</th><th scope="col">Also known as</th></tr></thead>
+<tbody>
+<tr><th scope="row">Ford F150</th><td class="yrs">2015–2017</td><td class="opts">3.5L V6 EcoBoost (VIN G, 8th digit)</td><td class="names"><span class="vn"><span class="voc">demo-vehicles</span> <span class="vtape">Ford F150</span></span></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</div>
+</main>
+
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3610}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
