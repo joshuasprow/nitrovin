@@ -8,11 +8,11 @@
 //
 //   0  the page as it is
 //   A  Chips: every part type, small, in the catalog's order, wrapping
-//   B  One field: the pressed part type as a field that opens a list
+//   B  One line: the "Parts that fit" strip holds the part type field
 //   C  Rail: one row that scrolls sideways, in the catalog's order
 //   D  Index: an always-open list under the part vocabulary's headings
 (() => {
-  const VARIANTS = [['0', 'The page as it is'], ['A', 'Chips, fixed order'], ['B', 'One field'], ['C', 'Sideways rail'], ['D', 'Index']];
+  const VARIANTS = [['0', 'The page as it is'], ['A', 'Chips, fixed order'], ['B', 'One line: strip + field'], ['C', 'Sideways rail'], ['D', 'Index']];
   const q = new URLSearchParams(location.search);
   let variant = q.get('variant') || sessionStorage.getItem('proto-variant') || 'A';
   let filter = '';
@@ -92,17 +92,26 @@
       }
       host.append(bar);
     },
-    B(host, types, redraw) {
+    // B: the "Parts that fit" strip's own first cell is the field. The
+    // strip names the catalog, the part type, the model and the year in
+    // one line; the list opens under the whole strip.
+    B(host, types, redraw, fit) {
       const on = types.find((t) => t.pressed);
       const isOpen = open == null ? !on : open;
-      const row = el('div', 'pb');
-      const field = el('button', 'pfield' + (on ? ' pp' : ''));
+      const strip = fit.querySelector('.fitstrip'), stamp = strip.querySelector('.stamp');
+      strip.querySelectorAll('.pbcell').forEach((e) => e.remove());
+      stamp.classList.add('proto-off');
+      const cell = el('div', 'pbcell');
+      const field = el('button', 'pfield');
       field.type = 'button'; field.setAttribute('aria-expanded', String(isOpen));
-      field.append(el('span', 'plab', 'Part type'), el('span', 'pval', on ? on.name : 'Choose a part type'), el('span', 'pcount', on ? on.n + (on.n === 1 ? ' candidate' : ' candidates') : types.length + ' part types'), el('span', 'pchev', isOpen ? '▴' : '▾'));
+      field.append(el('span', 'plab', stamp.textContent), el('span', 'pval', on ? on.name : 'Choose a part type'), el('span', 'pcount', String(on ? on.n : types.length)), el('span', 'pchev', isOpen ? '▴' : '▾'));
       field.addEventListener('click', () => { open = !isOpen; redraw(); });
-      row.append(field);
-      if (on) row.append(clearKey(on));
-      host.append(row);
+      cell.append(field);
+      if (on) cell.append(clearKey(on));
+      stamp.after(cell);
+      // Where the lines to the candidates leave from: between the model
+      // and the year, under the strip.
+      host.append(el('span', 'panchor pp'));
       const rec = recent().map((id) => types.find((t) => t.id === id && !t.pressed)).filter(Boolean).slice(0, 3);
       if (rec.length && !isOpen) {
         const r = el('div', 'pbrecent'); r.append(el('span', 'plab', 'Recent'));
@@ -142,11 +151,14 @@
     const wrap = fit && fit.querySelector('.ptwrap');
     if (!wrap) return;
     wrap.querySelectorAll(':scope > .proto').forEach((e) => e.remove());
+    fit.querySelectorAll('.pbcell').forEach((e) => e.remove());
+    fit.querySelectorAll('.proto-off').forEach((e) => e.classList.remove('proto-off'));
+    fit.classList.toggle('proto-b', variant === 'B');
     wrap.classList.toggle('proto-host', variant !== '0');
     const types = read(fit);
     if (variant !== '0' && types.length) {
       const host = el('div', 'proto proto-' + variant);
-      const redraw = () => { host.replaceChildren(); draw[variant](host, types, redraw); };
+      const redraw = () => { host.replaceChildren(); draw[variant](host, types, redraw, fit); };
       redraw();
       wrap.append(host);
     }

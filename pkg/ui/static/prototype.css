@@ -23,15 +23,23 @@
 /* A: chips, wrapping. */
 .proto-A .pa { display: flex; flex-wrap: wrap; gap: 8px 6px; align-items: center; }
 
-/* B: one field. */
-.proto-B .pb { display: flex; align-items: stretch; }
-.proto-B .pfield { flex: 1; display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: baseline; gap: .75rem; min-height: 48px; padding: .5rem .9rem; text-align: left; --key: var(--alu); text-transform: none; letter-spacing: 0; }
-.proto-B .pfield .plab { color: inherit; opacity: .7; }
-.proto-B .pfield .pval { font: 700 18px var(--cell-font); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.proto-B .pfield .pcount { font: 400 12px var(--cell-font); opacity: .8; white-space: nowrap; }
-.proto-B .pfield.pp { color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); background: var(--alu); border-color: var(--steel); box-shadow: var(--raised); transform: none; cursor: pointer; }
-.proto-B .pb .pclear { min-width: 48px; font-size: 20px; }
-.proto-B .pbrecent { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
+/* B: the strip's first cell is the field, a key of the second tape set
+   into the label tape; the list opens under the whole strip. */
+.proto-b .fitstrip .proto-off { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.proto-b .fitstrip .pbcell { align-self: stretch; display: flex; align-items: stretch; min-width: 0; padding: 5px 6px; border-right: 1px solid rgb(255 255 255 / .18); }
+.proto-b .pfield { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: .5rem; align-items: center; min-height: 44px; padding: .25rem .6rem; text-align: left; --key: var(--alu); text-transform: none; letter-spacing: 0; }
+.proto-b .pfield .plab { grid-column: 1 / -1; font: 700 9px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: inherit; opacity: .75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.proto-b .pfield .pval { font: 700 16px/1.2 var(--cell-font); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.proto-b .pfield .pcount { font: 400 11px var(--cell-font); padding: 0 .4rem; border: 1px solid currentColor; border-radius: 999px; opacity: .8; }
+.proto-b .pfield .pchev { font-size: 11px; }
+.proto-b .pbcell .pclear { min-width: 40px; font-size: 18px; }
+.proto-b .ptwrap { margin-top: 30px; }
+.proto-B .panchor { display: block; width: 0; height: 0; margin-left: calc((var(--xv) + var(--xy)) / 2); }
+.proto-B .pbrecent { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 0; position: relative; z-index: 3; width: fit-content; padding-right: 8px; background: var(--bg); }
+.proto-B .pbpanel { position: relative; z-index: 3; margin-top: 0; }
+@media (width < 64rem) {
+  .proto-b .fitstrip .pbcell { grid-column: 1 / -1; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18); }
+}
 .proto .pbpanel { margin-top: 10px; padding: .75rem; border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .3); }
 
 /* The grouped list, B's and C's panel and D's whole control. */
@@ -61,9 +69,6 @@
 @media (max-width: 34rem) {
   .proto .pcols, .proto-D .index.pcols { columns: 2 9rem; column-gap: .75rem; }
   .proto .pc, .proto .prow { font-size: 12px; padding: .3rem .45rem; }
-  .proto-B .pfield { grid-template-columns: minmax(0, 1fr) auto; gap: .1rem .5rem; }
-  .proto-B .pfield .plab { grid-column: 1 / -1; }
-  .proto-B .pfield .pcount { display: none; }
 }
 
 /* The bar: not part of any design. */
