@@ -195,3 +195,38 @@ connector does.
   -ldflags='-s -w'`), not 0.5 MB, most of it pgx's type codecs and the
   `golang.org/x/text` tables its SCRAM password normalisation links. The C
   library and the WebAssembly build are unchanged.
+
+## Amendment (2026-11-20): a batch's fitment keys share their lookups
+
+[#354](https://github.com/joshuasprow/nitrovin/issues/354): "all the stock lists
+of one answer are fetched together" left a batch of fitment keys one lookup per
+key, in turn. A part's candidates are many fitments of the same vehicles, so a
+caller paging each candidate's yard asks for those vehicles' rows once per key.
+The first user's dev warehouse, a pickup's side mirror: 44 fitment keys, 8,467 yard
+rows, through its `security_barrier` yard view of about 11,800 vehicles. Each key's
+query took 0.1 to 0.3 s, mostly planning the view and reading its rows, and the
+batch took 6 to 9 s on the server, past a 5 s caller's wait and, under load, past
+the 1 s statement timeout of single keys.
+
+- **A batch's fitment keys share one lookup per source, kind and page.** Fit
+  answers each request of a batch, then looks up every fitment key's stock lists at
+  once: those that page from their first row with the same `limit` and `location`
+  go in one call, each list its own `Result`. A later page stays a call of its own:
+  a call pages several lists only from their first row, as before. Answers are
+  unchanged byte for byte. A lookup that fails now leaves every list of its call
+  unavailable, a whole batch's where it left one key's.
+- **The yard lookup reads each key once.** Each vPIC model and catalog vehicle the
+  lists name is read once, in the union of their years for it, and each list keeps
+  the rows in its own years, by a join on the rows read, outside the fence, where
+  no barrier can hold it back.
+- **Each row is sent once.** A lookup answers each list's total in a row of its
+  own, then each row in any list's page once, with the lists whose pages hold it,
+  in `id` order. The shelf lookups use the same shape.
+- **Measured** on the same warehouse, under its other load, three rounds each,
+  `EXPLAIN (ANALYZE, TIMING OFF)` as a superuser rather than the connector's role:
+  the 44 lookups as built, 6.1, 7.2 and 7.6 s summed, 384,160 shared buffers; the
+  one lookup, 0.52, 0.69 and 0.89 s, 38,505 buffers and 813 result rows for
+  8,467. A `POST /v1/fit` of the 44 keys, from outside the warehouse's network:
+  8.5 to 13.4 s before, some lists `unavailable`; 0.37 to 0.91 s after.
+- **What is left is the view's rows.** The one lookup reads 769 vehicles, each
+  through the view's joins; the view, not the lookup, sets that price.

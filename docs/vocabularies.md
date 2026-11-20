@@ -630,9 +630,11 @@ is the oldest of that list's own rows: two candidates' shelves can say
 two times, and a list with none of the source's rows says none.
 
 **Lookups and indexes.** Each lookup is one fixed, parameterised `SELECT`
-for every list of its kind in an answer, each list bounded by the page,
-in its own `READ ONLY` transaction under the statement timeout. Give the
-relation's tables these indexes:
+for every list of its kind in an answer (for a batch's fitment keys, in
+the batch), each list bounded by the page, in its own `READ ONLY`
+transaction under the statement timeout. A yard lookup reads each vPIC
+model and catalog vehicle once however many of its lists name it. Give
+the relation's tables these indexes:
 
 - shelf, by fitment keys: `(type, number, side)`;
 - shelf, rows with no number: `(part_type, vehicle_<fields>, year)`;

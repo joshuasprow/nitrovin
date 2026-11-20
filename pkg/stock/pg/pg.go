@@ -6,8 +6,8 @@
 // one-row relation of its catalog release, and the environment variable
 // holding the DSN, so no file carries a secret. nitrovin dictates the
 // relation's column names, never its SQL: each lookup is one fixed,
-// parameterised SELECT, for every list of one answer at once, bounded by
-// the page, and nothing is cached.
+// parameterised SELECT, for every list of one call at once (one answer's,
+// or a batch's fitment keys'), bounded by the page, and nothing is cached.
 //
 // Nothing connects at load. The first lookup connects and checks the
 // relation's columns against information_schema; a missing or mistyped

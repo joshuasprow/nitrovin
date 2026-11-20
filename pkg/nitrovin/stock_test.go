@@ -2,8 +2,10 @@ package nitrovin
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 	"sync"
@@ -239,6 +241,102 @@ func TestFitStockPaging(t *testing.T) {
 	pages = stockPages(t, tr, `{"from":{"vocabulary":"catalog-models","entry":{"make":"Dodge","model":"Ram 1500"}},"model_year":2010,"part":{"spine":"part-types","id":"engine"},"stock":["shelf"],"limit":1`)
 	if want := []string{`candidates ["EN-57 "], by vehicle 0: `}; !slices.Equal(pages, want) {
 		t.Errorf("engine pages %q, want %q", pages, want)
+	}
+}
+
+// counting is a stock source counting its lookups, by source and lookup.
+type counting struct {
+	stock.Source
+	mu    *sync.Mutex
+	calls map[string]int
+}
+
+func (c counting) count(lookup string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.calls[c.Info().Name+" "+lookup]++
+}
+func (c counting) ShelfByFitment(ctx context.Context, lists [][]vocab.FitmentKey, p stock.Page) ([]stock.Result, stock.Meta, error) {
+	c.count("shelf by fitment")
+	return c.Source.ShelfByFitment(ctx, lists, p)
+}
+func (c counting) ShelfByVehicle(ctx context.Context, lists []stock.ShelfVehicle, p stock.Page) ([]stock.Result, stock.Meta, error) {
+	c.count("shelf by vehicle")
+	return c.Source.ShelfByVehicle(ctx, lists, p)
+}
+func (c counting) Yard(ctx context.Context, lists []stock.YardQuery, p stock.Page) ([]stock.Result, stock.Meta, error) {
+	c.count("yard")
+	return c.Source.Yard(ctx, lists, p)
+}
+
+// TestFitBatchStock: a batch's fitment keys share their stock lookups
+// (#354). Forty keys that page their lists from the first row cost each
+// source one lookup, as one key does; a key at other locations and a key
+// past its first page each cost one more. Every answer is, byte for byte,
+// the one its key gets fitted alone.
+func TestFitBatchStock(t *testing.T) {
+	tr := stockTranslator(t)
+	var mu sync.Mutex
+	calls := map[string]int{}
+	want := map[string]int{}
+	for i, s := range tr.core.Stock {
+		tr.core.Stock[i] = counting{s, &mu, calls}
+		lookup := "yard"
+		if s.Info().Holds == stock.Shelf {
+			lookup = "shelf by fitment"
+		}
+		want[s.Info().Name+" "+lookup] = 3
+	}
+	keys := []string{
+		`{"type":"brake-rotor-front","number":"BR-1999"}`,
+		`{"type":"brake-rotor-front","number":"BR-2001"}`,
+		`{"type":"brake-rotor-front","number":"BR-2002"}`,
+		`{"type":"mirror","number":"MR-1001","side":"left"}`,
+		`{"type":"mirror","number":"MR-1001","side":"right"}`,
+		`{"type":"engine","number":"EN-57"}`,
+	}
+	item := func(key, more string) string {
+		return `{"from":{"fitment":` + key + `},"stock":["shelf","yard"],"limit":1` + more + `}`
+	}
+	first, err := fit(t, tr, item(keys[1], ""))
+	if err != nil || first.Next == "" {
+		t.Fatalf("%s: next %q, %v; want a next page", item(keys[1], ""), first.Next, err)
+	}
+	var items []string
+	for i := range 40 {
+		items = append(items, item(keys[i%len(keys)], ""))
+	}
+	items = append(items, item(keys[1], `,"location":["north"]`), item(keys[1], `,"after":"`+first.Next+`"`))
+	reqs := make([]contract.FitRequest, len(items))
+	for i, it := range items {
+		if reqs[i], err = contract.ParseFitRequest([]byte(it)); err != nil {
+			t.Fatal(err)
+		}
+		reqs[i].Now = fitNow
+	}
+	clear(calls)
+	fits, err := tr.FitBatch(context.Background(), reqs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !maps.Equal(calls, want) {
+		t.Errorf("lookups %v, want %v", calls, want)
+	}
+	var rows int
+	for i, it := range items {
+		alone, err := fit(t, tr, it)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got, _ := json.Marshal(fits[i])
+		wantJSON, _ := json.Marshal(alone)
+		if string(got) != string(wantJSON) {
+			t.Errorf("%d %s\nin the batch %s\nalone        %s", i, it, got, wantJSON)
+		}
+		rows += len(fits[i].Shelf.Rows) + len(fits[i].Yard.Rows)
+	}
+	if rows == 0 {
+		t.Error("no answer carried a stock row")
 	}
 }
 

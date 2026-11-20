@@ -485,22 +485,74 @@ func lookupPanic(v any) *LookupPanic {
 	return &LookupPanic{Value: v, Stack: debug.Stack()}
 }
 
-// fitmentStock gives a fitment's answer the stock lists req asks for,
-// paged with its vehicles: apps are the applications it lists, before
-// paging.
-func (f Fitter) fitmentStock(ctx context.Context, req FitRequest, fit *vocab.Fitment, apps []*vocab.Application, out *Fit, pg pager) {
+// fitmentAsk is a fitment key's answer's stock lists, to look up once its
+// batch is answered: the request, the fitment it reached, the
+// applications it lists before paging, the answer to give the lists to,
+// and its page.
+type fitmentAsk struct {
+	req  FitRequest
+	fit  *vocab.Fitment
+	apps []*vocab.Application
+	out  *Fit
+	pg   pager
+}
+
+// fitmentStock gives each ask's answer the stock lists its request asks
+// for, paged with its vehicles. Every ask that pages from its first row
+// shares one lookup per source and kind with those of the same limit and
+// locations, so a batch of fitment keys costs a source one lookup, not one
+// a key (#354); a later page is a lookup of its own, as stockLists pages
+// only one list past its first row. The shelves and the yards are looked
+// up at once.
+func (f Fitter) fitmentStock(ctx context.Context, asks ...*fitmentAsk) {
+	if len(asks) == 0 {
+		return
+	}
 	concurrently(
-		func() {
-			if req.wants(StockShelf) {
-				out.Shelf = f.shelfLists(ctx, []*vocab.Fitment{fit}, pg.after, pg.limit, req.Location)[0]
-			}
-		},
-		func() {
-			if req.wants(StockYard) {
-				out.Yard = f.yardLists(ctx, [][]*vocab.Application{apps}, pg.after, pg.limit, req.Location)[0]
-			}
+		func() { f.fitmentLists(ctx, StockShelf, asks) },
+		func() { f.fitmentLists(ctx, StockYard, asks) })
+	for _, a := range asks {
+		pageStock(a.out, a.pg, a.out.Shelf, a.out.Yard)
+	}
+}
+
+// fitmentLists gives each ask asking for kind its list of kind, a lookup
+// for each group of asks that share their page.
+func (f Fitter) fitmentLists(ctx context.Context, kind string, asks []*fitmentAsk) {
+	var groups [][]*fitmentAsk
+	for _, a := range asks {
+		if !a.req.wants(kind) {
+			continue
+		}
+		i := slices.IndexFunc(groups, func(g []*fitmentAsk) bool {
+			return a.pg.after == 0 && g[0].pg.after == 0 && g[0].pg.limit == a.pg.limit && slices.Equal(g[0].req.Location, a.req.Location)
 		})
-	pageStock(out, pg, out.Shelf, out.Yard)
+		if i < 0 {
+			groups = append(groups, []*fitmentAsk{a})
+			continue
+		}
+		groups[i] = append(groups[i], a)
+	}
+	for _, g := range groups {
+		pg, location := g[0].pg, g[0].req.Location
+		if kind == StockShelf {
+			fits := make([]*vocab.Fitment, len(g))
+			for i, a := range g {
+				fits[i] = a.fit
+			}
+			for i, l := range f.shelfLists(ctx, fits, pg.after, pg.limit, location) {
+				g[i].out.Shelf = l
+			}
+			continue
+		}
+		apps := make([][]*vocab.Application, len(g))
+		for i, a := range g {
+			apps[i] = a.apps
+		}
+		for i, l := range f.yardLists(ctx, apps, pg.after, pg.limit, location) {
+			g[i].out.Yard = l
+		}
+	}
 }
 
 // pageStock sets the answer's next while any of lists, paged with its own

@@ -25,10 +25,12 @@ import (
 //
 // Each takes the same first four parameters: $1 how many lists, $2 the
 // locations to keep (empty: every one), $3 the page's offset and $4 its
-// limit; then the lookup's own, one array per column of its keys, each
-// key tagged with its list. Its result is a row per list's page row, in
-// list order then id order, or one row with a null id for a list whose
-// page is empty, each carrying its list's total and the release.
+// limit; then the lookup's own, one array per column of its keys. A
+// shelf's keys are each tagged with its list; a yard's are numbered, and
+// a last table names each list's keys and years. Its result is a row per
+// list's page row, in list order then id order, or one row with a null id
+// for a list whose page is empty, each carrying its list's total and the
+// release.
 type queries struct {
 	byFitment, byVehicle, yard string
 	// nv is how many vehicle columns there are: fields' (a vocabulary's
@@ -161,26 +163,40 @@ func (s *Source) queries(asOf string, padded map[string]bool) *queries {
 			vtypes[i] = "int4[]"
 		}
 	}
-	vcols := make([]string, len(vehicle))
+	// cols are a result row's columns after list, total, lists and
+	// release, each with its type.
+	cols := [][2]string{{"c_id", "text"}, {"c_location", "text"}, {"c_type", "text"}, {"c_number", "text"}, {"c_side", "text"}, {"c_part_type", "text"}}
 	for i := range vehicle {
-		vcols[i] = "p.c_v" + strconv.Itoa(i)
+		cols = append(cols, [2]string{"c_v" + strconv.Itoa(i), "text"})
 	}
-	// page answers matched rows m: each list's total, and its page.
-	page := func(with, m string) string {
-		out := []string{"l.list", "coalesce(t.total, 0)", release, "p.c_id", "p.c_location", "p.c_type", "p.c_number", "p.c_side", "p.c_part_type"}
-		out = append(out, vcols...)
-		out = append(out, "p.c_year", "p.c_decoded_make", "p.c_decoded_model", "p.c_decoded_year", "p.c_by_model", "p.c_fields", "p.c_as_of")
-		return "WITH " + with + ",\nm AS (" + m + "),\n" +
-			"t AS (SELECT list, count(*) AS total FROM m GROUP BY list),\n" +
-			`p AS (SELECT m.*, row_number() OVER (PARTITION BY m.list ORDER BY m.c_id COLLATE "C") AS rn FROM m)` + "\n" +
-			"SELECT " + strings.Join(out, ", ") + "\n" +
-			"FROM generate_series(0, $1::int4 - 1) AS l(list)\n" +
-			"LEFT JOIN t ON t.list = l.list\n" +
-			"LEFT JOIN p ON p.list = l.list AND p.rn > $3::int8 AND p.rn <= $3::int8 + $4::int8\n" +
-			"ORDER BY l.list, p.rn"
+	cols = append(cols, [2]string{"c_year", "int4"}, [2]string{"c_decoded_make", "int4"}, [2]string{"c_decoded_model", "int4"}, [2]string{"c_decoded_year", "int4"},
+		[2]string{"c_by_model", "bool"}, [2]string{"c_fields", "text"}, [2]string{"c_as_of", "text"})
+	rowCols, nullCols := make([]string, len(cols)), make([]string, len(cols))
+	for i, c := range cols {
+		rowCols[i], nullCols[i] = "f."+c[0], "NULL::"+c[1]+" AS "+c[0]
 	}
-	// matched are the relation's rows of each key of k: a row's columns
-	// cols and, for a yard's, whether its decode matched, byModel.
+	// page answers the rows read, each numbered n in f, and assign, the
+	// lists' rows of them: (list, n, c_id) of f. Its result is a row for
+	// each list, with its total and no row columns, then each row in any
+	// list's page, once however many lists' pages hold it, with those
+	// lists, in id order, which is each list's own: a list's rows read
+	// once for many lists are sent once (#354).
+	page := func(with, read, assign string) string {
+		return "WITH " + with + ",\n" +
+			"f AS (SELECT row_number() OVER () AS n, r.* FROM (" + read + ") r),\n" +
+			"a AS (" + assign + "),\n" +
+			"t AS (SELECT list, count(*) AS total FROM a GROUP BY list),\n" +
+			`p AS (SELECT n, array_agg(list ORDER BY list) AS lists FROM (SELECT a.*, row_number() OVER (PARTITION BY a.list ORDER BY a.c_id COLLATE "C") AS rn FROM a) a` +
+			" WHERE rn > $3::int8 AND rn <= $3::int8 + $4::int8 GROUP BY n)\n" +
+			"SELECT * FROM (SELECT l.list, coalesce(t.total, 0) AS total, NULL::int4[] AS lists, " + release + " AS release, " + strings.Join(nullCols, ", ") + "\n" +
+			"FROM generate_series(0, $1::int4 - 1) AS l(list) LEFT JOIN t ON t.list = l.list\n" +
+			"UNION ALL\n" +
+			"SELECT NULL, NULL, p.lists, NULL, " + strings.Join(rowCols, ", ") + " FROM p JOIN f ON f.n = p.n) x\n" +
+			`ORDER BY x.c_id COLLATE "C" NULLS FIRST`
+	}
+	// matched are the relation's rows of each key of k, each tagged with
+	// its key's column tag: a row's columns sel and, for a yard's,
+	// whether its decode matched, byModel.
 	//
 	// Every condition on the relation, cond and where, is in a subquery
 	// LATERAL to the key, fenced with OFFSET 0 so that the planner cannot
@@ -194,36 +210,51 @@ func (s *Source) queries(asOf string, padded map[string]bool) *queries {
 	// or integer comparison, IS NULL, IS NOT DISTINCT FROM or = ANY, which
 	// are leakproof. The fence has a price where no index serves a key:
 	// the lookup reads the relation once per key, not once.
-	matched := func(k, cols, byModel, cond string) string {
-		return "SELECT " + k + ".list, found.* FROM " + k + " CROSS JOIN LATERAL (SELECT " + cols + ", " + byModel + " AS c_by_model FROM " + rel + " r WHERE " +
+	matched := func(k, tag, sel, byModel, cond string) string {
+		return "SELECT " + k + "." + tag + ", found.* FROM " + k + " CROSS JOIN LATERAL (SELECT " + sel + ", " + byModel + " AS c_by_model FROM " + rel + " r WHERE " +
 			cond + " AND " + where + " OFFSET 0) found"
 	}
 
 	if s.info.Holds == stock.Shelf {
+		// A shelf's keys are each its list's: a row read is in that list.
+		const own = "SELECT list, n, c_id FROM f"
 		q.byFitment = page(
 			keys("k", 5, []string{"list", "type", "number", "side"}, []string{"int4[]", "text[]", "text[]", "text[]"}),
-			matched("k", selected(true, false, false, false), "NULL::bool",
-				is("type", "k.type")+" AND "+is("number", "k.number")+" AND "+col("side")+" IS NOT DISTINCT FROM k.side"))
+			matched("k", "list", selected(true, false, false, false), "NULL::bool",
+				is("type", "k.type")+" AND "+is("number", "k.number")+" AND "+col("side")+" IS NOT DISTINCT FROM k.side"), own)
 		q.byVehicle = page(
 			keys("k", 5, append([]string{"list", "part_type", "year"}, vnames...), append([]string{"int4[]", "text[]", "int4[]"}, vtypes...)),
-			matched("k", selected(false, true, true, false), "NULL::bool",
+			matched("k", "list", selected(false, true, true, false), "NULL::bool",
 				col("number")+" IS NULL AND "+is("part_type", "k.part_type")+" AND "+vehicleIs("k")+" AND "+
-					col("year")+" IS NOT NULL AND (k.year IS NULL OR "+col("year")+" = k.year)"))
+					col("year")+" IS NOT NULL AND (k.year IS NULL OR "+col("year")+" = k.year)"), own)
 		return q
 	}
 	decoded := col("decoded_make") + " IS NOT NULL AND " + col("decoded_model") + " IS NOT NULL AND " + col("decoded_year") + " IS NOT NULL"
 	within := func(k, year string) string {
 		return "(" + k + ".first IS NULL OR " + year + " >= " + k + ".first) AND (" + k + ".last IS NULL OR " + year + " <= " + k + ".last)"
 	}
-	m := matched("km", selected(false, false, true, true), "true",
+	// A yard's keys are each model and vehicle any list names, read once
+	// in every year any list names it in, km and kv, each numbered key;
+	// lk is each list's keys and years. A row a key reads is in every
+	// list naming that key in a year holding the row's: its decoded year
+	// when its decode matched, else its year. One read of a key serves
+	// every list naming it, so a batch's many fitments of the same
+	// vehicles read each vehicle's rows once, not once a fitment (#354).
+	// lk's conditions are on the rows read, outside the fence, so no
+	// barrier ever sees them.
+	read := matched("km", "key", selected(false, false, true, true), "true",
 		col("decoded_model")+" = km.model AND "+decoded+" AND "+within("km", col("decoded_year")))
-	with := keys("km", 5, []string{"list", "model", "first", "last"}, []string{"int4[]", "int4[]", "int4[]", "int4[]"})
+	with := keys("km", 5, []string{"key", "model", "first", "last"}, []string{"int4[]", "int4[]", "int4[]", "int4[]"})
+	next := 9
 	if len(vehicle) > 0 {
-		with += ",\n" + keys("kv", 9, append([]string{"list", "first", "last"}, vnames...), append([]string{"int4[]", "int4[]", "int4[]"}, vtypes...))
-		m += "\nUNION ALL\n" + matched("kv", selected(false, false, true, true), "false",
+		with += ",\n" + keys("kv", 9, append([]string{"key", "first", "last"}, vnames...), append([]string{"int4[]", "int4[]", "int4[]"}, vtypes...))
+		read += "\nUNION ALL\n" + matched("kv", "key", selected(false, false, true, true), "false",
 			vehicleIs("kv")+" AND "+col("year")+" IS NOT NULL AND "+within("kv", col("year"))+" AND NOT ("+decoded+")")
+		next = 12 + len(vehicle)
 	}
-	q.yard = page(with, m)
+	with += ",\n" + keys("lk", next, []string{"list", "key", "first", "last"}, []string{"int4[]", "int4[]", "int4[]", "int4[]"})
+	q.yard = page(with, read, "SELECT lk.list, f.n, f.c_id FROM f JOIN lk ON lk.key = f.key AND "+
+		within("lk", "CASE WHEN f.c_by_model THEN f.c_decoded_year ELSE f.c_year END"))
 	return q
 }
 
@@ -275,53 +306,108 @@ func (s *Source) ShelfByVehicle(ctx context.Context, lists []stock.ShelfVehicle,
 }
 
 // Yard answers the yard rows of each list's vPIC models and catalog
-// vehicles in their years: one query. A model or vehicle named twice in a
-// list is asked for once, in the union of its years, so no row matches
-// twice.
+// vehicles in their years: one query. Each model and vehicle the lists
+// name is one key, read once in every year any list names it in, and each
+// list keeps the rows of its own years. A model or vehicle named twice in
+// a list is kept in the union of its years, so no row matches twice.
 func (s *Source) Yard(ctx context.Context, lists []stock.YardQuery, p stock.Page) ([]stock.Result, stock.Meta, error) {
-	var mli, models, vli []int32
-	var mfirst, mlast, vfirst, vlast []*int32
-	vs := s.vehicleArgs()
+	// key is a model, or a vehicle v, its number, and the years the lists
+	// name it in; read is whether it is read at all: a vehicle with none
+	// of the source's columns is not.
+	type key struct {
+		n     int32
+		model int32
+		v     *vocab.Vehicle
+		years []span
+		read  bool
+	}
+	type listKey struct {
+		list int32
+		k    *key
+		sp   span
+	}
+	var mkeys, vkeys []*key
+	var named []listKey
+	byModel, byVehicle := map[int32]*key{}, map[string]*key{}
 	for i, l := range lists {
-		byModel := map[int32][]span{}
+		spans := map[int32][]span{}
 		var order []int32
 		for _, m := range l.Models {
-			if _, ok := byModel[m.Model]; !ok {
+			if _, ok := spans[m.Model]; !ok {
 				order = append(order, m.Model)
 			}
-			byModel[m.Model] = append(byModel[m.Model], spanOf(m.First, m.Last))
+			spans[m.Model] = append(spans[m.Model], spanOf(m.First, m.Last))
 		}
 		for _, m := range order {
-			for _, sp := range merge(byModel[m]) {
-				mli, models = append(mli, int32(i)), append(models, m)
-				mfirst, mlast = append(mfirst, sp.first()), append(mlast, sp.last())
+			k := byModel[m]
+			if k == nil {
+				k = &key{n: int32(len(mkeys) + len(vkeys)), model: m}
+				byModel[m] = k
+				mkeys = append(mkeys, k)
+			}
+			for _, sp := range merge(spans[m]) {
+				k.years = append(k.years, sp)
+				named = append(named, listKey{int32(i), k, sp})
 			}
 		}
 		if len(s.cols.vehicle()) == 0 {
 			continue // no catalog: no vehicle columns, and no vehicle to ask for
 		}
-		byVehicle := map[string][]span{}
+		vspans := map[string][]span{}
 		var vorder []*vocab.Vehicle
 		for j := range l.Vehicles {
 			v := &l.Vehicles[j]
-			k := vocab.VehicleKey(&v.Vehicle)
-			if _, ok := byVehicle[k]; !ok {
+			vk := vocab.VehicleKey(&v.Vehicle)
+			if _, ok := vspans[vk]; !ok {
 				vorder = append(vorder, &v.Vehicle)
 			}
-			byVehicle[k] = append(byVehicle[k], spanOf(v.First, v.Last))
+			vspans[vk] = append(vspans[vk], spanOf(v.First, v.Last))
 		}
 		for _, v := range vorder {
-			for _, sp := range merge(byVehicle[vocab.VehicleKey(v)]) {
-				if vs.add(v) {
-					vli, vfirst, vlast = append(vli, int32(i)), append(vfirst, sp.first()), append(vlast, sp.last())
-				}
+			vk := vocab.VehicleKey(v)
+			k := byVehicle[vk]
+			if k == nil {
+				k = &key{n: int32(len(mkeys) + len(vkeys)), v: v}
+				byVehicle[vk] = k
+				vkeys = append(vkeys, k)
+			}
+			for _, sp := range merge(vspans[vk]) {
+				k.years = append(k.years, sp)
+				named = append(named, listKey{int32(i), k, sp})
 			}
 		}
 	}
-	args := []any{mli, models, mfirst, mlast}
-	if len(s.cols.vehicle()) > 0 {
-		args = append(append(args, vli, vfirst, vlast), vs.args()...)
+	var mn, models, vn []int32
+	var mfirst, mlast, vfirst, vlast []*int32
+	for _, k := range mkeys {
+		k.read = true
+		for _, sp := range merge(k.years) {
+			mn, models = append(mn, k.n), append(models, k.model)
+			mfirst, mlast = append(mfirst, sp.first()), append(mlast, sp.last())
+		}
 	}
+	vs := s.vehicleArgs()
+	for _, k := range vkeys {
+		for _, sp := range merge(k.years) {
+			if k.read = vs.add(k.v); !k.read {
+				break
+			}
+			vn, vfirst, vlast = append(vn, k.n), append(vfirst, sp.first()), append(vlast, sp.last())
+		}
+	}
+	var li, ln []int32
+	var lfirst, llast []*int32
+	for _, nk := range named {
+		if nk.k.read {
+			li, ln = append(li, nk.list), append(ln, nk.k.n)
+			lfirst, llast = append(lfirst, nk.sp.first()), append(llast, nk.sp.last())
+		}
+	}
+	args := []any{mn, models, mfirst, mlast}
+	if len(s.cols.vehicle()) > 0 {
+		args = append(append(args, vn, vfirst, vlast), vs.args()...)
+	}
+	args = append(args, li, ln, lfirst, llast)
 	return s.lookup(ctx, stock.Yard, len(lists), p, func(q *queries) string { return q.yard }, "", args...)
 }
 
@@ -487,11 +573,13 @@ func (s *Source) acquireFailed(ctx context.Context, pool *pgxpool.Pool, err erro
 	return s.unavailable(ctx, err)
 }
 
-// scan reads a lookup's result into out, one Result per list.
+// scan reads a lookup's result into out, one Result per list: each list's
+// total, then each row, appended to every list it names.
 func scan(rows pgx.Rows, q *queries, holds stock.Holds, matched stock.Matched, out []stock.Result) (stock.Meta, error) {
 	var (
-		list                        int32
-		total                       int64
+		list                        *int32
+		total                       *int64
+		lists                       []int32
 		release, id, location       *string
 		typ, number, side, partType *string
 		year, dmake, dmodel, dyear  *int32
@@ -500,22 +588,24 @@ func scan(rows pgx.Rows, q *queries, holds stock.Holds, matched stock.Matched, o
 		vehicle                     = make([]*string, q.nv)
 		meta                        stock.Meta
 	)
-	dest := []any{&list, &total, &release, &id, &location, &typ, &number, &side, &partType}
+	dest := []any{&list, &total, &lists, &release, &id, &location, &typ, &number, &side, &partType}
 	for i := range vehicle {
 		dest = append(dest, &vehicle[i])
 	}
 	dest = append(dest, &year, &dmake, &dmodel, &dyear, &byModel, &fields, &asOf)
 	_, err := pgx.ForEachRow(rows, dest, func() error {
-		if list < 0 || int(list) >= len(out) {
-			return fmt.Errorf("pg: a result row of list %d of %d", list, len(out))
-		}
-		r := &out[list]
-		r.Total = int(total)
 		if release != nil {
 			meta.Release = *release
 		}
-		if id == nil {
+		if list != nil {
+			if *list < 0 || int(*list) >= len(out) || total == nil {
+				return fmt.Errorf("pg: a result row of list %d of %d", *list, len(out))
+			}
+			out[*list].Total = int(*total)
 			return nil
+		}
+		if id == nil || location == nil {
+			return errors.New("pg: a result row of no list with no id")
 		}
 		row := stock.Row{ID: *id, Location: *location, Matched: matched}
 		if typ != nil && number != nil {
@@ -551,7 +641,12 @@ func scan(rows pgx.Rows, q *queries, holds stock.Holds, matched stock.Matched, o
 		if asOf != nil {
 			row.AsOf = *asOf
 		}
-		r.Rows = append(r.Rows, row)
+		for _, l := range lists {
+			if l < 0 || int(l) >= len(out) {
+				return fmt.Errorf("pg: a result row of list %d of %d", l, len(out))
+			}
+			out[l].Rows = append(out[l].Rows, row)
+		}
 		return nil
 	})
 	return meta, err

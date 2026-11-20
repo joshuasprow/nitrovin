@@ -1008,7 +1008,11 @@ connector, a table or view in Postgres
 [Connectors](../vocabularies.md#connectors)); in Go, a
 `stock.Source`, which `contract.Fitter` reads with one lookup per source
 and list kind: for a connector, one parameterised `SELECT` answering every
-list of that kind in the answer, bounded by the page.
+list of that kind in the answer, bounded by the page. A batch's fitment
+keys share theirs: every fitment key's list of a kind from its first row,
+at the same `limit` and `location`, is in one lookup of the batch, so many
+keys cost a source one lookup, not one each
+([ADR 0020](../adr/0020-request-time-stock-the-postgres-connector.md#amendment-2026-11-20-a-batchs-fitment-keys-share-their-lookups)).
 
 | Where | With | List |
 | --- | --- | --- |
