@@ -379,6 +379,31 @@ func TestParityPostgres(t *testing.T) {
 		t.Fatal("no answer carried a stock source")
 	}
 
+	// The requests twice over as one batch: its fitment keys share their
+	// lookups, the yard's reading each vehicle once for every list naming
+	// it, and every answer is the one its request gets alone (#354).
+	batch := append(slices.Clone(requests), requests...)
+	reqs := make([]contract.FitRequest, len(batch))
+	for i, req := range batch {
+		if reqs[i], err = contract.ParseFitRequest([]byte(req)); err != nil {
+			t.Fatal(err)
+		}
+		reqs[i].Now = fitNow
+	}
+	fits, err := live.FitBatch(context.Background(), reqs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i, req := range batch {
+		got, err := json.Marshal(fits[i])
+		if err != nil {
+			t.Fatal(err)
+		}
+		if want := fitJSON(t, live, req); string(got) != string(want) {
+			t.Errorf("%s\nin the batch %s\nalone        %s", req, got, want)
+		}
+	}
+
 	info, err := json.Marshal(live.Info())
 	if err != nil {
 		t.Fatal(err)
@@ -894,11 +919,13 @@ func TestPlansPostgres(t *testing.T) {
 
 	// Each lookup's own parameters, for one list, after the four every
 	// lookup takes: a fitment key, a part type's vehicle and year, and
-	// for the yard a model in its years and a vehicle from a year on.
+	// for the yard a model in its years and a vehicle from a year on,
+	// keys 0 and 1, both the list's.
 	fitmentKey := []any{[]int32{0}, []string{"brake-rotor-front"}, []string{"BR-2001"}, []*string{nil}}
 	vehicleKey := []any{[]int32{0}, []string{"engine"}, []*int32{new(int32(2010))}, []*string{new("Chevrolet")}, []*string{new("Silverado 1500")}}
 	yardKeys := []any{[]int32{0}, []int32{1938}, []*int32{new(int32(2009))}, []*int32{new(int32(2012))},
-		[]int32{0}, []*int32{new(int32(2009))}, []*int32{nil}, []*string{new("Dodge")}, []*string{new("Ram 1500")}}
+		[]int32{1}, []*int32{new(int32(2009))}, []*int32{nil}, []*string{new("Dodge")}, []*string{new("Ram 1500")},
+		[]int32{0, 0}, []int32{0, 1}, []*int32{new(int32(2009)), new(int32(2009))}, []*int32{new(int32(2012)), nil}}
 	type route struct {
 		name, sql    string
 		args         []any
