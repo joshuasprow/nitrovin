@@ -14,7 +14,8 @@
 # one of them must pass, never skip. Runs for every path this workflow watches.
 #
 # postgres: one month restored into Postgres 17, and the tests that compare
-# against it. cmd/nitrovin-import's TestPostgres builds the artifact twice and
+# against it, split into five shards that each restore their own copy (see
+# the job). cmd/nitrovin-import's TestPostgres builds the artifact twice and
 # checks it against the database (row counts, NULL and empty-string counts,
 # sampled rows, one hash); pkg/decoder's TestMatcherPostgres checks the
 # pattern matcher and the per-schema index on every distinct pattern key
@@ -177,12 +178,41 @@ jobs:
             grep -q -- "--- PASS: $t " "$RUNNER_TEMP/test.log" || { echo "artifact: $t did not pass" >&2; exit 1; }
           done
 
+  # One job a shard, each restoring its own copy of the dump: TestCorePostgres,
+  # TestWrapperPostgres and TestProjectionPostgres each truncate
+  # vpic.wmiyearvalidchars in a transaction they hold for minutes, so on one
+  # database they could only take turns. The shards are balanced on their
+  # times in one run (2026-11-19): each subtest of hints about 3 minutes, core
+  # 2.5, the rest 2 to 3. run is the shard's -run pattern; pass is the tests
+  # and subtests it must pass, never skip.
   postgres:
-    name: Postgres
+    name: Postgres (${{ matrix.shard }})
     needs: changes
     if: needs.changes.outputs.postgres == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: wrapper hints
+            run: ^TestWrapperPostgres$/^hints$
+            pass: TestWrapperPostgres/hints
+          - shard: projection hints
+            run: ^TestProjectionPostgres$/^hints$
+            pass: TestProjectionPostgres/hints
+          - shard: core
+            run: ^TestCorePostgres$
+            pass: TestCorePostgres
+            guard: true
+          - shard: charset, matcher
+            run: ^(TestCharsetPostgres|TestMatcherPostgres|TestElementAttributeValuePostgres|TestParity)$
+            pass: TestCharsetPostgres TestMatcherPostgres TestElementAttributeValuePostgres
+            parity: true
+          - shard: qc, importer
+            run: ^(TestWrapperPostgres|TestProjectionPostgres)$/^qc$
+            pass: TestWrapperPostgres/qc TestProjectionPostgres/qc
+            importer: true
     services:
       postgres:
         # The custom dump is archive format 1.16: pg_restore 17 or newer.
@@ -219,6 +249,15 @@ jobs:
             go-test-${{ runner.os }}-${{ runner.arch }}-${{ steps.go.outputs.go-version }}-${{ hashFiles('go.sum') }}-
             go-test-${{ runner.os }}-${{ runner.arch }}-${{ steps.go.outputs.go-version }}-
 
+      # A Postgres test no shard's run names would never run: the shards'
+      # tests, listed here once more, must be every one pkg/decoder has.
+      - name: Every Postgres test is in a shard
+        if: matrix.guard
+        run: |
+          sharded="TestCharsetPostgres TestCorePostgres TestElementAttributeValuePostgres TestMatcherPostgres TestProjectionPostgres TestWrapperPostgres"
+          listed=$(go test -list 'Postgres$' ./pkg/decoder/ | grep '^Test' | sort | xargs)
+          [ "$listed" = "$sharded" ] || { echo "pkg/decoder's Postgres tests are: $listed; the shards run: $sharded" >&2; exit 1; }
+
       - name: Resolve data month
         id: month
         env:
@@ -236,6 +275,7 @@ jobs:
         run: scripts/oracle.sh restore "${{ steps.fetch.outputs.backup }}"
 
       - name: Test the importer against the dump
+        if: matrix.importer
         env:
           NITROVIN_PSQL: docker exec -i ${{ job.services.postgres.id }} psql -X -q -U postgres -d vpic
           NITROVIN_MONTH: ${{ steps.fetch.outputs.month }}
@@ -248,18 +288,20 @@ jobs:
         env:
           NITROVIN_PSQL: docker exec -i ${{ job.services.postgres.id }} psql -X -q -U postgres -d vpic
           NITROVIN_ARTIFACT: ${{ runner.temp }}/nitrovin.artifact
+          RUN: ${{ matrix.run }}
+          PASS: ${{ matrix.pass }}
+          PARITY: ${{ matrix.parity }}
         run: |
           go run ./cmd/nitrovin-import sql | $NITROVIN_PSQL |
             go run ./cmd/nitrovin-import build -month "${{ steps.fetch.outputs.month }}" \
               -o "$NITROVIN_ARTIFACT" -manifest "$RUNNER_TEMP/nitrovin.json"
-          go test -count=1 -v -timeout 30m ./pkg/decoder/ | tee "$RUNNER_TEMP/engine.log"
-          for t in TestMatcherPostgres TestCorePostgres TestCharsetPostgres TestWrapperPostgres \
-                   TestProjectionPostgres TestElementAttributeValuePostgres; do
+          go test -count=1 -v -timeout 30m -run "$RUN" ./pkg/decoder/ | tee "$RUNNER_TEMP/engine.log"
+          for t in $PASS; do
             grep -q -- "--- PASS: $t " "$RUNNER_TEMP/engine.log" || { echo "postgres: $t did not pass" >&2; exit 1; }
           done
           # The frozen key is one month's (its manifest says which); on
           # another month TestParity skips until the refresh renews the key.
-          if [ "${{ steps.fetch.outputs.month }}" = "$(jq -r .month testdata/parity/*/manifest.json)" ]; then
+          if [ "$PARITY" = true ] && [ "${{ steps.fetch.outputs.month }}" = "$(jq -r .month testdata/parity/*/manifest.json)" ]; then
             grep -q -- '--- PASS: TestParity ' "$RUNNER_TEMP/engine.log"
           fi
 

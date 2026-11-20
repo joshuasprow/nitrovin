@@ -191,7 +191,7 @@ UI that is not built yet is drawn on a Claude Design canvas before it is specifi
 
 - **CI requires PASS, not skip.** Several workflows grep `--- PASS: <Test> ` for hard-coded lists:
   - `contract.yml`
-  - `import.yml`: three lists, artifact, postgres, and stock (every `Test*Postgres` in `pkg/stock/pg`, run with `-race`)
+  - `import.yml`: artifact, postgres (one `pass` list per shard in its matrix; a new `Test*Postgres` in `pkg/decoder` goes in a shard's `run` and `pass`), and stock (every `Test*Postgres` in `pkg/stock/pg`, run with `-race`)
   - `refresh.yml`: `TestParity`, `TestEngineAnswerKey`, `TestDecodeAnswerKey`, `TestText`, `TestStdio`
 
   Renaming a listed test means editing its list. A new test that must never skip goes on one, and parallel PRs conflict there.
