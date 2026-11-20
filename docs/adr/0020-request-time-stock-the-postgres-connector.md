@@ -227,6 +227,7 @@ the 1 s statement timeout of single keys.
   the 44 lookups as built, 6.1, 7.2 and 7.6 s summed, 384,160 shared buffers; the
   one lookup, 0.52, 0.69 and 0.89 s, 38,505 buffers and 813 result rows for
   8,467. A `POST /v1/fit` of the 44 keys, from outside the warehouse's network:
-  8.5 to 13.4 s before, some lists `unavailable`; 0.37 to 0.91 s after.
+  8.5 to 18.1 s before, one run with lists `unavailable`; 0.37 to 0.91 s after,
+  and 1.4 s for a server's first request, which connects and checks the columns.
 - **What is left is the view's rows.** The one lookup reads 769 vehicles, each
   through the view's joins; the view, not the lookup, sets that price.
