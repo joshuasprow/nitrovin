@@ -5,7 +5,16 @@ import { writeFileSync, readFileSync, mkdirSync, copyFileSync } from 'node:fs';
 import { open, buildFrame, dcFile, previewFile, REPO } from './engine.mjs';
 import { frames } from './frames.mjs';
 
-const only = process.argv.slice(2);
+// --check writes nothing: it builds each frame and compares it with the
+// committed one, and exits 1 naming the frames that differ. What a checkout
+// cannot fix is left out of the comparison: a frame's height, which follows
+// the machine's fonts; the data month, which go.mod's pin sets; and the
+// release's hash.
+const check = process.argv.includes('--check');
+const only = process.argv.slice(2).filter(a => a !== '--check');
+const norm = (s) => s.replace(/height: \d+px; color/, 'height: Hpx; color').replace(/"height":\d+/, '"height":H')
+  .replace(/20\d\d_\d\d/g, 'MONTH').replace(/blake3:[0-9a-f]{64}/g, 'blake3:HASH');
+const stale = [];
 const OUT = `${REPO}/docs/design/canvas/project`, TMP = `${REPO}/build/canvas`;
 mkdirSync(TMP, { recursive: true });
 for (const f of ['brushed.svg', 'paper.svg']) copyFileSync(`${REPO}/pkg/ui/static/${f}`, `${TMP}/${f}`);
@@ -18,7 +27,15 @@ for (const frame of frames) {
   for (const scheme of ['light', 'dark']) {
     const built = pair[scheme];
     const name = frame.file + (scheme === 'dark' ? '-Dark' : '');
-    writeFileSync(`${OUT}/${name}.dc.html`, dcFile(frame, scheme, built));
+    const dc = dcFile(frame, scheme, built);
+    if (check) {
+      let have = ''; try { have = readFileSync(`${OUT}/${name}.dc.html`, 'utf8'); } catch (_) {}
+      const same = norm(have) === norm(dc);
+      if (!same) { stale.push(name); writeFileSync(`${TMP}/${name}.dc.html`, dc); }
+      console.log(name, same ? 'current' : 'STALE');
+      continue;
+    }
+    writeFileSync(`${OUT}/${name}.dc.html`, dc);
     writeFileSync(`${TMP}/${name}.html`, previewFile(frame, scheme, built));
     await c.size(frame.w, 800); await c.scheme(scheme);
     await c.goto(`file://${TMP}/${name}.html`, 300);
@@ -27,6 +44,13 @@ for (const frame of frames) {
   }
 }
 await c.close();
+if (check) {
+  if (stale.length) {
+    console.error(`canvas: ${stale.length} frame(s) differ from the page as built: ${stale.join(', ')}.\nRun scripts/canvas.sh, commit docs/design/canvas, and publish the changed frames (AGENTS.md, "Design Canvas").\nThe frames as built are in build/canvas.`);
+    process.exit(1);
+  }
+  process.exit(0);
+}
 
 // The index: each built frame's height, and the dark row under the tallest
 // light frame. Positions across the row and everything else are the

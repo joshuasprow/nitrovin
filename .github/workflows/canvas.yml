@@ -1,0 +1,52 @@
+# The design canvas's frames against the page as built. A frame under
+# docs/design/canvas/project holds the page's own markup and the stylesheet
+# rules it uses (scripts/canvas.sh), so a pull request that changes the page
+# and not the frames leaves them stale. This builds every frame from the
+# pull request's page, in the runner's headless Chrome, and fails naming
+# the ones that differ from the committed files.
+#
+# A frame's height, the data month and the release's hash are left out of
+# the comparison: the runner's fonts and go.mod's pin set them. So the
+# refresh's bump of the month does not run this, and does not fail it.
+#
+# The check cannot see the canvas itself. Publishing the rebuilt frames
+# stays with the loop in AGENTS.md ("Design Canvas").
+name: Canvas
+
+on:
+  pull_request:
+    paths:
+      - pkg/ui/**
+      - scripts/canvas.sh
+      - scripts/canvas/**
+      - scripts/sw.sh
+      - docs/design/canvas/project/**
+      - .github/actions/mise/**
+      - .github/workflows/canvas.yml
+      - "!**/*.md"
+      - "!**/*_test.go"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frames:
+    name: Frames
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/mise
+        with:
+          tools: go node
+      - run: scripts/canvas.sh --check
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: canvas-frames-as-built
+          path: build/canvas/*.dc.html
+          if-no-files-found: ignore

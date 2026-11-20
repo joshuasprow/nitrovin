@@ -1,10 +1,21 @@
 // A small CDP driver over headless Chrome: no dependencies.
-import { spawn } from 'node:child_process';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { spawn, spawnSync } from 'node:child_process';
+import { mkdtempSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const CHROME = process.env.NITROVIN_CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+// The browser: $NITROVIN_CHROME, else a Chrome or Chromium on PATH or in
+// /Applications, as cmd/nitrovin's browser tests find theirs.
+function chromePath() {
+  if (process.env.NITROVIN_CHROME) return process.env.NITROVIN_CHROME;
+  for (const name of ['google-chrome', 'google-chrome-stable', 'chromium', 'chromium-browser', 'chrome']) {
+    const r = spawnSync('which', [name], { encoding: 'utf8' });
+    if (r.status === 0 && r.stdout.trim()) return r.stdout.trim();
+  }
+  for (const p of ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/Applications/Chromium.app/Contents/MacOS/Chromium']) if (existsSync(p)) return p;
+  throw new Error('canvas: no Chrome or Chromium found; set NITROVIN_CHROME');
+}
+const CHROME = chromePath();
 
 export async function launch() {
   const dir = mkdtempSync(join(tmpdir(), 'cdp-'));

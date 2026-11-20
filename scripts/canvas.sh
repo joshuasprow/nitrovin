@@ -7,6 +7,13 @@
 # and the screenshots, then publish the changed files to the canvas.
 #
 #   scripts/canvas.sh [<frame>...]     # Main Materials Diagram Fitment Controls States
+#   scripts/canvas.sh --check [<frame>...]
+#
+# --check writes no frame. It builds each one, compares it with the committed
+# file, and exits 1 naming those that differ, each left in build/canvas as
+# built. A frame's height, the data month and the release's hash are left out
+# of the comparison: fonts and go.mod's pin set them, not the page.
+# canvas.yml runs it on a pull request that touches the page.
 #
 # It builds the Service Worker (scripts/sw.sh), starts two servers, one with
 # the demo set (pkg/ui/demo) and one with no vocabulary, and drives headless
