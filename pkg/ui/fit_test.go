@@ -93,11 +93,12 @@ var (
 	numberRE   = regexp.MustCompile(`<b class="num">([^<]*)</b>`)
 )
 
-// partTypes are a section's strip's part types: "name count", "*" before
-// the pressed one's name.
+// partTypes are a section's part types, each once, by name, whatever
+// headings its dialog lists them under: "name count", "*" before the
+// pressed one's name.
 func partTypes(s string) []string {
-	if i := strings.Index(s, `<ul class="ptypes"`); i >= 0 {
-		s = s[i : i+strings.Index(s[i:], "</ul>")]
+	if i := strings.Index(s, `<div class="ptgroups"`); i >= 0 {
+		s = s[i : i+strings.Index(s[i:], "</dialog>")]
 	}
 	var out []string
 	for _, m := range partTypeRE.FindAllStringSubmatch(s, -1) {
@@ -105,8 +106,13 @@ func partTypes(s string) []string {
 		if m[2] != "" {
 			name = "*" + name
 		}
-		out = append(out, name)
+		if !slices.Contains(out, name) {
+			out = append(out, name)
+		}
 	}
+	slices.SortFunc(out, func(a, b string) int {
+		return strings.Compare(strings.ToLower(strings.TrimPrefix(a, "*")), strings.ToLower(strings.TrimPrefix(b, "*")))
+	})
 	return out
 }
 
@@ -146,7 +152,7 @@ func TestPageFit(t *testing.T) {
 		`<span class="seg g-year"><span class="w">2015</span></span>`,
 		`<a class="ptype swap" href="/?from.vin=1FTEW1EG7FFA12345&amp;part.id=alternator">`,
 		`<a class="ptype swap" href="/?from.vin=1FTEW1EG7FFA12345&amp;part.id=mirror"><span class="nm">Door Mirror</span>`,
-		"Press a part type to see what fits this vehicle.",
+		"Choose a part type to see what fits this vehicle.",
 	} {
 		if !strings.Contains(s, want) {
 			t.Errorf("the pickup lacks %s\n%s", want, s)
@@ -207,7 +213,9 @@ func TestPageFit(t *testing.T) {
 	// verbatim and the note; the pressed part type's link takes it away.
 	s = fitSection(t, h, pickup+"&part.id=alternator")
 	for _, want := range []string{
-		`<a class="ptype swap" href="/?from.vin=1FTEW1EG7FFA12345" aria-current="true"><span class="nm">Alternator</span> <span class="n">3`,
+		`<a class="ptype swap" href="/?from.vin=1FTEW1EG7FFA12345&amp;part.id=alternator" aria-current="true"><span class="nm">Alternator</span> <span class="n">3`,
+		`<span class="nm">Alternator</span><span class="n">3<span class="visually-hidden"> candidates</span></span>`,
+		`<a class="ptclear swap" id="clear-type" data-focus="pick-type" href="/?from.vin=1FTEW1EG7FFA12345" aria-label="Clear Alternator">×</a>`,
 		`<ol class="cands" aria-label="Candidates: Alternator" tabindex="0">`,
 		`<p class="numtape"><b class="num">DEMO-1001</b> <span class="yrs">2015–2017</span></p>`,
 		`<div><dt>Options</dt><dd>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</dd></div>`,
@@ -265,7 +273,7 @@ func TestPageFit(t *testing.T) {
 				t.Errorf("%s: lacks %s\n%s", c.target, want, s)
 			}
 		}
-		if strings.Contains(s, `class="ptypes"`) {
+		if strings.Contains(s, `class="ptwrap"`) {
 			t.Errorf("%s: lists part types\n%s", c.target, s)
 		}
 		m := regexp.MustCompile(`<a href="(/ui/vocabularies/[^"]*)">`).FindStringSubmatch(s)

@@ -453,8 +453,8 @@
   // candidate's stock strip, is a link to the page (page.html's fit): its
   // answer is swapped in place, as a VIN's is, and is a history entry of
   // its own. The link the visitor followed keeps the focus, in the answer
-  // that replaced it: a part type, pressed from the strip or the dialog,
-  // is the strip's own; anything else the element of its id, else the
+  // that replaced it: a part type, chosen in the picker's list or under the
+  // picker, leaves it on the picker; anything else the element of its id, else the
   // link in its place. "Show all", which the answer it brings has no
   // more, leaves the focus on what it names (data-focus), the rows it
   // showed. In part-number mode a part type chosen in the dialog fills
@@ -480,6 +480,13 @@
     const a = e.target.closest && e.target.closest('#answer a.swap');
     if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
+    // The pressed part type, pressed again in the picker's list: the list
+    // shuts and the page stays as it is (#366).
+    if (a.matches('#fit .ptdialog .ptype[aria-current]')) {
+      a.closest('[popover]').hidePopover();
+      document.getElementById('pick-type').focus({ preventScroll: true });
+      return;
+    }
     const part = a.classList.contains('ptype') && a.parentElement.dataset.part;
     const i = [...document.querySelectorAll('#answer a.swap:not(.ptype)')].indexOf(a);
     const focused = document.activeElement === a;
@@ -515,7 +522,7 @@
         number.setSelectionRange(number.value.length, number.value.length);
         return;
       }
-      const again = part ? document.querySelector('#answer .ptypes > li[data-part="' + CSS.escape(part) + '"] > a.ptype') : (id && document.getElementById(id)) || document.querySelectorAll('#answer a.swap:not(.ptype)')[i];
+      const again = part ? document.getElementById('pick-type') : (id && document.getElementById(id)) || document.querySelectorAll('#answer a.swap:not(.ptype)')[i];
       if ((focused || dialog) && again) again.focus({ preventScroll: true });
     }).catch(console.error);
   });
@@ -600,27 +607,25 @@
     strip(document.getElementById('answer'));
   });
 
-  // The strip of part types (page.html's fit, #324). Without this script
-  // it is two rows of part types by name, the pressed one first, ending in
-  // "N more", which opens the part types dialog, every part type under its
-  // headings. With it:
+  // The part types (page.html's fit, #366; part-number mode's dialog,
+  // #325). Without this script a VIN's page has the picker, which opens
+  // the part types dialog as its list, every part type under its headings.
+  // With it:
   //
   // - a part type a page presses is kept in this browser (the last 8,
-  //   newest first, by its spine), and up to two the vehicle has lead the
-  //   strip, each with a Recent stamp; the dialog lists every one it has
-  //   under "Opened recently", whose Clear recent forgets them, as the VINs
+  //   newest first, by its spine). Up to three the vehicle has, the
+  //   pressed one aside, sit under the picker, in the order they were
+  //   opened; part-number mode's dialog lists every one it has under
+  //   "Opened recently", whose Clear recent forgets them, as the VINs
   //   menu's forgets them and the VINs;
-  // - each filter narrows its list as it is typed, by name: the strip's,
-  //   across every part type, the pressed one kept, which the rails hang
-  //   from; the dialog's, the dialog;
-  // - the two rows are packed again at each width, as the server packs
-  //   them (strip.go), from the numbers it gives (data-fit): beside the
-  //   filter, with the Recent stamps, of the part types the filter
-  //   leaves. No position is read (ADR 0027).
+  // - the filter narrows the list as it is typed, by name, hiding a
+  //   heading left with none;
+  // - pressing the pressed part type in the list shuts the list and
+  //   changes nothing: the key beside the picker clears it.
   //
   // Nothing is kept when storage fails.
   const PARTS = 'nitrovin.recent-parts';
-  const LEAD = 2;
+  const UNDER = 3;
   const recentParts = () => {
     try {
       return JSON.parse(localStorage.getItem(PARTS) || '[]').filter((r) => r && r.spine && r.id).slice(0, KEPT);
@@ -628,18 +633,17 @@
       return [];
     }
   };
-  const stripItems = (wrap) => [...wrap.querySelectorAll('.ptypes > li[data-part]')];
-  // listed are the part types answer lists, and the spine they are kept
-  // by: its strip's, or, in part-number mode, where the dialog stands
-  // alone, the dialog's.
+  // listed are the part types answer lists, its dialog's, and the spine
+  // they are kept by: the picker's, or, in part-number mode, where the
+  // dialog stands alone, the dialog's.
   const listed = (answer) => {
-    const wrap = answer && answer.querySelector('.ptwrap');
-    const dialog = answer && answer.querySelector('.ptdialog[data-spine]');
-    if (wrap) return { wrap, spine: wrap.dataset.spine, items: stripItems(wrap) };
-    if (dialog) return { spine: dialog.dataset.spine, items: [...dialog.querySelectorAll('.ptgroups li[data-part]')] };
-    return null;
+    const dialog = answer && answer.querySelector('.ptdialog');
+    if (!dialog) return null;
+    const wrap = answer.querySelector('.ptwrap');
+    const spine = wrap ? wrap.dataset.spine : dialog.dataset.spine;
+    return spine ? { wrap, dialog, spine, items: [...dialog.querySelectorAll('.ptgroups li[data-part]')] } : null;
   };
-  // keep keeps the part type answer presses, when its strip has it, or
+  // keep keeps the part type answer presses, when its list has it, or
   // the one the plate holds, in part-number mode.
   const keep = (answer) => {
     const list = listed(answer);
@@ -654,108 +658,48 @@
     }
     chips();
   };
-  // lay packs the part types shown into two rows at each width of the
-  // strip's measure (strip.go's stripFit, data-fit): a tape takes two
-  // cells where its name, count and Recent stamp do not fit one, and one
-  // that does not fit at a row's end starts the next row. It marks the
-  // tapes that take two (sN) and those past the rows (xN), draws the key
-  // where any are (kN), and writes how many (.kn.cN).
-  const lay = (wrap) => {
-    const fit = JSON.parse(wrap.dataset.fit);
-    const items = stripItems(wrap);
-    const shown = items.filter((li) => !li.hidden);
-    const filtered = !!wrap.querySelector('.ptf:not([hidden])');
-    const key = wrap.querySelector('.ptkey');
-    for (const g of fit.grids) {
-      const spans = shown.map((li) => {
-        const w = fit.tape + fit.slack + g.char * [...li.querySelector('.nm').textContent].length +
-          fit.digit * li.querySelector('.n').firstChild.nodeValue.length + (li.querySelector('.rstamp') ? fit.stamp : 0);
-        return w <= g.cell ? 1 : 2;
-      });
-      const lead = filtered ? g.lead : 0;
-      const fits = (k, withKey) => {
-        let row = 0;
-        let col = lead;
-        const place = (s) => {
-          if (col + s > g.cols) [row, col] = [row + 1, 0];
-          col += s;
-          return row < 2;
-        };
-        return spans.slice(0, k).every(place) && (!withKey || place(1));
-      };
-      let k = shown.length;
-      if (!fits(k, false)) for (k--; k > 0 && !fits(k, true); k--);
-      for (const li of items) {
-        const i = shown.indexOf(li);
-        li.classList.toggle('s' + g.cols, i >= 0 && spans[i] === 2);
-        li.classList.toggle('x' + g.cols, i >= k);
-      }
-      const n = shown.length - k;
-      key.classList.toggle('k' + g.cols, n > 0);
-      const kn = key.querySelector('.kn.c' + g.cols);
-      kn.firstChild.nodeValue = n + ' more';
-      kn.lastChild.textContent = n === 1 ? ' part type' : ' part types';
-    }
-  };
   const nameOf = (li) => li.querySelector('.ptype .nm').textContent.toLowerCase();
-  // filter narrows input's list to the names holding what it has: the
-  // strip's or the dialog's, which hides a heading left with none.
+  // filter narrows the dialog's list to the names holding what input has,
+  // and hides a heading left with none.
   const filter = (input) => {
     const q = input.value.trim().toLowerCase();
-    const wrap = input.closest('.ptwrap');
-    const scope = wrap || input.closest('.ptdialog');
+    const scope = input.closest('.ptdialog');
     let found = 0;
-    for (const li of wrap ? stripItems(wrap) : scope.querySelectorAll('.ptlist > li')) {
+    for (const li of scope.querySelectorAll('.ptlist > li')) {
       const match = nameOf(li).includes(q);
       if (match) found++;
-      li.hidden = !match && !(wrap && li.querySelector('.ptype[aria-current]'));
+      li.hidden = !match;
     }
-    for (const sec of wrap ? [] : scope.querySelectorAll('.ptgroup')) sec.hidden = !sec.querySelector('.ptlist > li:not([hidden])');
+    for (const sec of scope.querySelectorAll('.ptgroup')) sec.hidden = !sec.querySelector('.ptlist > li:not([hidden])');
     const none = scope.querySelector('.ptnone');
     none.hidden = found > 0;
     none.textContent = found ? '' : 'No part type’s name has “' + input.value.trim() + '”.';
-    if (wrap) lay(wrap);
   };
   document.addEventListener('input', (e) => {
     if (e.target.classList && e.target.classList.contains('ptfind')) filter(e.target);
   });
-  // strip draws answer's strip and dialog as this browser has them: the
-  // filters shown, the recent part types first and in the dialog's head,
-  // and the counts laid. In part-number mode there is the dialog alone.
+  // strip draws answer's part types as this browser has them: the filter
+  // shown, and the recent part types under the picker and in the dialog's
+  // "Opened recently".
   function strip(answer) {
     const list = listed(answer);
     if (!list) return;
-    const { wrap, items } = list;
+    const { wrap, dialog, items } = list;
     answer.querySelectorAll('.ptf').forEach((f) => { f.hidden = false; });
     const has = new Set(items.map((li) => li.dataset.part));
     const recent = recentParts().filter((r) => r.spine === list.spine && has.has(r.id)).map((r) => r.id);
+    const copy = (id) => dialog.querySelector('.ptgroups li[data-part="' + CSS.escape(id) + '"]').cloneNode(true);
     if (wrap) {
       wrap.classList.add('live');
-      items.forEach((li, i) => { li.dataset.at ??= i; });
-      const lead = recent.slice(0, LEAD);
-      const rank = (li) => (lead.includes(li.dataset.part) ? lead.indexOf(li.dataset.part) : LEAD + Number(li.dataset.at));
-      items.sort((a, b) => rank(a) - rank(b));
-      wrap.querySelector('.ptypes > .ptnone').before(...items);
-      for (const li of items) {
-        const stamp = li.querySelector('.rstamp');
-        if (lead.includes(li.dataset.part) && !stamp) {
-          const s = document.createElement('span');
-          s.className = 'rstamp';
-          s.textContent = 'Recent';
-          li.prepend(s);
-        } else if (!lead.includes(li.dataset.part) && stamp) {
-          stamp.remove();
-        }
-      }
+      const under = recent.filter((id) => id !== answer.dataset.part).slice(0, UNDER);
+      const row = wrap.querySelector('.ptrecents');
+      row.replaceChildren(...under.map(copy));
+      row.hidden = under.length === 0;
     }
-    const dialog = answer.querySelector('.ptdialog');
-    if (dialog) {
-      const sec = dialog.querySelector('.ptrecent');
-      sec.querySelector('.ptlist').replaceChildren(...recent.map((id) => dialog.querySelector('.ptgroups li[data-part="' + CSS.escape(id) + '"]').cloneNode(true)));
-      sec.hidden = recent.length === 0;
-    }
+    const sec = dialog.querySelector('.ptrecent');
+    sec.querySelector('.ptlist').replaceChildren(...recent.map(copy));
+    sec.hidden = recent.length === 0;
     for (const input of answer.querySelectorAll('.ptfind')) if (input.value) filter(input);
-    if (wrap) lay(wrap);
   }
   const parts = (answer) => {
     keep(answer);

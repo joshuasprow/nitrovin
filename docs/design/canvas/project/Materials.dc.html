@@ -41,7 +41,6 @@ code, pre, .mono{font-family: var(--cell-font)}
 .visually-hidden, .plbl{position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap}
 button{--key: var(--metal); font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase; padding: .45rem .9rem; cursor: pointer; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); background: var(--key); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised)}
 button:is(:active,.is-active), button[aria-pressed=true], &:has(#vins.is-open) .open-vins, &:has(nav.top.is-open) .open-nav{--key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed)}
-input[type=text], input[type=search]{font: inherit; padding: .35rem .5rem; box-sizing: border-box; color: var(--fg); background: var(--card-bg); border: 1px solid var(--steel); border-radius: 2px; box-shadow: inset 0 2px 3px rgb(0 0 0 / .18)}
 label{font-weight: 600}
 table{border-collapse: collapse; width: 100%}
 th, td{text-align: left; vertical-align: top; padding: .3rem .75rem .3rem 0; border-bottom: 1px solid var(--line)}
@@ -123,8 +122,7 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 .stamp .voc{min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis}
 .seg{position: relative; align-self: stretch; display: flex; align-items: center; justify-content: center; padding: .35rem .6rem; text-align: center; min-width: 0}
 .seg .w{font: 900 1.05rem/1.2 var(--cell-font); letter-spacing: .08em; text-shadow: var(--tape-emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere}
-.seg::before{content: ""; position: absolute; left: 8px; right: 8px; top: -13px; height: 5px; border: 4px solid var(--c); border-bottom: 0; border-radius: 2px 2px 0 0; filter: var(--stripe-lift)}
-.seg::after{content: ""; position: absolute; left: calc(50% - 2.5px); top: calc(-1px - var(--lead) - var(--prev)); height: calc(var(--lead) + var(--prev) - 12px); border-left: 5px solid var(--c); filter: var(--stripe-lift)}
+.seg::after{content: ""; position: absolute; left: calc(50% - 2.5px); top: calc(-1px - var(--lead) - var(--prev)); height: calc(var(--lead) + var(--prev) + 1px); border-left: 5px solid var(--c); filter: var(--stripe-lift)}
 .seg:is(:target,.is-target){scroll-margin: 16rem 2rem 4rem}
 .seg:is(:target,.is-target) .w{outline: 2px solid var(--cm); outline-offset: 4px}
 .tagplate .info{position: absolute; right: .45rem; top: 50%; transform: translateY(-50%); width: 1.35rem; height: 1.35rem; padding: 0; border-radius: 50%; font: italic 700 12px Georgia, serif; text-transform: none; letter-spacing: 0}
@@ -139,28 +137,18 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 .fitstrip .stamp{align-self: stretch; display: flex; align-items: center; min-width: 0; margin: 0; padding: 0 .5rem 0 .7rem; border-right: 1px solid rgb(255 255 255 / .18); font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss)}
 .fitstrip .g-vds{--cm: #7db4ff}
 .fitstrip .g-year{--cm: #ffb067}
-.ptypes{list-style: none; margin: 0; padding: 0}
-.ptype{display: inline-flex; align-items: center; gap: 10px; box-sizing: border-box; min-height: 44px; padding: 0 14px; font: 900 14px var(--cell-font); letter-spacing: .06em; text-decoration: none; color: var(--on-metal); text-shadow: var(--emboss); background: var(--alu); border: 1px solid var(--steel); border-top-color: #fff; border-bottom-color: var(--steel-dark); border-radius: 2px; box-shadow: var(--raised)}
-.ptype .n{padding: 1px 7px; border: 1px solid rgb(35 41 48 / .55); border-radius: 9px; font-size: 11px; text-shadow: none}
-.ptype:is(:active,.is-active), .ptype[aria-current]{transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed)}
-.ptypes .ptype[aria-current]{anchor-name: --fit-part}
 .ptwrap{position: relative; z-index: 3; margin: 30px 0 0}
-.ptwrap .ptypes{--cols: 5; display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 10px}
-.ptypes > li{display: flex; min-width: 0}
-.ptypes > li[hidden]{display: none}
-.ptwrap .ptype{flex: 1; min-width: 0; gap: 8px; padding-inline: 10px}
-.ptwrap .rstamp{padding: 0 6px}
-.ptype .n{flex: none}
-.ptwrap .ptype .nm{min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
-.ptkey #more-types{flex: 1; min-width: 0; min-height: 44px; padding: 0 .5rem}
-.kn:not(.c5), .ptypes > li.x5, .ptypes > .ptkey:not(.k5){display: none}
-.ptypes > li.s5{grid-column: span 2}
-.ptfind{width: 100%; min-height: 44px}
-.rstamp{display: flex; align-items: center; padding: 0 8px; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-metal); text-shadow: var(--emboss); background: var(--alu); border: 1px solid var(--steel); border-top-color: #fff; border-bottom-color: var(--steel-dark); border-right-color: rgb(35 41 48 / .3); border-radius: 2px 0 0 2px; box-shadow: var(--raised)}
-.rstamp + .ptype{border-left: 0; border-radius: 0 2px 2px 0}
-.rstamp:has(+ .ptype:is(:is(:active,.is-active), [aria-current])){transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed)}
-.ptypes > .ptf{order: -2}
-.ptypes > .ptnone{order: -1; grid-column: 2 / -1; align-self: center; color: var(--muted)}
+.ptsel{display: flex; align-items: stretch; gap: 6px; box-sizing: border-box; width: min(24rem, 100%); padding: 5px 6px; anchor-name: --fit-part, --pick-type; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck)}
+.ptfield{--key: var(--alu); flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: .5rem; align-items: center; min-height: 44px; padding: .25rem .6rem; text-align: left; text-transform: none; letter-spacing: 0}
+.ptfield .plab{grid-column: 1 / -1; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase}
+.ptfield .nm{min-width: 0; font: 900 16px/1.2 var(--cell-font); letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
+.ptfield .n{padding: 1px 7px; border: 1px solid rgb(35 41 48 / .55); border-radius: 9px; font: 900 11px var(--cell-font); text-shadow: none}
+.ptfield svg{width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round}
+.ptclear{flex: none; display: flex; align-items: center; justify-content: center; min-width: 44px; font: 900 18px/1 var(--cell-font); text-decoration: none; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); background: var(--metal); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised)}
+.ptclear:is(:active,.is-active){transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed)}
+.ptrecents{list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: fit-content; margin: 10px 0 0; padding: 0 8px 0 0; background: var(--bg)}
+.ptrecents[hidden]{display: none}
+.ptrecents::before{content: "Recent"; font: 900 10px var(--label-font); letter-spacing: .08em; text-transform: uppercase; color: var(--muted)}
 .ptgroups:has(> .ptgroup:only-child:not(:has(.pthead))){grid-template-columns: minmax(0, 1fr)}
 .cands{--gap: 12px; anchor-name: --fit-tags; list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: row dense; gap: 40px var(--gap); margin: 14px 0 0; padding: 40px 0 0 22px}
 .cand{position: relative; min-width: 0}
@@ -261,10 +249,12 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 .sheet .vp.pad{padding:0 var(--gutter)}
 .sheet .vp header,.sheet .vp main{margin-bottom:0}
 .sheet .vp .popover.is-open{display:block !important;position:relative !important;inset:auto !important;margin:0 !important;max-height:none !important;overflow:visible !important}
+/* The part type picker's list hangs from the picker, over what follows it. */
+.sheet .vp #fit .ptdialog.is-open{position:absolute !important;z-index:5;width:min(24rem,calc(100% - 2 * var(--gutter))) !important;margin-top:6px !important}
 
 </style>
 </helmet>
-<div class="root sheet" data-scheme="light" style="width: 1280px; height: 1820px; color: var(--fg); background: var(--bg)">
+<div class="root sheet" data-scheme="light" style="width: 1280px; height: 1780px; color: var(--fg); background: var(--bg)">
 <div><h1 class="sh-h1">Materials and elevation</h1><p class="sh-intro">Three materials, the same in both colour schemes: brushed aluminum, vinyl tape and manila. Three heights: static tape is stuck on; a control stands raised on a steel ledge; pressed, it sits flush, 2px down and darker.</p></div>
 <h2 class="sh-h2">Aluminum</h2>
 <section>
@@ -329,7 +319,7 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 </section>
 <h2 class="sh-h2">Vinyl tape</h2>
 <section>
-<p class="sh-cap">Label tape, the second tape, pinstripe <span>Black label tape carries names, letters raised white. The second tape is the plate's metal with the tape's ridges: a part type is a strip of it, raised, and the pressed one is flush. Lines are pinstripe tape in a group's colour, lit on one edge.</span></p>
+<p class="sh-cap">Label tape, the second tape, pinstripe <span>Black label tape carries names, letters raised white. The second tape is the plate's metal with the tape's ridges: the part type picker is a key of it on its own piece of label tape, and a part type opened recently is a strip of it, raised. Lines are pinstripe tape in a group's colour, lit on one edge, and run straight into the tape.</span></p>
 <div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px">
 
 <main id="ui-main" class="is-fw">
@@ -360,12 +350,12 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 <span class="seg g-vds"><span class="w">F150</span></span>
 <span class="seg g-year"><span class="w">2015</span></span>
 </div>
-<div class="ptwrap live" data-spine="demo-part-types" data-fit="{&quot;tape&quot;:46,&quot;digit&quot;:7.7,&quot;stamp&quot;:56,&quot;slack&quot;:2,&quot;grids&quot;:[{&quot;cols&quot;:5,&quot;cell&quot;:171,&quot;char&quot;:9.52,&quot;lead&quot;:1},{&quot;cols&quot;:4,&quot;cell&quot;:164,&quot;char&quot;:9.52,&quot;lead&quot;:1},{&quot;cols&quot;:3,&quot;cell&quot;:164,&quot;char&quot;:9.52,&quot;lead&quot;:1},{&quot;cols&quot;:2,&quot;cell&quot;:167,&quot;char&quot;:8.84,&quot;lead&quot;:0}]}">
-<ul class="ptypes" id="ptypes" aria-label="Part types">
-<li class="ptf"><label class="visually-hidden" for="ptf-strip">Filter part types</label><input type="search" id="ptf-strip" class="ptfind" placeholder="Filter part types" aria-controls="ptypes" value=""></li>
-<li data-part="alternator" data-at="0" class="s5 s4 s3 s2"><span class="rstamp">Recent</span><a class="ptype swap" href="#" aria-current="true"><span class="nm">Alternator</span> <span class="n">3<span class="visually-hidden"> candidates</span></span></a></li><li data-part="brake-rotor-front" class="s5 s4 s3 s2 x2" data-at="1"><a class="ptype swap" href="#"><span class="nm">Brake Rotor, Front</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="brake-rotor-rear" class="s5 s4 s3 s2 x2 x4 x3" data-at="2"><a class="ptype swap" href="#"><span class="nm">Brake Rotor, Rear</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="mirror" class="x3 x2 x4" data-at="3"><a class="ptype swap" href="#"><span class="nm">Door Mirror</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li data-part="fog-lamp" class="x4 x3 x2" data-at="4"><a class="ptype swap" href="#"><span class="nm">Fog Lamp</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="headlamp" class="s5 s4 x4 s3 x3 s2 x2 x5" data-at="5"><a class="ptype swap" href="#"><span class="nm">Headlamp Assembly</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li data-part="starter" class="s5 x5 s4 x4 s3 x3 s2 x2" data-at="6"><a class="ptype swap" href="#"><span class="nm">Starter Motor</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li><li data-part="transfer-case" class="s5 x5 s4 x4 s3 x3 s2 x2" data-at="7"><a class="ptype swap" href="#"><span class="nm">Transfer Case</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li class="ptnone" hidden=""></li>
-<li class="ptkey k5 k4 k3 k2"><button id="more-types" type="button"><span class="kn c5">3 more<span class="visually-hidden"> part types</span></span><span class="kn c4">6 more<span class="visually-hidden"> part types</span></span><span class="kn c3">6 more<span class="visually-hidden"> part types</span></span><span class="kn c2">7 more<span class="visually-hidden"> part types</span></span></button></li>
-</ul>
+<div class="ptwrap live" data-spine="demo-part-types">
+<div class="ptsel">
+<button id="pick-type" class="ptfield" type="button"><span class="plab">Part type</span><span class="nm">Alternator</span><span class="n">3<span class="visually-hidden"> candidates</span></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"></path></svg></button>
+<a class="ptclear swap" id="clear-type" data-focus="pick-type" href="#" aria-label="Clear Alternator">×</a>
+</div>
+<ul class="ptrecents" aria-label="Opened recently" hidden=""></ul>
 </div>
 <span class="stems" aria-hidden="true"></span><span class="runs" aria-hidden="true"></span><span class="drops" aria-hidden="true"></span>
 </section>
@@ -498,7 +488,7 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 </section>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1820}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1780}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};

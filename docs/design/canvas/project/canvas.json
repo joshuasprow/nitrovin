@@ -3,14 +3,14 @@
   "attachments": {},
   "boards": {
     "Controls-Dark.dc.html": {
-      "h": 3800,
+      "h": 4660,
       "title": "Dialogs, forms and inputs, dark",
       "w": 1280,
       "x": 5440,
-      "y": 3920
+      "y": 4780
     },
     "Controls.dc.html": {
-      "h": 3800,
+      "h": 4660,
       "title": "Dialogs, forms and inputs, light",
       "w": 1280,
       "x": 5440,
@@ -21,7 +21,7 @@
       "title": "Cards, brackets and lines, dark",
       "w": 1280,
       "x": 2720,
-      "y": 3920
+      "y": 4780
     },
     "Diagram.dc.html": {
       "h": 1940,
@@ -31,14 +31,14 @@
       "y": 0
     },
     "Fitment-Dark.dc.html": {
-      "h": 3610,
+      "h": 4350,
       "title": "The fitment card, dark",
       "w": 1280,
       "x": 4080,
-      "y": 3920
+      "y": 4780
     },
     "Fitment.dc.html": {
-      "h": 3610,
+      "h": 4350,
       "title": "The fitment card, light",
       "w": 1280,
       "x": 4080,
@@ -49,7 +49,7 @@
       "title": "The VIN input, both modes, dark",
       "w": 1280,
       "x": 0,
-      "y": 3920
+      "y": 4780
     },
     "Main.dc.html": {
       "h": 2100,
@@ -59,76 +59,28 @@
       "y": 0
     },
     "Materials-Dark.dc.html": {
-      "h": 1820,
+      "h": 1780,
       "title": "Materials and elevation, dark",
       "w": 1280,
       "x": 1360,
-      "y": 3920
+      "y": 4780
     },
     "Materials.dc.html": {
-      "h": 1820,
+      "h": 1780,
       "title": "Materials and elevation, light",
       "w": 1280,
       "x": 1360,
       "y": 0
     },
-    "Proposal-PartType-1280-Dark.dc.html": {
-      "h": 2990,
-      "page": "proposals",
-      "title": "Proposal: the part type picker, 1280 wide, dark",
-      "w": 1280,
-      "x": 0,
-      "y": 3540
-    },
-    "Proposal-PartType-1280.dc.html": {
-      "h": 2990,
-      "page": "proposals",
-      "title": "Proposal: the part type picker, 1280 wide, light",
-      "w": 1280,
-      "x": 0,
-      "y": 0
-    },
-    "Proposal-PartType-390-Dark.dc.html": {
-      "h": 3420,
-      "page": "proposals",
-      "title": "Proposal: the part type picker, 390 wide, dark",
-      "w": 470,
-      "x": 2288,
-      "y": 3540
-    },
-    "Proposal-PartType-390.dc.html": {
-      "h": 3420,
-      "page": "proposals",
-      "title": "Proposal: the part type picker, 390 wide, light",
-      "w": 470,
-      "x": 2288,
-      "y": 0
-    },
-    "Proposal-PartType-768-Dark.dc.html": {
-      "h": 3270,
-      "page": "proposals",
-      "title": "Proposal: the part type picker, 768 wide, dark",
-      "w": 848,
-      "x": 1360,
-      "y": 3540
-    },
-    "Proposal-PartType-768.dc.html": {
-      "h": 3270,
-      "page": "proposals",
-      "title": "Proposal: the part type picker, 768 wide, light",
-      "w": 848,
-      "x": 1360,
-      "y": 0
-    },
     "States-Dark.dc.html": {
-      "h": 3540,
+      "h": 3450,
       "title": "States, dark",
       "w": 1280,
       "x": 6800,
-      "y": 3920
+      "y": 4780
     },
     "States.dc.html": {
-      "h": 3540,
+      "h": 3450,
       "title": "States, light",
       "w": 1280,
       "x": 6800,
@@ -144,23 +96,13 @@
     "view": "canvas"
   },
   "noteOrder": [
-    "heading",
-    "proposal-part-type"
+    "heading"
   ],
   "notes": {
     "heading": {
       "kind": "title1",
       "maxW": 8000,
       "text": "The page as built: what DESIGN.md describes",
-      "w": 240,
-      "x": 0,
-      "y": -300
-    },
-    "proposal-part-type": {
-      "kind": "title1",
-      "maxW": 2758,
-      "page": "proposals",
-      "text": "Proposal (#366): the part type picker",
       "w": 240,
       "x": 0,
       "y": -300
@@ -178,22 +120,12 @@
     "Diagram-Dark.dc.html",
     "Fitment-Dark.dc.html",
     "Controls-Dark.dc.html",
-    "States-Dark.dc.html",
-    "Proposal-PartType-1280.dc.html",
-    "Proposal-PartType-768.dc.html",
-    "Proposal-PartType-390.dc.html",
-    "Proposal-PartType-1280-Dark.dc.html",
-    "Proposal-PartType-768-Dark.dc.html",
-    "Proposal-PartType-390-Dark.dc.html"
+    "States-Dark.dc.html"
   ],
   "pages": [
     {
       "id": "page-1",
       "name": "nitrovin UI"
-    },
-    {
-      "id": "proposals",
-      "name": "Proposals"
     }
   ],
   "title": "nitrovin UI Design"
