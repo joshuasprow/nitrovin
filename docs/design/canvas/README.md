@@ -15,8 +15,8 @@ kept together.
 `_blob/` is not the canvas's: it links each uploaded image's address to its
 original in `pkg/ui/static/` (see "Rebuilding a canvas from a snapshot").
 
-The canvas is one row of six frames, each named after the part of
-[DESIGN.md](../../../DESIGN.md) it illustrates.
+The canvas has two pages. The first, "nitrovin UI", is one row of six frames,
+each named after the part of [DESIGN.md](../../../DESIGN.md) it illustrates.
 
 | Frame | Shows |
 | --- | --- |
@@ -41,17 +41,25 @@ colour-scheme queries are resolved for that box: the page at 1280, 768 and
 edited by hand: a change to the page is a rerun, and the diff of this folder
 is what to publish.
 
+The second page, "Proposals", holds what is not built yet. Its frames are
+not `scripts/canvas.sh`'s: each is captured the same way from a prototype
+running on a throwaway branch, which its row's title names by issue.
+
+| Frames | Proposes | Prototype |
+| --- | --- | --- |
+| `Proposal-PartType-1280`, `-768`, `-390` | #366: the row of part types and its dialog become one picker under the "Parts that fit" strip | branch `prototype/part-types-366` |
+
 The wireframes and texture frames that proposed the fitment slices (#320 to
 #325) are removed from the canvas. This folder's history holds them.
 
 ## This snapshot
 
-Canvas version `1795195411-1ca1`, published on 2026-11-20.
+Canvas version `1795209348-fb84`, published on 2026-11-20.
 
 ## Rebuilding a canvas from a snapshot
 
-Publish this folder as the root of a new Design canvas. The six frames and their dark twins
-draw their textures from two
+Publish this folder as the root of a new Design canvas. Every frame and its dark twin
+draws their textures from two
 images uploaded to the original canvas, at addresses that resolve only there:
 
 | Address in the frames | Original |
@@ -60,7 +68,7 @@ images uploaded to the original canvas, at addresses that resolve only there:
 | `/_blob/8df67eb7edb3679ce1a61d297a1fcd76` | `pkg/ui/static/paper.svg` |
 
 Upload both to the new canvas and replace each address with the one the
-upload returns. Without that, those twelve frames draw with no texture.
+upload returns. Without that, those frames draw with no texture.
 
 `_blob/` holds one link per upload, named for its address and pointing at
 its original. A reader that draws the frames off the canvas, from this
