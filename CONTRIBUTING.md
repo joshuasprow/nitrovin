@@ -100,7 +100,8 @@ cancel), and none runs for Markdown, `GLOSSARY.md`, `NOTICE` or `docs/`
 alone, except the API documents the contract tests read, the deviation
 witnesses the oracle reads, `docs/vocabularies.md`, whose image recipe
 `release.yml` builds, and `README.md`, whose install, MCP and verify
-text `TestFormREADME` holds to the page's.
+text `TestFormREADME` holds to the page's. `canvas.yml` starts on every
+pull request and, for those alone, skips its one costly job.
 
 - `contract.yml` (schemas, the no-data tests and the `js/wasm` build):
   `pkg/contract`, `pkg/nitrovin`, `pkg/decoder`, `pkg/vocab`, `pkg/fitment`,
@@ -130,6 +131,17 @@ text `TestFormREADME` holds to the page's.
   Postgres 17 (the oracle's digest, no dump) and runs every
   `pkg/stock/pg` Postgres test, each required to pass, in about a minute,
   for every path the workflow watches.
+- `canvas.yml` (the design canvas's frames against the page as built), on
+  every pull request, in two jobs. *Changed paths* decides whether the
+  frames are built. *Frames* runs `scripts/canvas.sh --check` when the
+  branch changes `pkg/ui`, `scripts/canvas.sh`, `scripts/canvas/`,
+  `scripts/sw.sh`, `docs/design/canvas/project/` or the workflow, in about
+  three minutes; otherwise it is skipped, which counts as passed. *Frames*
+  is the one required status check of `main`'s ruleset, which is why this
+  workflow has no path filter: a required check that never starts would
+  hold every pull request outside its paths. A stale frame fails it: run
+  `scripts/canvas.sh`, commit `docs/design/canvas`, and publish the changed
+  frames ([AGENTS.md](AGENTS.md), "Design Canvas").
 - `libnitrovin.yml` (the C library on six native runners, on the pinned
   artifact): `cmd/libnitrovin`, the packages it links (`pkg/stdio`,
   `pkg/nitrovin`, `pkg/contract`, `pkg/decoder`, `pkg/vocab`), `go.mod`,
