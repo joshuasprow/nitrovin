@@ -176,8 +176,8 @@ strip of label tape saying what was asked (the catalog, and the model and
 year it asked with, on the lines from Vehicle and Model year through the
 names), the vehicle's part types as the second tape, each a link that
 presses it, and the pressed one's candidates as manila tags on two rails
-of pinstripe tape: Vehicle's and Model year's, from the pressed part type
-down the tags' leading edge to each eyelet (.rails, ui.css). A tag's
+of pinstripe tape: Vehicle's and Model year's, down from the pressed part
+type (.risers) and along (.rails) to each eyelet (ui.css). A tag's
 number is a strip of label tape across it; its rows are the catalog's
 words, verbatim; its marks are ink on it: a solid stamp checked, a dashed
 one not, plain words for what has nothing checked. Where there is nothing
@@ -208,7 +208,7 @@ own, which plate.js swaps in place (swap). */}}
 {{end}}</p>
 </div></li>
 {{end}}</ol>
-<span class="rails" aria-hidden="true"></span>
+<span class="rails" aria-hidden="true"></span><span class="risers" aria-hidden="true"></span>
 {{with .Next}}<p class="more-cands">This page shows {{len $.Tags}} of {{$.Total}} candidates. <a class="swap" href="{{.}}">Next page</a></p>
 {{end}}{{end}}{{else}}<h2 id="fit-h" class="visually-hidden">Parts that fit</h2>
 <p class="blank"><span>{{.Blank}}</span>{{if .Add}}<button type="button" popovertarget="vocabularies">Add a catalog</button>{{end}}{{range .Ways}}<a href="{{.Href}}">{{.Text}}</a>{{end}}</p>

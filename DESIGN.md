@@ -304,10 +304,15 @@ catalog has for the vehicle, and the candidates of the one pressed.
   option text (verbatim) and note are rows in the tag's ink under muted
   labels.
 - **The rails** are two lines of pinstripe tape, Vehicle's and Model year's,
-  from the pressed part type (by anchor positioning; from the tags' corner
-  where a browser has none) along to the tags' leading edge, down it, and
-  along each row to two drops into each eyelet. Where they cross, Model
-  year's lies over Vehicle's.
+  down from the pressed part type (by anchor positioning) and along to two
+  drops into each eyelet. No piece of tape ends but at an eyelet or a joint
+  with its rail's next piece. One row's rails run only between the riser and
+  the eyelets, from whichever is nearer the leading edge to whichever is
+  further. Several rows' run along to the tags' leading edge, down it to the
+  last row's bar, and along each row to its last eyelet. Where a browser has
+  no anchor positioning, the rails start at the tags' top: at the leading
+  edge for several rows, above the first eyelet for one. Where they cross,
+  Model year's lies over Vehicle's.
 - **Marks are ink on the tag**, in its ordinary ink: a solid stamp, a little
   askew, with a tick, "Checked" and the decoded elements that met the
   catalog's conditions; a dashed stamp with a warning triangle, "Not
