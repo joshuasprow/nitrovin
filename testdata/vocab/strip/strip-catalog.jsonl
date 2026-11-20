@@ -23,3 +23,4 @@
 {"fitment":{"type":"radiator","number":"ST-2003"},"applications":[{"vehicle":{"model":1850},"first":2014,"last":2014,"options":""}]}
 {"fitment":{"type":"starter","number":"ST-2004"},"applications":[{"vehicle":{"model":1850},"first":2014,"last":2014,"options":""}]}
 {"fitment":{"type":"water-pump","number":"ST-2005"},"applications":[{"vehicle":{"model":1850},"first":2014,"last":2014,"options":""}]}
+{"fitment":{"type":"battery-cable","number":"ST-2006"},"applications":[{"vehicle":{"model":1850},"first":2014,"last":2014,"options":""}]}

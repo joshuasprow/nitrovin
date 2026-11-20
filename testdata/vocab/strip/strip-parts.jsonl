@@ -1,6 +1,7 @@
 {"format":1,"kind":"spine","name":"strip-parts","version":"2026.11"}
 {"id":"alternator","name":"Alternator"}
 {"id":"battery","name":"Battery"}
+{"id":"battery-cable","name":"Battery Cable, Positive, with Fusible Link and Terminal"}
 {"id":"brake-caliper-front","name":"Brake Caliper, Front"}
 {"id":"brake-pads-front","name":"Brake Pads, Front"}
 {"id":"brake-pads-rear","name":"Brake Pads, Rear"}

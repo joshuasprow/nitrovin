@@ -1,6 +1,6 @@
 {"format":1,"kind":"vocabulary","name":"strip-groups","version":"2026.11","subject":"part","fields":["group"],"spine":"strip-parts"}
 {"entry":{"group":"Brakes"},"mappings":[{"id":"brake-caliper-front"},{"id":"brake-pads-front"},{"id":"brake-pads-rear"},{"id":"brake-rotor-front"},{"id":"brake-rotor-rear"}]}
 {"entry":{"group":"Cooling"},"mappings":[{"id":"radiator"},{"id":"thermostat"},{"id":"water-pump"}]}
-{"entry":{"group":"Electrical"},"mappings":[{"id":"alternator"},{"id":"battery"},{"id":"headlamp"},{"id":"starter"}],"note":"a headlamp is filed under Electrical and Lighting both"}
+{"entry":{"group":"Electrical"},"mappings":[{"id":"alternator"},{"id":"battery"},{"id":"battery-cable"},{"id":"headlamp"},{"id":"starter"}],"note":"a headlamp is filed under Electrical and Lighting both"}
 {"entry":{"group":"Lighting"},"mappings":[{"id":"fog-lamp"},{"id":"headlamp"},{"id":"tail-lamp"}]}
 {"entry":{"group":"Seats"},"mappings":[],"note":"listed, not yet placed: no part type is under it"}
