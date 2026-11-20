@@ -200,8 +200,12 @@ var errCancelled = errors.New("the fit's context ended")
 // before it answers: a source that ignores ctx cannot hold a fit past its
 // caller. The abandoned call finishes on its own. A file source answers
 // from memory, so it is always asked, and waited for, ctx or not: one
-// slow live source does not empty the files' lists after it.
+// slow live source does not empty the files' lists after it. Its time,
+// until it answers or ctx ends, adds to ctx's StockTime.
 func lookup(ctx context.Context, src stock.Source, p stock.Page, call stockCall) ([]stock.Result, stock.Meta, error) {
+	if stop := timeLookup(ctx); stop != nil {
+		defer stop()
+	}
 	if src.Info().Kind == stock.KindFile {
 		return call(ctx, src, p)
 	}

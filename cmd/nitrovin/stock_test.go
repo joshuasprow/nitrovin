@@ -51,6 +51,9 @@ func (s stockService) Fit(ctx context.Context, r contract.FitRequest) (contract.
 func (s stockService) FitBatch(ctx context.Context, rs []contract.FitRequest) ([]contract.Fit, error) {
 	return s.f.FitBatch(ctx, rs)
 }
+func (s stockService) FitBatchRows(ctx context.Context, rs []contract.FitRequest) (contract.FitBatchRows, error) {
+	return s.f.FitBatchRows(ctx, rs)
+}
 
 // TestServeStockUnavailable: over HTTP, a stock source that is down
 // answers unavailable in its block, with its own reason or, for any other

@@ -72,7 +72,8 @@ func (r FitRequest) kind() fitKind {
 // after it never gave; Decode's error; or an Internal for a fault in
 // nitrovin. ctx bounds its stock lookups: a source that has not answered
 // when ctx ends is unavailable, with reason StockCancelled, and the rest
-// of the answer stands.
+// of the answer stands. req.StockFields cuts its stock rows' fields once
+// every list is whole.
 // A panic in a stock lookup, which runs on a goroutine of its own, panics
 // Fit's caller as a *LookupPanic. One in a live lookup Fit stopped waiting
 // for, its ctx having ended, is dropped without a trace: nothing logs it,
@@ -86,6 +87,7 @@ func (f Fitter) Fit(ctx context.Context, req FitRequest) (Fit, error) {
 	if ask != nil {
 		f.fitmentStock(ctx, ask)
 	}
+	fieldCuts{}.cut(&out, req.StockFields)
 	return out, nil
 }
 
@@ -226,7 +228,8 @@ func (f Fitter) fit(ctx context.Context, req FitRequest, out *Fit) (*fitmentAsk,
 // ("/3/part"). ctx bounds every fit's stock lookups, as Fit's. The
 // fitment keys' stock lists are looked up once every request is
 // answered, together (fitmentStock): a batch of many keys costs a
-// source one lookup, not one a key.
+// source one lookup, not one a key. Each request's StockFields then cuts
+// its answer's stock rows' fields.
 func (f Fitter) FitBatch(ctx context.Context, reqs []FitRequest) ([]Fit, error) {
 	now := time.Now()
 	out := make([]Fit, len(reqs))
@@ -246,7 +249,23 @@ func (f Fitter) FitBatch(ctx context.Context, reqs []FitRequest) ([]Fit, error) 
 		}
 	}
 	f.fitmentStock(ctx, asks...)
+	cuts := fieldCuts{}
+	for i, req := range reqs {
+		cuts.cut(&out[i], req.StockFields)
+	}
 	return out, nil
+}
+
+// FitBatchRows is FitBatch with the batch's stock rows once (ADR 0018):
+// its answers, each list's rows indexes into the one table of the batch's
+// distinct rows, cut by each request's StockFields as FitBatch cuts them.
+// Expanded, every index replaced by its row, it is FitBatch's answer.
+func (f Fitter) FitBatchRows(ctx context.Context, reqs []FitRequest) (FitBatchRows, error) {
+	fits, err := f.FitBatch(ctx, reqs)
+	if err != nil {
+		return FitBatchRows{}, err
+	}
+	return rowsOnce(fits), nil
 }
 
 // checkTo refuses a to name that is no loaded vehicle vocabulary.

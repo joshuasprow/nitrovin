@@ -461,7 +461,8 @@ _Avoid_: item
 **Stock row**:
 One shelf part or yard vehicle as its source supplies it: a stock file's line,
 or a connector's relation row; in an answer, the row with its source's name,
-how it matched, and its fields verbatim (`StockRow`).
+how it matched, and its fields verbatim (`StockRow`), or only those a
+request's `stock_fields` names.
 _Avoid_: stock item, record
 
 **Yard vehicle**:
@@ -497,6 +498,13 @@ A fit answer's list of shelf parts or yard vehicles: a page of its rows, its
 with a `reason` when `unavailable`). A candidate has a shelf and a yard list,
 its first rows; a fit from the fitment's key pages them.
 _Avoid_: availability, stock result
+
+**Stock rows once**:
+A batch's answer that holds each stock row once (`POST
+/v1/fit?stock_rows=once`, `FitBatchRows`): the fits, every stock list's rows
+indexes into the batch's one table of distinct rows. A row is its kind, source
+and id; two lists holding it differently hold two.
+_Avoid_: slim answer, normalized answer
 
 **Catalog mismatch**:
 A shelf source numbered under a catalog release other than the loaded catalog's,

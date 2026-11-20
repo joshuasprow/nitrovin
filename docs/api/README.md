@@ -191,14 +191,18 @@ contract, not in `openapi.yaml`, and may change.
   (`/from/entry/model`) included.
 - `POST /v1/fit` takes a JSON array of `FitRequest` (≤ 1,000 items,
   ≤ 1 MiB) and answers an array of `Fit` in the same order, reading the
-  clock once. `GET /v1/fit` takes one request as dotted query parameters,
-  read as the JSON request they spell, as `GET /v1/translate` is:
-  `from.vin`; `from.vocabulary` with one `from.entry.<field>` per field;
+  clock once. With `?stock_rows=once`, its one query parameter, it answers
+  a `FitBatchRows` instead, each stock row once
+  ([Stock](#stock)). `GET /v1/fit` takes one request as dotted query
+  parameters, read as the JSON request they spell, as `GET /v1/translate`
+  is: `from.vin`; `from.vocabulary` with one `from.entry.<field>` per field;
   `from.make`, `from.model` or `from.ext`; or `from.fitment.type`,
   `from.fitment.number` and `from.fitment.side`. Then `part.spine` with
   `part.id`, or `part.vocabulary` with one `part.entry.<field>` per field;
   `side`; `to` repeated; `model_year`; `related` (`true` or `false`);
-  `limit`; `after`; `now`.
+  `stock`, `location` and `stock_fields` repeated (`stock_fields=` alone
+  is the empty list); `limit`; `after`; `now`. `stock_rows` is refused
+  there: a single fit has no batch.
 - `GET /v1/vocabularies` is the catalog (`list` with no `of`), and takes no
   parameter. `GET /v1/vocabularies/{name}/entries` is `list` with `of` the
   name (`vpic` included, and the loaded catalog's, which pages its
@@ -207,8 +211,26 @@ contract, not in `openapi.yaml`, and may change.
   `where.type=mirror` for a catalog's part type,
   `where.make=Dodge&where.model=Ram%201500` for its lines for a vehicle),
   `limit`, `after`.
-- Every parameter but `to` is given at most once, and an unknown one is
-  refused, as on `GET /v1/decode/{vin}`.
+- Every parameter but `to`, `stock`, `location` and `stock_fields` is
+  given at most once, and an unknown one is refused, as on
+  `GET /v1/decode/{vin}`.
+
+**Fit answers are compressed** (`GET` and `POST /v1/fit`, refusals
+included): brotli when the request's `Accept-Encoding` allows `br`, else
+gzip when it allows `gzip`, else none; a body under 1 KiB goes as it is.
+Every `/v1/fit` response carries `Vary: Accept-Encoding`, and
+`Content-Length` is the length sent. The JSON is the same either way: a
+client that decodes gzip itself, as most do, changes nothing. A stock
+answer repeats itself, so it compresses to a few percent of its size
+([ADR 0018](../adr/0018-fit-is-a-request-beside-translate.md#amendment-2026-11-20-a-batchs-stock-rows-once-compressed-with-its-times)
+has the measurements).
+
+**`Server-Timing`** on every fit answer (not a refusal) splits its time,
+each `dur` in milliseconds: `fit`, the fit, its stock lookups included;
+`stock`, its stock lookups summed over every source (above `fit` when
+sources answer at once); `encode`, marshalling and compressing the
+answer. It names no source, connection or relation:
+`fit;dur=612.4, stock;dur=540.1, encode;dur=18.3`.
 
 **CORS** is off unless `serve --cors <origin>` (or `*`) turns it on. Then
 every response under `/v1/` and on `/mcp`, refusals included, carries
@@ -816,6 +838,7 @@ object. Its inputs shape the answer:
 | `related` | bool | `false` | The vehicles that share fitments with `from` |
 | `stock` | string[] | none | `shelf`, `yard` or both: the stock of the answer's fitments (Stock, below). Only with `part`, `related` (`yard` only) or a fitment key |
 | `location` | string[] | none | Keeps the stock rows at one of these locations. Only with `stock` |
+| `stock_fields` | string[] | every field | Keeps, of each stock row's `fields`, only those named; `[]` keeps none (Stock, below). Only with `stock` |
 | `limit` | int | 100 | 1 to 1,000 items a page |
 | `after` | string | none | The previous page's `next` |
 | `now` | string | wall clock | A VIN's decode clock, as a translate request's |
@@ -952,7 +975,8 @@ object. Its inputs shape the answer:
   vocabulary (or a spine) that isn't the catalog's; `part` or `related`
   with a fitment key; `stock` other than `shelf` and `yard`, or without
   `part`, `related` or a fitment key, or `shelf` with `related`;
-  `location` without `stock`; a side other than `left`, `right` or `both`; an
+  `location` or `stock_fields` without `stock`, or an empty name in
+  `stock_fields`; a side other than `left`, `right` or `both`; an
   unknown vocabulary (or a name of the wrong kind: a part vocabulary as
   `from` or in `to`); entry fields other than the vocabulary's, a
   `filed_under` entry's included; a fitment key without `number`, or
@@ -1091,6 +1115,44 @@ options against the vehicle itself.
 A shelf row whose number the catalog lacks, current or retired, is an
 **orphan**: it is under no candidate, and `/v1/info` and `vocab check`
 count it as drift.
+
+**Only the fields read** (`stock_fields`, [ADR
+0019](../adr/0019-what-stock-says.md#amendment-2026-11-20-a-request-names-the-row-fields-it-reads)).
+A fit request may name the row fields it reads: every stock row of its
+answer then carries only those of its `fields`, in the source's order,
+their values verbatim. Absent keeps every field, as before; `[]` keeps
+none, for rows by identity alone; a name no row has is no error, as two
+sources may name their fields differently. It cuts `fields` alone, in
+every list of the answer (a candidate's `shelf` and `yard`,
+`shelf_by_vehicle`, a fitment key's lists, a related vehicle's `yard`): a
+row keeps its `source`, `id`, `location`, `matched`, what it names
+(`fitment` and `reached`, `part`, `vehicle`, `year`, `vin`, `decoded`) and
+`as_of`, and every list its `total`, paging and `sources`. In `GET
+/v1/fit` it repeats, as `stock` does: `stock_fields=vin&stock_fields=row`,
+and `stock_fields=` alone for none.
+
+**Each row once a batch** (`POST /v1/fit?stock_rows=once`, [ADR
+0018](../adr/0018-fit-is-a-request-beside-translate.md#amendment-2026-11-20-a-batchs-stock-rows-once-compressed-with-its-times)).
+Many fitment keys of one part reach the same yard vehicles, and the array
+of fits repeats a row whole in every list holding it. With
+`stock_rows=once` the batch answers a `FitBatchRows` instead: `fits`, the
+fits in request order, each as the array would hold it but that every
+stock list's `rows` are integers, indexes into `stock_rows`; and
+`stock_rows`, the batch's distinct rows, in the order the fits first list
+them. Expanded, each index replaced by its row, it is the array of fits,
+value for value (an object's members may come in another order).
+
+- A row is its kind, `source` and `id`: two sources' rows of one id are
+  two rows, and a shelf row and a yard row never share an index.
+- A row two lists hold differently is two rows: cut by different
+  `stock_fields`, so no fit receives a field it did not ask for.
+- Everything else is unchanged: `total`, `next`, paging and every
+  `sources` block, a source's `reason` included.
+- `stock_fields` and `stock_rows` compose: `stock_rows` holds the rows as
+  each fit cut them.
+- In Go, `Fitter.FitBatchRows` (and `nitrovin.Translator`'s); its lists
+  are `contract.StockRefs`. Only a batch has rows to share, so `GET
+  /v1/fit` refuses `stock_rows`, and no other surface takes it.
 
 The synthetic stock's examples, tested on every surface, with
 `--vocab testdata/vocab --vocab testdata/vocab/fitment --vocab testdata/vocab/stock`:

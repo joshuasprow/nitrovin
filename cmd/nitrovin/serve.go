@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	_ "embed"
 	"encoding/hex"
@@ -17,9 +18,11 @@ import (
 	"os/signal"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
+	"github.com/andybalholm/brotli"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/zeebo/blake3"
 
@@ -237,6 +240,7 @@ type decodeService interface {
 	List(contract.ListRequest) (contract.List, error)
 	Fit(context.Context, contract.FitRequest) (contract.Fit, error)
 	FitBatch(context.Context, []contract.FitRequest) ([]contract.Fit, error)
+	FitBatchRows(context.Context, []contract.FitRequest) (contract.FitBatchRows, error)
 	SpineBundle() ([]byte, error)
 	File(name string) ([]byte, error)
 }
@@ -457,42 +461,74 @@ func (a *api) translateBatch(w http.ResponseWriter, r *http.Request) {
 }
 
 // fit is GET /v1/fit, one request as dotted query parameters, and POST
-// /v1/fit, a batch (ADR 0018).
+// /v1/fit, a batch (ADR 0018), with its stock rows once given
+// stock_rows=once. Its answers and refusals are compressed as the
+// request's Accept-Encoding allows (encoded), and an answer's
+// Server-Timing says how long the fit took (fit), its stock lookups,
+// summed over every source (stock), and marshalling and compressing it
+// (encode), in milliseconds.
 func (a *api) fit(w http.ResponseWriter, r *http.Request) {
+	h := w.Header()
+	h.Add("Vary", "Accept-Encoding")
+	coding := contentCoding(r.Header.Get("Accept-Encoding"))
+	var stock contract.StockTime
+	start := time.Now()
+	v, err := a.fitAnswer(contract.WithStockTime(r.Context(), &stock), r)
+	took := time.Since(start)
+	status, contentType := http.StatusOK, "application/json"
+	var body []byte
+	if err == nil {
+		start = time.Now()
+		if body, err = json.Marshal(v); err == nil {
+			body, coding = encoded(coding, append(body, '\n'))
+			h.Set("Server-Timing", fmt.Sprintf("fit;dur=%.1f, stock;dur=%.1f, encode;dur=%.1f", ms(took), ms(stock.Duration()), ms(time.Since(start))))
+		}
+	}
+	if err != nil {
+		p := contract.AsProblem(err)
+		status, contentType = p.Status, "application/problem+json"
+		body, coding = encoded(coding, a.problemJSON(p))
+	}
+	if coding != "" {
+		h.Set("Content-Encoding", coding)
+	}
+	a.write(w, status, contentType, body)
+}
+
+// fitAnswer is r's fit, its stock lookups bounded by ctx: a GET's Fit, a
+// POST's []Fit or, given stock_rows=once, its FitBatchRows.
+func (a *api) fitAnswer(ctx context.Context, r *http.Request) (any, error) {
+	query, p := parseQuery(r)
+	if p != nil {
+		return nil, p
+	}
 	if r.Method == http.MethodPost {
-		body, ok := a.body(w, r)
-		if !ok {
-			return
+		once, err := contract.ParseFitBatchQuery(query)
+		if err != nil {
+			return nil, err
+		}
+		body, p := readBody(r)
+		if p != nil {
+			return nil, p
 		}
 		reqs, err := contract.ParseFitBatch(body)
 		if err != nil {
-			a.problem(w, contract.AsProblem(err))
-			return
+			return nil, err
 		}
-		fits, err := a.d.FitBatch(r.Context(), reqs)
-		if err != nil {
-			a.problem(w, contract.AsProblem(err))
-			return
+		if once {
+			return a.d.FitBatchRows(ctx, reqs)
 		}
-		a.ok(w, fits)
-		return
-	}
-	query, ok := a.query(w, r)
-	if !ok {
-		return
+		return a.d.FitBatch(ctx, reqs)
 	}
 	req, err := contract.ParseFitQuery(query)
 	if err != nil {
-		a.problem(w, contract.AsProblem(err))
-		return
+		return nil, err
 	}
-	fit, err := a.d.Fit(r.Context(), req)
-	if err != nil {
-		a.problem(w, contract.AsProblem(err))
-		return
-	}
-	a.ok(w, fit)
+	return a.d.Fit(ctx, req)
 }
+
+// ms is d in milliseconds, as Server-Timing's dur.
+func ms(d time.Duration) float64 { return float64(d) / float64(time.Millisecond) }
 
 // list is GET /v1/vocabularies, the catalog, with escapedName "", and GET
 // /v1/vocabularies/{name}/entries; escapedName is the path segment.
@@ -521,32 +557,49 @@ func (a *api) list(w http.ResponseWriter, r *http.Request, escapedName string) {
 
 // query is a GET's query; a malformed one is refused.
 func (a *api) query(w http.ResponseWriter, r *http.Request) (url.Values, bool) {
-	query, err := url.ParseQuery(r.URL.RawQuery)
-	if err != nil {
-		a.problem(w, contract.NewProblem(contract.InvalidRequest, "", "the query string is malformed: "+err.Error()))
+	query, p := parseQuery(r)
+	if p != nil {
+		a.problem(w, p)
 		return nil, false
 	}
 	return query, true
 }
 
-// body is a POST's body, up to one byte over contract.MaxBody, enough for
-// the batch parsers to refuse it. The request is the body alone, so any
+// parseQuery is r's query, or the refusal of a malformed one.
+func parseQuery(r *http.Request) (url.Values, *contract.Problem) {
+	query, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		return nil, contract.NewProblem(contract.InvalidRequest, "", "the query string is malformed: "+err.Error())
+	}
+	return query, nil
+}
+
+// body is a POST's body (readBody). The request is the body alone, so any
 // query parameter is refused.
 func (a *api) body(w http.ResponseWriter, r *http.Request) ([]byte, bool) {
 	if r.URL.RawQuery != "" {
 		a.problem(w, contract.NewProblem(contract.InvalidRequest, "", fmt.Sprintf("POST %s takes no query parameters", r.URL.EscapedPath())))
 		return nil, false
 	}
-	if r.ContentLength > contract.MaxBody {
-		a.problem(w, contract.NewProblem(contract.TooLarge, "", fmt.Sprintf("the body is over %d bytes", contract.MaxBody)))
-		return nil, false
-	}
-	body, err := io.ReadAll(io.LimitReader(r.Body, contract.MaxBody+1))
-	if err != nil {
-		a.problem(w, contract.NewProblem(contract.MalformedJSON, "", "reading the body: "+err.Error()))
+	body, p := readBody(r)
+	if p != nil {
+		a.problem(w, p)
 		return nil, false
 	}
 	return body, true
+}
+
+// readBody is a POST's body, up to one byte over contract.MaxBody, enough
+// for the batch parsers to refuse it.
+func readBody(r *http.Request) ([]byte, *contract.Problem) {
+	if r.ContentLength > contract.MaxBody {
+		return nil, contract.NewProblem(contract.TooLarge, "", fmt.Sprintf("the body is over %d bytes", contract.MaxBody))
+	}
+	body, err := io.ReadAll(io.LimitReader(r.Body, contract.MaxBody+1))
+	if err != nil {
+		return nil, contract.NewProblem(contract.MalformedJSON, "", "reading the body: "+err.Error())
+	}
+	return body, nil
 }
 
 func (a *api) info(w http.ResponseWriter, _ *http.Request) { a.ok(w, a.d.Info()) }
@@ -569,14 +622,20 @@ func (a *api) ok(w http.ResponseWriter, v any) {
 	a.write(w, http.StatusOK, "application/json", append(b, '\n'))
 }
 
-// problem writes p with its status. An internal problem is a fault in
-// nitrovin, so it is logged too, and sent to PostHog with the stack that
-// raised it: a recovered panic's from the panic.
+// problem writes p with its status (problemJSON).
 func (a *api) problem(w http.ResponseWriter, p *contract.Problem) {
+	a.write(w, p.Status, "application/problem+json", a.problemJSON(p))
+}
+
+// problemJSON is p's body. An internal problem is a fault in nitrovin, so
+// it is logged too, and sent to PostHog with the stack that raised it: a
+// recovered panic's from the panic, else its caller's, the handler or
+// problem writing it.
+func (a *api) problemJSON(p *contract.Problem) []byte {
 	if p.Status == http.StatusInternalServerError {
 		a.log.Print(p)
 		if a.ph != nil {
-			frames, panicking := callerStack(0)
+			frames, panicking := callerStack(1)
 			typ := "internal"
 			if panicking {
 				typ = "panic"
@@ -588,7 +647,7 @@ func (a *api) problem(w http.ResponseWriter, p *contract.Problem) {
 	if err != nil { // a Problem is strings and an int: unreachable
 		panic(err)
 	}
-	a.write(w, p.Status, "application/problem+json", append(b, '\n'))
+	return append(b, '\n')
 }
 
 func (a *api) write(w http.ResponseWriter, status int, contentType string, body []byte) {
@@ -597,4 +656,84 @@ func (a *api) write(w http.ResponseWriter, status int, contentType string, body 
 	h.Set("Content-Length", strconv.Itoa(len(body)))
 	w.WriteHeader(status)
 	w.Write(body) // an error means the client is gone: no one is left to tell
+}
+
+// The compression of a fit route's bodies (ADR 0018's amendment of
+// 2026-11-20 has the measurements): brotli at brotliQuality where the
+// request's Accept-Encoding allows it, else gzip at gzipLevel, else none;
+// and none for a body under compressMin bytes, which costs more in time
+// than it saves.
+const (
+	brotliQuality = 4
+	gzipLevel     = 6
+	compressMin   = 1024
+)
+
+// The compressors, kept between bodies: each holds tables worth reusing.
+var (
+	brotliWriters = sync.Pool{New: func() any { return brotli.NewWriterLevel(nil, brotliQuality) }}
+	gzipWriters   = sync.Pool{New: func() any {
+		w, err := gzip.NewWriterLevel(nil, gzipLevel)
+		if err != nil { // a valid level: unreachable
+			panic(err)
+		}
+		return w
+	}}
+)
+
+// contentCoding is the content coding of a fit route's body for accept,
+// a request's Accept-Encoding (RFC 9110): "br" when it allows brotli,
+// else "gzip" when it allows gzip, else "", none. A coding is allowed
+// when the header lists it, or else *, with a q above 0.
+func contentCoding(accept string) string {
+	q := map[string]bool{}
+	for item := range strings.SplitSeq(accept, ",") {
+		name, params, _ := strings.Cut(item, ";")
+		name = strings.ToLower(strings.TrimSpace(name))
+		if name == "x-gzip" {
+			name = "gzip"
+		}
+		allowed := true
+		for p := range strings.SplitSeq(params, ";") {
+			if k, v, ok := strings.Cut(strings.TrimSpace(p), "="); ok && strings.EqualFold(strings.TrimSpace(k), "q") {
+				f, err := strconv.ParseFloat(strings.TrimSpace(v), 64)
+				allowed = err == nil && f > 0
+			}
+		}
+		if _, seen := q[name]; !seen {
+			q[name] = allowed
+		}
+	}
+	for _, coding := range []string{"br", "gzip"} {
+		if allowed, listed := q[coding]; allowed || !listed && q["*"] {
+			return coding
+		}
+	}
+	return ""
+}
+
+// encoded is body in coding, and the coding it is in: body itself, with
+// "", when coding is "" or body is under compressMin bytes.
+func encoded(coding string, body []byte) ([]byte, string) {
+	if coding == "" || len(body) < compressMin {
+		return body, ""
+	}
+	pool := &gzipWriters
+	if coding == "br" {
+		pool = &brotliWriters
+	}
+	w := pool.Get().(interface {
+		io.WriteCloser
+		Reset(io.Writer)
+	})
+	defer pool.Put(w)
+	var buf bytes.Buffer
+	w.Reset(&buf)
+	if _, err := w.Write(body); err != nil { // a bytes.Buffer: unreachable
+		panic(err)
+	}
+	if err := w.Close(); err != nil { // a bytes.Buffer: unreachable
+		panic(err)
+	}
+	return buf.Bytes(), coding
 }

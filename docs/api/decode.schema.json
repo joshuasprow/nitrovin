@@ -913,6 +913,11 @@
           "items": { "type": "string", "minLength": 1 },
           "description": "Keeps the stock rows at one of these locations, opaque strings each source gives its rows. Only with stock."
         },
+        "stock_fields": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Keeps, of every stock row's fields in the answer, only those named (ADR 0019): empty keeps none, and a name no row has is no error. Only fields are cut: a row's source, id, location, matched, what it names (fitment and reached, part, vehicle, year, vin, decoded) and as_of stay. Absent: every field. Only with stock."
+        },
         "limit": { "type": "integer", "minimum": 1, "maximum": 1000, "default": 100 },
         "after": { "type": "string", "minLength": 1, "description": "The previous page's next cursor." },
         "now": {
@@ -921,7 +926,7 @@
           "description": "Frozen clock for the VIN's decode, as a decode request's now."
         }
       },
-      "dependentRequired": { "location": ["stock"] },
+      "dependentRequired": { "location": ["stock"], "stock_fields": ["stock"] },
       "if": { "required": ["from"], "properties": { "from": { "type": "object", "required": ["fitment"] } } },
       "then": { "not": { "anyOf": [{ "required": ["part"] }, { "required": ["related"] }] } },
       "else": {
@@ -995,6 +1000,16 @@
         { "required": ["related"] }
       ],
       "dependentRequired": { "fitments": ["vehicles"] },
+      "additionalProperties": false
+    },
+    "FitBatchRows": {
+      "type": "object",
+      "description": "POST /v1/fit?stock_rows=once's answer (ADR 0018): the batch's stock rows once. fits are the batch's fits, one per request in order, each as the array would hold it but that every stock list's rows are indexes into stock_rows; stock_rows are the batch's distinct stock rows, in the order the fits first list them. A row is one entry for every list holding it alike: its kind, source and id name it, and two lists holding it differently, cut by different stock_fields, hold two. Expanded, each index replaced by its row, it is the array of fits.",
+      "required": ["fits", "stock_rows"],
+      "properties": {
+        "fits": { "type": "array", "items": { "$ref": "#/$defs/Fit" } },
+        "stock_rows": { "type": "array", "items": { "$ref": "#/$defs/StockRow" } }
+      },
       "additionalProperties": false
     },
     "FitCatalog": {
@@ -1182,7 +1197,12 @@
       "description": "A list of stock rows (ADR 0019): the rows of every loaded source of its kind, each tagged with its source, how many the whole list holds, and every source's block.",
       "required": ["rows", "total", "sources"],
       "properties": {
-        "rows": { "type": "array", "items": { "$ref": "#/$defs/StockRow" } },
+        "rows": {
+          "anyOf": [
+            { "type": "array", "items": { "$ref": "#/$defs/StockRow" } },
+            { "type": "array", "items": { "type": "integer", "minimum": 0 }, "description": "In a FitBatchRows only: each row's index into its stock_rows, in the list's order." }
+          ]
+        },
         "total": { "type": "integer", "minimum": 0, "description": "How many rows the list holds across every page and available source." },
         "sources": { "type": "array", "items": { "$ref": "#/$defs/StockSource" }, "description": "Every loaded source of the list's kind, in load order." }
       },
@@ -1229,7 +1249,7 @@
           "properties": { "make": { "type": "integer", "minimum": 1 }, "model": { "type": "integer", "minimum": 1 }, "year": { "type": "integer" } },
           "additionalProperties": false
         },
-        "fields": { "type": "object", "description": "The row's own fields, verbatim, never interpreted." }
+        "fields": { "type": "object", "description": "The row's own fields, verbatim, never interpreted; with stock_fields, only those it names." }
       },
       "additionalProperties": false
     },

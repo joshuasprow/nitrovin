@@ -212,6 +212,7 @@ UI that is not built yet is drawn on a Claude Design canvas before it is specifi
   | `cmd/nitrovin/testdata/text.txt` | `go test ./cmd/nitrovin -run 'TestText$' -update` |
   | `pkg/decoder/testdata/*.oracle.jsonl` | `-update-oracle`, against the oracle container |
   | `cmd/nitrovin-epa/testdata/vehicles.jsonl` | `go test ./cmd/nitrovin-epa -update` |
+  | `pkg/nitrovin/testdata/fit-batch-stock.json` | `go test ./pkg/nitrovin -run 'TestFitBatchStockGolden$' -update-stock-golden`, only for a change meant to change a stock answer's bytes |
 
 - **Not gated:** `pkg/decoder` coverage is reported only. CI runs no fuzzing (`FuzzPrimitives`, `FuzzOpenCompiled`). Benchmarks (`bench/`) gate nothing. `go test -count=1 ./scripts` tests `release.sh`.
   - **Release's bench:** a tag runs every benchmark on one runner at the default `-benchtime`, and that table is the release notes' footer. A pull request or a dispatch without a tag runs two shards, `BenchmarkFit` and the rest, each on its own runner at `-benchtime 100ms`: about three minutes, not eight. Their table, in `bench-table`'s summary, compares only roughly with a tag's.
