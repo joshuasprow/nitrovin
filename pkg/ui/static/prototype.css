@@ -1,0 +1,80 @@
+/* PROTOTYPE, never for main (#366): the part types control, four ways.
+   prototype.js draws them inside the page's own .ptwrap and hides its strip. */
+
+.proto-host > .ptypes { display: none; }
+.proto-host .ptypes .ptype[aria-current] { anchor-name: none; }
+.proto .pp { anchor-name: --fit-part; }
+.proto { font-family: var(--cell-font); }
+
+/* Shared: a part type as a small strip of the second tape, its count
+   after it; the pressed one is black label tape, flush; a recent one
+   carries a dot. */
+.proto .pc, .proto .prow { display: inline-flex; align-items: baseline; gap: .45rem; min-height: 32px; box-sizing: border-box; padding: .35rem .6rem; font: 700 13px var(--cell-font); letter-spacing: .02em; text-decoration: none; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); background: var(--alu); border: 1px solid var(--steel); border-radius: 2px; box-shadow: var(--raised); }
+.proto .pc .n, .proto .prow .n { font-weight: 400; font-size: 11px; opacity: .75; }
+.proto .pc.pr::before, .proto .prow.pr::before { content: ""; align-self: center; width: 6px; height: 6px; border-radius: 50%; background: var(--c-vds); }
+.proto .pp { color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape-in); border-color: var(--tape-edge); box-shadow: var(--pressed); transform: translateY(2px); cursor: default; }
+.proto .pclear { min-width: 32px; min-height: 32px; padding: 0 .5rem; font: 700 16px/1 var(--cell-font); letter-spacing: 0; border-radius: 0 2px 2px 0; margin-left: -1px; }
+.proto .pchip { display: inline-flex; align-items: stretch; }
+.proto .pchip.on .pc { border-radius: 2px 0 0 2px; }
+.proto .pchip.on .pclear { transform: translateY(2px); box-shadow: var(--pressed); background: var(--alu-in); }
+.proto .pfind { font: 14px/1.4 system-ui, sans-serif; padding: .3rem .5rem; width: 11rem; max-width: 100%; box-sizing: border-box; color: var(--fg); background: var(--card-bg); border: 1px solid var(--steel); border-radius: 2px; box-shadow: inset 0 2px 3px rgb(0 0 0 / .18); }
+.proto .plab { font: 900 10px var(--label-font); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+/* A: chips, wrapping. */
+.proto-A .pa { display: flex; flex-wrap: wrap; gap: 8px 6px; align-items: center; }
+
+/* B: one field. */
+.proto-B .pb { display: flex; align-items: stretch; }
+.proto-B .pfield { flex: 1; display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: baseline; gap: .75rem; min-height: 48px; padding: .5rem .9rem; text-align: left; --key: var(--alu); text-transform: none; letter-spacing: 0; }
+.proto-B .pfield .plab { color: inherit; opacity: .7; }
+.proto-B .pfield .pval { font: 700 18px var(--cell-font); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.proto-B .pfield .pcount { font: 400 12px var(--cell-font); opacity: .8; white-space: nowrap; }
+.proto-B .pfield.pp { color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); background: var(--alu); border-color: var(--steel); box-shadow: var(--raised); transform: none; cursor: pointer; }
+.proto-B .pb .pclear { min-width: 48px; font-size: 20px; }
+.proto-B .pbrecent { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
+.proto .pbpanel { margin-top: 10px; padding: .75rem; border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .3); }
+
+/* The grouped list, B's and C's panel and D's whole control. */
+.proto .pcols { columns: 3 14rem; column-gap: 1.25rem; margin-top: .6rem; }
+.proto .pg { break-inside: avoid; margin: 0 0 .75rem; }
+.proto .pgh { margin: 0 0 .3rem; padding: 0 0 .15rem; font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase; color: var(--fg); border-bottom: 3px solid var(--c-vds); }
+.proto .pgl { list-style: none; margin: 0; padding: 0; }
+.proto .pgl li { display: flex; align-items: stretch; margin: 0 0 4px; }
+.proto .pgl .prow { flex: 1; justify-content: space-between; }
+.proto .pgl .prow.pp { border-radius: 2px 0 0 2px; }
+.proto .pgl .pclear { transform: translateY(2px); box-shadow: var(--pressed); background: var(--alu-in); }
+
+/* C: one row that scrolls sideways. */
+.proto-C .pcwrap { display: flex; align-items: stretch; gap: 8px; }
+.proto-C .pall { flex: none; white-space: nowrap; }
+.proto-C .prail { flex: 1; min-width: 0; display: flex; gap: 6px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; padding: 2px 2px 10px; mask-image: linear-gradient(90deg, #000 calc(100% - 2.5rem), transparent); }
+.proto-C .prail .pchip { flex: none; scroll-snap-align: start; }
+.proto-C .prail .pc { white-space: nowrap; }
+
+/* D: the index, always open. Rows are ink on the ground, not keys. */
+.proto-D .index .prow { min-height: 30px; padding: .2rem .4rem; color: var(--fg); text-shadow: none; background: none; border: 0; border-bottom: 1px dotted var(--line); border-radius: 0; box-shadow: none; font-weight: 600; }
+.proto-D .index .prow:hover { background: color-mix(in srgb, var(--link) 12%, transparent); }
+.proto-D .index .prow.pp { color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border: 1px solid var(--tape-edge); transform: none; box-shadow: var(--lift-stuck); }
+.proto-D .index .pclear { transform: none; box-shadow: var(--raised); background: var(--key); }
+.proto-D .index.pcols { columns: 3 13rem; }
+
+@media (max-width: 34rem) {
+  .proto .pcols, .proto-D .index.pcols { columns: 2 9rem; column-gap: .75rem; }
+  .proto .pc, .proto .prow { font-size: 12px; padding: .3rem .45rem; }
+  .proto-B .pfield { grid-template-columns: minmax(0, 1fr) auto; gap: .1rem .5rem; }
+  .proto-B .pfield .plab { grid-column: 1 / -1; }
+  .proto-B .pfield .pcount { display: none; }
+}
+
+/* The bar: not part of any design. */
+.proto-bar { position: fixed; z-index: 9999; left: 50%; bottom: 10px; transform: translateX(-50%); display: grid; gap: 2px; justify-items: center; padding: 6px 10px; max-width: calc(100vw - 16px); box-sizing: border-box; color: #fff; background: #d6006c; border-radius: 14px; box-shadow: 0 6px 18px rgb(0 0 0 / .45); font: 600 13px system-ui, sans-serif; }
+.proto-bar .proto-top { display: flex; align-items: center; gap: 10px; }
+.proto-bar button { all: unset; cursor: pointer; padding: 2px 10px; font-size: 18px; border-radius: 8px; background: rgb(255 255 255 / .2); }
+.proto-bar .proto-state { font: 400 11px ui-monospace, monospace; opacity: .9; text-align: center; overflow-wrap: anywhere; }
+.proto-D .pd { position: relative; z-index: 1; background: var(--bg); padding-bottom: 4px; }
+.proto-D .index .prow { justify-content: flex-start; }
+.proto-D .index .prow .n { margin-left: auto; }
+@media (max-width: 34rem) {
+  .proto-bar { padding: 4px 8px; font-size: 12px; }
+  .proto-bar .proto-state { display: none; }
+}
