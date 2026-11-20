@@ -208,7 +208,7 @@ func TestPageFit(t *testing.T) {
 	s = fitSection(t, h, pickup+"&part.id=alternator")
 	for _, want := range []string{
 		`<a class="ptype swap" href="/?from.vin=1FTEW1EG7FFA12345" aria-current="true"><span class="nm">Alternator</span> <span class="n">3`,
-		`<ol class="cands" aria-label="Candidates: Alternator">`,
+		`<ol class="cands" aria-label="Candidates: Alternator" tabindex="0">`,
 		`<p class="numtape"><b class="num">DEMO-1001</b> <span class="yrs">2015–2017</span></p>`,
 		`<div><dt>Options</dt><dd>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</dd></div>`,
 		`<div><dt>Note</dt><dd>demo: 240 A</dd></div>`,

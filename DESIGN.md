@@ -186,7 +186,7 @@ mode is in the URL, and nothing is remembered between visits.
   the yard vehicles among the vehicles listed, named in the URL as a
   candidate's are (`fitment.number`). They hang under the tag, in its
   third, notched up at it, shelf over yard, a row's fields under its id
-  and location; under 34 rem they scroll sideways as a candidate's do.
+  and location; under 34 rem shelf and yard are one row that scrolls sideways.
   The rows are the page's, paged with the vehicles; "Show all" is every one.
 - **The vehicles** are the page's own table panel beside the tag, with no
   line or notch to it: the catalog's name for each vehicle (a vPIC
@@ -276,6 +276,12 @@ its group's colour.
 - **Several names stack.** The first strip is on top, with the edges of up to
   three more under it. The stamp is the switch and carries the count. Opened,
   the stack is one strip with a row to a name.
+- **On a wide page the vocabularies' strips are one block.** Each lies
+  against the strip above, or against a closed stack's edges, with no gap.
+  Only the first strip carries the brackets and the lines into them; the
+  strips after it carry their underlines alone. A blank strip stands 8 px
+  off the block. "N more vocabularies" hangs from the block's bottom edge,
+  at its leading end, with no gap.
 - **A switch of tape stands raised.** "N more vocabularies", and on a narrow
   page a stack's stamp on its line of its own, keep a 1 px bottom edge on the
   controls' ledge and shadow. On, each is flush, and its fill is `--tape-in`,
@@ -361,12 +367,12 @@ that it is narrow.
 
 - The band reads the group's title and its positions ("Vehicle 4–8").
 - The body is either label and value rows, or one large value in the monospace
-  face. A row is its label and its value on one line; a long value wraps
-  under that line. The check digit's card opens its arithmetic in a dialog.
+  face. A row is its label, small, with its value under it, both at the
+  card's leading edge, so every row reads alike whatever its value's length. The check digit's card opens its arithmetic in a dialog.
   The year's card shows the year, then the codes around its own as one run of
   small text with its own in bold.
-- The six cards share one grid row, as tall as its tallest card. Four or five
-  lines is usual and is not a limit. No card cuts text off or keeps it behind
+- The six cards share one grid row, as tall as its tallest card. Up to four
+  rows, eight or nine lines, is usual and is not a limit. No card cuts text off or keeps it behind
   a control.
 - A newly finished group pops its card in (0.3 s).
 - **Wide**, the six cards span the plate's width, each under its leader line.
@@ -386,9 +392,26 @@ catalog has for the vehicle, and the candidates of the one pressed.
   1020); the catalog's model the decode reached and the year it asked with
   ("any year" without one) sit under the names' model and years, each over
   its group's underline and under its group's bracket, on the lines from
-  Vehicle and Model year that run on through the names. No line runs from a
-  blank strip, or past the names' "more" switch. Narrow, the stamp is a line
-  of its own above the two words and no line runs to it.
+  Vehicle and Model year that run on through the names. The two lines pass
+  behind the names' block from its first strip, so they show behind a blank
+  strip and beside the "more" switch. No line runs to the strip when no
+  vocabulary has a name. Narrow, the stamp is a line of its own above the
+  two words, each at the middle of its half.
+- **From the strip to the pressed part type**, at every width, each line
+  comes down out of the strip under its word, turns in the 30 px under the
+  strip (Vehicle's 9 px into it, Model year's 18 px), and runs along to
+  drop into the pressed part type where its riser leaves it, behind a
+  phone's filter on the way. So the lines from the two cards reach the
+  eyelets in one piece. With nothing pressed they end on the strip. They
+  need anchor positioning, as the risers do.
+- **Narrow, the names move and the strip does not**, so the two lines are
+  carried between them by the row's own scroll (a scroll timeline; no
+  script reads a position). In the row each line runs on from the last strip
+  shown to the row's bottom edge, past a blank strip and the "more" switch. In the 30 px above the strip it comes down where
+  the row left it, turns (Vehicle's 9 px down, Model year's 18 px), and
+  runs along to drop into the strip over its word. A line whose column is
+  off the window runs to the window's edge. A browser without scroll
+  timelines draws no line between the names and the strip.
 - **The part types** are the second tape, each with its count, on a grid.
   Each is a link to the page with it pressed (the URL's `part.id`); the
   pressed one's link presses nothing. Nothing is pressed without the
@@ -447,8 +470,10 @@ catalog has for the vehicle, and the candidates of the one pressed.
   vocabulary the dialog is one list by name. Its part types are the same
   tape, the pressed one pressed; choosing one closes the dialog and leads
   the strip with it.
-- **The candidates** are manila tags, three to a row, one to a row under
-  34 rem, in the answer's order. A tag's number is a strip of label tape
+- **The candidates** are manila tags, three to a row, in the answer's
+  order. Under 34 rem they are one row that scrolls sideways, the next tag
+  showing at the edge; the row reaches both edges of the window, takes
+  focus, and starts at the open candidate where the browser can. A tag's number is a strip of label tape
   across it under the eyelet, where a card prints its band, with the years at
   its trailing end; a candidate has no group and takes no colour. Its side,
   option text (verbatim) and note are rows in the tag's ink under muted
@@ -463,6 +488,12 @@ catalog has for the vehicle, and the candidates of the one pressed.
   no anchor positioning, the rails start at the tags' top: at the leading
   edge for several rows, above the first eyelet for one. Where they cross,
   Model year's lies over Vehicle's.
+- **Under 34 rem the rails are one row's** and move with the tags: they
+  start at the first tag's drops and end at the last's. The riser from the
+  pressed part type stays put. Where it comes down before the first eyelet's
+  place at the row's start, or past the last eyelet's place at the row's
+  end, a piece that stays put with it runs from the riser to that place,
+  and lies under the tags' own bars once they move.
 - **Marks are ink on the tag**, in its ordinary ink: a solid stamp, a little
   askew, with a tick, "Checked" and the decoded elements that met the
   catalog's conditions; a dashed stamp with a warning triangle, "Not
@@ -496,9 +527,10 @@ catalog has for the vehicle, and the candidates of the one pressed.
   open at a time. The rows are the page's table panel (panel ground, a
   2 px `--steel` edge on 3 px of `--steel-dark` and a soft shadow), notched
   up at its tag: on a wide page the row under the tag's row, the tags after
-  it filling theirs first; on a narrow one right under the tag. The rails
-  run on down its leading edge to the next row of tags. Shelf and yard are
-  two equal halves divided by a rule, one when one kind is loaded, each
+  it filling theirs first, the rails running on down its leading edge to
+  the next row of tags; under 34 rem right under the tag, in its column,
+  moving with it. Shelf and yard are two equal halves divided by a rule
+  (under 34 rem, shelf over yard), one when one kind is loaded, each
   under its count in the label face and, muted, its sources' as-of dates,
   or why one did not answer. A row is its id in the monospace face, its
   location, and its source's fields verbatim, each name muted before its
@@ -571,7 +603,11 @@ metal; a way on is a link.
   order. A piece of tape after them reads "N more vocabularies" and shows the
   rest in place. It is a switch without a script, as a stack's is.
 - A newly finished group draws its bracket and line in.
-- No line runs to a blank strip.
+- **The lines never stop short.** Vehicle's and Model year's run from the
+  card through the names and the strip of parts to the pressed part type
+  and its candidates' eyelets, at every width. Maker's ends on a name's
+  make.
+- No line ends on a blank strip: with no name at all, none is drawn.
 
 ## Good enough: dialogs
 
