@@ -98,11 +98,10 @@
     // hangs from it at its width.
     B(host, types, redraw) {
       const on = types.find((t) => t.pressed);
-      const isOpen = open == null ? !on : open;
-      // Where the lines to the candidates leave from: between the model
-      // and the year, under the strip.
-      host.append(el('span', 'panchor pp'));
-      const pick = el('div', 'pbpick'), tape = el('div', 'pbtape');
+      const isOpen = !!open;
+      // The lines come down from the strip to the picker, and leave it for
+      // the candidates, as they do the pressed part type on the page.
+      const pick = el('div', 'pbpick'), tape = el('div', 'pbtape panch');
       const field = el('button', 'pfield');
       field.type = 'button'; field.setAttribute('aria-expanded', String(isOpen));
       field.append(el('span', 'plab', 'Part type'), el('span', 'pval', on ? on.name : 'Choose a part type'), el('span', 'pcount', String(on ? on.n : types.length)), el('span', 'pchev', isOpen ? '▴' : '▾'));
@@ -111,9 +110,8 @@
       if (on) tape.append(clearKey(on));
       pick.append(tape);
       if (isOpen) {
-        // Over the candidates when a part type is pressed; in the page's
-        // flow when none is, where there is nothing under it to cover.
-        const panel = el('div', 'pbpanel' + (on ? '' : ' inflow'));
+        // Over whatever is under the picker: it pushes nothing down.
+        const panel = el('div', 'pbpanel');
         if (types.length > 6) panel.append(find(host, redraw));
         panel.append(grouped(types, 'pcols'));
         pick.append(panel);

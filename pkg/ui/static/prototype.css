@@ -115,3 +115,6 @@
 .proto-B .pbpanel .pcols { columns: 1; margin-top: 0; }
 .proto-B .pbpanel .pfind { width: 100%; margin-bottom: .6rem; }
 .proto-B .pbrecent { margin-top: 10px; }
+
+/* The lines' anchor is the picker itself. */
+.proto .panch { anchor-name: --fit-part; }
