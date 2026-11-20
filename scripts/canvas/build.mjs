@@ -53,11 +53,12 @@ if (check) {
 }
 
 // The index: each built frame's height, and the dark row under the tallest
-// light frame. Positions across the row and everything else are the
-// canvas's own and stay as read.
+// light frame. Positions across the row, the Proposals page's frames and
+// everything else are the canvas's own and stay as read.
 const path = `${OUT}/canvas.json`, idx = JSON.parse(readFileSync(path, 'utf8'));
 for (const f of frames) if (f.h) for (const k of [`${f.file}.dc.html`, `${f.file}-Dark.dc.html`]) if (idx.boards[k]) idx.boards[k].h = f.h;
-const light = Object.entries(idx.boards).filter(([k]) => !k.includes('-Dark'));
-const darkY = Math.max(...light.map(([, b]) => b.y + b.h)) + 120;
-for (const [k, b] of Object.entries(idx.boards)) if (k.includes('-Dark')) b.y = darkY;
+const mine = new Set(frames.flatMap((f) => [`${f.file}.dc.html`, `${f.file}-Dark.dc.html`]));
+const own = Object.entries(idx.boards).filter(([k]) => mine.has(k));
+const darkY = Math.max(...own.filter(([k]) => !k.includes('-Dark')).map(([, b]) => b.y + b.h)) + 120;
+for (const [k, b] of own) if (k.includes('-Dark')) b.y = darkY;
 writeFileSync(path, JSON.stringify(idx, null, 2) + '\n');
