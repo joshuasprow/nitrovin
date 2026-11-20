@@ -14,7 +14,7 @@ info:
     parameters. Element names and codes change with data months; that is data,
     not a breaking change. Pin `element_id` for anything long-lived.
 
-    Every response, refusals and `/mcp` included, carries
+    Every response, refusals, `/mcp` and `/healthz` included, carries
     `Nitrovin-Release: <decoder_version>/<data_month>/<artifact_hash>`, the
     release answering, as `GET /v1/info` reports it.
   license:

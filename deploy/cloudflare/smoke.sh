@@ -151,8 +151,8 @@ status=$(req info "$base/v1/info")
 got=$(identity "$tmp/info.b")
 [[ $got == "$want" ]] || fail "GET /v1/info: $got; the image reports $want"
 release=$(jq -r '[.decoder_version, .data_month, .artifact_hash] | join("/")' "$tmp/want-info.json")
-[[ $(header info nitrovin-release) == "$release" ]] ||
-	fail "GET /v1/info: Nitrovin-Release '$(header info nitrovin-release)'; the image is $release"
+named=$(header info nitrovin-release)
+[[ $named == "$release" ]] || fail "GET /v1/info: Nitrovin-Release '$named'; the image is $release"
 pass "GET /v1/info: $got, Nitrovin-Release $release"
 
 # A decode: the image's bytes, a MISS (or FIRST), then a HIT (or SECOND).

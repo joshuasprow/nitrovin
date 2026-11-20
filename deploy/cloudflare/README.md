@@ -103,9 +103,9 @@ cd deploy/cloudflare/worker && npx wrangler rollback               # roll back t
 ```
 
 A release before [#370](https://github.com/joshuasprow/nitrovin/issues/370)
-names its release on the pages alone, not on `/v1`: deployed with today's
-Worker, its decodes and `/v1/info` are never cached (`BYPASS`), and
-`smoke.sh` fails on them, though the site answers.
+names its release on the pages alone, not on `/v1`: deployed with the
+Worker since #370, its decodes and `/v1/info` are never cached (`BYPASS`),
+and `smoke.sh` fails on them, though the site answers.
 
 A weekly `drift` job fails when `terraform plan` is not empty.
 

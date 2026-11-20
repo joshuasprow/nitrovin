@@ -159,9 +159,9 @@ type loaded struct {
 
 func (l loaded) Info() contract.Info { return l.Translator.Info() }
 
-// Release is the data's release: its decoder version, data month and
-// artifact hash (ui.Release).
-func (l loaded) Release() string { return ui.Release(l.Decoder.Info()) }
+// Release is the data's release, as the pages name it: its decoder
+// version, data month and artifact hash (ui.Release).
+func (l loaded) Release() string { return ui.Release(l.LoadInfo()) }
 
 // SpineBundle is the data month's spine bundle.
 func (l loaded) SpineBundle() ([]byte, error) {
