@@ -2,6 +2,15 @@
   "v": 3,
   "attachments": {},
   "boards": {
+    "Artboard-vknl.dc.html": {
+      "h": 600,
+      "handmade": true,
+      "page": "page-pchz95",
+      "title": "Artboard 1",
+      "w": 800,
+      "x": 0,
+      "y": 0
+    },
     "Controls-Dark.dc.html": {
       "h": 4660,
       "title": "Dialogs, forms and inputs, dark",
@@ -120,12 +129,17 @@
     "Diagram-Dark.dc.html",
     "Fitment-Dark.dc.html",
     "Controls-Dark.dc.html",
-    "States-Dark.dc.html"
+    "States-Dark.dc.html",
+    "Artboard-vknl.dc.html"
   ],
   "pages": [
     {
       "id": "page-1",
       "name": "nitrovin UI"
+    },
+    {
+      "id": "page-pchz95",
+      "name": "Page 2"
     }
   ],
   "title": "nitrovin UI Design"
