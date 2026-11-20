@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"errors"
@@ -19,10 +20,12 @@ import (
 	"path/filepath"
 	"runtime"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/andybalholm/brotli"
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	"go.yaml.in/yaml/v3"
 
@@ -586,11 +589,15 @@ func refusalCases() []apiCase {
 		fitGET("?from.model=1850&related=true&stock=shelf", "/stock"),
 		fitGET("?from.model=1850&stock=yard", "/stock"),
 		fitGET("?from.fitment.type=mirror&from.fitment.number=MR-1001&location=north", "/location"),
+		fitGET("?from.fitment.type=mirror&from.fitment.number=MR-1001&stock_fields=vin", "/stock_fields"),
+		fitGET("?from.fitment.type=mirror&from.fitment.number=MR-1001&stock=yard&stock_rows=once", "/stock_rows"),
 		fitPOST(`[{"from":`, 400, contract.MalformedJSON, ""),
 		fitPOST(fitItem, 400, contract.InvalidRequest, ""),
 		fitPOST(`[]`, 400, contract.InvalidRequest, ""),
 		fitPOST(`[`+fitItem+`,{"from":{"fitment":{"type":"mirror"}}}]`, 400, contract.InvalidRequest, "/1/from/fitment/number"),
 		{op: opFitBatch, method: "POST", target: "/v1/fit?side=left", body: `[` + fitItem + `]`, status: 400, problem: contract.InvalidRequest},
+		{op: opFitBatch, method: "POST", target: "/v1/fit?stock_rows=twice", body: `[` + fitItem + `]`, status: 400, problem: contract.InvalidRequest},
+		{op: opFitBatch, method: "POST", target: "/v1/fit?stock_rows=once", body: `[{"from":{"model":1938},"stock_rows":"once"}]`, status: 400, problem: contract.InvalidRequest, pointer: "/0/stock_rows"},
 		fitPOST(batchOf(contract.MaxBatch+1, fitItem), 413, contract.TooLarge, ""),
 		fitPOST(fitOverlong, 413, contract.TooLarge, ""),
 		notAllowed(opFitOne, "PUT", "/v1/fit"),
@@ -830,7 +837,10 @@ func vocabCases(t *testing.T, svc decodeService) []apiCase {
 func fitCases(t *testing.T, svc decodeService) []apiCase {
 	var cases []apiCase
 	var items, answers []string
-	examples := slices.Clone(fitExamples)
+	examples := append(slices.Clone(fitExamples),
+		// stock_fields, beside the documented examples (#371).
+		struct{ query, item string }{"from.fitment.type=brake-rotor-front&from.fitment.number=BR-1999&stock=shelf&stock=yard&stock_fields=stock_number&stock_fields=row",
+			`{"from":{"fitment":{"type":"brake-rotor-front","number":"BR-1999"}},"stock":["shelf","yard"],"stock_fields":["stock_number","row"]}`})
 	conditions := map[string][]string{}
 	for _, c := range fitConditions {
 		examples = append(examples, struct{ query, item string }{c.query, c.item})
@@ -853,8 +863,16 @@ func fitCases(t *testing.T, svc decodeService) []apiCase {
 		items = append(items, item)
 		answers = append(answers, string(bytes.TrimSuffix(want, []byte("\n"))))
 	}
-	cases = append(cases, apiCase{op: opFitBatch, method: "POST", target: "/v1/fit", body: "[" + strings.Join(items, ",") + "]", status: 200,
+	batch := "[" + strings.Join(items, ",") + "]"
+	cases = append(cases, apiCase{op: opFitBatch, method: "POST", target: "/v1/fit", body: batch, status: 200,
 		want: []byte("[" + strings.Join(answers, ",") + "]\n")})
+	// The same batch with its stock rows once.
+	reqs, err := contract.ParseFitBatch([]byte(batch))
+	if err != nil {
+		t.Fatal(err)
+	}
+	once, err := svc.FitBatchRows(context.Background(), reqs)
+	cases = append(cases, apiCase{op: opFitBatch, method: "POST", target: "/v1/fit?stock_rows=once", body: batch, status: 200, want: wantBody(t, once, err)})
 	for _, c := range fitRefusals {
 		req, err := contract.ParseFitRequest([]byte(c.item))
 		if err != nil {
@@ -932,6 +950,9 @@ func (faulty) Fit(context.Context, contract.FitRequest) (contract.Fit, error) {
 }
 func (faulty) FitBatch(context.Context, []contract.FitRequest) ([]contract.Fit, error) {
 	return nil, errors.New("injected fault")
+}
+func (faulty) FitBatchRows(context.Context, []contract.FitRequest) (contract.FitBatchRows, error) {
+	return contract.FitBatchRows{}, errors.New("injected fault")
 }
 func (faulty) SpineBundle() ([]byte, error) { return nil, errors.New("injected fault") }
 func (faulty) File(string) ([]byte, error)  { return nil, errors.New("injected fault") }
@@ -1270,6 +1291,172 @@ func TestServeFitNoCatalog(t *testing.T) {
 		}
 		if resp.StatusCode != 200 || !strings.HasPrefix(string(body), c.want) {
 			t.Errorf("%s %s: %d %s; want 200 and %s…", c.method, c.target, resp.StatusCode, body, c.want)
+		}
+	}
+}
+
+// TestServeFitEncoding: GET and POST /v1/fit answer compressed as the
+// request's Accept-Encoding allows, brotli before gzip, each body
+// decompressing to the bytes served uncompressed, its Content-Length the
+// compressed one; a body under compressMin and a refusal go as they are;
+// every fit response varies by Accept-Encoding; an answer's Server-Timing
+// gives its fit, stock and encode times and nothing else; and
+// stock_rows=once answers POST's batch with its rows once, and is refused
+// on GET and with any other value (#371).
+func TestServeFitEncoding(t *testing.T) {
+	fixtureData(t)
+	d, err := nitrovin.Embedded()
+	if err != nil {
+		t.Fatal(err)
+	}
+	files, err := vocab.Open(fixture, fitmentFixture, stockFixture)
+	if err != nil {
+		t.Fatal(err)
+	}
+	svc := translating(t, d, files...)
+	a, err := newAPI(svc, log.New(io.Discard, "", 0), io.Discard, nil, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv := httptest.NewServer(a)
+	t.Cleanup(srv.Close)
+	// A client that leaves Accept-Encoding and the body as they are.
+	raw := &http.Client{Timeout: time.Minute, Transport: &http.Transport{DisableCompression: true}}
+	send := func(method, target, body, accept string) (*http.Response, []byte) {
+		t.Helper()
+		req, err := http.NewRequest(method, srv.URL+target, strings.NewReader(body))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if accept != "" {
+			req.Header.Set("Accept-Encoding", accept)
+		}
+		resp, err := raw.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		b, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if v := resp.Header.Values("Vary"); !slices.Contains(v, "Accept-Encoding") {
+			t.Errorf("%s %s: Vary %q; want Accept-Encoding", method, target, v)
+		}
+		if cl := resp.Header.Get("Content-Length"); cl != strconv.Itoa(len(b)) {
+			t.Errorf("%s %s: Content-Length %s for %d bytes", method, target, cl, len(b))
+		}
+		return resp, b
+	}
+	decompress := func(coding string, b []byte) []byte {
+		t.Helper()
+		var r io.Reader = bytes.NewReader(b)
+		switch coding {
+		case "br":
+			r = brotli.NewReader(r)
+		case "gzip":
+			gz, err := gzip.NewReader(r)
+			if err != nil {
+				t.Fatal(err)
+			}
+			r = gz
+		}
+		out, err := io.ReadAll(r)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return out
+	}
+	timing := func(what string, resp *http.Response) {
+		t.Helper()
+		var names []string
+		for m := range strings.SplitSeq(resp.Header.Get("Server-Timing"), ", ") {
+			name, dur, ok := strings.Cut(m, ";dur=")
+			if f, err := strconv.ParseFloat(dur, 64); !ok || err != nil || f < 0 {
+				t.Errorf("%s: Server-Timing metric %q; want <name>;dur=<ms>", what, m)
+			}
+			names = append(names, name)
+		}
+		if want := []string{"fit", "stock", "encode"}; !slices.Equal(names, want) {
+			t.Errorf("%s: Server-Timing %q; want the metrics %q", what, resp.Header.Get("Server-Timing"), want)
+		}
+	}
+
+	const item = `{"from":{"fitment":{"type":"brake-rotor-front","number":"BR-1999"}},"stock":["shelf","yard"],"now":"` + now + `"}`
+	batch := batchOf(4, item)
+	reqs, err := contract.ParseFitBatch([]byte(batch))
+	if err != nil {
+		t.Fatal(err)
+	}
+	fits, err := svc.FitBatch(context.Background(), reqs)
+	once, onceErr := svc.FitBatchRows(context.Background(), reqs)
+	for _, c := range []struct {
+		method, target, body string
+		want                 []byte
+	}{
+		{"POST", "/v1/fit", batch, wantBody(t, fits, err)},
+		{"POST", "/v1/fit?stock_rows=once", batch, wantBody(t, once, onceErr)},
+		{"GET", "/v1/fit?from.fitment.type=brake-rotor-front&from.fitment.number=BR-1999&stock=shelf&stock=yard&now=" + now, "", wantBody(t, fits[0], nil)},
+	} {
+		what := c.method + " " + c.target
+		resp, plain := send(c.method, c.target, c.body, "")
+		if resp.StatusCode != http.StatusOK || !bytes.Equal(plain, c.want) || resp.Header.Get("Content-Encoding") != "" {
+			t.Fatalf("%s: %d, Content-Encoding %q, %s; want 200, none and %s", what, resp.StatusCode, resp.Header.Get("Content-Encoding"), plain, c.want)
+		}
+		if len(plain) < compressMin {
+			t.Fatalf("%s: %d bytes, under compressMin", what, len(plain))
+		}
+		timing(what, resp)
+		for _, e := range []struct{ accept, coding string }{
+			{"br", "br"},
+			{"gzip, deflate, br", "br"},
+			{"gzip", "gzip"},
+			{"x-gzip", "gzip"},
+			{"br;q=0, gzip;q=0.5", "gzip"},
+			{"*", "br"},
+			{"*;q=0, gzip", "gzip"},
+			{"br;q=0, gzip;q=0", ""},
+			{"identity", ""},
+			{"deflate", ""},
+		} {
+			resp, b := send(c.method, c.target, c.body, e.accept)
+			if got := resp.Header.Get("Content-Encoding"); got != e.coding {
+				t.Errorf("%s, Accept-Encoding %q: Content-Encoding %q; want %q", what, e.accept, got, e.coding)
+				continue
+			}
+			if e.coding != "" && len(b) >= len(plain) {
+				t.Errorf("%s, %s: %d bytes compressed of %d", what, e.coding, len(b), len(plain))
+			}
+			if got := decompress(e.coding, b); !bytes.Equal(got, plain) {
+				t.Errorf("%s, Accept-Encoding %q: decompressed\n%s\nwant\n%s", what, e.accept, got, plain)
+			}
+			timing(what+", "+e.accept, resp)
+		}
+	}
+	var shape map[string]json.RawMessage
+	if err := json.Unmarshal(wantBody(t, once, onceErr), &shape); err != nil || len(shape) != 2 || shape["fits"] == nil || shape["stock_rows"] == nil {
+		t.Errorf("stock_rows=once: keys of %v; want fits and stock_rows", shape)
+	}
+
+	// A small answer and refusals are sent as they are.
+	resp, b := send("GET", "/v1/fit?from.fitment.type=engine&from.fitment.number=NOPE&now="+now, "", "br, gzip")
+	if resp.StatusCode != http.StatusOK || len(b) >= compressMin || resp.Header.Get("Content-Encoding") != "" {
+		t.Errorf("a small answer: %d, %d bytes, Content-Encoding %q; want 200, under %d, none", resp.StatusCode, len(b), resp.Header.Get("Content-Encoding"), compressMin)
+	}
+	timing("a small answer", resp)
+	for _, c := range []struct{ method, target, body, pointer string }{
+		{"GET", "/v1/fit?from.fitment.type=engine&from.fitment.number=EN-57&stock=yard&stock_rows=once", "", "/stock_rows"},
+		{"POST", "/v1/fit?stock_rows=twice", batch, ""},
+		{"POST", "/v1/fit?stock_row=once", batch, ""},
+		{"POST", "/v1/fit?stock_rows=once", `[{"from":{"fitment":{"type":"engine","number":"EN-57"}},"stock_rows":"once"}]`, "/0/stock_rows"},
+	} {
+		resp, b := send(c.method, c.target, c.body, "br, gzip")
+		var p contract.Problem
+		if err := json.Unmarshal(b, &p); err != nil || resp.StatusCode != http.StatusBadRequest || p.Type != contract.InvalidRequest || p.Pointer != c.pointer {
+			t.Errorf("%s %s: %d %s; want #invalid-request at %q", c.method, c.target, resp.StatusCode, b, c.pointer)
+		}
+		if resp.Header.Get("Content-Encoding") != "" || resp.Header.Get("Server-Timing") != "" {
+			t.Errorf("%s %s: Content-Encoding %q, Server-Timing %q; want neither", c.method, c.target, resp.Header.Get("Content-Encoding"), resp.Header.Get("Server-Timing"))
 		}
 	}
 }

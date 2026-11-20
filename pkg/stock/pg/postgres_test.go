@@ -230,6 +230,40 @@ func sourcesOf(v any, fn func(block map[string]any)) {
 	}
 }
 
+// decoded is v's JSON decoded, as a caller reads it.
+func decoded(t *testing.T, v any) any {
+	t.Helper()
+	b, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out any
+	if err := json.Unmarshal(b, &out); err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
+// stockListsOf calls fn with every stock list of a decoded answer: each
+// object of rows and sources.
+func stockListsOf(v any, fn func(list map[string]any)) {
+	switch v := v.(type) {
+	case map[string]any:
+		_, rows := v["rows"]
+		if _, sources := v["sources"]; rows && sources {
+			fn(v)
+			return
+		}
+		for _, x := range v {
+			stockListsOf(x, fn)
+		}
+	case []any:
+		for _, x := range v {
+			stockListsOf(x, fn)
+		}
+	}
+}
+
 // stockIDs are an answer's stock rows as "id/matched[/reached]", list by
 // list, in answer order.
 func stockIDs(t *testing.T, answer []byte) string {
@@ -402,6 +436,47 @@ func TestParityPostgres(t *testing.T) {
 		if want := fitJSON(t, live, req); string(got) != string(want) {
 			t.Errorf("%s\nin the batch %s\nalone        %s", req, got, want)
 		}
+	}
+
+	// The batch again with both stock options (#371): its rows once, each
+	// cut to two of its fields. Expanded, every index replaced by its row,
+	// it is the full batch's answer cut to those fields; and the rows many
+	// lists hold are each one row.
+	names := []string{"stock_number", "row"}
+	for i := range reqs {
+		reqs[i].StockFields = names
+	}
+	once, err := live.FitBatchRows(context.Background(), reqs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := decoded(t, once).(map[string]any)
+	table, refs := got["stock_rows"].([]any), 0
+	stockListsOf(got["fits"], func(l map[string]any) {
+		rows := l["rows"].([]any)
+		for i, r := range rows {
+			refs++
+			rows[i] = decoded(t, table[int(r.(float64))]) // a copy: each list's row is its own
+		}
+	})
+	full := decoded(t, fits)
+	stockListsOf(full, func(l map[string]any) {
+		for _, r := range l["rows"].([]any) {
+			fields := r.(map[string]any)["fields"].(map[string]any)
+			for k := range fields {
+				if !slices.Contains(names, k) {
+					delete(fields, k)
+				}
+			}
+		}
+	})
+	if !reflect.DeepEqual(got["fits"], full) {
+		b, _ := json.Marshal(got["fits"])
+		want, _ := json.Marshal(full)
+		t.Errorf("the batch's rows once, expanded\n%s\nwant its answer cut to %q\n%s", b, names, want)
+	}
+	if len(table) == 0 || refs <= len(table) {
+		t.Errorf("%d references to %d stock rows; want rows shared", refs, len(table))
 	}
 
 	info, err := json.Marshal(live.Info())

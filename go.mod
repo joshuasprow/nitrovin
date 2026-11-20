@@ -3,6 +3,11 @@ module github.com/joshuasprow/nitrovin
 go 1.27
 
 require (
+	// brotli (MIT), a pure-Go port of Google's encoder, compresses /v1/fit's
+	// answers when a request's Accept-Encoding allows br (cmd/nitrovin's
+	// serve.go), and its tests measure the spine bundle's brotli size
+	// (pkg/nitrovin/bundle_test.go). Only cmd/nitrovin's binary links it:
+	// the C library and the WebAssembly build do not.
 	github.com/andybalholm/brotli v1.3.0
 	// chromedp drives headless Chrome over the DevTools protocol for
 	// TestForm's browser runs (cmd/nitrovin/browser_test.go): tests only, no

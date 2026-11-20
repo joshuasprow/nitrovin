@@ -200,14 +200,17 @@ paths:
         optional `from.fitment.side`, absent for any side (ADR 0024).
         `part` is `part.spine` with `part.id`, or `part.vocabulary` with one
         `part.entry.<field>` per field. `to` is repeated, once per vehicle
-        vocabulary, and `stock` and `location` once per value. Every other
-        parameter is given at most once, and an
-        unknown one is refused. The answer, and any refusal with its
-        `pointer`, is the one the same request gets as a `POST /v1/fit`
-        item. Nothing to fit is never an error: it answers with its
+        vocabulary, and `stock`, `location` and `stock_fields` once per
+        value, `stock_fields` given once and empty meaning no field. Every
+        other parameter is given at most once, and an unknown one is
+        refused, as is `stock_rows`, a batch's. The answer, and any refusal
+        with its `pointer`, is the one the same request gets as a `POST
+        /v1/fit` item. Nothing to fit is never an error: it answers with its
         `status`, `no-catalog` when no catalog is loaded, and an empty list.
         A `filed_under` key that reaches two or more fitments answers
         `ambiguous`, listing them in `fitments`: ask again with a side.
+        Answers and refusals are compressed as `Accept-Encoding` allows,
+        and an answer's `Server-Timing` says how long its parts took.
       parameters:
         - name: from.vin
           in: query
@@ -286,6 +289,12 @@ paths:
           schema: { $ref: 'decode.schema.json#/$defs/FitRequestFields/properties/location' }
           style: form
           explode: true
+        - name: stock_fields
+          in: query
+          description: A field of the stock rows' `fields` to keep; repeated for several, given once empty for none. Absent keeps every field. Only with `stock`.
+          schema: { $ref: 'decode.schema.json#/$defs/FitRequestFields/properties/stock_fields' }
+          style: form
+          explode: true
         - name: limit
           in: query
           description: List items a page.
@@ -298,6 +307,10 @@ paths:
       responses:
         '200':
           description: The fit.
+          headers:
+            Content-Encoding: { $ref: '#/components/headers/FitContentEncoding' }
+            Vary: { $ref: '#/components/headers/FitVary' }
+            Server-Timing: { $ref: '#/components/headers/FitServerTiming' }
           content:
             application/json:
               schema: { $ref: 'decode.schema.json#/$defs/Fit' }
@@ -312,7 +325,17 @@ paths:
         length and order. The wall clock is read once for the whole
         request; an item's `now` overrides it for that item. Any refused
         item refuses the whole request with 400, its `pointer` naming the
-        item (`/3/part`).
+        item (`/3/part`). With `stock_rows=once`, the answer is a
+        `FitBatchRows` instead: the fits, every stock list's rows indexes
+        into `stock_rows`, the batch's distinct stock rows, once each. Any
+        other query parameter is refused. Answers and refusals are
+        compressed as `Accept-Encoding` allows, and an answer's
+        `Server-Timing` says how long its parts took.
+      parameters:
+        - name: stock_rows
+          in: query
+          description: '`once` answers a `FitBatchRows`: each stock row once, every list holding indexes into `stock_rows`. Absent answers the array of fits.'
+          schema: { enum: [once] }
       requestBody:
         required: true
         content:
@@ -328,12 +351,18 @@ paths:
               - { from: { fitment: { type: brake-rotor-front, number: BR-2001 } }, to: [fleet] }
       responses:
         '200':
-          description: One fit per request item, in order.
+          description: One fit per request item, in order; with `stock_rows=once`, a `FitBatchRows`.
+          headers:
+            Content-Encoding: { $ref: '#/components/headers/FitContentEncoding' }
+            Vary: { $ref: '#/components/headers/FitVary' }
+            Server-Timing: { $ref: '#/components/headers/FitServerTiming' }
           content:
             application/json:
               schema:
-                type: array
-                items: { $ref: 'decode.schema.json#/$defs/Fit' }
+                oneOf:
+                  - type: array
+                    items: { $ref: 'decode.schema.json#/$defs/Fit' }
+                  - $ref: 'decode.schema.json#/$defs/FitBatchRows'
         '400': { $ref: '#/components/responses/BadRequest' }
         '405': { $ref: '#/components/responses/MethodNotAllowed' }
         '413': { $ref: '#/components/responses/TooLarge' }
@@ -496,6 +525,26 @@ components:
         day. Absent: the wall clock, read once per request.
       schema: { $ref: 'decode.schema.json#/$defs/DecodeRequestFields/properties/now' }
       example: '2026-09-01T00:00:00Z'
+  headers:
+    FitContentEncoding:
+      description: |
+        `br` when the request's `Accept-Encoding` allows brotli, else `gzip`
+        when it allows gzip; absent when it allows neither, and for a body
+        under 1 KiB, which is sent as it is. A refusal follows the same
+        rule. The JSON is the same either way.
+      schema: { enum: [br, gzip] }
+    FitVary:
+      description: '`Accept-Encoding`, on every `/v1/fit` response: the body''s coding follows it.'
+      schema: { type: string }
+    FitServerTiming:
+      description: |
+        How long the answer's parts took, each a `dur` in milliseconds:
+        `fit`, the fit, its stock lookups included; `stock`, its stock
+        lookups, summed over every source, so above `fit` when sources
+        answer at once; `encode`, marshalling and compressing the answer.
+        It names no source, connection or relation. Absent from a refusal.
+      schema: { type: string }
+      example: fit;dur=612.4, stock;dur=540.1, encode;dur=18.3
   responses:
     BadRequest:
       description: |

@@ -44,6 +44,11 @@ func TestParseFitRequest(t *testing.T) {
 			FitRequest{From: FitFrom{Fitment: &FitmentKey{FiledUnder: map[string]string{"code": "MIR"}, Number: "MR-1001"}}}},
 		{`{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-1001","side":"left"}},"to":["fleet"]}`,
 			FitRequest{From: FitFrom{Fitment: &FitmentKey{FiledUnder: map[string]string{"code": "MIR"}, Number: "MR-1001", Side: "left"}}, To: []string{"fleet"}}},
+		// stock_fields cuts the rows' fields; empty keeps none.
+		{`{"from":{"fitment":{"type":"mirror","number":"MR-1001"}},"stock":["yard"],"stock_fields":["vin","row","vin"]}`,
+			FitRequest{From: FitFrom{Fitment: &FitmentKey{Type: "mirror", Number: "MR-1001"}}, Stock: []string{"yard"}, StockFields: []string{"vin", "row", "vin"}}},
+		{`{"from":{"fitment":{"type":"mirror","number":"MR-1001"}},"stock":["yard"],"stock_fields":[]}`,
+			FitRequest{From: FitFrom{Fitment: &FitmentKey{Type: "mirror", Number: "MR-1001"}}, Stock: []string{"yard"}, StockFields: []string{}}},
 	}
 	fitRequest := schemaDef(t, "FitRequest")
 	for _, c := range accepted {
@@ -106,6 +111,10 @@ func TestParseFitRequest(t *testing.T) {
 		{`{"from":{"make":476},"after":""}`, InvalidRequest, "/after", false},
 		{`{"from":{"make":476},"now":"tomorrow"}`, InvalidRequest, "/now", false},
 		{`{"from":{"make":476},"model_year":"2010"}`, InvalidRequest, "/model_year", false},
+		{`{"from":{"fitment":{"type":"mirror","number":"MR-1001"}},"stock_fields":["vin"]}`, InvalidRequest, "/stock_fields", false},
+		{`{"from":{"fitment":{"type":"mirror","number":"MR-1001"}},"stock":["yard"],"stock_fields":"vin"}`, InvalidRequest, "/stock_fields", false},
+		{`{"from":{"fitment":{"type":"mirror","number":"MR-1001"}},"stock":["yard"],"stock_fields":["vin",""]}`, InvalidRequest, "/stock_fields/1", false},
+		{`{"from":{"fitment":{"type":"mirror","number":"MR-1001"}},"stock":["yard"],"stock_fields":[1]}`, InvalidRequest, "/stock_fields/0", false},
 	}
 	for _, c := range refused {
 		_, err := ParseFitRequest([]byte(c.in))
@@ -148,6 +157,8 @@ func TestFitRequestValidate(t *testing.T) {
 		{FitRequest{From: FitFrom{VIN: "x"}, Stock: []string{"shelf"}}, "/stock"},
 		{FitRequest{From: FitFrom{Fitment: key}, Location: []string{"north"}}, "/location"},
 		{FitRequest{From: FitFrom{Fitment: key}, Stock: []string{"shelf"}, Location: []string{""}}, "/location/0"},
+		{FitRequest{From: FitFrom{Fitment: key}, StockFields: []string{}}, "/stock_fields"},
+		{FitRequest{From: FitFrom{Fitment: key}, Stock: []string{"shelf"}, StockFields: []string{""}}, "/stock_fields/0"},
 	} {
 		problemOf(t, c.r.Validate(), InvalidRequest, c.pointer)
 	}
@@ -192,6 +203,37 @@ func TestParseFitBatch(t *testing.T) {
 	}
 }
 
+// TestParseFitBatchQuery: POST /v1/fit's query takes stock_rows=once
+// alone.
+func TestParseFitBatchQuery(t *testing.T) {
+	for _, c := range []struct {
+		query string
+		once  bool
+		ok    bool
+	}{
+		{"", false, true},
+		{"stock_rows=once", true, true},
+		{"stock_rows=twice", false, false},
+		{"stock_rows=", false, false},
+		{"stock_rows=once&stock_rows=once", false, false},
+		{"stock_rows=once&side=left", false, false},
+		{"stock_row=once", false, false},
+	} {
+		q, err := url.ParseQuery(c.query)
+		if err != nil {
+			t.Fatal(err)
+		}
+		once, err := ParseFitBatchQuery(q)
+		if c.ok {
+			if err != nil || once != c.once {
+				t.Errorf("?%s: %v, %v; want %v", c.query, once, err, c.once)
+			}
+			continue
+		}
+		problemOf(t, err, InvalidRequest, "")
+	}
+}
+
 // TestParseFitQuery: a query asks what the JSON request it spells asks,
 // and is refused where that request is, at the same pointer.
 func TestParseFitQuery(t *testing.T) {
@@ -210,6 +252,12 @@ func TestParseFitQuery(t *testing.T) {
 			`{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-1001"}}}`},
 		{"from.fitment.filed_under.code=MIR&from.fitment.number=MR-1001&from.fitment.side=right&to=fleet",
 			`{"from":{"fitment":{"filed_under":{"code":"MIR"},"number":"MR-1001","side":"right"}},"to":["fleet"]}`},
+		{"from.fitment.type=mirror&from.fitment.number=1&stock=yard&stock_fields=vin&stock_fields=row",
+			`{"from":{"fitment":{"type":"mirror","number":"1"}},"stock":["yard"],"stock_fields":["vin","row"]}`},
+		{"from.fitment.type=mirror&from.fitment.number=1&stock=yard&stock_fields=",
+			`{"from":{"fitment":{"type":"mirror","number":"1"}},"stock":["yard"],"stock_fields":[]}`},
+		{"from.fitment.type=mirror&from.fitment.number=1&stock=yard&stock_fields=&stock_fields=vin",
+			`{"from":{"fitment":{"type":"mirror","number":"1"}},"stock":["yard"],"stock_fields":["","vin"]}`},
 		// Refused alike.
 		{"", `{}`},
 		{"from.fitment.type=mirror", `{"from":{"fitment":{"type":"mirror"}}}`},
@@ -245,6 +293,7 @@ func TestParseFitQuery(t *testing.T) {
 		{"from.make=476&vin=1D7RV1GT5AS123456", "/vin"},
 		{"from.spine=part-types&from.id=mirror", "/from/id"},
 		{"from.fitment.filed_under.code=A&from.fitment.filed_under.code=B&from.fitment.number=1", "/from/fitment/filed_under/code"},
+		{"from.fitment.type=mirror&from.fitment.number=1&stock=yard&stock_rows=once", "/stock_rows"},
 	} {
 		q, err := url.ParseQuery(c.query)
 		if err != nil {

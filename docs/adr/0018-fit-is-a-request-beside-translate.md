@@ -241,3 +241,81 @@ fields it takes without a fit.
   entries and the matching applications, which `Matching` reads from the vehicle's
   block alone in a compiled catalog (ADR 0023); `ByVehicle` would read every far
   fitment whole on every page.
+
+## Amendment (2026-11-20): a batch's stock rows once, compressed, with its times
+
+[#371](https://github.com/joshuasprow/nitrovin/issues/371): once a batch's
+fitment keys share one stock lookup (ADR 0020's amendment of the same day), the
+answer's size is what is left. The first user's side-mirror batch, 44 fitment
+keys: 3.86 MB, 3.44 MB of it yard rows, 8,467 rows for 769 vehicles, each row
+whole in every list holding it. Cut to identity and `vin` (ADR 0019's
+amendment of the same day) it is 1.03 MB; with each row sent once besides,
+about 0.67 MB. Compressed, the whole answer is 380 KB as gzip level 6 and 47 KB
+as brotli quality 4, in 0.01 to 0.02 s of CPU each.
+
+- **Each stock row once, asked for by the batch.** `POST /v1/fit?stock_rows=once`
+  answers a `FitBatchRows`: `fits`, the fits in request order, every stock list's
+  `rows` indexes into `stock_rows`, the batch's distinct rows in the order the
+  fits first list them. Expanded, it is the array of fits. It is the batch's
+  option, not a request's, because only a batch has rows to share, and one item
+  could not change the shape of every other's answer. A query parameter keeps the
+  body the array of requests it was; `GET /v1/fit` refuses it, a single fit
+  having no batch, and so does every other surface, which answers one fit a call.
+- **A distinct answer, opt-in.** Without the option the answer is the bare array,
+  byte for byte as before (`TestFitBatchStockGolden` holds a batch's bytes from
+  before #371), so no caller's integration changes when nitrovin upgrades; with
+  it, the answer is an object, so a caller decoding into types meets one shape
+  per request, never an array that might hold indexes.
+- **A row is its kind, source and id, and all of it.** Two lists holding a row
+  alike share its index; a shelf row and a yard row never do; a row two lists
+  hold differently, cut by different `stock_fields` or reached through different
+  fitments, is two rows, so no fit receives a field it did not ask for. Totals,
+  paging and every `sources` block are as without the option.
+- **In Go, types of its own.** `FitRefs`, `FitCandidateRefs` and
+  `RelatedVehicleRefs` embed `Fit`, `FitCandidate` and `RelatedVehicle` and
+  replace their stock lists with `StockRefs`. A `MarshalJSON` on `StockList`
+  writing either rows or indexes was the smaller change, and was measured
+  doubling the marshalling of every stock answer, with the option or without
+  (3.1 to 6.3 ms for 3.6 MB of rows): `encoding/json` compacts again whatever a
+  marshaller returns. The price is the order of members: a `FitRefs` writes its
+  lists after the `Fit`'s other members.
+- **Compressed answers, in `serve` alone.** `GET` and `POST /v1/fit` answer
+  brotli when `Accept-Encoding` allows `br`, else gzip when it allows `gzip`,
+  else nothing; a body under 1 KiB goes as it is, as a frame and its CPU cost
+  more than they save there. Refusals follow the same rule, every `/v1/fit`
+  response varies by `Accept-Encoding`, and `Content-Length` is what is sent.
+  The JSON is unchanged: compression is HTTP's, so the other surfaces, stdio and
+  the C library among them, answer exactly as before. Brotli is
+  `github.com/andybalholm/brotli`, a pure-Go port, so the binary stays
+  `CGO_ENABLED=0`; it was a test dependency already. Other routes are left as
+  they were: their answers are small, or (the spine bundle) compressed already.
+- **`Server-Timing` on every fit answer:** `fit`, the contract's whole answer,
+  stock lookups included; `stock`, the lookups summed over every source, timed
+  where every lookup passes (`contract.StockTime`, given in the fit's context);
+  `encode`, marshalling and compressing. Nothing else, so a caller learns no
+  source, connection or relation name, and none of it enters an answer.
+- **Measured** on the reference machine, on a synthetic yard shaped as the
+  mirror: 769 vehicles of about 500 bytes of `fields` each (hashes for photos,
+  VINs and stock numbers, so they do not compress as a template would), against
+  the synthetic catalog's four fitment keys repeated to 44, `stock: ["yard"]`,
+  `limit` 192: 8,448 rows. The contract's batch took 2.4 ms from the files; 3.3 ms
+  cutting `stock_fields`, 5.2 ms with the rows once, 6.2 ms with both.
+
+  | Answer | JSON | Marshal | brotli q4 | gzip 6 |
+  | --- | --- | --- | --- | --- |
+  | As before | 4.49 MB | 8.1 ms | 19.9 KB, 9.2 ms | 661 KB, 9.8 ms |
+  | `stock_fields: ["vin"]` | 1.55 MB | 5.8 ms | 4.4 KB, 3.4 ms | 128 KB, 2.6 ms |
+  | `stock_rows=once` | 216 KB | 0.5 ms | 21.0 KB, 1.6 ms | 22.7 KB, 0.5 ms |
+  | Both | 123 KB | 0.4 ms | 4.7 KB, 0.9 ms | 5.7 KB, 0.2 ms |
+
+  The levels, on the answer as before: brotli quality 1 is 216 KB in 2.9 ms, 4 is
+  19.9 KB in 9.2 ms, 5 18.6 KB in 9.9 ms, 6 18.5 KB in 9.6 ms, 11 16.4 KB in 216
+  ms; gzip level 1 is 772 KB in 6.3 ms, 6 661 KB in 9.8 ms, 9 640 KB in 43.9 ms.
+  Quality 4 is the first to find the repeats across lists, ten times smaller
+  than quality 1, and later qualities buy a few percent for more CPU; level 6 is
+  gzip's default, and its 32 KB window cannot reach those repeats at any level.
+  Brotli at quality 4 and gzip at 6 are `serve`'s constants.
+- **What is left** is the database's read (0.5 to 0.9 s on the mirror, ADR 0020)
+  and, at about 0.4 MB of the mirror's answer, each fitment key's catalog
+  `vehicles`, which a caller paging only stock still receives. A request option
+  leaving them out is a separate change, when one is wanted.

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"reflect"
 	"slices"
 	"strings"
 	"sync"
@@ -337,6 +338,250 @@ func TestFitBatchStock(t *testing.T) {
 	}
 	if rows == 0 {
 		t.Error("no answer carried a stock row")
+	}
+}
+
+// withStockFields is item, a fit request's JSON, with stock_fields names;
+// nil leaves it out.
+func withStockFields(item string, names []string) string {
+	if names == nil {
+		return item
+	}
+	b, _ := json.Marshal(names)
+	return strings.TrimSuffix(item, "}") + `,"stock_fields":` + string(b) + `}`
+}
+
+// decodeJSON is v's JSON decoded, as a caller reads it.
+func decodeJSON(t *testing.T, v any) any {
+	t.Helper()
+	b, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out any
+	if err := json.Unmarshal(b, &out); err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
+// eachStockList calls fn with every stock list in v, a decoded answer,
+// and the key that holds it: shelf, yard or shelf_by_vehicle.
+func eachStockList(v any, fn func(key string, list map[string]any)) {
+	switch v := v.(type) {
+	case map[string]any:
+		for k, e := range v {
+			if l, ok := e.(map[string]any); ok && (k == "shelf" || k == "yard" || k == "shelf_by_vehicle") {
+				if _, ok := l["sources"]; ok {
+					fn(k, l)
+					continue
+				}
+			}
+			eachStockList(e, fn)
+		}
+	case []any:
+		for _, e := range v {
+			eachStockList(e, fn)
+		}
+	}
+}
+
+// cutRows is what stock_fields names asks of v, a decoded answer: each
+// stock row's fields with only the members named, nothing else of it.
+func cutRows(v any, names []string) any {
+	eachStockList(v, func(_ string, l map[string]any) {
+		for _, r := range l["rows"].([]any) {
+			fields := r.(map[string]any)["fields"].(map[string]any)
+			for k := range fields {
+				if !slices.Contains(names, k) {
+					delete(fields, k)
+				}
+			}
+		}
+	})
+	return v
+}
+
+// TestFitStockFields: stock_fields cuts every stock row's fields, on every
+// kind of stock list, to the names given, and nothing else: a row keeps
+// its source, id, location, how it matched and what it names; a name no
+// row has is ignored; empty keeps no field (#371).
+func TestFitStockFields(t *testing.T) {
+	tr := stockTranslator(t)
+	const ram = `"from":{"vocabulary":"catalog-models","entry":{"make":"Dodge","model":"Ram 1500"}},"model_year":2010`
+	items := []string{
+		`{` + ram + `,"part":{"vocabulary":"part-codes","entry":{"code":"ROT"}},"stock":["shelf","yard"]}`,
+		`{` + ram + `,"part":{"spine":"part-types","id":"mirror"},"stock":["shelf"],"location":["north"]}`,
+		`{"from":{"fitment":{"type":"brake-rotor-front","number":"BR-1999"}},"stock":["shelf","yard"]}`,
+		`{"from":{"model":1850},"model_year":2010,"related":true,"stock":["yard"]}`,
+	}
+	var cut, kept int
+	for _, item := range items {
+		full, err := fit(t, tr, item)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, names := range [][]string{{"stock_number", "row", "nope"}, {"nope"}, {}} {
+			req := withStockFields(item, names)
+			got, err := fit(t, tr, req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := cutRows(decodeJSON(t, full), names)
+			if g := decodeJSON(t, got); !reflect.DeepEqual(g, want) {
+				gb, _ := json.Marshal(g)
+				wb, _ := json.Marshal(want)
+				t.Errorf("%s\ngot  %s\nwant %s", req, gb, wb)
+			}
+			eachStockList(decodeJSON(t, got), func(_ string, l map[string]any) {
+				for _, r := range l["rows"].([]any) {
+					row := r.(map[string]any)
+					for _, k := range []string{"source", "id", "location", "matched"} {
+						if _, ok := row[k]; !ok {
+							t.Errorf("%s: a row without %s: %v", req, k, row)
+						}
+					}
+					if n := len(row["fields"].(map[string]any)); len(names) > 0 && names[0] == "stock_number" && n > 0 {
+						kept++
+					}
+				}
+			})
+		}
+		eachStockList(decodeJSON(t, full), func(_ string, l map[string]any) {
+			for _, r := range l["rows"].([]any) {
+				if len(r.(map[string]any)["fields"].(map[string]any)) > 2 {
+					cut++
+				}
+			}
+		})
+	}
+	if cut == 0 || kept == 0 {
+		t.Errorf("%d rows with fields to cut, %d keeping a field named; want some of each", cut, kept)
+	}
+}
+
+// expandRows is v, a decoded FitBatchRows, as its array of fits: every
+// stock list's indexes replaced by the rows of stock_rows they name.
+func expandRows(t *testing.T, v any) any {
+	t.Helper()
+	o := v.(map[string]any)
+	table := o["stock_rows"].([]any)
+	fits := o["fits"]
+	eachStockList(fits, func(_ string, l map[string]any) {
+		rows := l["rows"].([]any)
+		for i, r := range rows {
+			n, ok := r.(float64)
+			if !ok || n != float64(int(n)) || int(n) < 0 || int(n) >= len(table) {
+				t.Fatalf("a list's row %v is no index into %d stock rows", r, len(table))
+			}
+			b, _ := json.Marshal(table[int(n)]) // a copy: each list's row is its own
+			var row any
+			if err := json.Unmarshal(b, &row); err != nil {
+				t.Fatal(err)
+			}
+			rows[i] = row
+		}
+	})
+	return fits
+}
+
+// TestFitBatchRows: a batch's stock rows once (#371). Expanded, the answer
+// is the batch's array of fits, cuts and order included; a row that many
+// keys and lists hold alike is one row of stock_rows, and one cut three
+// ways three; every row is referenced; and shelf and yard rows never
+// share an index.
+func TestFitBatchRows(t *testing.T) {
+	tr := stockTranslator(t)
+	const ram = `"from":{"vocabulary":"catalog-models","entry":{"make":"Dodge","model":"Ram 1500"}},"model_year":2010`
+	keys := []string{
+		`{"type":"brake-rotor-front","number":"BR-1999"}`,
+		`{"type":"brake-rotor-front","number":"BR-2001"}`,
+		`{"type":"mirror","number":"MR-1001","side":"left"}`,
+		`{"type":"mirror","number":"MR-1001","side":"right"}`,
+	}
+	const whole = 12 // the first items, keys asking for every field
+	var items []string
+	for i := range whole {
+		items = append(items, `{"from":{"fitment":`+keys[i%len(keys)]+`},"stock":["shelf","yard"]}`)
+	}
+	items = append(items,
+		`{`+ram+`,"part":{"vocabulary":"part-codes","entry":{"code":"ROT"}},"stock":["shelf","yard"],"stock_fields":["stock_number"]}`,
+		`{`+ram+`,"part":{"spine":"part-types","id":"mirror"},"stock":["shelf"]}`,
+		`{"from":{"model":1850},"model_year":2010,"related":true,"stock":["yard"]}`,
+		`{"from":{"fitment":`+keys[1]+`},"stock":["shelf","yard"],"limit":1,"stock_fields":[]}`,
+		`{`+ram+`}`,
+	)
+	reqs := make([]contract.FitRequest, len(items))
+	for i, it := range items {
+		var err error
+		if reqs[i], err = contract.ParseFitRequest([]byte(it)); err != nil {
+			t.Fatal(err)
+		}
+		reqs[i].Now = fitNow
+	}
+	fits, err := tr.FitBatch(context.Background(), reqs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	once, err := tr.FitBatchRows(context.Background(), reqs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	conforms(t, "FitBatchRows", once)
+	got, want := expandRows(t, decodeJSON(t, once)), decodeJSON(t, fits)
+	if !reflect.DeepEqual(got, want) {
+		gb, _ := json.Marshal(got)
+		wb, _ := json.Marshal(want)
+		t.Errorf("expanded\n%s\nwant FitBatch's\n%s", gb, wb)
+	}
+
+	kinds := map[int]string{}
+	eachStockList(decodeJSON(t, once).(map[string]any)["fits"], func(key string, l map[string]any) {
+		kind := strings.TrimSuffix(key, "_by_vehicle")
+		for _, r := range l["rows"].([]any) {
+			i := int(r.(float64))
+			if k, ok := kinds[i]; ok && k != kind {
+				t.Errorf("stock row %d is in a %s list and a %s list", i, k, kind)
+			}
+			kinds[i] = kind
+		}
+	})
+	if len(kinds) != len(once.StockRows) {
+		t.Errorf("%d of %d stock rows referenced; want every one", len(kinds), len(once.StockRows))
+	}
+	// The keys' rows, each whole: one index a row, however many lists
+	// hold it.
+	at := map[string][]int{}
+	var refs int
+	for _, f := range once.Fits[:whole] {
+		for _, l := range []*contract.StockRefs{f.Shelf, f.Yard} {
+			for _, i := range l.Rows {
+				r := once.StockRows[i]
+				if id := r.Source + "/" + r.ID; !slices.Contains(at[id], i) {
+					at[id] = append(at[id], i)
+				}
+				refs++
+			}
+		}
+	}
+	for id, is := range at {
+		if len(is) != 1 {
+			t.Errorf("%s is stock rows %v; want one", id, is)
+		}
+	}
+	if refs <= len(at) {
+		t.Errorf("%d references to the keys' %d rows; want rows shared", refs, len(at))
+	}
+	// A-1, under BR-2001: whole for the keys, cut to stock_number for the
+	// Ram's rotors, with no field for the paged key.
+	var a1 []string
+	for _, r := range once.StockRows {
+		if r.Source == "shelf-annex" && r.ID == "A-1" {
+			a1 = append(a1, string(r.Fields))
+		}
+	}
+	if want := []string{`{"stock_number":"C300","condition":"new"}`, `{"stock_number":"C300"}`, `{}`}; !slices.Equal(a1, want) {
+		t.Errorf("A-1's stock rows' fields %q; want %q", a1, want)
 	}
 }
 

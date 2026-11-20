@@ -1841,7 +1841,7 @@
     {
       "name": "fit",
       "title": "Fit parts and vehicles",
-      "description": "Fit a vehicle or a part number against the loaded parts catalog, offline: which parts fit a vehicle, and which vehicles a part fits. What it answers depends on the inputs:\n- a vehicle alone: its part types, each with a count of fitments.\n- a vehicle with part: the candidate fitments of that part type, with the applications that matched.\n- a fitment key ({\"fitment\": {\"type\", \"number\", \"side\"}}) as from: the fitment's vehicles. A retired number reaches the fitment that replaced it. When the catalog names a filed_under vocabulary (its catalog's filed_under), {\"fitment\": {\"filed_under\": {...}, \"number\", \"side\"}} names it by one of that system's part codes instead of the part type; without side it reaches any side, and two fitments reached answer status ambiguous with them in fitments: ask the user which side, then ask again with it.\n- a vehicle with related: true: the vehicles that share its fitments, with how many per part type.\n\nWhat is loaded differs from server to server: call fit with the vehicle alone first. Its catalog gives the catalog's name (list's of, to page its fitment lines), its part spine (part's spine) and its vehicle vocabulary, and its part_types the part type ids; list with no arguments gives the vocabulary names and fields. Use only names these give.\n\n- from: a VIN string; {\"vocabulary\": name, \"entry\": {...}} with exactly that vocabulary's fields; {\"make\": id}, {\"model\": id} or {\"ext\": id}; or {\"fitment\": {\"type\": part type, \"number\": number}}, with \"side\" for a sided fitment, or {\"fitment\": {\"filed_under\": {...}, \"number\": number}} with exactly the filed_under vocabulary's fields.\n- part: {\"spine\": the catalog's part spine, \"id\": part type} or {\"vocabulary\": name, \"entry\": {...}}. An entry of the catalog's filed_under vocabulary keeps the candidates filed under it (those reached through a redirect are kept). Not with a fitment.\n- side: \"left\", \"right\" or \"both\", to keep the fitments that can go on that side.\n- to: vehicle vocabulary names to name vehicles in. None names them as spine entries.\n- model_year: only a year the user knows apart from the VIN; with a fitment, keeps the applications whose years hold it.\n- limit: list items a page, 1-1000 (default 100); after: the previous page's next, to continue. total counts every page; no next means the last page.\n- stock: [\"shelf\"], [\"yard\"] or both, with part or a fitment, for what is in stock (with related: [\"yard\"] only). Each candidate gets shelf (parts under its number, or a retired number it replaced) and yard (whole yard vehicles of any vehicle and year the fitment fits; qualifiers and option text are not checked against them), each its first 10 rows with total: a fit from that fitment key with the same stock pages them all, with limit and after. With part, shelf_by_vehicle holds parts with no number for the vehicle and year, paged with the candidates. status and total describe the candidates only: shelf_by_vehicle has its own total and can hold rows when status is no-fitment. Related vehicles get a yard count only; no fit lists those vehicles by themselves. location: locations to keep rows at.\n- now: omit.\n\nNothing to fit is not an error: status says why (unknown, no-vehicle, no-fitment, or no-catalog when no parts catalog is loaded) and the list is empty. When models lists several vehicles, ask the user which one. An application's options is the catalog's requirement text, verbatim: a person must settle it, so report it with the part, never decide it. A result with unconfirmed was not fully checked: report it as possible, not certain. An application's confirmed lists, in the same form, the conditions that were checked and held: an element id there means the VIN's decode met that qualifier, so report the fit as confirmed on it; \"model_year\" alone means only the year was checked. With neither confirmed nor unconfirmed nothing was checked, and only the option text describes the fit: report it as possible. A stock row's fields are the source's own, verbatim: report them, never interpret them. A source with status unavailable gave no rows, so its stock is unknown, not empty; a shelf with catalog_mismatch numbers its parts under another catalog release, so check the number.",
+      "description": "Fit a vehicle or a part number against the loaded parts catalog, offline: which parts fit a vehicle, and which vehicles a part fits. What it answers depends on the inputs:\n- a vehicle alone: its part types, each with a count of fitments.\n- a vehicle with part: the candidate fitments of that part type, with the applications that matched.\n- a fitment key ({\"fitment\": {\"type\", \"number\", \"side\"}}) as from: the fitment's vehicles. A retired number reaches the fitment that replaced it. When the catalog names a filed_under vocabulary (its catalog's filed_under), {\"fitment\": {\"filed_under\": {...}, \"number\", \"side\"}} names it by one of that system's part codes instead of the part type; without side it reaches any side, and two fitments reached answer status ambiguous with them in fitments: ask the user which side, then ask again with it.\n- a vehicle with related: true: the vehicles that share its fitments, with how many per part type.\n\nWhat is loaded differs from server to server: call fit with the vehicle alone first. Its catalog gives the catalog's name (list's of, to page its fitment lines), its part spine (part's spine) and its vehicle vocabulary, and its part_types the part type ids; list with no arguments gives the vocabulary names and fields. Use only names these give.\n\n- from: a VIN string; {\"vocabulary\": name, \"entry\": {...}} with exactly that vocabulary's fields; {\"make\": id}, {\"model\": id} or {\"ext\": id}; or {\"fitment\": {\"type\": part type, \"number\": number}}, with \"side\" for a sided fitment, or {\"fitment\": {\"filed_under\": {...}, \"number\": number}} with exactly the filed_under vocabulary's fields.\n- part: {\"spine\": the catalog's part spine, \"id\": part type} or {\"vocabulary\": name, \"entry\": {...}}. An entry of the catalog's filed_under vocabulary keeps the candidates filed under it (those reached through a redirect are kept). Not with a fitment.\n- side: \"left\", \"right\" or \"both\", to keep the fitments that can go on that side.\n- to: vehicle vocabulary names to name vehicles in. None names them as spine entries.\n- model_year: only a year the user knows apart from the VIN; with a fitment, keeps the applications whose years hold it.\n- limit: list items a page, 1-1000 (default 100); after: the previous page's next, to continue. total counts every page; no next means the last page.\n- stock: [\"shelf\"], [\"yard\"] or both, with part or a fitment, for what is in stock (with related: [\"yard\"] only). Each candidate gets shelf (parts under its number, or a retired number it replaced) and yard (whole yard vehicles of any vehicle and year the fitment fits; qualifiers and option text are not checked against them), each its first 10 rows with total: a fit from that fitment key with the same stock pages them all, with limit and after. With part, shelf_by_vehicle holds parts with no number for the vehicle and year, paged with the candidates. status and total describe the candidates only: shelf_by_vehicle has its own total and can hold rows when status is no-fitment. Related vehicles get a yard count only; no fit lists those vehicles by themselves. location: locations to keep rows at. stock_fields: the names of the row fields to keep, to keep a long answer short ([] keeps none); each row keeps its source, id, location, how it matched and what it names.\n- now: omit.\n\nNothing to fit is not an error: status says why (unknown, no-vehicle, no-fitment, or no-catalog when no parts catalog is loaded) and the list is empty. When models lists several vehicles, ask the user which one. An application's options is the catalog's requirement text, verbatim: a person must settle it, so report it with the part, never decide it. A result with unconfirmed was not fully checked: report it as possible, not certain. An application's confirmed lists, in the same form, the conditions that were checked and held: an element id there means the VIN's decode met that qualifier, so report the fit as confirmed on it; \"model_year\" alone means only the year was checked. With neither confirmed nor unconfirmed nothing was checked, and only the option text describes the fit: report it as possible. A stock row's fields are the source's own, verbatim: report them, never interpret them. A source with status unavailable gave no rows, so its stock is unknown, not empty; a shelf with catalog_mismatch numbers its parts under another catalog release, so check the number.",
       "inputSchema": {
         "type": "object",
         "$ref": "#/$defs/FitRequest",
@@ -2057,6 +2057,14 @@
                 },
                 "description": "Keeps the stock rows at one of these locations, opaque strings each source gives its rows. Only with stock."
               },
+              "stock_fields": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "Keeps, of every stock row's fields in the answer, only those named (ADR 0019): empty keeps none, and a name no row has is no error. Only fields are cut: a row's source, id, location, matched, what it names (fitment and reached, part, vehicle, year, vin, decoded) and as_of stay. Absent: every field. Only with stock."
+              },
               "limit": {
                 "type": "integer",
                 "minimum": 1,
@@ -2076,6 +2084,9 @@
             },
             "dependentRequired": {
               "location": [
+                "stock"
+              ],
+              "stock_fields": [
                 "stock"
               ]
             },
@@ -3155,10 +3166,22 @@
             ],
             "properties": {
               "rows": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/$defs/StockRow"
-                }
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/StockRow"
+                    }
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "description": "In a FitBatchRows only: each row's index into its stock_rows, in the list's order."
+                  }
+                ]
               },
               "total": {
                 "type": "integer",
@@ -3265,7 +3288,7 @@
               },
               "fields": {
                 "type": "object",
-                "description": "The row's own fields, verbatim, never interpreted."
+                "description": "The row's own fields, verbatim, never interpreted; with stock_fields, only those it names."
               }
             },
             "additionalProperties": false

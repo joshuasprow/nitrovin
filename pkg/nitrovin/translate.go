@@ -63,6 +63,13 @@ func (t *Translator) FitBatch(ctx context.Context, reqs []contract.FitRequest) (
 	return t.core.FitBatch(ctx, reqs)
 }
 
+// FitBatchRows is FitBatch with the batch's stock rows once (ADR 0018):
+// every stock list's rows are indexes into one table of the batch's
+// distinct rows (contract.Fitter.FitBatchRows).
+func (t *Translator) FitBatchRows(ctx context.Context, reqs []contract.FitRequest) (contract.FitBatchRows, error) {
+	return t.core.FitBatchRows(ctx, reqs)
+}
+
 // decode is the core's decoder: the engine, answering with the Decoder's
 // data month and version.
 func (t *Translator) decode(vin string, modelYear contract.Null[int32], now time.Time) (contract.VINDecode, error) {

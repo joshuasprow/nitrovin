@@ -39,6 +39,12 @@ type FitRequest struct {
 	// Location keeps the stock rows at one of these locations; none keeps
 	// every row. It takes Stock.
 	Location []string
+	// StockFields keeps, of every stock row's fields in the answer, only
+	// those named (ADR 0019): nil keeps every field, and a non-nil empty
+	// list none. A name no row has is no error. It cuts only fields: a
+	// row's identity, how it matched and what it names stay. It takes
+	// Stock.
+	StockFields []string
 	// Limit is the page size, 1 to MaxListLimit; 0 means DefaultListLimit.
 	Limit int
 	// After is the previous page's Next; "" starts at the first.
@@ -178,6 +184,14 @@ func (r FitRequest) validate(prefix string) *Problem {
 	if len(r.Location) > 0 && len(r.Stock) == 0 {
 		return NewProblem(InvalidRequest, prefix+"/location", "location filters stock: give it with stock")
 	}
+	for i, name := range r.StockFields {
+		if name == "" {
+			return NewProblem(InvalidRequest, prefix+"/stock_fields/"+strconv.Itoa(i), "a field name is not empty")
+		}
+	}
+	if r.StockFields != nil && len(r.Stock) == 0 {
+		return NewProblem(InvalidRequest, prefix+"/stock_fields", "stock_fields cuts stock rows' fields: give it with stock")
+	}
 	if r.Limit < 0 || r.Limit > MaxListLimit {
 		return NewProblem(InvalidRequest, prefix+"/limit", fmt.Sprintf("limit must be an integer from 1 to %d", MaxListLimit))
 	}
@@ -225,7 +239,7 @@ func (p *FitPart) validate(ptr string) *Problem {
 }
 
 // fitFields are FitRequest's properties.
-var fitFields = []string{"from", "model_year", "part", "side", "to", "related", "stock", "location", "limit", "after", "now"}
+var fitFields = []string{"from", "model_year", "part", "side", "to", "related", "stock", "location", "stock_fields", "limit", "after", "now"}
 
 // partFields are the properties a part object may have.
 var partFields = []string{"vocabulary", "entry", "spine", "id"}
@@ -265,16 +279,40 @@ func ParseFitBatch(data []byte) ([]FitRequest, error) {
 	return reqs, nil
 }
 
+// StockRowsOnce is POST /v1/fit's stock_rows value asking for the batch's
+// stock rows once (FitBatchRows).
+const StockRowsOnce = "once"
+
+// ParseFitBatchQuery parses POST /v1/fit's query: the batch's own options,
+// none of a request's. stock_rows=once asks for the batch's stock rows
+// once (Fitter.FitBatchRows), reported as once; any other parameter or
+// value is refused, with no pointer, the body's pointers being into the
+// batch. The error is a *Problem.
+func ParseFitBatchQuery(query url.Values) (once bool, err error) {
+	for _, name := range slices.Sorted(maps.Keys(query)) {
+		vs := query[name]
+		switch {
+		case name != "stock_rows":
+			return false, NewProblem(InvalidRequest, "", "POST /v1/fit takes stock_rows alone of query parameters, not "+strconv.Quote(name))
+		case len(vs) != 1 || vs[0] != StockRowsOnce:
+			return false, NewProblem(InvalidRequest, "", "stock_rows is given once, as once")
+		}
+		once = true
+	}
+	return once, nil
+}
+
 // ParseFitQuery parses GET /v1/fit: the request's paths as dotted
 // parameters. from is from.vin, a VIN; from.vocabulary with one
 // from.entry.<field> per entry field; from.make, from.model or from.ext;
 // or from.fitment.type, or one from.fitment.filed_under.<field> per entry
 // field, with from.fitment.number and from.fitment.side. part is
 // part.spine with part.id, or part.vocabulary with one part.entry.<field>
-// per field. to, stock and location are repeated, one value each; side,
+// per field. to, stock, location and stock_fields are repeated, one value
+// each, and stock_fields given once, empty, is the empty list; side,
 // model_year, related (true or false), limit, after and now are the
 // request's. Every other parameter is given at most once, and an unknown
-// one is refused.
+// one is refused: stock_rows too, a batch's, which a single fit has not.
 // As in ParseTranslateQuery, the parameters are read as the JSON request
 // they spell, and a problem's pointer is the parameter's path
 // ("/part/entry/code"). The error is a *Problem.
@@ -298,10 +336,13 @@ func ParseFitQuery(query url.Values) (FitRequest, error) {
 			member = "from.fitment.filed_under."
 		}
 		ptr := queryPointer(name, member)
-		if name == "to" || name == "stock" || name == "location" {
-			to := make([]json.RawMessage, len(vs))
-			for i, v := range vs {
-				to[i] = queryString(v)
+		if name == "to" || name == "stock" || name == "location" || name == "stock_fields" {
+			to := make([]json.RawMessage, 0, len(vs))
+			for _, v := range vs {
+				to = append(to, queryString(v))
+			}
+			if name == "stock_fields" && len(vs) == 1 && vs[0] == "" {
+				to = to[:0] // no field
 			}
 			req[name] = marshalRaw(to)
 			continue
@@ -327,6 +368,8 @@ func ParseFitQuery(query url.Values) (FitRequest, error) {
 			req[name] = queryBool(v)
 		case "side", "after", "now":
 			req[name] = queryString(v)
+		case "stock_rows":
+			return FitRequest{}, NewProblem(InvalidRequest, ptr, "stock_rows is a batch's: give it to POST /v1/fit")
 		default:
 			if field, ok := strings.CutPrefix(name, "from.entry."); ok {
 				set("from.entry", field, queryString(v))
@@ -445,14 +488,19 @@ func readFit(fields map[string]json.RawMessage, prefix string) (FitRequest, *Pro
 			return r, NewProblem(InvalidRequest, prefix+"/related", "related must be true or false")
 		}
 	}
-	for _, name := range []string{"stock", "location"} {
+	for _, name := range []string{"stock", "location", "stock_fields"} {
 		raw, ok := fields[name]
 		if !ok {
 			continue
 		}
+		// stock_fields may be empty: it then keeps no field.
+		empty, want := name == "stock_fields", " must be a non-empty array of strings"
+		if empty {
+			want = " must be an array of field names"
+		}
 		var items []json.RawMessage
-		if firstByte(raw) != '[' || json.Unmarshal(raw, &items) != nil || len(items) == 0 {
-			return r, NewProblem(InvalidRequest, prefix+"/"+name, name+" must be a non-empty array of strings")
+		if firstByte(raw) != '[' || json.Unmarshal(raw, &items) != nil || len(items) == 0 && !empty {
+			return r, NewProblem(InvalidRequest, prefix+"/"+name, name+want)
 		}
 		out := make([]string, len(items))
 		for i, item := range items {
@@ -460,10 +508,13 @@ func readFit(fields map[string]json.RawMessage, prefix string) (FitRequest, *Pro
 				return r, NewProblem(InvalidRequest, prefix+"/"+name+"/"+strconv.Itoa(i), name+" must be an array of strings")
 			}
 		}
-		if name == "stock" {
+		switch name {
+		case "stock":
 			r.Stock = out
-		} else {
+		case "location":
 			r.Location = out
+		default:
+			r.StockFields = out
 		}
 	}
 	if raw, ok := fields["limit"]; ok {
