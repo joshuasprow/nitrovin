@@ -1,3 +1,4 @@
 {"format":1,"kind":"catalog","name":"partmode-catalog","version":"2026.11","spine":"part-types","vehicles":"catalog-models"}
 {"fitment":{"type":"brake-rotor-front","number":"BR-3001"},"applications":[{"vehicle":{"make":"Dodge","model":"Ram 1500"},"first":2009,"last":2012,"options":""},{"vehicle":{"make":"Chevrolet","model":"Silverado 1500"},"first":2014,"last":2018,"options":"w/ heavy duty brakes"}]}
 {"fitment":{"type":"engine","number":"EN-0000"},"note":"withdrawn: listed with no vehicle","applications":[]}
+{"fitment":{"type":"mirror","number":"MR-3001","side":"left"},"applications":[{"vehicle":{"make":"Dodge","model":"Ram 1500"},"first":2009,"last":2012,"options":"power"},{"vehicle":{"make":"Chevrolet","model":"Silverado 1500"},"first":2014,"last":2018,"options":"power"}]}

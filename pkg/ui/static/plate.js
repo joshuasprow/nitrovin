@@ -78,20 +78,20 @@
 
   // swap puts the answer and the Developers dialog of doc, a fragment the
   // server drew, in the page's place, and marks the groups it completes.
-  // An answer in the other mode brings its plate and switch (#lookup);
-  // one in part-number mode, the part type on the plate, which the
-  // answer's dialog chose. The number on the plate is the visitor's,
-  // and stays.
-  const swap = (doc) => {
+  // An answer in the other mode, or one a mode key asked for (plate),
+  // brings its plate and switch (#lookup); one in part-number mode, the
+  // part type on the plate, which the answer's dialog chose. The number
+  // on the plate is the visitor's, and stays.
+  const swap = (doc, plate) => {
     const old = document.getElementById('answer');
     const answer = doc.getElementById('answer');
     if (!old || !answer) return;
     const lookup = document.getElementById('lookup');
-    const plate = doc.getElementById('lookup');
-    const moved = !!(lookup && plate) && !!lookup.querySelector('#part-form') !== !!plate.querySelector('#part-form');
+    const drawn = doc.getElementById('lookup');
+    const moved = !!(lookup && drawn) && (plate || !!lookup.querySelector('#part-form') !== !!drawn.querySelector('#part-form'));
     const field = document.getElementById('part-type-field');
     const chosen = doc.getElementById('part-type-field');
-    if (moved) lookup.replaceWith(plate);
+    if (moved) lookup.replaceWith(drawn);
     else if (field && chosen) field.replaceWith(chosen);
     const before = done(old);
     old.replaceWith(answer);
@@ -121,8 +121,9 @@
   let pending = null;
   // ask asks the server for url's answer, the page with a VIN and perhaps
   // a part type pressed; how is the history's part: 'push', 'replace' or
-  // '' to leave it alone.
-  const ask = async (url, how) => {
+  // '' to leave it alone; plate, whether the answer's plate replaces the
+  // page's (swap).
+  const ask = async (url, how, plate) => {
     clearTimeout(timer);
     if (pending) pending.abort();
     const mine = pending = new AbortController();
@@ -135,7 +136,7 @@
       throw err;
     }
     if (pending === mine) pending = null;
-    swap(new DOMParser().parseFromString(html, 'text/html'));
+    swap(new DOMParser().parseFromString(html, 'text/html'), plate);
     const whole = (new URL(url, location.href).searchParams.get('from.vin') || '').length === LENGTH;
     // Asked again for the VIN the page is at (Enter on it), it is the
     // same entry: a second would make Back do nothing.
@@ -236,14 +237,15 @@
     ask(partURL(), 'push').catch(console.error);
   });
 
-  // The switch: the other mode's page, plate and all, swapped in place,
-  // and its field focused, as the page's own load focuses it.
+  // The switch: the page in a mode with nothing on its plate, the plate
+  // and all swapped in place, whichever mode the page was in, and its
+  // field focused, as the page's own load focuses it.
   document.addEventListener('click', (e) => {
     const a = e.target.closest && e.target.closest('.modes a.mode');
     if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
     const u = new URL(a.href);
-    ask(u.pathname + u.search, 'push').then(() => {
+    ask(u.pathname + u.search, 'push', true).then(() => {
       const field = document.getElementById('from-number') || document.getElementById('from-vin');
       if (field) field.focus({ preventScroll: true });
     }).catch(console.error);

@@ -216,6 +216,10 @@ func (h *Handler) home(r *http.Request) (view, error) {
 		page.Examples = append(page.Examples, example{Label: e.vin, Hint: e.hint, Href: vinHref(e.vin)})
 	}
 	if partMode(raw) {
+		// A URL is one mode: one naming both offers each.
+		if raw.Has("from.vin") {
+			return h.mixedHome(raw, info, page)
+		}
 		return h.partHome(r, raw, info, page)
 	}
 	d := newDiagram(cleanVIN(raw.Get("from.vin")))

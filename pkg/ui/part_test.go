@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"bytes"
 	"html"
 	"io"
 	"log"
@@ -10,6 +11,9 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/joshuasprow/nitrovin/pkg/nitrovin"
+	"github.com/joshuasprow/nitrovin/pkg/vocab"
 )
 
 // partModePath is a file of the part-number mode fixture
@@ -251,10 +255,50 @@ func TestPagePartMode(t *testing.T) {
 		t.Errorf("BR-3001's vehicles: %q", got)
 	}
 
-	// A URL is one mode: a VIN beside a part number is refused.
+	// A URL is one mode: a VIN beside a part number is refused, on the
+	// VIN's plate, empty, with a link to each. The part type is named
+	// as the catalog names it.
 	status, _, body = response(t, h, "GET", "/?from.vin=1FTEW1EG7FFA12345&from.fitment.type=alternator&from.fitment.number=DEMO-4001", htmx)
-	if status != http.StatusBadRequest || !strings.Contains(body, `<p class="error" role="alert">A page looks up a VIN or a part number, not both: this link names both.</p>`) {
-		t.Errorf("a VIN and a part number: %d\n%s", status, body)
+	for _, want := range []string{
+		`<p class="error" role="alert">This link names a VIN, 1FTEW1EG7FFA12345, and a part number, Alternator DEMO-4001.</p>`,
+		`<p class="ways"><a href="/?from.vin=1FTEW1EG7FFA12345">Open the VIN</a> · <a href="/?from.fitment.type=alternator&amp;from.fitment.number=DEMO-4001">Open the part number</a></p>`,
+		`<input type="text" id="from-vin" name="from.vin" value=""`,
+		`<a class="mode" href="/" aria-current="true">VIN</a>`,
+	} {
+		if status != http.StatusBadRequest || !strings.Contains(body, want) {
+			t.Errorf("a VIN and a part number: %d, lacks %s\n%s", status, want, body)
+		}
+	}
+	if strings.Contains(body, `id="part-form"`) || strings.Contains(body, "No catalog loaded") {
+		t.Errorf("a VIN and a part number: the part plate, or no catalog, with one loaded\n%s", body)
+	}
+
+	// A side the fit request does not know is refused in its words.
+	status, _, body = response(t, h, "GET", alternator+"DEMO-4001&from.fitment.side=up", htmx)
+	if status != http.StatusBadRequest || !strings.Contains(body, `<p class="error" role="alert">`) || strings.Contains(body, `class="ptag"`) {
+		t.Errorf("a side that is none: %d\n%s", status, body)
+	}
+
+	// A sided part found with no side asked keeps the side it was found
+	// on, with stock loaded: on its strip and its Next page, which a
+	// later page needs no retry to follow.
+	sided := pagesOver(t, fitmentPath("part-types"), fitmentPath("catalog-models"), partModePath("partmode-catalog"), filepath.Join("..", "..", "testdata", "vocab", "stock", "yard-stock.jsonl"))
+	sided.vehicles = 1
+	s = partSection(t, sided, "/?from.fitment.type=mirror&from.fitment.number=MR-3001")
+	next = regexp.MustCompile(`<p class="more-cands">This page shows 1 of 2 vehicles. <a class="swap" href="([^"]*)">Next page</a></p>`).FindStringSubmatch(s)
+	if got := vehicleRows(s); next == nil || len(got) != 1 || !strings.Contains(next[1], "from.fitment.side=left") || !strings.Contains(s, `<div><dt>Side</dt><dd>left</dd></div>`) ||
+		!regexp.MustCompile(`<a class="stk swap" id="stk-part" href="[^"]*from\.fitment\.side=left`).MatchString(s) {
+		t.Fatalf("MR-3001, its side found: %q, next %q\n%s", got, next, s)
+	}
+	if got := vehicleRows(partSection(t, sided, html.UnescapeString(next[1]))); len(got) != 1 || !strings.HasPrefix(got[0], "Chevrolet Silverado 1500") {
+		t.Errorf("MR-3001's next page: %q", got)
+	}
+
+	// A vPIC catalog's vehicle is named as VIN mode names one: its vPIC
+	// reference and the data month's name for it.
+	vpic := pagesOver(t, stripPath("strip-parts"), stripPath("strip-catalog"))
+	if s := partSection(t, vpic, "/?from.fitment.type=alternator&from.fitment.number=ST-1001"); !strings.Contains(s, `<tr><th scope="row">vPIC model 1801 (F-150)</th><td class="yrs">2015–2017</td>`) {
+		t.Errorf("a vPIC catalog's vehicle:\n%s", s)
 	}
 }
 
@@ -307,5 +351,68 @@ func TestLibraryPartMode(t *testing.T) {
 		}) {
 			t.Errorf("%s: the browser asked %q; want the server's fit of the key", target, s.gets)
 		}
+	}
+
+	// The server holds the catalog and the browser vehicle vocabularies
+	// of its own: the server's /v1/fit is asked to name the vehicles in
+	// the server's alone, which it knows, and the part is drawn as the
+	// server draws it.
+	s = newDecoderServer(t, d)
+	for _, f := range theDemo().files {
+		s.serve(t, f.Name, f.data)
+	}
+	s.fits = demoTranslator(t, d, true)
+	l = openWith(t, s, newDisk())
+	if _, err := l.Load([]Picked{{FileName: "classics.jsonl", Data: fixtureFile(t, "classics")}, {FileName: "fleet.jsonl", Data: fixtureFile(t, "fleet")}}, quiet); err != nil {
+		t.Fatal(err)
+	}
+	browser = NewInBrowser(l, BrowserConfig{}, log.New(io.Discard, "", 0))
+	const found = "/?from.fitment.type=alternator&from.fitment.number=DEMO-4001"
+	s.gets = nil
+	if want, got := partSection(t, srv, found), partSection(t, browser, found); got != want || !strings.Contains(got, `class="ptag"`) {
+		t.Errorf("%s in a browser holding fleet, the server's catalog:\n%s\nwant the server's\n%s", found, got, want)
+	}
+	if slices.ContainsFunc(s.gets, func(g string) bool { return strings.Contains(g, "to=fleet") }) {
+		t.Errorf("the browser asked the server to name vehicles in its own vocabulary: %q", s.gets)
+	}
+	// A side the fit request does not know is refused alike.
+	errRE := regexp.MustCompile(`<p class="error" role="alert">[^<]*</p>`)
+	_, _, want := response(t, srv, "GET", found+"&from.fitment.side=up", htmx)
+	if status, _, body := response(t, browser, "GET", found+"&from.fitment.side=up", htmx); status != http.StatusBadRequest || errRE.FindString(want) == "" || errRE.FindString(body) != errRE.FindString(want) {
+		t.Errorf("a side that is none in the browser: %d, %q; want 400, the server's %q", status, errRE.FindString(body), errRE.FindString(want))
+	}
+
+	// A vPIC catalog, the browser's own and the server's: its vehicles
+	// named as the server names them.
+	const st = "/?from.fitment.type=alternator&from.fitment.number=ST-1001"
+	vpicWant := partSection(t, pagesOver(t, stripPath("strip-parts"), stripPath("strip-catalog")), st)
+	var picked []Picked
+	for _, n := range []string{"strip-parts", "strip-catalog"} {
+		picked = append(picked, Picked{FileName: n + ".jsonl", Data: mustRead(t, stripPath(n))})
+	}
+	l = openWith(t, newDecoderServer(t, d), newDisk())
+	if _, err := l.Load(picked[:1], quiet); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := l.Compile(bytes.NewReader(picked[1].Data), picked[1].FileName, int64(len(picked[1].Data)), vocab.DirScratch(t.TempDir()), quiet); err != nil {
+		t.Fatal(err)
+	}
+	if got := partSection(t, NewInBrowser(l, BrowserConfig{}, log.New(io.Discard, "", 0)), st); got != vpicWant || !strings.Contains(got, "vPIC model 1801 (F-150)") {
+		t.Errorf("%s in the browser's vPIC catalog:\n%s\nwant the server's\n%s", st, got, vpicWant)
+	}
+	s = newDecoderServer(t, d)
+	for _, p := range picked {
+		s.serve(t, strings.TrimSuffix(p.FileName, ".jsonl"), p.Data)
+	}
+	files, err := vocab.Open(stripPath("strip-parts"), stripPath("strip-catalog"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s.fits, err = nitrovin.NewTranslator(d, files...); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(s.fits.Close)
+	if got := partSection(t, NewInBrowser(openWith(t, s, newDisk()), BrowserConfig{}, log.New(io.Discard, "", 0)), st); got != vpicWant {
+		t.Errorf("%s in the browser, the server's vPIC catalog:\n%s\nwant the server's\n%s", st, got, vpicWant)
 	}
 }

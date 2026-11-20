@@ -215,8 +215,10 @@ type diagram struct {
 	// the page with the VIN the decoder suggests instead, "" for none.
 	Problems  []string
 	Fix, FixV string
-	// Error is a refusal that names no cell.
+	// Error is a refusal that names no cell, and Ways the links on from
+	// it: a link naming a VIN and a part number offers each.
 	Error string
+	Ways  []wayOn
 }
 
 // cleanVIN is s as the plate takes it: letters and digits alone, upper

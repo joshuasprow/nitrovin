@@ -174,12 +174,53 @@ const partModeHref = homePath + "?" + fromNumberParam + "="
 func vehicleVocabularies(cat []contract.CatalogEntry) []string {
 	var out []string
 	for _, c := range cat {
-		if c.Kind == "vocabulary" && c.Spine == vocab.Reserved {
+		if c.Kind == string(vocab.KindVocabulary) && c.Spine == vocab.Reserved {
 			out = append(out, c.Name)
 		}
 	}
 	slices.Sort(out)
 	return out
+}
+
+// partVocabularies are the vehicle vocabularies a part's vehicles are
+// named in: every one loaded, or, in the browser while the server holds
+// the catalog, the server's alone, as the server's fit answers and it
+// knows no other. A browser's own vocabulary then names no vehicle of a
+// part.
+func (h *Handler) partVocabularies(cat []contract.CatalogEntry) []string {
+	to := vehicleVocabularies(cat)
+	if h.lib == nil || h.lib.ServerCatalog().Name == "" {
+		return to
+	}
+	server := h.lib.Server()
+	return slices.DeleteFunc(to, func(name string) bool {
+		return !slices.ContainsFunc(server, func(f StoredFile) bool { return f.Name == name })
+	})
+}
+
+// mixedHome is GET / for a link that names a VIN and a part number, which
+// a page does not: the VIN's plate, empty, and a link to each.
+func (h *Handler) mixedHome(q url.Values, info contract.Info, page *homePage) (view, error) {
+	vin := cleanVIN(q.Get("from.vin"))
+	k := partKey{Type: q.Get(fromTypeParam), Number: strings.TrimSpace(q.Get(fromNumberParam)), Side: q.Get(fromSideParam)}
+	part := k.Number
+	if k.Type != "" {
+		name := k.Type
+		if loaded := h.loadedCatalog(info); loaded.Name != "" {
+			names, err := h.spineNames(loaded.Spine)
+			if err != nil {
+				return view{}, err
+			}
+			name = typeName(names, k.Type)
+		}
+		part = strings.TrimSpace(name + " " + k.Number)
+	}
+	d := newDiagram("")
+	d.Fit = h.idleFit(info)
+	d.Error = "This link names a VIN, " + vin + ", and a part number, " + part + "."
+	d.Ways = []wayOn{{Text: "Open the VIN", Href: vinHref(vin)}, {Text: "Open the part number", Href: partHref(k, "", fitKey{}, "")}}
+	page.Diagram = d
+	return view{title: homeTitle, template: "home", data: page, target: mainTarget, vocabDialog: true, status: http.StatusBadRequest}, nil
 }
 
 // partHome is GET / in part-number mode, q its query: the plate with the
@@ -189,10 +230,6 @@ func (h *Handler) partHome(r *http.Request, q url.Values, info contract.Info, pa
 		After: q.Get(afterParam), Open: fitKey{Type: q.Get(typeParam), Number: q.Get(numberParam), Side: q.Get(sideParam)}, Rows: q.Get(rowsParam)}
 	page.Part = p
 	v := view{title: partTitle, template: "home", data: page, target: mainTarget, vocabDialog: true}
-	if q.Has("from.vin") {
-		v.status, p.Error = http.StatusBadRequest, "A page looks up a VIN or a part number, not both: this link names both."
-		return v, nil
-	}
 	loaded := h.loadedCatalog(info)
 	if loaded.Name == "" {
 		p.Blank, p.Add = "No catalog loaded.", true
@@ -211,7 +248,6 @@ func (h *Handler) partHome(r *http.Request, q url.Values, info contract.Info, pa
 	if n, ok := names[p.Type]; ok {
 		p.TypeName = n
 	}
-	key := partKey{Type: p.Type, Number: p.Number, Side: p.Side}
 	var types []partTypeLink
 	for id, name := range names {
 		types = append(types, partTypeLink{ID: id, Name: name, Href: partHref(partKey{Type: id, Number: p.Number}, "", fitKey{}, ""), Pressed: id == p.Type})
@@ -235,24 +271,45 @@ func (h *Handler) partHome(r *http.Request, q url.Values, info contract.Info, pa
 		return v, nil
 	}
 
-	res := &result{URL: requestOrigin(r) + partHref(key, p.After, p.Open, p.Rows)}
+	res := &result{URL: requestOrigin(r) + partHref(partKey{Type: p.Type, Number: p.Number, Side: p.Side}, p.After, p.Open, p.Rows)}
 	page.Result = res
 	kinds := h.stockKinds(info)
 	limit := vehiclesPage
 	if h.vehicles != 0 {
 		limit = h.vehicles
 	}
-	to := vehicleVocabularies(cat)
+	to := h.partVocabularies(cat)
 	p.Named = len(to) > 0
-	req := contract.FitRequest{From: contract.FitFrom{Fitment: &contract.FitmentKey{Type: p.Type, Number: p.Number, Side: p.Side}}, To: to, Stock: kinds, Limit: limit, After: p.After}
-	fit, raw, sides, err := h.partFit(r.Context(), req)
-	if err != nil {
+	// The request is the fit request's own query, so a key it refuses
+	// (a side that is none) is refused in its words wherever it is asked.
+	fq := url.Values{fromTypeParam: {p.Type}, fromNumberParam: {p.Number}, "limit": {strconv.Itoa(limit)}}
+	if len(to) > 0 {
+		fq["to"] = to
+	}
+	if len(kinds) > 0 {
+		fq["stock"] = kinds
+	}
+	if p.Side != "" {
+		fq.Set(fromSideParam, p.Side)
+	}
+	if p.After != "" {
+		fq.Set(afterParam, p.After)
+	}
+	refuse := func(err error) (view, error) {
 		status, words, fault := refusal(err)
 		if fault != nil {
 			return view{}, fault
 		}
 		v.status, p.Error = status, words
 		return v, nil
+	}
+	req, err := contract.ParseFitQuery(fq)
+	if err != nil {
+		return refuse(err)
+	}
+	fit, raw, sides, err := h.partFit(r.Context(), &req)
+	if err != nil {
+		return refuse(err)
 	}
 	if len(sides) > 1 {
 		p.Blank = p.Catalog + " has " + p.TypeName + " " + p.Number + " on more than one side."
@@ -261,6 +318,9 @@ func (h *Handler) partHome(r *http.Request, q url.Values, info contract.Info, pa
 		}
 		return v, nil
 	}
+	// The key the answer came from: a side the retry found stays on
+	// every link, so a later page asks with it and needs no retry.
+	key := partKey{Type: p.Type, Number: p.Number, Side: req.From.Fitment.Side}
 	if err := h.fitJSON(res, "part-json", "The part", "the part's JSON", fit, raw); err != nil {
 		return view{}, err
 	}
@@ -290,10 +350,18 @@ func (h *Handler) partHome(r *http.Request, q url.Values, info contract.Info, pa
 		fields[c.Name] = c.Fields
 	}
 	for _, fv := range fit.Vehicles {
-		row := vehicleRow{Name: catalogVehicleName(fv.Vehicle, fields[fit.Catalog.Vehicles]), Years: yearsText(fv.First, fv.Last), Options: fv.Options}
+		row := vehicleRow{Name: vehicleText(fv.Vehicle, fields[fit.Catalog.Vehicles]), Years: yearsText(fv.First, fv.Last), Options: fv.Options}
+		// A vPIC catalog's vehicle is named as VIN mode names one: its
+		// reference, and the spine's name for it when the answer has it.
+		if fv.Vehicle.Entry == nil {
+			ref := contract.SpineRef{Make: fv.Vehicle.Make, Model: fv.Vehicle.Model, Ext: fv.Vehicle.Ext}
+			if i := slices.IndexFunc(fv.Spine, func(s contract.SpineEntry) bool { return s.SpineRef == ref && s.Name != "" }); i >= 0 {
+				row.Name += " (" + fv.Spine[i].Name + ")"
+			}
+		}
 		for _, t := range fv.To {
 			for _, e := range t.Entries {
-				row.Names = append(row.Names, vehicleName{Vocabulary: t.Vocabulary, Name: entryName(e.Entry, fields[t.Vocabulary])})
+				row.Names = append(row.Names, vehicleName{Vocabulary: t.Vocabulary, Name: vehicleText(contract.CatalogVehicle{Entry: e.Entry}, fields[t.Vocabulary])})
 			}
 		}
 		p.Vehicles = append(p.Vehicles, row)
@@ -310,23 +378,25 @@ func (h *Handler) partHome(r *http.Request, q url.Values, info contract.Info, pa
 
 // partFit answers req, from a fitment key: as asked, or, when a key with
 // no side is no fitment, on each side in turn. sides are the sides that
-// found a fitment then, the one answered when there is one.
-func (h *Handler) partFit(ctx context.Context, req contract.FitRequest) (fit contract.Fit, raw []byte, sides []string, err error) {
-	if fit, raw, err = h.fit(ctx, req, nil); err != nil || fit.Status != contract.FitUnknown || req.From.Fitment.Side != "" {
+// found a fitment then; req is left the request answered, the first of
+// them its side.
+func (h *Handler) partFit(ctx context.Context, req *contract.FitRequest) (fit contract.Fit, raw []byte, sides []string, err error) {
+	if fit, raw, err = h.fit(ctx, *req, nil); err != nil || fit.Status != contract.FitUnknown || req.From.Fitment.Side != "" {
 		return fit, raw, nil, err
 	}
-	unknown, unknownRaw := fit, raw
+	unknown, unknownRaw, asked := fit, raw, *req.From.Fitment
 	for _, s := range []string{contract.SideLeft, contract.SideRight, contract.SideBoth} {
-		k := *req.From.Fitment
+		k := asked
 		k.Side = s
-		req.From.Fitment = &k
-		f, b, err := h.fit(ctx, req, nil)
+		try := *req
+		try.From.Fitment = &k
+		f, b, err := h.fit(ctx, try, nil)
 		if err != nil {
 			return contract.Fit{}, nil, nil, err
 		}
 		if f.Status != contract.FitUnknown {
 			if len(sides) == 0 {
-				fit, raw = f, b
+				fit, raw, *req = f, b, try
 			}
 			sides = append(sides, s)
 		}
@@ -372,36 +442,9 @@ func plural(n int, one, many string) string {
 	return many
 }
 
-// entryName is a vocabulary entry's name: its fields' values in the
-// vocabulary's order, fields, each one there.
-func entryName(entry map[string]string, fields []string) string {
-	var words []string
-	for _, f := range fields {
-		if s := entry[f]; s != "" {
-			words = append(words, s)
-		}
-	}
-	return strings.Join(words, " ")
-}
-
-// catalogVehicleName is a catalog's vehicle as the catalog names it: its
-// vehicle vocabulary entry's fields, in order (fields), or, when its
-// vehicles are vPIC's, the make, model or extension it names.
-func catalogVehicleName(v contract.CatalogVehicle, fields []string) string {
-	switch {
-	case v.Entry != nil:
-		return entryName(v.Entry, fields)
-	case v.Make != 0:
-		return "vPIC make " + strconv.Itoa(int(v.Make))
-	case v.Model != 0:
-		return "vPIC model " + strconv.Itoa(int(v.Model))
-	}
-	return v.Ext
-}
-
 // partStock fills the part's stock strip and, when the URL opens it, its
-// rows: those fit, the answer from p's key, carries for its page, or,
-// with every row asked for, the whole of its stock (allStock).
+// rows, as a candidate's (stockColumns), key the key the part was
+// answered from.
 func (h *Handler) partStock(ctx context.Context, p *partPage, key partKey, fit contract.Fit, kinds []string, res *result) error {
 	cand := contract.FitCandidate{Fitment: *fit.Fitment, Shelf: fit.Shelf, Yard: fit.Yard}
 	own := candidateKey(cand)
@@ -416,24 +459,14 @@ func (h *Handler) partStock(ctx context.Context, p *partPage, key partKey, fit c
 		return nil
 	}
 	p.Tag.Strip.Open, p.Tag.Strip.Href = true, partHref(key, p.After, fitKey{}, "")
-	lists := map[string]*contract.StockList{contract.StockShelf: fit.Shelf, contract.StockYard: fit.Yard}
-	more := partHref(key, p.After, own, rowsAll)
-	if p.Rows == rowsAll {
-		var err error
-		if lists, err = h.allStock(ctx, own, kinds, res); err != nil {
-			return err
-		}
-		more = ""
-	} else {
+	if p.Rows != rowsAll {
 		p.Rows = ""
 	}
-	panel := &stockPanel{Number: own.Number}
-	for _, kind := range kinds {
-		if l := lists[kind]; l != nil {
-			panel.Columns = append(panel.Columns, newStockColumn(kind, l, "", more))
-		}
+	cols, err := h.stockColumns(ctx, own, cand, kinds, p.Rows == rowsAll, partHref(key, p.After, own, rowsAll), "", res)
+	if err != nil {
+		return err
 	}
-	p.Tag.Panel = panel
+	p.Tag.Panel = &stockPanel{Number: own.Number, Columns: cols}
 	return nil
 }
 

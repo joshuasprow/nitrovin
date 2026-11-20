@@ -169,7 +169,8 @@ is open and the panel shown whole, which plate.js tells a history entry by. */}}
 {{template "aka" .Names}}
 </div>
 {{template "fit" .Fit}}
-{{with .Error}}<p class="error" role="alert">{{.}}</p>{{end}}
+{{with .Error}}<p class="error" role="alert">{{.}}</p>{{end}}{{with .Ways}}
+<p class="ways">{{range $i, $w := .}}{{if $i}} · {{end}}<a href="{{$w.Href}}">{{$w.Text}}</a>{{end}}</p>{{end}}
 {{if or .Problems .Fix}}<div class="problems" role="status">
 {{range .Problems}}<p>{{.}}</p>
 {{end}}{{with .Fix}}<p><a class="fix" href="{{.}}">Use <span class="mono">{{$.FixV}}</span> instead</a></p>{{end}}

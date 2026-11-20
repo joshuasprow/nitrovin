@@ -99,7 +99,7 @@ h3 { font: 900 12px var(--label-font); letter-spacing: .08em; text-transform: up
 a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible, pre:focus-visible, .hang:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
 code, pre, .mono { font-family: var(--cell-font); }
 .hint { color: var(--muted); font-weight: 400; }
-.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.visually-hidden, .plbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .error { color: var(--bad); margin: .5rem 0; }
 /* A button is a key of the plate's metal (--key): raised, and pressed
    flush. It is pressed while it is held, while it is on, and while the
@@ -626,7 +626,7 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
    after it fill first (dense); the rails run on down past it to the next
    row of tags. Shelf and yard are its two equal halves. */
 .rows { position: relative; grid-column: 1 / -1; min-width: 0; margin-top: -24px; }
-.rows, .stock-panel, .prows { background: var(--card-bg); border: 2px solid var(--steel); border-radius: 4px; box-shadow: 0 3px 0 var(--steel-dark), 0 8px 16px rgb(0 0 0 / .25); }
+.rows, .stock-panel, .prows, .vehicles { background: var(--card-bg); border: 2px solid var(--steel); border-radius: 4px; box-shadow: 0 3px 0 var(--steel-dark), 0 8px 16px rgb(0 0 0 / .25); }
 :is(.rows, .prows) .notch { position: absolute; top: -10px; left: calc(50% - 9px); width: 16px; height: 16px; background: var(--card-bg); border-left: 2px solid var(--steel); border-top: 2px solid var(--steel); transform: rotate(45deg); }
 .rows::before, .rows::after { position: absolute; top: -18px; box-sizing: border-box; width: 5px; pointer-events: none; border: 0 solid var(--c-vds); border-left-width: 5px; filter: var(--stripe-lift); }
 .rows::before { z-index: 0; left: calc(var(--rail-x) - 24px); bottom: -16px; }
@@ -737,7 +737,6 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
 .plabels { padding: 0 var(--plate-pad); margin-bottom: 7px; }
 .plabels .lab, .pfield { margin: 0 6px; min-width: 0; }
 .pplate { align-items: center; padding-block: 14px 16px; }
-.plbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .ptpick { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 56px; padding: 0 14px; font: 900 clamp(14px, 2.3cqw, 21px) var(--cell-font); letter-spacing: .04em; text-align: left; text-transform: none;
   text-shadow: var(--emboss); background: var(--alu); border-top-color: #fff; border-bottom-color: var(--steel-dark); border-radius: 2px; }
 .ptpick .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -775,7 +774,7 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
 .prows .stock-col td:last-child { grid-column: 1 / -1; }
 /* The vehicles: the page's own table panel. Each name in a vocabulary is
    a strip of label tape, stuck on, after the vocabulary's name. */
-.vehicles { min-width: 0; margin-left: 12px; padding: .25rem 1rem .75rem; overflow-x: auto; background: var(--card-bg); border: 2px solid var(--steel); border-radius: 4px; box-shadow: 0 3px 0 var(--steel-dark), 0 8px 16px rgb(0 0 0 / .25); }
+.vehicles { min-width: 0; margin-left: 12px; padding: .25rem 1rem .75rem; overflow-x: auto; }
 .vehicles table { font-size: 14px; }
 .vehicles th, .vehicles td { padding: .55rem .9rem .55rem 0; }
 .vehicles thead th { padding-top: .75rem; vertical-align: bottom; }

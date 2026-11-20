@@ -751,7 +751,11 @@ type serverFitJSON struct {
 		First   contract.Null[int32] `json:"first"`
 		Last    contract.Null[int32] `json:"last"`
 		Options string               `json:"options"`
-		To      []struct {
+		Spine   []struct {
+			contract.SpineRef
+			Name string `json:"name"`
+		} `json:"spine"`
+		To []struct {
 			Vocabulary string `json:"vocabulary"`
 			Entries    []struct {
 				Entry map[string]string `json:"entry"`
@@ -823,6 +827,9 @@ func (w serverFitJSON) fit() (contract.Fit, error) {
 		}
 		out.Vehicles = append(out.Vehicles, contract.FitVehicle{Vehicle: v, First: fv.First, Last: fv.Last, Options: fv.Options})
 		names := &out.Vehicles[len(out.Vehicles)-1].FitNames
+		for _, s := range fv.Spine {
+			names.Spine = append(names.Spine, contract.SpineEntry{SpineRef: s.SpineRef, Name: s.Name})
+		}
 		for _, t := range fv.To {
 			tr := contract.Translated{Vocabulary: t.Vocabulary}
 			for _, e := range t.Entries {

@@ -170,6 +170,30 @@ func TestPartMode(t *testing.T) {
 			}
 			log.take()
 
+			// Each mode key is the page in its mode with nothing on the
+			// plate, the pressed one too, with a script as without.
+			for _, c := range []struct{ from, key, want, wait string }{
+				{found, `.modes a.mode[aria-current]`, empty, `#answer[data-q="from.fitment.number="]`},
+				{found, `.modes a.mode[href="/"]`, "/", `#answer[data-vin=""]`},
+				{"/?from.vin=1FTEW1EG7FFA12345", `.modes a.mode[aria-current]`, "/", `#answer[data-vin=""]`},
+			} {
+				tb.do(chromedp.Navigate(srv.URL + c.from))
+				tb.wait("#answer")
+				live()
+				log.take()
+				tb.do(chromedp.Click(chromedp.CSS(c.key)))
+				tb.wait(c.wait)
+				live()
+				tb.requests(name+", "+c.key+" from "+c.from, js, c.want)
+				if got := tb.at(); got != c.want {
+					t.Errorf("%s from %s: the tab is at %s; want %s", c.key, c.from, got, c.want)
+				}
+				if v := measure[string](tb, `(document.getElementById("from-number") || document.getElementById("from-vin")).value`); v != "" || tb.count(".ptag") != 0 {
+					t.Errorf("%s from %s: the plate holds %q, %d tags; want it empty", c.key, c.from, v, tb.count(".ptag"))
+				}
+			}
+			log.take()
+
 			// A retired number answers with its replacement, stamped.
 			tb.do(chromedp.Navigate(srv.URL + chosen + "DEMO-0901"))
 			tb.wait(".ptag .mk.replaces")
