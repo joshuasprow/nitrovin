@@ -1208,7 +1208,8 @@ against, reaches every EPA name mapped to vPIC's Silverado for 2004.
 
 The **demo set** is a small, invented catalog and the files around it, so
 fitment, stock and translation can be seen without files of your own:
-[`pkg/ui/demo/`](../pkg/ui/demo), every file named `demo-*` (15 kB in all).
+[`pkg/ui/demo/`](../pkg/ui/demo), every file named `demo-*` directly in it
+(15 kB in all), and a second catalog of the same vehicles in `vpic/`.
 It is built around popular vPIC models of the pinned data month (a Ford
 F-150, a Chevrolet Silverado 1500, a Ram 1500, a Honda Civic and CR-V, a
 Toyota Camry and RAV4) and two vehicles vPIC lacks. Every number
@@ -1224,6 +1225,7 @@ value in it is made up, and says so.
 | `demo-catalog` | `catalog` | 46 fitments, release `DEMO-2`: qualified applications, sides, a redirect and a retired number |
 | `demo-shelf` | `stock` (shelf) | numbered parts, one under a retired number and one with none, of release `DEMO-1` |
 | `demo-yard-stock` | `stock` (yard) | whole vehicles, nine by VIN and two by the catalog's vehicle |
+| `vpic/demo-vpic-catalog` | `catalog` (`"vehicles": "vpic"`) | the same vehicles and part types as vPIC's own, with no vehicle vocabulary: 46 fitments, release `DEMO-V1`, numbers `DEMO-V…`; applications to vPIC models (the F-150 is model 1801), to a make (every Toyota) and to `demo-classics`' extensions; qualified applications, sides, a redirect and a retired number. A server's alone, in place of `demo-catalog` (below) |
 
 **In a browser**, the Vocabularies dialog of any `serve` with the browser
 translator (release builds, and nitrovin.app) offers it as one **Load
@@ -1241,8 +1243,33 @@ nitrovin --vocab pkg/ui/demo serve       # then ask localhost:8080/v1/fit
 nitrovin --vocab pkg/ui/demo fit --part demo-part-types:alternator --stock shelf 1FTEW1EG7FFA12345
 ```
 
+**The vPIC catalog.** `vpic/demo-vpic-catalog` names the demo's vehicles
+as vPIC's own makes, models and extensions, as a catalog that knows vPIC
+ids does. One catalog per nitrovin holds, so it has a directory of its
+own and loads in place of `demo-catalog`: a directory loads only the
+`*.jsonl` directly in it, so `--vocab pkg/ui/demo` never loads it, and the
+spine and extension set it names, and the part vocabulary on that spine,
+load by file beside it:
+
+```sh
+nitrovin --vocab pkg/ui/demo/vpic --vocab pkg/ui/demo/demo-part-types.jsonl \
+  --vocab pkg/ui/demo/demo-classics.jsonl --vocab pkg/ui/demo/demo-part-codes.jsonl serve
+```
+
+Its pages name each vehicle in vPIC's words: the fit card's `F-150 /
+Ford` for `/?from.vin=1FTEW1EG7FFA12345`; the catalog's lines, filtered
+by one of make, model and ext
+(`/ui/vocabularies/demo-vpic-catalog?where.model=1801`); and part-number
+mode's vehicles, `vPIC model 1801 (F-150)` for
+`/?from.fitment.type=alternator&from.fitment.number=DEMO-V1001`. The
+shelf and the yard name `demo-catalog`'s numbers and vehicles, so it loads
+without them. Load demo never offers it: `pkg/ui` embeds only the files
+directly in `pkg/ui/demo/`, so no server publishes it
+(`TestDemoVPICNotOffered`).
+
 `nitrovin vocab check pkg/ui/demo` finds nothing in it on the pinned month,
-and CI holds it there (`TestDemoCheck`), so a month that drops one of its
+nor does `vocab check` on the vPIC catalog beside the files it names, and
+CI holds both there (`TestDemoCheck`), so a month that drops one of their
 ids fails before a release ships it.
 
 **A walkthrough.** On a server that loaded the set (the `serve` above),

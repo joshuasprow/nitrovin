@@ -480,6 +480,19 @@ module knows its list. Every number, location and field value in them says
 it is invented (`DEMO-`, `demo-north`, `demo: …`), and no field name looks
 personal.
 
+[`pkg/ui/demo/vpic/`](pkg/ui/demo/vpic) holds the set's second catalog,
+`demo-vpic-catalog`
+([#350](https://github.com/joshuasprow/nitrovin/issues/350)): the same
+vehicles and part types, named as vPIC's own makes, models and extensions
+(`"vehicles": "vpic"`), its numbers `DEMO-V…`. One catalog per nitrovin
+holds, so it has its own directory and loads in place of `demo-catalog`,
+beside the spine and extension set it names (the `serve` line in
+[The demo set](docs/vocabularies.md#the-demo-set)). It is a server's and
+the tests', never the browser's: `pkg/ui` embeds only `demo/*.jsonl`, so
+it is neither published nor in Load demo (`TestDemoVPICNotOffered`).
+`TestPageDemoVPIC` (`pkg/ui`) holds what the fit card, the catalog's
+lines and part-number mode show of its vehicles.
+
 To change it, edit the files and the requests
 [The demo set](docs/vocabularies.md#the-demo-set) walks through together.
 `TestLibraryDemoFit` (`pkg/ui`) loads the set as Load demo does and asks
@@ -492,7 +505,8 @@ which).
 
 `TestDemoCheck` (`cmd/nitrovin`) runs `nitrovin vocab check pkg/ui/demo`
 on the embedded month, which must find nothing (the set has no deliberate
-drift), compiles its catalog, and decodes each VIN to the model, year and
+drift), and the same check on the vPIC catalog beside the files it names;
+compiles both catalogs; and decodes each VIN to the model, year and
 drive type the walkthrough rests on. `TestDemoHints` holds the page's word
 on loading the demo (a link naming a demo file) to where it can load: not
 beside a server's catalog or a file of a demo name, which make the panel

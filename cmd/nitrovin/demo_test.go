@@ -15,6 +15,17 @@ import (
 // --vocab` serves as the browser loads it.
 var demoDir = abs("../../pkg/ui/demo")
 
+// vpicDemo is the demo set's second catalog, whose vehicles are vPIC's
+// (#350), and the files of the demo set it loads beside in place of
+// demo-catalog: the spine and extension set it names, and the part
+// vocabulary on that spine.
+var vpicDemo = []string{
+	filepath.Join(demoDir, "vpic"),
+	filepath.Join(demoDir, "demo-part-types.jsonl"),
+	filepath.Join(demoDir, "demo-classics.jsonl"),
+	filepath.Join(demoDir, "demo-part-codes.jsonl"),
+}
+
 // demoVINs are the demo set's VINs, its yard's, and the vPIC model, year
 // and drive type each must decode to on the embedded data month: the
 // stories of #278 rest on them (a four-wheel and a two-wheel drive F-150,
@@ -39,13 +50,23 @@ var demoVINs = map[string]struct {
 // runs it, so a month that drops one of its vPIC ids or values fails here
 // rather than shipping a broken demo: `nitrovin vocab check` finds no
 // fault and no drift in it (it has no deliberate drift), it compiles, and
-// each of its VINs still decodes to the vehicle its stories need.
+// each of its VINs still decodes to the vehicle its stories need. The
+// vPIC demo catalog (pkg/ui/demo/vpic), beside the files it names, is
+// held the same way.
 func TestDemoCheck(t *testing.T) {
 	fixtureData(t)
-	if r := cli(t, nil, "", "vocab", "check", demoDir); r.exit != 0 || r.stdout != "" || r.stderr != "" {
-		t.Errorf("vocab check on the demo set: exit %d, stdout %q, stderr %q; want exit 0 and nothing", r.exit, r.stdout, r.stderr)
+	for _, c := range []struct {
+		name  string
+		paths []string
+	}{
+		{"the demo set", []string{demoDir}},
+		{"the vPIC demo catalog", vpicDemo},
+	} {
+		if r := cli(t, nil, "", append([]string{"vocab", "check"}, c.paths...)...); r.exit != 0 || r.stdout != "" || r.stderr != "" {
+			t.Errorf("vocab check on %s: exit %d, stdout %q, stderr %q; want exit 0 and nothing", c.name, r.exit, r.stdout, r.stderr)
+		}
 	}
-	// Its catalog compiles beside the files it names (stock never goes
+	// Each catalog compiles beside the files it names (stock never goes
 	// into a compile).
 	compile := []string{"vocab", "compile", "-o", filepath.Join(t.TempDir(), "demo.compiled")}
 	for _, n := range []string{"demo-catalog", "demo-classics", "demo-part-codes", "demo-part-types", "demo-vehicles"} {
@@ -53,6 +74,9 @@ func TestDemoCheck(t *testing.T) {
 	}
 	if r := cli(t, nil, "", compile...); r.exit != 0 || r.stdout != "" {
 		t.Errorf("vocab compile of the demo's catalog: exit %d, stdout %q, stderr %q", r.exit, r.stdout, r.stderr)
+	}
+	if r := cli(t, nil, "", append([]string{"vocab", "compile", "-o", filepath.Join(t.TempDir(), "demo-vpic.compiled")}, vpicDemo...)...); r.exit != 0 || r.stdout != "" || r.stderr != "" {
+		t.Errorf("vocab compile of the vPIC demo catalog: exit %d, stdout %q, stderr %q", r.exit, r.stdout, r.stderr)
 	}
 	for vin, want := range demoVINs {
 		r := cli(t, nil, "", "decode", "--shape", "nitrovin", vin)
