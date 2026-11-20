@@ -19,9 +19,9 @@
 # Chrome (TestFitCard), by the server and the browser alike
 # (TestPageFit, TestLibraryPageFit), their candidates' stock strips and
 # rows likewise (TestStockStrip; TestPageStock, TestLibraryStockPage), and
-# its strip of part types capped at two rows, filtered and led by recent
-# ones, on the strip fixture (TestPartTypeStrip, in pkg/ui and in the same
-# Chrome); the plate's part-number mode, its part, vehicles and stock, by
+# its part type picker and the picker's list, filtered and with recent
+# ones under it, on the strip fixture (TestPartTypePicker, in pkg/ui and in
+# the same Chrome); the plate's part-number mode, its part, vehicles and stock, by
 # the server and the browser alike (TestPagePartMode, TestLibraryPartMode)
 # and in the same Chrome (TestPartMode); the demo set's vPIC catalog
 # (pkg/ui/demo/vpic) checked beside it (TestDemoCheck), on each surface of
@@ -110,10 +110,10 @@ jobs:
             "pkg/nitrovin "{TestCatalogLoads,TestCatalogDrift,TestModelYearsCounts}
             "cmd/nitrovin "{TestVocabCheck,TestVocabLoad,TestServeVocabularies,TestVocabCheckCatalog,TestTranslate,TestTranslateRefused,TestList,TestListRefused}
             "cmd/nitrovin "{TestStdioOps,TestMCPVocabSession,TestWorker,TestWorkerCatalog,TestWorkerCatalogParts,TestWorkerStock,TestVocabPage,TestVocabTranslate}
-            "cmd/nitrovin "{TestDemoCheck,TestDemoHints,TestWorkerDemo,TestFitCard,TestStockStrip,TestPartTypeStrip,TestPartMode,TestReveal}
+            "cmd/nitrovin "{TestDemoCheck,TestDemoHints,TestWorkerDemo,TestFitCard,TestStockStrip,TestPartTypePicker,TestPartMode,TestReveal}
             "pkg/nitrovin TestFitConfirmed" "cmd/nitrovin TestFitConfirmed"
             "pkg/nitrovin "{TestListCatalogVehicle,TestListCatalogVPIC}
-            "pkg/ui "{TestLibraryDemoFit,TestDemoPanel,TestPageFit,TestCatalogEntries,TestLibraryPageFit,TestPageStock,TestLibraryStockPage,TestPartTypeStrip,TestPagePartMode,TestLibraryPartMode}
+            "pkg/ui "{TestLibraryDemoFit,TestDemoPanel,TestPageFit,TestCatalogEntries,TestLibraryPageFit,TestPageStock,TestLibraryStockPage,TestPartTypePicker,TestPagePartMode,TestLibraryPartMode}
             "pkg/ui "{TestPageDemoVPIC,TestDemoVPICNotOffered}
             "cmd/nitrovin-epa "{TestBuild,TestEntry,TestCuratedLoadsClean}
           )

@@ -38,14 +38,16 @@ func TestFitCard(t *testing.T) {
 			tb.do(chromedp.Navigate(srv.URL + pickup))
 			tb.wait(`#fit a.ptype`)
 			log.take()
-			if n := tb.count(`#fit .ptypes a.ptype`); n != 8 || tb.count(`#fit [aria-current]`) != 0 || tb.count(`#fit .cand`) != 0 {
+			if n := tb.count(`#fit .ptgroups a.ptype`); n != 8 || tb.count(`#fit [aria-current]`) != 0 || tb.count(`#fit .cand`) != 0 {
 				t.Errorf("%s: %d part types, %d pressed, %d candidates; want 8, none, none", pickup, n, tb.count(`#fit [aria-current]`), tb.count(`#fit .cand`))
 			}
 			tb.audit(name + ", the pickup's part types")
 
-			// Pressing Alternator: its three candidates, each catalog text
+			// Alternator, chosen in the picker's list: its three candidates, each catalog text
 			// only, and the URL its own.
-			tb.do(chromedp.Click(chromedp.CSS(`#fit a.ptype[href$="part.id=alternator"]`)))
+			tb.do(chromedp.Click(chromedp.CSS(`#pick-type`)))
+			tb.wait(`#part-types:popover-open`)
+			tb.do(chromedp.Click(chromedp.CSS(`#fit .ptgroups a.ptype[href$="part.id=alternator"]`)))
 			tb.wait(`#fit a.ptype[aria-current="true"]`)
 			tb.wait(`#fit .cand`)
 			tb.requests(name+", Alternator pressed", js, pressed)
@@ -55,8 +57,8 @@ func TestFitCard(t *testing.T) {
 			if n, text := tb.count(`#fit .cand .mk`), tb.count(`#fit .cand .mk.text`); n != 3 || text != 3 || !strings.Contains(tb.html(`#fit .cand .mk`), "Catalog text only") {
 				t.Errorf("the alternators' marks: %d, %d catalog text only; want 3 of 3", n, text)
 			}
-			if js && eval[bool](tb, `document.activeElement !== document.querySelector('#fit a.ptype[aria-current="true"]')`) {
-				t.Errorf("the pressed part type lost the focus to %s", eval[string](tb, `document.activeElement.outerHTML`))
+			if js && eval[bool](tb, `document.activeElement !== document.getElementById("pick-type")`) {
+				t.Errorf("the picker lost the focus to %s", eval[string](tb, `document.activeElement.outerHTML`))
 			}
 			tb.audit(name + ", the alternators")
 

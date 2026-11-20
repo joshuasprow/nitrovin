@@ -431,12 +431,12 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
   background: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .16) 2px 3px), color-mix(in srgb, var(--cm) 76%, #000); }
 .seg { position: relative; align-self: stretch; display: flex; align-items: center; justify-content: center; padding: .35rem .6rem; text-align: center; min-width: 0; }
 .seg .w { font: 900 1.05rem/1.2 var(--cell-font); letter-spacing: .08em; text-shadow: var(--tape-emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere; }
-.seg::before { content: ""; position: absolute; left: 8px; right: 8px; top: -13px; height: 5px; border: 4px solid var(--c); border-bottom: 0; border-radius: 2px 2px 0 0; filter: var(--stripe-lift); }
-.seg::after { content: ""; position: absolute; left: calc(50% - 2.5px); top: calc(-1px - var(--lead) - var(--prev)); height: calc(var(--lead) + var(--prev) - 12px); border-left: 5px solid var(--c); filter: var(--stripe-lift); }
-.seg.unsure::before, .seg.unsure .w { border-style: dashed; }
+/* A name's line runs straight down into its tape. No line ends in a
+   bracket but the plate's own (#366). */
+.seg::after { content: ""; position: absolute; left: calc(50% - 2.5px); top: calc(-1px - var(--lead) - var(--prev)); height: calc(var(--lead) + var(--prev) + 1px); border-left: 5px solid var(--c); filter: var(--stripe-lift); }
+.seg.unsure .w { border-style: dashed; }
 .tagplate.rule .g-wmi::after, .tagplate.rule .g-vds::after { border-left-style: dashed; }
 .tagplate.rule .g-wmi .w, .tagplate.rule .g-vds .w { border-bottom-style: dashed; }
-.seg.none::before { display: none; }
 .seg.none .w { border: 0; }
 /* The years "Check years" led to: ringed in their mark, and brought into
    view with the cards above them and the label beside them still in it. */
@@ -446,7 +446,7 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
    brackets and no stamp, only a hairline between their names. */
 .tagplate.below { margin-top: 0; }
 .tagplate.below::before { border-top: 0; border-radius: 0; box-shadow: none; }
-.tagplate.below .seg::before, .tagplate.below .seg::after { display: none; }
+.tagplate.below .seg::after { display: none; }
 .tagplate.below .seg, .tagplate.below .lbl { border-top: 1px solid rgb(255 255 255 / .14); }
 .stack:has(.fan):is(:has(.fan:checked), :has(.seg:target)) {
   & .stamp.switch::after { content: "▴"; }
@@ -487,7 +487,7 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
   }
   .stack + .stack .tagplate.blank { margin-top: 8px; }
   .more-voc { margin-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; }
-  .stack + .stack .seg::before, .stack + .stack .seg::after { display: none; }
+  .stack + .stack .seg::after { display: none; }
   #answer:has(.fitstrip) .aka.done:not(:has(.stack:first-child .tagplate.blank))::before,
   #answer:has(.fitstrip) .aka.done:not(:has(.stack:first-child .tagplate.blank))::after { content: ""; position: absolute; z-index: -1; top: 40px; bottom: 0; left: calc(52.206% - 2.5px); border-left: 5px solid var(--c-vds); filter: var(--stripe-lift); pointer-events: none; }
   #answer:has(.fitstrip) .aka.done:not(:has(.stack:first-child .tagplate.blank))::after { left: calc(87.5% - 2.5px); border-left-color: var(--c-year); }
@@ -514,72 +514,40 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
    letters struck as the plate's are, in the monospace face and the name's
    own case, its count in a small outlined pill. A control: raised, and the
    pressed one flush (aria-current), as a key is. */
-.ptypes { list-style: none; margin: 0; padding: 0; }
 .ptype { display: inline-flex; align-items: center; gap: 10px; box-sizing: border-box; min-height: 44px; padding: 0 14px; font: 900 14px var(--cell-font); letter-spacing: .06em; text-decoration: none; color: var(--on-metal); text-shadow: var(--emboss);
   background: var(--alu); border: 1px solid var(--steel); border-top-color: #fff; border-bottom-color: var(--steel-dark); border-radius: 2px; box-shadow: var(--raised); }
 .ptype .n { padding: 1px 7px; border: 1px solid rgb(35 41 48 / .55); border-radius: 9px; font-size: 11px; text-shadow: none; }
 .ptype:active, .ptype[aria-current] { transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed); }
-.ptypes .ptype[aria-current] { anchor-name: --fit-part; }
-/* Two rows of part types, then "N more" (#324), held without a script:
-   the strip is a grid, 5 columns from 64rem, 4 above 46rem, 3 above 34rem
-   and 2 on a phone. A tape takes one cell, or two where its name does
-   not fit one (.sN at N columns), in strip order; one that does not fit
-   at a row's end starts the next row. The server packs the two rows at
-   each width (strip.go) and marks the part types past them (.xN), which
-   are not drawn, so out of reach; the key, drawn where any are (.kN),
-   says how many (.kn.cN), and each width shows its own. plate.js packs
-   them again, by the same numbers (data-fit), beside its filter and
-   Recent stamps. A name too long even for two cells ends in "…"; the
-   link's name is still whole. */
-.ptwrap { position: relative; z-index: 3; margin: 30px 0 0; }
-.ptwrap .ptypes { --cols: 5; display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 10px; }
-.ptypes > li { display: flex; min-width: 0; }
-.ptypes > li[hidden] { display: none; }
-.ptwrap .ptype { flex: 1; min-width: 0; gap: 8px; padding-inline: 10px; }
-.ptwrap .rstamp { padding: 0 6px; }
 .ptype .n { flex: none; }
-.ptwrap .ptype .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ptkey #more-types { flex: 1; min-width: 0; min-height: 44px; padding: 0 .5rem; }
-.fit:has(#part-types:popover-open) #more-types { --key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed); }
-@media (width >= 64rem) {
-  .kn:not(.c5), .ptypes > li.x5, .ptypes > .ptkey:not(.k5) { display: none; }
-  .ptypes > li.s5 { grid-column: span 2; }
-}
-@media (46rem < width < 64rem) {
-  .ptwrap .ptypes { --cols: 4; }
-  .kn:not(.c4), .ptypes > li.x4, .ptypes > .ptkey:not(.k4) { display: none; }
-  .ptypes > li.s4 { grid-column: span 2; }
-}
-@media (34rem < width <= 46rem) {
-  .ptwrap .ptypes { --cols: 3; }
-  .kn:not(.c3), .ptypes > li.x3, .ptypes > .ptkey:not(.k3) { display: none; }
-  .ptypes > li.s3 { grid-column: span 2; }
-}
-@media (width <= 34rem) {
-  .ptwrap .ptypes { --cols: 2; }
-  .kn:not(.c2), .ptypes > li.x2, .ptypes > .ptkey:not(.k2) { display: none; }
-  .ptypes > li.s2 { grid-column: span 2; }
-  .ptypes > .ptf { grid-column: 1 / -1; }
-}
-/* With a script: the filter, the page's recessed field, leads the first
-   row; recent part types lead the rest, each with a "Recent" stamp of
-   the same tape joined to its leading edge, flush with it when it is
-   pressed. A filter matching nothing says so beside it, above the
-   pressed part type, where no rail runs. */
+/* The picker (#366): one key of the second tape on its own piece of label
+   tape, under the strip and no wider than 24rem. It names the pressed
+   part type, or asks for one, with a count in the part types' pill, and
+   opens the part types dialog, which hangs from it (below). The key
+   beside it, of the plate's metal, clears the pressed part type: pressing
+   that one in the list changes nothing. The rails' lines come down to
+   the picker and leave from under it (--fit-part). With a script, up to
+   three part types opened recently sit under it, each the second tape. */
+.ptwrap { position: relative; z-index: 3; margin: 30px 0 0; }
+.ptsel { display: flex; align-items: stretch; gap: 6px; box-sizing: border-box; width: min(24rem, 100%); padding: 5px 6px; anchor-name: --fit-part, --pick-type;
+  background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck); }
+.ptfield { --key: var(--alu); flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: .5rem; align-items: center; min-height: 44px; padding: .25rem .6rem; text-align: left; text-transform: none; letter-spacing: 0; }
+.ptfield .plab { grid-column: 1 / -1; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; }
+.ptfield .nm { min-width: 0; font: 900 16px/1.2 var(--cell-font); letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ptfield .n { padding: 1px 7px; border: 1px solid rgb(35 41 48 / .55); border-radius: 9px; font: 900 11px var(--cell-font); text-shadow: none; }
+.ptfield svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.fit:has(#part-types:popover-open) .ptfield { --key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed); }
+.ptclear { flex: none; display: flex; align-items: center; justify-content: center; min-width: 44px; font: 900 18px/1 var(--cell-font); text-decoration: none; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8);
+  background: var(--metal); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised); }
+.ptclear:active { transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed); }
+.ptrecents { list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: fit-content; margin: 10px 0 0; padding: 0 8px 0 0; background: var(--bg); }
+.ptrecents[hidden] { display: none; }
+.ptrecents::before { content: "Recent"; font: 900 10px var(--label-font); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .ptfind { width: 100%; min-height: 44px; }
-.rstamp { display: flex; align-items: center; padding: 0 8px; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-metal); text-shadow: var(--emboss);
-  background: var(--alu); border: 1px solid var(--steel); border-top-color: #fff; border-bottom-color: var(--steel-dark); border-right-color: rgb(35 41 48 / .3); border-radius: 2px 0 0 2px; box-shadow: var(--raised); }
-.rstamp + .ptype { border-left: 0; border-radius: 0 2px 2px 0; }
-.rstamp:has(+ .ptype:is(:active, [aria-current])) { transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed); }
-.ptypes > .ptf { order: -2; }
-.ptypes > .ptnone { order: -1; grid-column: 2 / -1; align-self: center; color: var(--muted); }
-@media (width <= 34rem) {
-  .ptypes > .ptnone { grid-column: 1 / -1; }
-}
 /* The part types dialog: the filter, what it lists, the recent part
    types, then every part type under its vocabulary's headings, two
    columns of them, in the dialogs' section style with the entry in its
-   own case. */
+   own case. Part-number mode opens it as a dialog. On a VIN's page it is
+   the picker's list (below). */
 .ptdialog .hint { margin: .6rem 0 1rem; font-size: 13px; }
 .ptdialog .ptnone { margin: 0 0 1rem; color: var(--muted); }
 .ptgroups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem 1.5rem; }
@@ -589,6 +557,23 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
 .pthead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 .5rem; margin: 0 0 .6rem; border-bottom: 3px solid var(--c-vds); }
 .pthead h3 { margin: 0; padding: 0 0 3px; border: 0; letter-spacing: .04em; text-transform: none; }
 .ptlist { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0 0 6px; }
+/* The picker's list: the same dialog, hung from the picker at its width
+   by anchor positioning, over whatever is under it, with no head, no
+   line of what it lists and no backdrop: one column, each part type a
+   row with its count at the far end. It is never taller than half the
+   window less the picker, so it fits under the picker or, where there
+   is no room, over it (flip-block), and scrolls. Pressing outside it or
+   Escape shuts it. A browser without anchor positioning keeps the
+   dialog. */
+@supports (anchor-name: --a) {
+  .fit .ptdialog { position-anchor: --pick-type; inset: auto; top: calc(anchor(bottom) + 6px); left: anchor(left); width: anchor-size(width); max-height: min(30rem, calc(50vh - 3rem)); margin: 0; padding: .75rem; border-radius: 4px; position-try-fallbacks: flip-block; }
+  .fit .ptdialog::backdrop { background: transparent; }
+  .fit .ptdialog :is(.dialog-head, .hint, .ptrecent) { display: none; }
+  .fit .ptdialog .ptf { margin: 0 0 .75rem; }
+  .fit .ptgroups { grid-template-columns: minmax(0, 1fr); gap: .75rem; }
+  .fit .ptlist { flex-direction: column; flex-wrap: nowrap; gap: 6px; padding: 0; }
+  .fit .ptlist .ptype { display: flex; justify-content: space-between; }
+}
 /* An empty place: the page's blank strip, a dashed outline in the faint
    colour with its sentence, and in it a key of metal or a link on. */
 :is(.fit, .part, .choice) .blank { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; box-sizing: border-box; min-height: 46px; margin: 30px 0 0; padding: .5rem .75rem; color: var(--muted); border: 3px dashed var(--faint); border-radius: 2px; }
@@ -698,7 +683,7 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
    next. One row starts at its first tag's drops instead. These are in
    the rule for anything wider than a phone, below; a phone's tags are
    one row under two bars (the narrow page's). */
-/* From the pressed part type: a riser down from it to each rail's bar
+/* From the picker: a riser down from it to each rail's bar
    (.risers), and a run along that bar (.rails) from the leading edge to
    the riser, or, in one row, between the riser and the eyelets. Without
    anchor positioning, a stub from the tags' top: at the leading edge, or,
@@ -726,13 +711,12 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
   .rows.at3 .notch { left: calc(100% - (100% - 2 * var(--gap)) / 6 - 9px); }
   .rows.more-wide::before, .rows.more-wide::after { content: ""; }
 }
-/* From the strip of parts to the pressed part type: each line comes
-   down out of the strip under its word (.stems), turns in the 30px under
-   the strip, the vehicle's 9px into it and the year's 18px, runs along
-   (.runs) and drops into the pressed part type (.drops) where its riser
-   leaves it, behind a phone's filter on the way. The words are at --xv
-   and --xy of the strip. The pressed part type leads the part types, so
-   it is never past the year's word, and the two runs never cross. */
+/* From the strip of parts to the picker: each line comes down out of
+   the strip under its word (.stems), turns in the 30px under the strip,
+   the vehicle's 9px into it and the year's 18px, runs along (.runs) and
+   drops into the picker (.drops) where its riser leaves it. The words
+   are at --xv and --xy of the strip. The picker's middle is never past
+   the year's word, so the two runs never cross. */
 .stems, .runs, .drops, .carry { display: none; }
 .fit { --xv: 52.206%; --xy: 87.5%; }
 .fitstrip { anchor-name: --fit-strip; }
@@ -994,8 +978,9 @@ button.linkish:active { transform: none; box-shadow: none; }
   .fit { margin: 0; }
   .fit { --xv: 25%; --xy: 75%; }
   .fitstrip { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 30px; }
-  .fitstrip .stamp { grid-column: 1 / -1; padding-block: .35rem; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18); }
-  .fitstrip .seg::before, .fitstrip .seg::after { display: none; }
+  .fitstrip .seg { grid-row: 1; }
+  .fitstrip .stamp { grid-row: 2; grid-column: 1 / -1; padding-block: .35rem; border-right: 0; border-top: 1px solid rgb(255 255 255 / .18); }
+  .fitstrip .seg::after { display: none; }
   .fit > .blank { margin-top: 1rem; }
 }
 /* A narrow page's names move and its strip of parts does not, so the
@@ -1081,7 +1066,7 @@ button.linkish:active { transform: none; box-shadow: none; }
      at the edge, and reaches both edges of the window. The rails are one
      row's, as on a wide page: each tag's bars run to its neighbour's, the
      first tag's start at its drops and the last's end at its, and they
-     move with the tags. The riser from the pressed part type stays put,
+     move with the tags. The riser from the picker stays put,
      and so does a piece of each bar (.rails) that reaches it: from where
      the first eyelet is before any scroll, or the riser if it is before
      that, to where the last eyelet is at the row's end, or the riser if

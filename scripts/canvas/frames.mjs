@@ -42,7 +42,7 @@ export const frames = [
       { h2: 'Aluminum' },
       { vp: 'wide', url: vin(F150), keep: ['header', '#lookup'], pre: blur, mark: { '.open-developers': 'is-active' }, cap: 'Plates and keys', note: 'The brand is a static plate. A button is a key of the same metal, raised; Developers is shown pressed, as is the VIN key of the switch.' },
       { h2: 'Vinyl tape' },
-      { vp: 'wide', url: vin(F150, '&part.id=alternator'), keep: ['#answer > .hang > .aka', '#fit .carry', '#fit .fitstrip', '#fit .ptwrap', '#fit .stems', '#fit .runs', '#fit .drops'], cap: 'Label tape, the second tape, pinstripe', note: 'Black label tape carries names, letters raised white. The second tape is the plate\'s metal with the tape\'s ridges: a part type is a strip of it, raised, and the pressed one is flush. Lines are pinstripe tape in a group\'s colour, lit on one edge.' },
+      { vp: 'wide', url: vin(F150, '&part.id=alternator'), keep: ['#answer > .hang > .aka', '#fit .carry', '#fit .fitstrip', '#fit .ptwrap', '#fit .stems', '#fit .runs', '#fit .drops'], cap: 'Label tape, the second tape, pinstripe', note: 'Black label tape carries names, letters raised white. The second tape is the plate\'s metal with the tape\'s ridges: the part type picker is a key of it on its own piece of label tape, and a part type opened recently is a strip of it, raised. Lines are pinstripe tape in a group\'s colour, lit on one edge, and run straight into the tape.' },
       { h2: 'Manila' },
       { vp: 'wide', url: vin(F150, '&part.id=alternator&fitment.number=DEMO-1001'), keep: ['#answer > .leaders', '#answer > .hang > .cards', '#fit .cands', '#fit .rails'], cap: 'Tags', note: 'Paper stock with tooth, clipped corners, a reinforced eyelet, a band printed in the group\'s colour. A control on a tag is label tape; a candidate\'s stock strip is the one metal on a tag.' },
     ],
@@ -63,9 +63,10 @@ export const frames = [
   {
     file: 'Fitment', title: 'The fitment card', w: W,
     heading: 'The fitment card',
-    intro: 'The parts that fit: a strip naming the catalog\'s vehicle, the part types on the second tape, and the candidates as manila tags on rails that come down from the pressed part type. A candidate\'s stock strip opens its shelf and yard rows.',
+    intro: 'The parts that fit: a strip naming the catalog\'s vehicle, a picker of its part types, and the candidates as manila tags on rails that come down from the picker. A candidate\'s stock strip opens its shelf and yard rows.',
     items: [
-      { vp: 'wide', url: vin(F150, '&part.id=alternator&fitment.number=DEMO-1001'), keep: ['#answer > .hang > .aka', '#fit'], cap: 'Part types, candidates, marks and stock', note: 'Alternator pressed; the first candidate\'s stock open under its row.' },
+      { vp: 'wide', url: vin(F150, '&part.id=alternator&fitment.number=DEMO-1001'), keep: ['#answer > .hang > .aka', '#fit'], cap: 'Picker, candidates, marks and stock', note: 'Alternator pressed: the picker names it and counts its candidates, and × beside it clears. The first candidate\'s stock is open under its row.' },
+      { vp: 'wide', url: vin(F150, '&part.id=alternator'), open: ['#part-types'], keep: ['#answer > .hang > .aka', '#fit'], style: 'padding-bottom: 300px', cap: 'The picker\'s list', note: 'Hung from the picker at its width, over the candidates: every part type under the part vocabulary\'s headings, in an order that never changes. The pressed one is flush; pressing it again changes nothing.' },
       { vp: 'wide', url: vin(SILV, '&part.id=brake-rotor-rear'), keep: ['#answer > .hang > .aka', '#fit'], cap: 'By redirect', note: 'One tag: the rails run from the riser to its eyelet. The mark names the part type the catalog lists it under.' },
       { row: [
         { vp: 'tab', url: vin(F150, '&part.id=alternator'), keep: ['#answer > .hang > .aka', '#fit'], cap: 'Narrow', note: 'Three tags across down to 34rem. The names scroll; the strip does not.' },
@@ -82,7 +83,7 @@ export const frames = [
     items: [
       { h2: 'Dialogs' },
       { vp: 'wide', url: vin(F150), open: ['#developers'], keep: ['#developers'], drop: ['#mcp + dl', '#mcp', '#verify + .copyable', '#verify', '#links + ul', '#links'], cap: 'Dialog', note: 'A slotted screw at each end of the head, the title struck in, Close at the far end. Sections sit over a blue rule; what is copied sits in a recessed field.' },
-      { vp: 'wide', url: vin(CAMRY, '&part.id=headlamp'), visit: [vin(CAMRY, '&part.id=starter'), vin(CAMRY, '&part.id=fog-lamp')], open: ['#part-types'], keep: ['#part-types'], cap: 'Part types dialog', note: 'Every part type the vehicle has, under the part vocabulary\'s headings, with a filter and those opened recently.' },
+      { vp: 'wide', url: '/?from.fitment.number=', visit: [vin(CAMRY, '&part.id=starter'), vin(CAMRY, '&part.id=fog-lamp')], open: ['#part-types'], keep: ['#part-types'], cap: 'Part types dialog', note: 'Part-number mode\'s: every part type of the catalog under the part vocabulary\'s headings, with a filter and those opened recently. On a VIN\'s page the same list hangs from the picker.' },
       { row: [
         { vp: 'wide', box: 760, style: 'padding-bottom: 80px', url: vin(F150), open: ['.note'], keep: ['#answer > .hang > .aka', '.note'], cap: 'Note', note: 'How a name on the tape was reached.' },
         { vp: 'tab', box: 400, url: vin(F150), visit: [vin(CAMRY), vin(SILV)], open: ['#vins'], keep: ['#vins'], cap: 'Menu', note: 'Recent VINs, then the examples.' },
@@ -91,7 +92,8 @@ export const frames = [
       { vp: 'wide', url: vin(F150), pre: showVocab, open: ['#vocabularies'], keep: ['#vocabularies'], cap: 'Vocabularies', note: 'A dashed box around a native file input, beside what the server holds; then a table of label-face headers over a steel rule, each row with a disclosure.' },
       { vp: 'wide', base: BARE, url: '/', pre: showVocab, open: ['#vocabularies'], keep: ['#vocabularies'], cap: 'Vocabularies, none loaded', note: 'The offer: one key and a hint.' },
       { h2: 'Forms and inputs' },
-      { vp: 'wide', url: vin(CAMRY), keep: ['#fit .fitstrip', '#fit .ptwrap'], visit: [vin(CAMRY, '&part.id=starter')], cap: 'Filter and Recent', note: 'A recessed field leads the strip; a part type opened recently leads it too, under a stamp. N more opens the dialog.' },
+      { vp: 'wide', url: vin(CAMRY), keep: ['#fit .fitstrip', '#fit .ptwrap'], visit: [vin(CAMRY, '&part.id=starter'), vin(CAMRY, '&part.id=headlamp')], cap: 'Picker and Recent', note: 'The picker asks for a part type and counts the vehicle\'s. Up to three opened recently sit under it.' },
+      { vp: 'wide', url: vin(CAMRY), keep: ['#fit .fitstrip', '#fit .ptwrap', '#part-types'], open: ['#part-types'], style: 'padding-bottom: 560px', cap: 'The picker\'s list', note: 'A recessed filter, then each part type as a row of the second tape with its count at the far end.' },
       { vp: 'wide', url: vin('1FTEW1EG0FFA12345'), keep: ['#answer > .hang > .cards .card.g-check', '#answer .error', '#answer .errors', '#answer .problems'], cap: 'Errors', note: 'Error-colour text on the tag and under the names.' },
     ],
   },

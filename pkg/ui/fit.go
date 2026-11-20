@@ -15,11 +15,11 @@ import (
 
 // The page's fit card (ADR 0018, #322): under "Also known as", the part
 // types the loaded catalog has for the VIN's vehicle, every page of them,
-// the pressed one first and the rest by name, each with its count of
-// candidates, and the candidates of the one pressed. The strip shows two
-// rows of them and "N more" (#324), which opens a dialog of all of them
-// under the headings of a part vocabulary (partGroups); plate.js leads
-// the strip with the ones this browser opened recently, and filters it. A
+// each with its count of candidates, and the candidates of the one
+// pressed. A picker names the pressed one and opens a dialog of all of
+// them under the headings of a part vocabulary (partGroups), its list
+// (#366); plate.js lists the ones this browser opened recently under the
+// picker, and filters the list. A
 // part type is pressed by a link to the page with it as the second
 // parameter, part.id, the fit request's own part by its id on the
 // catalog's spine; nothing is pressed without it, and no candidate is
@@ -62,13 +62,16 @@ type fitCard struct {
 	// Model and Year are what the strip says was asked: the catalog's
 	// vehicle the decode reached, and the year, "any year" without one.
 	Model, Year string
-	// Types are the vehicle's part types: the pressed one first, then
-	// the rest by name (#324). Spine is the catalog's spine, which names
-	// them, and which plate.js keeps recent part types by. Strip is how
-	// two rows hold them at each of the strip's widths (layStrip).
-	Types []partTypeLink
-	Spine string
-	Strip stripLaid
+	// Types are the vehicle's part types, by name. Spine is the catalog's
+	// spine, which names them, and which plate.js keeps recent part types
+	// by. PickCount and PickNoun are what the picker counts: the pressed
+	// part type's candidates, or with none pressed the part types. Clear
+	// is the page with none pressed, the key beside the picker.
+	Types     []partTypeLink
+	Spine     string
+	PickCount int
+	PickNoun  string
+	Clear     string
 	// Groups are the part types dialog's: under each heading, an entry of
 	// GroupedBy, the part vocabulary the headings come from, the part
 	// types it maps to, then "Other"; without one, a group with no
@@ -108,15 +111,13 @@ type wayOn struct {
 	Text, Href string
 }
 
-// partTypeLink is a part type of the strip or the dialog: its spine id,
-// its name and count, and the page with it pressed, or, for the pressed
-// one, with none. Class, in the strip, says at which widths its tape
-// takes two cells and at which it is past the two rows (layStrip).
+// partTypeLink is a part type of the dialog: its spine id, its name and
+// count, and the page with it pressed, which for the pressed one is the
+// page itself: pressing it again changes nothing (#366).
 type partTypeLink struct {
 	ID, Name, Href string
 	Count          int
 	Pressed        bool
-	Class          string
 }
 
 // partGroup is one heading of the part types dialog and its part types,
@@ -292,21 +293,16 @@ func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecod
 		names[t.Type] = partTypeName(t)
 		l := partTypeLink{ID: t.Type, Name: partTypeName(t), Count: t.Count, Href: fitHref(d.VIN, t.Type, "")}
 		if t.Type == part {
-			l.Pressed, l.Href, c.Pressed, pressed = true, vinHref(d.VIN), l.Name, true
+			l.Pressed, c.Pressed, pressed = true, l.Name, true
+			c.PickCount, c.PickNoun, c.Clear = t.Count, plural(t.Count, "candidate", "candidates"), vinHref(d.VIN)
 		}
 		byName = append(byName, l)
 	}
-	// The strip leads with the pressed part type, so a part type pressed
-	// from the dialog is in sight beside its candidates, whatever the
-	// strip has room for.
 	c.Spine = fit.Catalog.Spine
-	c.Types = slices.Clone(byName)
-	if i := slices.IndexFunc(c.Types, func(l partTypeLink) bool { return l.Pressed }); i > 0 {
-		l := c.Types[i]
-		copy(c.Types[1:i+1], c.Types[:i])
-		c.Types[0] = l
+	c.Types = byName
+	if !pressed {
+		c.PickCount, c.PickNoun = len(byName), plural(len(byName), "part type", "part types")
 	}
-	c.Strip = layStrip(c.Types)
 	voc := headingVocabulary(cat, c.Spine, c.filedUnder)
 	if c.Groups, err = h.partGroups(byName, voc); err != nil {
 		return err

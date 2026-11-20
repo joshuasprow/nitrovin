@@ -95,7 +95,7 @@ func TestPageDemoVPIC(t *testing.T) {
 	for _, want := range []string{
 		`<h2 id="fit-h" class="stamp">Parts that fit · demo-vpic-catalog</h2>`,
 		`<span class="seg g-vds"><span class="w">F-150 / Ford</span></span>`,
-		"Press a part type to see what fits this vehicle.",
+		"Choose a part type to see what fits this vehicle.",
 	} {
 		if !strings.Contains(s, want) {
 			t.Errorf("the pickup lacks %s\n%s", want, s)

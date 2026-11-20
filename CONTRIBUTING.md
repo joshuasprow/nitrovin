@@ -433,14 +433,13 @@ names it. A month that retires one of them fails the refresh's bump PR in
 truly belongs to one month (the answer keys, `pkg/contract`'s element
 table) skips on any other, and is not a vocabulary test.
 
-`testdata/vocab/strip/` is the page's strip of part types (#324): a
-`vpic` catalog (`strip-catalog`) on a spine of its own (`strip-parts`),
-with eighteen part types for a 2015 F-150 (more than two rows of the
-strip hold at any width) and six for a 2014 Silverado (which fit at 1280
-and 768), one of them a name too long for its tape, and a part vocabulary
+`testdata/vocab/strip/` is the page's part type picker with many part
+types (#324, #366): a `vpic` catalog (`strip-catalog`) on a spine of its
+own (`strip-parts`), with eighteen part types for a 2015 F-150 and six for
+a 2014 Silverado, one of them a name too long for a line, and a part vocabulary
 of their groups (`strip-groups`) with one part type under two groups,
 four under none and one group over none. It loads clean alone, and no
-other test loads it: `TestPartTypeStrip` in `pkg/ui` draws its strip and
+other test loads it: `TestPartTypePicker` in `pkg/ui` draws its picker and
 dialog, and in `cmd/nitrovin` runs them in Chrome.
 
 ### The EPA vocabulary

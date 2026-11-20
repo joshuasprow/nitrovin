@@ -274,13 +274,15 @@ top plate (ui.css), with no script. */}}
 {{/* fit is the parts that fit (fit.go), under the names. Found, it is a
 strip of label tape saying what was asked (the catalog, and the model and
 year it asked with, on the lines from Vehicle and Model year through the
-names), the vehicle's part types as the second tape, each a link that
-presses it, two rows of them and "N more" (#324), which opens the part
+names), the part type picker under it (#366), a key of the second tape on its own
+piece of label tape that names the pressed part type and opens the part
 types dialog, every part type under the headings of a part vocabulary,
+which hangs from the picker as its list; a key beside the picker clears
+the pressed one, and plate.js lists up to three opened recently under it;
 and the pressed one's candidates as manila tags on two rails
 of pinstripe tape: Vehicle's and Model year's, carried from the names to
 the strip on a narrow page (.carry), out of the strip (.stems), along
-(.runs) and into the pressed part type (.drops), then down from it
+(.runs) and into the picker (.drops), then down from it
 (.risers) and along (.rails) to each eyelet (ui.css). A tag's
 number is a strip of label tape across it; its rows are the catalog's
 words, verbatim; its marks are ink on it: a solid stamp checked, a dashed
@@ -299,17 +301,16 @@ own, which plate.js swaps in place (swap). */}}
 <span class="seg g-vds"><span class="w">{{.Model}}</span></span>
 <span class="seg g-year"><span class="w">{{.Year}}</span></span>
 </div>
-<div class="ptwrap" data-spine="{{.Spine}}" data-fit="{{.Strip.Fit}}">
-<ul class="ptypes" id="ptypes" aria-label="Part types">
-<li class="ptf" hidden><label class="visually-hidden" for="ptf-strip">Filter part types</label><input type="search" id="ptf-strip" class="ptfind" placeholder="Filter part types" autocomplete="off" aria-controls="ptypes"></li>
-{{range .Types}}<li data-part="{{.ID}}"{{with .Class}} class="{{.}}"{{end}}>{{template "ptype" .}}</li>
-{{end}}<li class="ptnone" hidden></li>
-<li class="{{.Strip.KeyClass}}"><button type="button" id="more-types" popovertarget="part-types">{{range .Strip.Keys}}<span class="kn c{{.Cols}}">{{.N}} more<span class="visually-hidden"> {{if eq .N 1}}part type{{else}}part types{{end}}</span></span>{{end}}</button></li>
-</ul>
+<div class="ptwrap" data-spine="{{.Spine}}">
+<div class="ptsel">
+<button type="button" id="pick-type" class="ptfield" popovertarget="part-types"><span class="plab">Part type</span><span class="nm">{{if .Pressed}}{{.Pressed}}{{else}}Choose a part type{{end}}</span><span class="n">{{.PickCount}}<span class="visually-hidden"> {{.PickNoun}}</span></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg></button>
+{{if .Pressed}}<a class="ptclear swap" id="clear-type" data-focus="pick-type" href="{{.Clear}}" aria-label="Clear {{.Pressed}}">×</a>
+{{end}}</div>
+<ul class="ptrecents" aria-label="Opened recently" hidden></ul>
 </div>
 {{if .Pressed}}<span class="stems" aria-hidden="true"></span><span class="runs" aria-hidden="true"></span><span class="drops" aria-hidden="true"></span>
 {{end}}{{template "part-types-dialog" .Dialog}}
-{{if .Invite}}<p class="blank"><span>Press a part type to see what fits this vehicle.</span></p>
+{{if .Invite}}<p class="blank"><span>Choose a part type to see what fits this vehicle.</span></p>
 {{end}}{{with .NoneFit}}<p class="blank"><span>{{.}}</span></p>
 {{end}}{{if .Tags}}<ol class="cands" aria-label="Candidates: {{.Pressed}}" tabindex="0">
 {{range .Tags}}<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">

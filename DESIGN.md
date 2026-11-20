@@ -268,18 +268,18 @@ its group's colour.
   heading are upper case.
 - **Four columns at fixed fractions** (130, 170, 465 and 255 of 1020): the
   vocabulary's stamp, then make, model and years. Each word sits over a 3 px
-  underline in its group's mark, under a bracket in its group's colour, on the
-  line that runs down from its card. On a narrow page the strip lies under the
+  underline in its group's mark, on the line that runs straight down into the
+  tape from its card. No line ends in a bracket but the plate's own. On a narrow page the strip lies under the
   first four of the cards' six columns, and the stamp is a label above it.
-- **A dashed line, bracket or underline is a doubt.** The strip's note, behind
+- **A dashed line or underline is a doubt.** The strip's note, behind
   its round "i" button, says the doubt in words.
 - **Several names stack.** The first strip is on top, with the edges of up to
   three more under it. The stamp is the switch and carries the count. Opened,
   the stack is one strip with a row to a name.
 - **On a wide page the vocabularies' strips are one block.** Each lies
   against the strip above, or against a closed stack's edges, with no gap.
-  Only the first strip carries the brackets and the lines into them; the
-  strips after it carry their underlines alone. A blank strip stands 8 px
+  Only the first strip carries the lines into it; the strips after it carry
+  their underlines alone. A blank strip stands 8 px
   off the block. "N more vocabularies" hangs from the block's bottom edge,
   at its leading end, with no gap.
 - **A switch of tape stands raised.** "N more vocabularies", and on a narrow
@@ -384,24 +384,24 @@ that it is narrow.
 
 ## Good enough: the parts that fit
 
-Under "Also known as", in the page's single column, the part types the loaded
-catalog has for the vehicle, and the candidates of the one pressed.
+Under "Also known as", in the page's single column, a picker of the part
+types the loaded catalog has for the vehicle, and the candidates of the one
+pressed.
 
 - **The strip** is label tape, stuck on: its stamp reads "Parts that fit ·"
   and the catalog's name, over the names' stamp and make columns (300 of
   1020); the catalog's model the decode reached and the year it asked with
   ("any year" without one) sit under the names' model and years, each over
-  its group's underline and under its group's bracket, on the lines from
-  Vehicle and Model year that run on through the names. The two lines pass
+  its group's underline, on the lines from Vehicle and Model year that run on
+  through the names and straight down into the tape. The two lines pass
   behind the names' block from its first strip, so they show behind a blank
   strip and beside the "more" switch. No line runs to the strip when no
-  vocabulary has a name. Narrow, the stamp is a line of its own above the
-  two words, each at the middle of its half.
-- **From the strip to the pressed part type**, at every width, each line
-  comes down out of the strip under its word, turns in the 30 px under the
-  strip (Vehicle's 9 px into it, Model year's 18 px), and runs along to
-  drop into the pressed part type where its riser leaves it, behind a
-  phone's filter on the way. So the lines from the two cards reach the
+  vocabulary has a name. Narrow, the two words lead, each at the middle of its half, and the stamp
+  is a line of its own under them.
+- **From the strip to the picker**, at every width, each line comes down
+  out of the strip under its word, turns in the 30 px under the strip
+  (Vehicle's 9 px into it, Model year's 18 px), and runs along to drop
+  into the picker where its riser leaves it. So the lines from the two cards reach the
   eyelets in one piece. With nothing pressed they end on the strip. They
   need anchor positioning, as the risers do.
 - **Narrow, the names move and the strip does not**, so the two lines are
@@ -412,64 +412,47 @@ catalog has for the vehicle, and the candidates of the one pressed.
   runs along to drop into the strip over its word. A line whose column is
   off the window runs to the window's edge. A browser without scroll
   timelines draws no line between the names and the strip.
-- **The part types** are the second tape, each with its count, on a grid.
-  Each is a link to the page with it pressed (the URL's `part.id`); the
-  pressed one's link presses nothing. Nothing is pressed without the
-  parameter, and a blank strip asks for a press. A tape takes one cell,
-  or two where its name, its count and its Recent stamp do not fit one.
-  A name too long even for two cells, or for a phone's whole row, ends in
-  "…" and keeps its count; the link's name is whole, and the dialog shows
-  it whole.
-- **Their order:** the pressed one first, wherever it was, so a part type
-  chosen in the dialog is beside its candidates; then, with JavaScript, up
-  to two this browser opened recently that the vehicle has, newest first;
-  then the rest by name, A to Z. A recent one wears a small upper-case
-  "Recent" stamp of the same tape joined to its leading edge, pressed
-  flush with it.
-- **Two rows, then "N more".** The grid has 5 columns from 64 rem, 4 above
-  46 rem, 3 above 34 rem and 2 on a phone. The tapes go in strip order,
-  and one of two cells that does not fit at a row's end starts the next
-  row, leaving the cell empty, as the grid places it. Two rows hold every
-  part type, or as many as fit with "N more" after them, N the rest,
-  which are not drawn and out of the keyboard's reach; N varies with the
-  names. On the demo set's F-150 it is 6 and the key at 1280 px, 4 at
-  768, and 1 on a phone, whose next tape takes a whole row. "N more" is a
-  key of metal, as high as the tape beside it, which opens the part types
-  dialog; its name says N as it reads ("2 more part types"). The tape's
-  face is monospace, so the server knows each name's width: it packs the
-  two rows at each width, writes which tapes take two cells, which are
-  past the rows and N, and each width shows its own, so it holds without
-  a script, reading no position. Its measure assumes the narrowest window
-  of each width and a phone of at least 360 px, and a little wider type
-  than any browser draws, so a one-cell name is never cut. Where every
-  part type fits, the key is not drawn at all.
-- **The filter**, with JavaScript only, is the page's recessed field. It
-  takes the first cell, and on a phone it is a row of its own above the
-  two. Typing narrows the strip by name across every part type, keeping
-  the pressed one, which the rails hang from. The script packs the rows
-  again as the server does, from the measure the server gives it
-  (`data-fit`), beside the filter and the Recent stamps, and draws no
-  key when the matches fit. None matching says so beside the filter,
-  above the pressed one, where no rail runs.
-- **Recent part types** are kept in the browser as recent VINs are, the last
-  eight, newest first, and nothing is kept when storage fails. The VINs
-  menu's "Clear recent" forgets both; the dialog's forgets part types only
-  and leaves the focus on the dialog's filter.
-- **The part types dialog** is the page's own dialog, opened by "N more": a
-  head of metal with "Part types" struck in it and Close, the filter (with
-  JavaScript), a line naming the vehicle, the catalog and the part
-  vocabulary its headings come from, then, with JavaScript, the part types
-  this browser opened recently under "Opened recently" with its Clear
-  recent, then every part type, in two columns of headings (one under
-  34 rem). The headings are the entries of a part vocabulary on the
-  catalog's spine (the one the catalog files its fitments under, else the
-  first loaded), each over the part types it maps to, so a part type two
-  entries map to is under both, and "Other" last over the ones none maps
-  to; an entry mapping to none of the vehicle's has no heading. They are
-  the dialogs' section style in the entry's own case. With no part
-  vocabulary the dialog is one list by name. Its part types are the same
-  tape, the pressed one pressed; choosing one closes the dialog and leads
-  the strip with it.
+- **The picker** is one key of the second tape on its own piece of label
+  tape, under the strip, at most 24 rem wide and the page's width on a
+  phone. Over its name it is labelled "Part type". With nothing pressed
+  (no `part.id` in the URL) it reads "Choose a part type" with the count
+  of the vehicle's part types in the part types' pill, and a blank strip
+  under it asks for a choice. With one pressed it reads the part type's
+  name, cut with "…" where it does not fit, and counts its candidates.
+- **Clearing is its own key.** Beside the picker, with one pressed, a key
+  of the plate's metal reads "×" and links to the page with none pressed.
+  Nothing else un-presses a part type.
+- **The picker's list** is the part types dialog, hung from the picker at
+  its width, over whatever is under it: it pushes nothing down. It has no
+  head and no backdrop, and pressing outside it or Escape shuts it. It
+  holds the filter (with JavaScript), then every part type under its
+  headings in one column, each a row of the second tape with its count at
+  the far end. It is never taller than half the window less the picker,
+  so it fits under the picker, or over it where there is no room under,
+  and scrolls. It hangs by anchor positioning; a browser without it shows
+  the same list as the page's dialog, with its head and Close.
+- **Order never changes.** The headings are the entries of a part
+  vocabulary on the catalog's spine (the one the catalog files its
+  fitments under, else the first loaded), each over the part types it maps
+  to by name, so a part type two entries map to is under both, and "Other"
+  last over the ones none maps to; an entry mapping to none of the
+  vehicle's has no heading. They are the dialogs' section style in the
+  entry's own case. With no part vocabulary the list is one, by name.
+  Pressing a part type does not move it or any other.
+- **The pressed part type** is pressed in the list, flush on `--alu-in`.
+  Its link is the page as it is: pressing it again shuts the list and
+  changes nothing.
+- **The filter** is the page's recessed field at the head of the list.
+  Typing narrows the list by name and hides a heading left with none.
+  None matching says so under it.
+- **Recent part types**, with JavaScript, are kept in the browser as
+  recent VINs are, the last eight, newest first, and nothing is kept when
+  storage fails. Up to three the vehicle has, never the pressed one, sit
+  under the picker after the word "Recent", each the second tape with its
+  count: pressing one presses it. The VINs menu's "Clear recent" forgets
+  them and the VINs.
+- **A choice keeps the focus on the picker**, from the list or from under
+  it, and so does clearing.
 - **The candidates** are manila tags, three to a row, in the answer's
   order. Under 34 rem they are one row that scrolls sideways, the next tag
   showing at the edge; the row reaches both edges of the window, takes
@@ -479,7 +462,7 @@ catalog has for the vehicle, and the candidates of the one pressed.
   option text (verbatim) and note are rows in the tag's ink under muted
   labels.
 - **The rails** are two lines of pinstripe tape, Vehicle's and Model year's,
-  down from the pressed part type (by anchor positioning) and along to two
+  down from the picker (by anchor positioning) and along to two
   drops into each eyelet. No piece of tape ends but at an eyelet or a joint
   with its rail's next piece. One row's rails run only between the riser and
   the eyelets, from whichever is nearer the leading edge to whichever is
@@ -609,7 +592,7 @@ metal; a way on is a link.
   rest in place. It is a switch without a script, as a stack's is.
 - A newly finished group draws its bracket and line in.
 - **The lines never stop short.** Vehicle's and Model year's run from the
-  card through the names and the strip of parts to the pressed part type
+  card through the names and the strip of parts to the picker
   and its candidates' eyelets, at every width. Maker's ends on a name's
   make.
 - No line ends on a blank strip: with no name at all, none is drawn.
