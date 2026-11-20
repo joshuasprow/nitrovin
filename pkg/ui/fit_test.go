@@ -81,7 +81,7 @@ func fitSection(t *testing.T, h *Handler, target string) string {
 }
 
 var (
-	partTypeRE = regexp.MustCompile(`<a class="ptype swap" href="([^"]*)"( aria-current="true")?>([^<]*) <span class="n">(\d+)`)
+	partTypeRE = regexp.MustCompile(`<a class="ptype swap" href="([^"]*)"( aria-current="true")?><span class="nm">([^<]*)</span> <span class="n">(\d+)`)
 	markRE     = regexp.MustCompile(`<span class="mk (\w+)">(?:<svg[^>]*><path[^>]*/></svg>)?([^<]*)</span>`)
 	numberRE   = regexp.MustCompile(`<b class="num">([^<]*)</b>`)
 )
@@ -138,7 +138,7 @@ func TestPageFit(t *testing.T) {
 		`<span class="seg g-vds"><span class="w">F150</span></span>`,
 		`<span class="seg g-year"><span class="w">2015</span></span>`,
 		`<a class="ptype swap" href="/?from.vin=1FTEW1EG7FFA12345&amp;part.id=alternator">`,
-		`<a class="ptype swap" href="/?from.vin=1FTEW1EG7FFA12345&amp;part.id=mirror">Door Mirror`,
+		`<a class="ptype swap" href="/?from.vin=1FTEW1EG7FFA12345&amp;part.id=mirror"><span class="nm">Door Mirror</span>`,
 		"Press a part type to see what fits this vehicle.",
 	} {
 		if !strings.Contains(s, want) {
@@ -200,7 +200,7 @@ func TestPageFit(t *testing.T) {
 	// verbatim and the note; the pressed part type's link takes it away.
 	s = fitSection(t, h, pickup+"&part.id=alternator")
 	for _, want := range []string{
-		`<a class="ptype swap" href="/?from.vin=1FTEW1EG7FFA12345" aria-current="true">Alternator <span class="n">3`,
+		`<a class="ptype swap" href="/?from.vin=1FTEW1EG7FFA12345" aria-current="true"><span class="nm">Alternator</span> <span class="n">3`,
 		`<ol class="cands" aria-label="Candidates: Alternator">`,
 		`<p class="numtape"><b class="num">DEMO-1001</b> <span class="yrs">2015–2017</span></p>`,
 		`<div><dt>Options</dt><dd>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</dd></div>`,

@@ -200,11 +200,11 @@ own, which plate.js swaps in place (swap). */}}
 <div class="ptwrap" data-spine="{{.Spine}}">
 <ul class="ptypes" id="ptypes" aria-label="Part types">
 <li class="ptf" hidden><label class="visually-hidden" for="ptf-strip">Filter part types</label><input type="search" id="ptf-strip" class="ptfind" placeholder="Filter part types" autocomplete="off" aria-controls="ptypes"></li>
-{{range .Types}}<li data-part="{{.ID}}">{{template "ptype" .}}{{if .More}}<span class="ptmore" aria-hidden="true">{{.More}} more</span>{{else}}<span class="ptmore none" aria-hidden="true"></span>{{end}}</li>
-{{end}}</ul>
-<button type="button" id="more-types" popovertarget="part-types">More<span class="visually-hidden"> part types</span></button>
+{{range .Types}}<li data-part="{{.ID}}">{{template "ptype" .}}</li>
+{{end}}<li class="ptnone" hidden></li>
+<li class="ptkey"><button type="button" id="more-types" popovertarget="part-types">{{range .Keys}}<span class="kn c{{.Cols}}" data-slots="{{.Slots}}">{{.N}} more<span class="visually-hidden"> {{if eq .N 1}}part type{{else}}part types{{end}}</span></span>{{end}}</button></li>
+</ul>
 </div>
-<p class="ptnone" hidden></p>
 <dialog id="part-types" class="ptdialog" popover aria-labelledby="part-types-h">
 <div class="dialog-head">
 <h2 id="part-types-h">Part types</h2>
@@ -300,9 +300,10 @@ plate is. */}}
 {{- end}}
 
 {{/* ptype is a part type, the second tape: a link to the page with it
-pressed, or, pressed, with none, its count in a pill. */}}
+pressed, or, pressed, with none, its name (cut with an ellipsis where its
+tape is too short, the link's name still whole) and its count in a pill. */}}
 {{define "ptype" -}}
-<a class="ptype swap" href="{{.Href}}"{{if .Pressed}} aria-current="true"{{end}}>{{.Name}} <span class="n">{{.Count}}<span class="visually-hidden"> {{if eq .Count 1}}candidate{{else}}candidates{{end}}</span></span></a>
+<a class="ptype swap" href="{{.Href}}"{{if .Pressed}} aria-current="true"{{end}}><span class="nm">{{.Name}}</span> <span class="n">{{.Count}}<span class="visually-hidden"> {{if eq .Count 1}}candidate{{else}}candidates{{end}}</span></span></a>
 {{- end}}
 
 {{/* chips are what to try, the menu the header's VINs button opens (a

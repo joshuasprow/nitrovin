@@ -495,8 +495,9 @@
   // - each filter narrows its list as it is typed, by name: the strip's,
   //   across every part type, the pressed one kept, which the rails hang
   //   from; the dialog's, the dialog;
-  // - what the strip's clip hides is out of the keyboard's reach, and its
-  //   key says how many that is, or is gone when nothing is.
+  // - the key says, at each width, how many part types the filter leaves
+  //   that the two rows have no room for, counted from the cells the
+  //   server says two rows have there: no position is read (ADR 0027).
   //
   // Nothing is kept when storage fails.
   const PARTS = 'nitrovin.recent-parts';
@@ -523,32 +524,19 @@
     }
     chips();
   };
-  // measure hides what the clip hides from the keyboard, and names the
-  // key with how many that is, or hides it.
-  const measure = (wrap) => {
-    let over = 0;
-    for (const li of stripItems(wrap)) {
-      const out = !li.hidden && li.offsetTop >= wrap.clientHeight;
-      li.classList.toggle('over', out);
-      if (out) over++;
-    }
-    const key = wrap.querySelector('#more-types');
-    key.hidden = over === 0;
-    key.setAttribute('aria-label', over + ' more part types');
-  };
-  // lay gives each part type shown the count of those after it, which the
-  // stylesheet shows for the last the strip has room for, and measures.
+  // lay writes the key's count at each width (page.html's .kn, one a
+  // width): the part types shown past the two rows' cells there, beside
+  // the filter, which the stylesheet does not draw, nor the key with none.
   const lay = (wrap) => {
-    const shown = stripItems(wrap).filter((li) => !li.hidden);
-    shown.forEach((li, i) => {
-      const more = li.querySelector('.ptmore');
-      const n = shown.length - i - 1;
-      more.textContent = n ? n + ' more' : '';
-      more.classList.toggle('none', n === 0);
-    });
-    measure(wrap);
+    const shown = stripItems(wrap).filter((li) => !li.hidden).length;
+    for (const kn of wrap.querySelectorAll('#more-types .kn')) {
+      const slots = Number(kn.dataset.slots);
+      const n = shown > slots ? shown - (slots - 1) : 0;
+      kn.firstChild.nodeValue = n + ' more';
+      kn.lastChild.textContent = n === 1 ? ' part type' : ' part types';
+    }
   };
-  const nameOf = (li) => li.querySelector('.ptype').firstChild.nodeValue.trim().toLowerCase();
+  const nameOf = (li) => li.querySelector('.ptype .nm').textContent.toLowerCase();
   // filter narrows input's list to the names holding what it has: the
   // strip's or the dialog's, which hides a heading left with none.
   const filter = (input) => {
@@ -562,16 +550,13 @@
       li.hidden = !match && !(wrap && li.querySelector('.ptype[aria-current]'));
     }
     for (const sec of wrap ? [] : scope.querySelectorAll('.ptgroup')) sec.hidden = !sec.querySelector('.ptlist > li:not([hidden])');
-    const none = wrap ? wrap.nextElementSibling : scope.querySelector('.ptnone');
+    const none = scope.querySelector('.ptnone');
     none.hidden = found > 0;
     none.textContent = found ? '' : 'No part type’s name has “' + input.value.trim() + '”.';
     if (wrap) lay(wrap);
   };
   document.addEventListener('input', (e) => {
     if (e.target.classList && e.target.classList.contains('ptfind')) filter(e.target);
-  });
-  const resized = new ResizeObserver((entries) => {
-    for (const e of entries) if (e.target.isConnected) measure(e.target);
   });
   // strip draws answer's strip and dialog as this browser has them: the
   // filters shown, the recent part types first and in the dialog's head,
@@ -588,7 +573,7 @@
     const lead = recent.slice(0, LEAD);
     const rank = (li) => (lead.includes(li.dataset.part) ? lead.indexOf(li.dataset.part) : LEAD + Number(li.dataset.at));
     items.sort((a, b) => rank(a) - rank(b));
-    wrap.querySelector('.ptypes').append(...items);
+    wrap.querySelector('.ptypes > .ptnone').before(...items);
     for (const li of items) {
       const stamp = li.querySelector('.rstamp');
       if (lead.includes(li.dataset.part) && !stamp) {
@@ -608,8 +593,6 @@
     }
     for (const input of answer.querySelectorAll('.ptfind')) if (input.value) filter(input);
     lay(wrap);
-    resized.disconnect();
-    resized.observe(wrap);
   }
   const parts = (answer) => {
     keep(answer);
@@ -624,6 +607,10 @@
     }
     chips();
     strip(document.getElementById('answer'));
+    // The button's section is gone with what it listed: the focus stays
+    // in the dialog, on its filter.
+    const find = e.target.closest('.ptdialog')?.querySelector('.ptfind');
+    if (find) find.focus();
   });
 
   const init = () => {

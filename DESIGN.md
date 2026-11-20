@@ -303,35 +303,39 @@ catalog has for the vehicle, and the candidates of the one pressed.
   Vehicle and Model year that run on through the names. No line runs from a
   blank strip, or past the names' "more" switch. Narrow, the stamp is a line
   of its own above the two words and no line runs to it.
-- **The part types** are the second tape, a wrapping row, each with its
-  count. Each is a link to the page with it pressed (the URL's `part.id`);
-  the pressed one's link presses nothing. Nothing is pressed without the
-  parameter, and a blank strip asks for a press.
+- **The part types** are the second tape, each with its count, on a grid
+  of equal tapes. Each is a link to the page with it pressed (the URL's
+  `part.id`); the pressed one's link presses nothing. Nothing is pressed
+  without the parameter, and a blank strip asks for a press. A name too
+  long for its tape ends in "…" and keeps its count; the link's name is
+  whole, and the dialog shows it whole.
 - **Their order:** the pressed one first, wherever it was, so a part type
   chosen in the dialog is beside its candidates; then, with JavaScript, up
   to two this browser opened recently that the vehicle has, newest first;
   then the rest by name, A to Z. A recent one wears a small upper-case
-  "Recent" stamp of the same tape joined to its leading edge.
-- **Two rows, then "N more".** The strip shows two rows of part types,
-  however many fit them (about nine on a wide page, six at 768 px, four on
-  a phone), and holds a column at their end for "N more", N the count it
-  has no room for. "N more" is a key of metal, as high as the tape beside
-  it, which opens the part types dialog. It holds without a script: each
-  part type carries the count of those after it, drawn in that column at
-  its own row, so the second row's last one's lies on top; the first row's
-  is covered with the ground, the third's and on are clipped, and the last
-  part type's is the ground itself. With JavaScript the part types past the
-  rows are out of the keyboard's reach, and the key is gone when nothing is
-  past them. Without it, a keyboard in the strip shows every row while it
-  is there. A name never wraps on its tape, so every row is one tape high.
-- **The filter**, with JavaScript only, is the page's recessed field,
-  leading the first row, and a line of its own above the two rows under
-  34 rem. Typing narrows the strip by name across every part type, keeping
-  the pressed one, which the rails hang from; "N more" stays only if the
-  matches overflow, and none matching says so in a line.
+  "Recent" stamp of the same tape joined to its leading edge, pressed
+  flush with it.
+- **Two rows, then "N more".** The grid has 5 columns from 64 rem, 4 above
+  46 rem, 3 above 34 rem and 2 on a phone. Two rows of c columns hold 2c
+  tapes: every part type when there are no more, otherwise 2c − 1 and
+  "N more", N the rest, which are not drawn and out of the keyboard's
+  reach. That is 9 and the key at 1280 px, 7 at 768 and 3 on a phone, and
+  N is never 1. "N more" is a key of metal, as high as the tape beside
+  it, which opens the part types dialog; its name says N as it reads
+  ("9 more part types"). The server writes N for each width and the width
+  shows its own, so it holds without a script, reading no position; where
+  every part type fits, the key is not drawn at all.
+- **The filter**, with JavaScript only, is the page's recessed field. It
+  takes the first cell (8 part types and the key at 1280, 6 at 768), and
+  on a phone it is a row of its own above the two. Typing narrows the
+  strip by name across every part type, keeping the pressed one, which the
+  rails hang from; the key counts the matches its rows have no room for,
+  from the cells each width has, and is not drawn when they fit. None
+  matching says so in the row, beside the pressed one, where no rail runs.
 - **Recent part types** are kept in the browser as recent VINs are, the last
   eight, newest first, and nothing is kept when storage fails. The VINs
-  menu's "Clear recent" forgets both; the dialog's forgets part types only.
+  menu's "Clear recent" forgets both; the dialog's forgets part types only
+  and leaves the focus on the dialog's filter.
 - **The part types dialog** is the page's own dialog, opened by "N more": a
   head of metal with "Part types" struck in it and Close, the filter (with
   JavaScript), a line naming the vehicle, the catalog and the part

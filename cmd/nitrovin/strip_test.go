@@ -1,39 +1,60 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"net/http/httptest"
 	"os"
 	"slices"
+	"strings"
 	"testing"
 
+	"github.com/chromedp/cdproto/input"
 	"github.com/chromedp/chromedp"
 )
 
 // stripFixture is a vPIC catalog with eighteen part types for a 2015
-// F-150 and five for a 2014 Silverado, and a part vocabulary of their
-// groups (#324).
+// F-150 and six for a 2014 Silverado, one with a name too long for its
+// tape, and a part vocabulary of their groups (#324).
 var stripFixture = abs("../../testdata/vocab/strip")
 
 const (
 	stripPickup    = "/?from.vin=1FTEW1EG7FFA12345"
 	stripSilverado = "/?from.vin=1GCVKREC6EZ123456"
+	longName       = "Battery Cable, Positive, with Fusible Link and Terminal"
 )
+
+// stripWidth is a window the strip is laid out in, and how many part
+// types its two rows show beside the key, without the script's filter and
+// with it: of 5 columns at 1280, 4 at 768 and 2 at 390, 2c − 1, and a
+// cell fewer for the filter but on a phone, where it is a row of its own.
+type stripWidth struct {
+	width, height int64
+	shown, beside int
+}
+
+var stripWidths = []stripWidth{{1280, 900, 9, 8}, {768, 1024, 7, 6}, {390, 844, 3, 3}}
 
 // TestPartTypeStrip runs the strip of part types (#324) in a browser, on a
 // server that loaded the strip fixture, without JavaScript and with it.
-// At 1280, 768 and 390 the F-150's eighteen part types are two rows and
-// "N more", N the count of those the rows have no room for. "N more"
-// opens the part types dialog; a part type chosen there leads the strip,
-// pressed, and the rails hang from it at every width. Without JavaScript
-// there is no filter and nothing is recent. With it, typing narrows the
-// strip across the part types it had no room for, the pressed one kept;
-// the dialog's own filter narrows the dialog; part types opened lead the
-// strip on the next VIN, stamped Recent, and are listed in the dialog;
-// the dialog's Clear recent forgets them and keeps the VINs, and the VINs
-// menu's forgets both. axe audits each state. CI (CI set) needs the
-// browser; a machine without one skips.
+// At 1280, 768 and 390 the F-150's eighteen part types are two rows of
+// equal tapes and "N more": the part types past them are not drawn and
+// out of the keyboard's reach, and the key is drawn, on top, the next
+// stop after the last part type, its name saying N. Where every part type
+// fits, as the Silverado's do at 1280 and 768, there is no key to see or
+// reach. A name too long for its tape ends in "…" and keeps its count.
+// "N more" opens the part types dialog; a part type chosen there leads the
+// strip, pressed, and the rails hang from it at every width. Without
+// JavaScript there is no filter and nothing is recent. With it, typing
+// narrows the strip across the part types it had no room for, the pressed
+// one kept, and a filter matching nothing says so beside the pressed one,
+// clear of its rails; the dialog's own filter narrows the dialog; part
+// types opened lead the strip on the next VIN, stamped Recent, the stamp
+// flush with a pressed one, and are listed in the dialog; the dialog's
+// Clear recent forgets them, keeps the VINs and keeps the focus in the
+// dialog, and the VINs menu's forgets both. axe audits each state. CI (CI
+// set) needs the browser; a machine without one skips.
 func TestPartTypeStrip(t *testing.T) {
 	path := chromePath()
 	if path == "" {
@@ -44,17 +65,23 @@ func TestPartTypeStrip(t *testing.T) {
 	}
 	srv := httptest.NewServer(vocabServer(t, nil, stripFixture))
 	t.Cleanup(srv.Close)
-	widths := []struct{ width, height int64 }{{1280, 900}, {768, 1024}, {390, 844}}
 	for _, js := range []bool{false, true} {
 		name := map[bool]string{false: "js-off", true: "js-on"}[js]
 		t.Run(name, func(t *testing.T) {
 			tb := newTab(t, path, srv.URL, &requestLog{}, js)
-			for _, w := range widths {
+			for _, w := range stripWidths {
 				tb.window(w.width, w.height)
 				tb.strip(stripPickup)
-				tb.capped(fmt.Sprintf("%s, %d", name, w.width))
+				tb.capped(fmt.Sprintf("%s, %d", name, w.width), w)
+				tb.strip(stripSilverado)
+				if w.width == 390 {
+					tb.capped(fmt.Sprintf("%s, the Silverado, %d", name, w.width), w)
+					tb.longName(fmt.Sprintf("%s, the Silverado, %d", name, w.width))
+				} else {
+					tb.fits(fmt.Sprintf("%s, the Silverado, %d", name, w.width))
+				}
 			}
-			tb.audit(name + ", the capped strip at 390")
+			tb.audit(name + ", the Silverado at 390")
 			tb.window(1280, 900)
 			tb.strip(stripPickup)
 			tb.audit(name + ", the capped strip at 1280")
@@ -72,10 +99,10 @@ func TestPartTypeStrip(t *testing.T) {
 			if n := tb.count("#part-types:popover-open"); n != 0 {
 				t.Errorf("chosen in the dialog, the dialog is still open")
 			}
-			for _, w := range widths {
+			for _, w := range stripWidths {
 				tb.window(w.width, w.height)
 				tb.strip(stripPickup + "&part.id=water-pump")
-				tb.capped(fmt.Sprintf("%s, Water Pump pressed, %d", name, w.width))
+				tb.capped(fmt.Sprintf("%s, Water Pump pressed, %d", name, w.width), w)
 				tb.hangs(fmt.Sprintf("%s, Water Pump pressed, %d", name, w.width))
 			}
 			tb.window(1280, 900)
@@ -91,30 +118,48 @@ func TestPartTypeStrip(t *testing.T) {
 			// The filter narrows the strip across every part type, the
 			// pressed one kept: Wiper Motor is past the two rows.
 			tb.strip(stripPickup + "&part.id=water-pump")
-			if !eval[bool](tb, `document.querySelector('.ptypes > li[data-part="wiper-motor"]').classList.contains('over')`) {
+			if eval[bool](tb, `document.querySelector('.ptypes > li[data-part="wiper-motor"]').getClientRects().length > 0`) {
 				t.Errorf("Wiper Motor is in the two rows; want it past them")
 			}
 			tb.do(chromedp.SendKeys("#ptf-strip", "wip"))
-			if got := shown(tb, ".ptypes > li[data-part]"); !slices.Equal(got, []string{"water-pump", "wiper-motor"}) {
+			if got := drawn(tb, ".ptypes > li[data-part]"); !slices.Equal(got, []string{"water-pump", "wiper-motor"}) {
 				t.Errorf("filtered by wip, the strip shows %q; want water-pump (pressed) and wiper-motor", got)
 			}
-			if eval[bool](tb, `!document.getElementById('more-types').hidden`) {
+			if eval[bool](tb, `document.getElementById('more-types').getClientRects().length > 0`) {
 				t.Errorf("filtered to two, the strip still has its key")
 			}
 			tb.audit("js-on, the strip filtered")
+			typeIn(tb, "#ptf-strip", "")
+			tb.capped("js-on, the filter emptied", stripWidths[0])
+
+			// Matching nothing, at 390, the strip says so beside the
+			// pressed part type, where no rail runs.
+			tb.window(390, 844)
 			typeIn(tb, "#ptf-strip", "zz")
-			if got := eval[string](tb, `document.querySelector('.ptwrap + .ptnone:not([hidden])')?.textContent ?? ''`); got != "No part type’s name has “zz”." {
+			if got := eval[string](tb, `document.querySelector('.ptypes > .ptnone:not([hidden])')?.textContent ?? ''`); got != "No part type’s name has “zz”." {
 				t.Errorf("filtered by zz, the strip says %q", got)
 			}
+			if eval[bool](tb, `(() => {
+				const fit = document.getElementById('fit').getBoundingClientRect();
+				const m = document.querySelector('.ptypes > .ptnone').getBoundingClientRect();
+				return [':before', ':after'].some((p) => {
+					const r = getComputedStyle(document.querySelector('.risers'), p);
+					const left = fit.left + parseFloat(r.left), top = fit.top + parseFloat(r.top), bottom = fit.bottom - parseFloat(r.bottom);
+					return left < m.right && left + 5 > m.left && top < m.bottom && bottom > m.top;
+				});
+			})()`) {
+				t.Errorf("filtered by zz at 390, a rail runs through the line saying so")
+			}
+			tb.hangs("js-on, filtered by zz, 390")
 			typeIn(tb, "#ptf-strip", "")
-			tb.capped("js-on, the filter emptied")
+			tb.window(1280, 900)
 
 			// The dialog's filter narrows the dialog, and the headings
 			// left with nothing go.
 			tb.do(chromedp.Click(chromedp.CSS("#more-types")))
 			tb.wait("#part-types:popover-open")
 			typeIn(tb, "#ptf-dialog", "lamp")
-			if got := shown(tb, ".ptgroups .ptlist > li"); !slices.Equal(got, []string{"headlamp", "fog-lamp", "headlamp", "tail-lamp"}) {
+			if got := drawn(tb, ".ptgroups .ptlist > li"); !slices.Equal(got, []string{"headlamp", "fog-lamp", "headlamp", "tail-lamp"}) {
 				t.Errorf("the dialog filtered by lamp shows %q", got)
 			}
 			if got := eval[[]string](tb, `[...document.querySelectorAll('.ptgroups .ptgroup:not([hidden]) h3')].map(h => h.textContent)`); !slices.Equal(got, []string{"Electrical", "Lighting"}) {
@@ -133,34 +178,39 @@ func TestPartTypeStrip(t *testing.T) {
 				tb.do(chromedp.Click(chromedp.CSS(`#part-types .ptgroups a.ptype[href$="part.id=` + part + `"]`)))
 				tb.wait(`#answer[data-part="` + part + `"] .cand`)
 			}
+			// Pressed, a recent part type's stamp is flush with it.
+			if got := eval[string](tb, `getComputedStyle(document.querySelector('.ptypes > li:has(.ptype[aria-current]) > .rstamp')).transform`); got != "matrix(1, 0, 0, 1, 0, 2)" {
+				t.Errorf("the pressed part type's Recent stamp is at %s; want 2px down, flush", got)
+			}
 			tb.strip(stripSilverado)
-			want := []string{"water-pump", "starter", "alternator", "battery", "radiator"}
+			want := []string{"water-pump", "starter", "alternator", "battery", "battery-cable", "radiator"}
 			if got := eval[[]string](tb, `[...document.querySelectorAll('.ptypes > li[data-part]')].map(li => li.dataset.part)`); !slices.Equal(got, want) {
 				t.Errorf("the next VIN's strip %q; want %q", got, want)
 			}
 			if got := eval[[]string](tb, `[...document.querySelectorAll('.ptypes > li:has(> .rstamp)')].map(li => li.dataset.part)`); !slices.Equal(got, want[:2]) {
 				t.Errorf("the next VIN's Recent stamps are on %q; want %q", got, want[:2])
 			}
-			// The Silverado's five fit in its two rows: it has no key.
-			if n := tb.count("#more-types:not([hidden])"); n != 0 {
-				t.Errorf("the Silverado's strip has a key with nothing past its rows")
-			}
+			tb.fits("js-on, the next VIN")
 			tb.strip(stripPickup)
 			tb.do(chromedp.Click(chromedp.CSS("#more-types")))
 			tb.wait("#part-types:popover-open")
-			if got := shown(tb, ".ptrecent .ptlist > li"); !slices.Equal(got, []string{"water-pump", "starter", "battery"}) {
+			if got := drawn(tb, ".ptrecent .ptlist > li"); !slices.Equal(got, []string{"water-pump", "starter", "battery"}) {
 				t.Errorf("the next VIN's dialog lists %q as opened recently", got)
 			}
 			tb.audit("js-on, the next VIN's dialog, opened recently")
 
-			// The dialog's Clear recent forgets the part types and keeps
-			// the VINs; the VINs menu's forgets both.
+			// The dialog's Clear recent forgets the part types, keeps the
+			// VINs, and keeps the focus in the dialog; the VINs menu's
+			// forgets both.
 			tb.do(chromedp.Click(chromedp.CSS(".ptrecent .clear-parts")))
 			if n := tb.count(".rstamp, .ptrecent:not([hidden])"); n != 0 || eval[bool](tb, `localStorage.getItem('nitrovin.recent-parts') !== null`) {
 				t.Errorf("cleared in the dialog, %d Recent stamps or recent lists show", n)
 			}
 			if eval[bool](tb, `localStorage.getItem('nitrovin.recent') === null`) {
 				t.Errorf("cleared in the dialog, the recent VINs are gone too")
+			}
+			if got := eval[string](tb, `document.activeElement.id`); got != "ptf-dialog" {
+				t.Errorf("cleared in the dialog, the focus is on %q; want the dialog's filter", got)
 			}
 			tb.do(chromedp.Click(chromedp.CSS("#part-types .dialog-head button")))
 			tb.wait("#part-types:not(:popover-open)")
@@ -194,36 +244,107 @@ func (tb *tab) strip(target string) {
 	}
 }
 
-// capped checks the strip shows two rows of part types and its key says
-// how many it has no room for: the count the last of them shows, which
-// lies on top of the others'. With the script, the ones it has no room
-// for are out of the keyboard's reach, and the key is named with their
-// count.
-func (tb *tab) capped(step string) {
+// laidStrip is the strip as a visitor has it: the part types drawn, of
+// all of them; the rows the part types and the key are drawn in; whether
+// the key is drawn, the element at its centre is the key, its one label
+// shown and every other part type is not drawn; and where Tab goes from
+// the last part type drawn.
+type laidStrip struct {
+	Drawn, Total, Rows int
+	Key, OnTop         bool
+	Label, Stray, Next string
+}
+
+// layStrip reads the strip as it is drawn, then presses Tab from its last
+// part type drawn as a keyboard does.
+func (tb *tab) layStrip() laidStrip {
 	tb.t.Helper()
-	type strip struct {
-		Rows, Shown, Total, Over int
-		Count, Key               string
-	}
-	got := measure[strip](tb, `(() => {
-		const wrap = document.querySelector('.ptwrap');
-		const items = [...wrap.querySelectorAll('.ptypes > li[data-part]')].filter((li) => !li.hidden);
-		const bottom = wrap.getBoundingClientRect().bottom;
-		const shown = items.filter((li) => li.getBoundingClientRect().top < bottom);
+	got := measure[laidStrip](tb, `(() => {
+		const items = [...document.querySelectorAll('.ptypes > li[data-part]')];
+		const drawn = items.filter((li) => li.getClientRects().length > 0);
 		const key = document.getElementById('more-types');
+		const keyDrawn = key.getClientRects().length > 0;
+		const tops = drawn.map((li) => li.getBoundingClientRect().top);
+		let onTop = false;
+		if (keyDrawn) {
+			const r = key.getBoundingClientRect();
+			tops.push(r.top);
+			key.scrollIntoView({block: 'center'});
+			const k = key.getBoundingClientRect();
+			onTop = key.contains(document.elementFromPoint((k.left + k.right) / 2, (k.top + k.bottom) / 2));
+		}
+		const labels = [...key.querySelectorAll('.kn')].filter((s) => s.getClientRects().length > 0);
+		const stray = items.filter((li) => !drawn.includes(li) && getComputedStyle(li).display !== 'none').map((li) => li.dataset.part).join(' ');
+		drawn.at(-1).querySelector('.ptype').focus();
 		return {
-			Rows: new Set(shown.map((li) => Math.round(li.getBoundingClientRect().top))).size,
-			Shown: shown.length, Total: items.length,
-			Over: wrap.querySelectorAll('.ptypes > li.over').length,
-			Count: shown.at(-1).querySelector('.ptmore').textContent,
-			Key: key.hidden ? '' : key.getAttribute('aria-label') || '',
+			Drawn: drawn.length, Total: items.length,
+			Rows: new Set(tops.map((t) => Math.round(t))).size,
+			Key: keyDrawn, OnTop: onTop,
+			Label: labels.length === 1 ? labels[0].textContent : labels.length + ' labels',
+			Stray: stray,
 		};
 	})()`)
-	if got.Rows != 2 || got.Shown >= got.Total || got.Count != fmt.Sprintf("%d more", got.Total-got.Shown) {
-		tb.t.Errorf("%s: %d rows, %d of %d shown, the key reads %q; want 2 rows and the rest more", step, got.Rows, got.Shown, got.Total, got.Count)
+	tb.call(func(ctx context.Context) error {
+		key := input.DispatchKeyEventParams{Type: input.DispatchKeyEventTypeKeyDown, Key: "Tab", Code: "Tab", WindowsVirtualKeyCode: 9}
+		if _, err := chromedp.Call(ctx, input.DispatchKeyEvent, key); err != nil {
+			return err
+		}
+		key.Type = input.DispatchKeyEventTypeKeyUp
+		_, err := chromedp.Call(ctx, input.DispatchKeyEvent, key)
+		return err
+	})
+	got.Next = measure[string](tb, `document.activeElement.id || document.activeElement.closest('li')?.dataset.part || document.activeElement.tagName`)
+	return got
+}
+
+// capped checks the strip at w shows two rows: w's part types and the key
+// on top, the next stop after them, its one label "N more part types",
+// N the rest, which are not drawn.
+func (tb *tab) capped(step string, w stripWidth) {
+	tb.t.Helper()
+	want := w.shown
+	if tb.js {
+		want = w.beside
 	}
-	if want := fmt.Sprintf("%d more part types", got.Total-got.Shown); tb.js && (got.Over != got.Total-got.Shown || got.Key != want) {
-		tb.t.Errorf("%s: %d out of reach and the key named %q; want %d and %q", step, got.Over, got.Key, got.Total-got.Shown, want)
+	got := tb.layStrip()
+	label := fmt.Sprintf("%d more part types", got.Total-want)
+	if got.Drawn != want || got.Rows != 2 || !got.Key || !got.OnTop || got.Label != label || got.Stray != "" || got.Next != "more-types" {
+		tb.t.Errorf("%s: %d of %d part types drawn in %d rows, the key drawn %t, on top %t, labelled %q, %q drawn past it, Tab goes on to %q; want %d in 2 rows and the key, on top, labelled %q, the next stop",
+			step, got.Drawn, got.Total, got.Rows, got.Key, got.OnTop, got.Label, got.Stray, got.Next, want, label)
+	}
+}
+
+// fits checks a strip whose part types all fit: every one drawn, and no
+// key to see or to reach.
+func (tb *tab) fits(step string) {
+	tb.t.Helper()
+	got := tb.layStrip()
+	if got.Drawn != got.Total || got.Key || got.Next == "more-types" {
+		tb.t.Errorf("%s: %d of %d part types drawn, the key drawn %t, Tab goes on to %q; want all, and no key", step, got.Drawn, got.Total, got.Key, got.Next)
+	}
+}
+
+// longName checks the long-named part type's tape: its name cut with an
+// ellipsis, its count inside the tape, and the link's name whole.
+func (tb *tab) longName(step string) {
+	tb.t.Helper()
+	type tape struct {
+		Cut, Inside bool
+		Overflow    string
+		Name        string
+	}
+	got := measure[tape](tb, `(() => {
+		const a = document.querySelector('.ptypes > li[data-part="battery-cable"] .ptype');
+		const nm = a.querySelector('.nm'), n = a.querySelector('.n');
+		const ar = a.getBoundingClientRect(), nr = n.getBoundingClientRect();
+		return {
+			Cut: nm.scrollWidth > nm.clientWidth, Overflow: getComputedStyle(nm).textOverflow,
+			Inside: a.getClientRects().length > 0 && nr.left >= ar.left && nr.right <= ar.right,
+			Name: a.textContent,
+		};
+	})()`)
+	if !got.Cut || got.Overflow != "ellipsis" || !got.Inside || !strings.HasPrefix(got.Name, longName+" ") {
+		tb.t.Errorf("%s: the long name cut %t with %q, its count inside its tape %t, the link's text %q; want it cut with an ellipsis, the count inside and the name whole", step, got.Cut, got.Overflow, got.Inside, got.Name)
 	}
 }
 
@@ -248,10 +369,10 @@ func (tb *tab) hangs(step string) {
 	}
 }
 
-// shown are the data-part of each element sel matches that is not hidden.
-func shown(tb *tab, sel string) []string {
+// drawn are the data-part of each element sel matches that is drawn.
+func drawn(tb *tab, sel string) []string {
 	tb.t.Helper()
-	return eval[[]string](tb, `[...document.querySelectorAll(`+jsString(sel)+`)].filter((li) => !li.hidden).map((li) => li.dataset.part)`)
+	return eval[[]string](tb, `[...document.querySelectorAll(`+jsString(sel)+`)].filter((li) => li.getClientRects().length > 0).map((li) => li.dataset.part)`)
 }
 
 // typeIn puts text in the field sel matches, as a paste or an autofill

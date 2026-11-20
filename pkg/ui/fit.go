@@ -64,9 +64,11 @@ type fitCard struct {
 	Model, Year string
 	// Types are the vehicle's part types: the pressed one first, then
 	// the rest by name (#324). Spine is the catalog's spine, which names
-	// them, and which plate.js keeps recent part types by.
+	// them, and which plate.js keeps recent part types by. Keys are
+	// "N more" at each of the strip's widths (stripKeys).
 	Types []partTypeLink
 	Spine string
+	Keys  []stripKey
 	// Groups are the part types dialog's: under each heading, an entry of
 	// GroupedBy, the part vocabulary the headings come from, the part
 	// types it maps to, then "Other"; without one, a group with no
@@ -108,13 +110,43 @@ type wayOn struct {
 
 // partTypeLink is a part type of the strip or the dialog: its spine id,
 // its name and count, and the page with it pressed, or, for the pressed
-// one, with none. More, in the strip, is how many part types follow it:
-// the "N more" its row shows when it is the last the strip has room for.
+// one, with none.
 type partTypeLink struct {
 	ID, Name, Href string
 	Count          int
 	Pressed        bool
-	More           int
+}
+
+// stripColumns are the strip's columns at each of its widths, widest
+// first, as ui.css lays them: 5 from 64rem, 4 above 46rem, 3 above 34rem,
+// and 2 on a phone. A filter, with a script, takes a cell in the first
+// row but on a phone, where it is a row of its own.
+var stripColumns = []int{5, 4, 3, 2}
+
+// stripKey is "N more" at one width: Cols the strip's columns there, N
+// the part types its two rows have no room for, and Slots the cells two
+// rows have for part types and the key beside the script's filter, which
+// plate.js counts its own N by.
+type stripKey struct {
+	Cols, N, Slots int
+}
+
+// stripKeys are "N more" at each width for n part types. Two rows of c
+// columns hold 2c tapes: n part types when n is no more, otherwise
+// 2c − 1 and the key, so N is never 1.
+func stripKeys(n int) []stripKey {
+	var keys []stripKey
+	for _, c := range stripColumns {
+		k := stripKey{Cols: c, Slots: 2 * c}
+		if n > k.Slots {
+			k.N = n - (k.Slots - 1)
+		}
+		if c > 2 {
+			k.Slots--
+		}
+		keys = append(keys, k)
+	}
+	return keys
 }
 
 // partGroup is one heading of the part types dialog and its part types,
@@ -279,7 +311,7 @@ func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecod
 	}
 	// The strip leads with the pressed part type, so a part type pressed
 	// from the dialog is in sight beside its candidates, whatever the
-	// strip has room for; each says how many follow it.
+	// strip has room for.
 	c.Spine = fit.Catalog.Spine
 	c.Types = slices.Clone(byName)
 	if i := slices.IndexFunc(c.Types, func(l partTypeLink) bool { return l.Pressed }); i > 0 {
@@ -287,9 +319,7 @@ func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecod
 		copy(c.Types[1:i+1], c.Types[:i])
 		c.Types[0] = l
 	}
-	for i := range c.Types {
-		c.Types[i].More = len(c.Types) - i - 1
-	}
+	c.Keys = stripKeys(len(c.Types))
 	voc := headingVocabulary(cat, c.Spine, c.filedUnder)
 	if c.Groups, err = h.partGroups(byName, voc); err != nil {
 		return err
