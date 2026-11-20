@@ -102,3 +102,16 @@
   .proto-b .fitstrip .g-vds { grid-column: 2; }
   .proto-b .fitstrip .g-year { grid-column: 3; }
 }
+
+/* B, option 2: the picker is its own piece of tape under the strip, and
+   its list hangs from it at its width. */
+.proto-b .fitstrip { grid-template-rows: none; }
+.proto-B .pbpick { position: relative; z-index: 4; width: min(24rem, 100%); }
+.proto-B .pbtape { display: flex; align-items: stretch; padding: 5px 6px; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-radius: 2px; box-shadow: var(--lift-stuck); }
+.proto-B .pbtape .pfield { flex: 1; }
+.proto-B .pbtape .pclear { min-width: 40px; font-size: 18px; }
+.proto-B .pbpick .pbpanel { position: absolute; left: 0; right: 0; top: calc(100% + 6px); margin: 0; }
+.proto-B .pbpick .pbpanel.inflow { position: static; margin-top: 6px; }
+.proto-B .pbpanel .pcols { columns: 1; margin-top: 0; }
+.proto-B .pbpanel .pfind { width: 100%; margin-bottom: .6rem; }
+.proto-B .pbrecent { margin-top: 10px; }

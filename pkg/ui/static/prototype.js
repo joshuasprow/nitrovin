@@ -12,7 +12,7 @@
 //   C  Rail: one row that scrolls sideways, in the catalog's order
 //   D  Index: an always-open list under the part vocabulary's headings
 (() => {
-  const VARIANTS = [['0', 'The page as it is'], ['A', 'Chips, fixed order'], ['B', 'One line: strip + field'], ['C', 'Sideways rail'], ['D', 'Index']];
+  const VARIANTS = [['0', 'The page as it is'], ['A', 'Chips, fixed order'], ['B', 'Picker under the strip'], ['C', 'Sideways rail'], ['D', 'Index']];
   const q = new URLSearchParams(location.search);
   let variant = q.get('variant') || sessionStorage.getItem('proto-variant') || 'A';
   let filter = '';
@@ -92,36 +92,38 @@
       }
       host.append(bar);
     },
-    // B: the "Parts that fit" strip's own first cell is the field. The
-    // strip names the catalog, the part type, the model and the year in
-    // one line; the list opens under the whole strip.
-    B(host, types, redraw, fit) {
+    // B: the "Parts that fit" strip stays as the page has it, the model
+    // and the year under the names' lines. The picker is its own piece of
+    // tape under it, no wider than 24rem, and its list is a dropdown that
+    // hangs from it at its width.
+    B(host, types, redraw) {
       const on = types.find((t) => t.pressed);
       const isOpen = open == null ? !on : open;
-      const strip = fit.querySelector('.fitstrip'), stamp = strip.querySelector('.stamp');
-      strip.querySelectorAll('.pbcell').forEach((e) => e.remove());
-      stamp.classList.add('proto-off');
-      const cell = el('div', 'pbcell');
-      const field = el('button', 'pfield');
-      field.type = 'button'; field.setAttribute('aria-expanded', String(isOpen));
-      field.append(el('span', 'plab', stamp.textContent), el('span', 'pval', on ? on.name : 'Choose a part type'), el('span', 'pcount', String(on ? on.n : types.length)), el('span', 'pchev', isOpen ? '▴' : '▾'));
-      field.addEventListener('click', () => { open = !isOpen; redraw(); });
-      cell.append(field);
-      if (on) cell.append(clearKey(on));
-      stamp.after(cell);
       // Where the lines to the candidates leave from: between the model
       // and the year, under the strip.
       host.append(el('span', 'panchor pp'));
+      const pick = el('div', 'pbpick'), tape = el('div', 'pbtape');
+      const field = el('button', 'pfield');
+      field.type = 'button'; field.setAttribute('aria-expanded', String(isOpen));
+      field.append(el('span', 'plab', 'Part type'), el('span', 'pval', on ? on.name : 'Choose a part type'), el('span', 'pcount', String(on ? on.n : types.length)), el('span', 'pchev', isOpen ? '▴' : '▾'));
+      field.addEventListener('click', () => { open = !isOpen; redraw(); });
+      tape.append(field);
+      if (on) tape.append(clearKey(on));
+      pick.append(tape);
+      if (isOpen) {
+        // Over the candidates when a part type is pressed; in the page's
+        // flow when none is, where there is nothing under it to cover.
+        const panel = el('div', 'pbpanel' + (on ? '' : ' inflow'));
+        if (types.length > 6) panel.append(find(host, redraw));
+        panel.append(grouped(types, 'pcols'));
+        pick.append(panel);
+      }
+      host.append(pick);
       const rec = recent().map((id) => types.find((t) => t.id === id && !t.pressed)).filter(Boolean).slice(0, 3);
       if (rec.length && !isOpen) {
         const r = el('div', 'pbrecent'); r.append(el('span', 'plab', 'Recent'));
         for (const t of rec) r.append(item(t, 'pc'));
         host.append(r);
-      }
-      if (isOpen) {
-        const panel = el('div', 'pbpanel');
-        panel.append(find(host, redraw), grouped(types, 'pcols'));
-        host.append(panel);
       }
     },
     C(host, types, redraw) {
