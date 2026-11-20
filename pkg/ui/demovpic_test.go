@@ -106,13 +106,13 @@ func TestPageDemoVPIC(t *testing.T) {
 		tags   []string
 	}{
 		{pickup + "&part.id=alternator", []string{
-			"DEMO-V1001 | text: Catalog text only", "DEMO-V1002 | text: Catalog text only", "DEMO-V1003 | text: Catalog text only"}},
+			"DEMO-V1001 | text: Match the options yourself", "DEMO-V1002 | text: Match the options yourself", "DEMO-V1003 | text: Match the options yourself"}},
 		// The qualified applications: the 4WD rotor by the decode's drive
 		// type; the Silverado's by its series, through the redirect.
 		{pickup + "&part.id=brake-rotor-front", []string{"DEMO-V1102 | checked: Checked · Drive Type"}},
 		{"/?from.vin=1GCVKREC6EZ123456&part.id=brake-rotor-rear", []string{"DEMO-V2101 | checked: Checked · Series | redirect: By redirect · Brake Rotor, Front"}},
 		// A make's application: every Toyota of its years.
-		{"/?from.vin=4T1B11HK7JU512345&part.id=starter", []string{"DEMO-V5501 | text: Catalog text only"}},
+		{"/?from.vin=4T1B11HK7JU512345&part.id=starter", []string{"DEMO-V5501 | text: Match the options yourself"}},
 	} {
 		if got := tags(fitSection(t, h, c.target)); !slices.Equal(got, c.tags) {
 			t.Errorf("%s: candidates %q; want %q", c.target, got, c.tags)

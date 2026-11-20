@@ -46,6 +46,10 @@ func TestPartTypePicker(t *testing.T) {
 	// picker is what the picker reads: its name, its count and what it
 	// counts.
 	const picker = `[document.querySelector("#pick-type .nm").textContent, document.querySelector("#pick-type .n").textContent]`
+	// still answers once the page has stopped scrolling: a press scrolls
+	// what it opened into the window (plate.js's reveal), smoothly, and the
+	// picker's list, hung from the picker, moves with it under a click.
+	const still = `(async () => { for (let y = -1, n = 0; n < 3; n = scrollY === y ? n + 1 : 0, y = scrollY) await new Promise((r) => setTimeout(r, 60)); return true; })()`
 	for _, size := range []struct {
 		name          string
 		width, height int64
@@ -54,6 +58,11 @@ func TestPartTypePicker(t *testing.T) {
 			name := size.name + map[bool]string{false: ", js-off", true: ", js-on"}[js]
 			t.Run(name, func(t *testing.T) {
 				tb := newTab(t, path, srv.URL, &requestLog{}, js)
+				settle := func() {
+					if js {
+						eval[bool](tb, still)
+					}
+				}
 				tb.window(size.width, size.height)
 				tb.do(chromedp.Navigate(srv.URL + pickup))
 				tb.wait(`#pick-type`)
@@ -71,6 +80,7 @@ func TestPartTypePicker(t *testing.T) {
 
 				// The list, opened: every part type, and where the browser
 				// can hang it, under the picker at its width, in the window.
+				settle()
 				tb.do(chromedp.Click(chromedp.CSS(`#pick-type`)))
 				tb.wait(`#part-types:popover-open`)
 				if n := tb.count(`#part-types .ptgroups li[data-part]`); n != 19 {
@@ -125,6 +135,7 @@ func TestPartTypePicker(t *testing.T) {
 				tb.audit(name + ", Water Pump pressed")
 
 				// Pressed again in the list, it stays pressed.
+				settle()
 				tb.do(chromedp.Click(chromedp.CSS(`#pick-type`)))
 				tb.wait(`#part-types:popover-open`)
 				tb.do(chromedp.Click(chromedp.CSS(`#part-types .ptgroups a.ptype[aria-current="true"]`)))
@@ -136,6 +147,7 @@ func TestPartTypePicker(t *testing.T) {
 
 				// Fog Lamp chosen: with scripts, Water Pump sits under the
 				// picker, and pressing it there presses it.
+				settle()
 				tb.do(chromedp.Click(chromedp.CSS(`#pick-type`)))
 				tb.wait(`#part-types:popover-open`)
 				tb.do(chromedp.Click(chromedp.CSS(`#part-types .ptgroups li[data-part="fog-lamp"] a.ptype`)))
@@ -148,6 +160,7 @@ func TestPartTypePicker(t *testing.T) {
 						t.Errorf("Fog Lamp pressed, under the picker: %q; want Water Pump alone", got)
 					}
 					tb.audit(name + ", a recent part type under the picker")
+					settle()
 					tb.do(chromedp.Click(chromedp.CSS(`.ptrecents li[data-part="water-pump"] a.ptype`)))
 					tb.wait(`#answer[data-part="water-pump"] .ptrecents li[data-part="fog-lamp"]`)
 					if got := tb.at(); got != pump {
@@ -158,6 +171,7 @@ func TestPartTypePicker(t *testing.T) {
 				}
 
 				// The key beside the picker clears it.
+				settle()
 				tb.do(chromedp.Click(chromedp.CSS(`#clear-type`)))
 				tb.wait(`#answer:not([data-part]) #pick-type`)
 				if got := tb.at(); got != pickup {

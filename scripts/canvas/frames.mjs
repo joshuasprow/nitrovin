@@ -65,7 +65,7 @@ export const frames = [
     heading: 'The fitment card',
     intro: 'The parts that fit: a strip naming the catalog\'s vehicle, a picker of its part types, and the candidates as manila tags on rails that come down from the picker. A candidate\'s stock strip opens its shelf and yard rows.',
     items: [
-      { vp: 'wide', url: vin(F150, '&part.id=alternator&fitment.number=DEMO-1001'), keep: ['#answer > .hang > .aka', '#fit'], cap: 'Picker, candidates, marks and stock', note: 'Alternator pressed: the picker names it and counts its candidates, and × beside it clears. The first candidate\'s stock is open under its row.' },
+      { vp: 'wide', url: vin(F150, '&part.id=alternator&fitment.number=DEMO-1001'), keep: ['#answer > .hang > .aka', '#fit'], cap: 'Picker, candidates, marks and stock', note: 'Alternator pressed: the picker names it and counts its candidates, and × beside it clears. Beside it, what the decode says of this vehicle, to match each candidate\'s options against. The first candidate\'s stock is open under its row.' },
       { vp: 'wide', url: vin(F150, '&part.id=alternator'), open: ['#part-types'], keep: ['#answer > .hang > .aka', '#fit'], style: 'padding-bottom: 300px', cap: 'The picker\'s list', note: 'Hung from the picker at its width, over the candidates: every part type under the part vocabulary\'s headings, in an order that never changes. The pressed one is flush; pressing it again changes nothing.' },
       { vp: 'wide', url: vin(SILV, '&part.id=brake-rotor-rear'), keep: ['#answer > .hang > .aka', '#fit'], cap: 'By redirect', note: 'One tag: the rails run from the riser to its eyelet. The mark names the part type the catalog lists it under.' },
       { row: [

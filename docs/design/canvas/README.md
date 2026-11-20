@@ -44,15 +44,16 @@ A second page, "Proposals", appears when something is drawn before it is
 built. Its frames are not `scripts/canvas.sh`'s: each is captured the same
 way from a prototype running on a throwaway branch, which its row's title
 names by issue. When the proposal is built its frames are folded into the
-six and the page goes. None is open now: the part type picker of #366 was
-the first, and this folder's history holds its frames.
+six and the page goes. The part type picker of #366 was the first, and this folder's
+history holds its frames. A second page with one empty artboard,
+`Artboard-vknl`, is on the canvas now.
 
 The wireframes and texture frames that proposed the fitment slices (#320 to
 #325) are removed from the canvas. This folder's history holds them.
 
 ## This snapshot
 
-Canvas version `1795210908-ce3e`, published on 2026-11-20.
+Canvas version `1795215304-539a`, published on 2026-11-20.
 
 ## Rebuilding a canvas from a snapshot
 

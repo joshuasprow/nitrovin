@@ -480,8 +480,10 @@ pressed.
 - **Marks are ink on the tag**, in its ordinary ink: a solid stamp, a little
   askew, with a tick, "Checked" and the decoded elements that met the
   catalog's conditions; a dashed stamp with a warning triangle, "Not
-  checked" and what could not be; "Catalog text only" and "No conditions",
-  plain muted words, when nothing was either; and a solid stamp with an
+  checked" and what could not be; "Match the options yourself" and "No
+  conditions", plain muted words, when nothing was either: the first where
+  the catalog gives option text, which the page cannot read and the reader
+  matches against the vehicle; and a solid stamp with an
   arrow, "By redirect" and the part type the catalog lists it under. A model
   year confirmed alone earns no stamp: every candidate's years held.
 - **Weakest wins.** Each of a candidate's applications earns its own marks,
@@ -489,8 +491,19 @@ pressed.
   it never claims more than the weakest way the candidate fits: an
   application checked by Drive Type beside one with no condition reads "No
   conditions" and "Checked · Drive Type", never Checked alone. The weaker
-  come first: Not checked, Catalog text only, No conditions, then Checked,
+  come first: Not checked, Match the options yourself, No conditions, then
+  Checked,
   then By redirect.
+- **This vehicle**, beside the picker, where a candidate on the page has
+  option text: what the decode says of the vehicle that a catalog's
+  options name, so the match is a glance and the reader never counts along
+  the plate. After the words "This vehicle" in the label face, the Vehicle
+  card's rows but the model, a small label over each value as on a card,
+  then "VIN 4–8": the Vehicle group's five characters in the cell face,
+  each over an underline in the group's colour, as on the plate, with its
+  position under it. It is ink on the ground, not a control. The page
+  puts the two side by side and judges nothing: it marks no candidate as
+  the match. Under 46 rem it is a row of its own under the picker.
 - **More candidates** than a page holds (30) are a "Next page" link away.
 - **The stock strip** is the bottom edge of every tag, and the only part of
   it that presses: the second tape, "Stock · 2 shelf · 2 yard", naming only

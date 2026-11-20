@@ -179,7 +179,7 @@ func TestPageFit(t *testing.T) {
 		on      *Handler // nil: the demo set's pages
 	}{
 		{pickup + "&part.id=alternator", "*Alternator 3", []string{
-			"DEMO-1001 | text: Catalog text only", "DEMO-1002 | text: Catalog text only", "DEMO-1003 | text: Catalog text only"}, nil},
+			"DEMO-1001 | text: Match the options yourself", "DEMO-1002 | text: Match the options yourself", "DEMO-1003 | text: Match the options yourself"}, nil},
 		{pickup + "&part.id=brake-rotor-front", "*Brake Rotor, Front 1", []string{"DEMO-1102 | checked: Checked · Drive Type"}, nil},
 		{pickup + "&part.id=brake-rotor-rear", "*Brake Rotor, Rear 1", []string{"DEMO-1111 | none: No conditions"}, nil},
 		// The CR-V's decode has no drive type to check an AWD fitment by.
@@ -191,7 +191,7 @@ func TestPageFit(t *testing.T) {
 		// year a doubt before the drive type's check.
 		{"/?from.vin=1FTEW1EG&part.id=brake-rotor-front", "*Brake Rotor, Front 1", []string{"DEMO-1102 | unchecked: Not checked · Model year | checked: Checked · Drive Type"}, nil},
 		{"/?from.vin=1D7RV1GT5AS123456&part.id=mirror", "*Door Mirror 2", []string{
-			"MR-1001 | text: Catalog text only | checked: Checked · Drive Type", "MR-1001 | text: Catalog text only"}, fixture},
+			"MR-1001 | text: Match the options yourself | checked: Checked · Drive Type", "MR-1001 | text: Match the options yourself"}, fixture},
 	} {
 		on := h
 		if c.on != nil {
@@ -247,7 +247,7 @@ func TestPageFit(t *testing.T) {
 		t.Fatalf("the first page of alternators: %q\n%s", got, s)
 	}
 	s = fitSection(t, paged, html.UnescapeString(next[1]))
-	if got := tags(s); !slices.Equal(got, []string{"DEMO-1003 | text: Catalog text only"}) || strings.Contains(s, "more-cands") {
+	if got := tags(s); !slices.Equal(got, []string{"DEMO-1003 | text: Match the options yourself"}) || strings.Contains(s, "more-cands") {
 		t.Errorf("the next page of alternators: %q\n%s", got, s)
 	}
 
@@ -392,6 +392,43 @@ func TestCatalogEntries(t *testing.T) {
 		slices.Sort(got)
 		if slices.Sort(want); !slices.Equal(got, want) {
 			t.Errorf("%s: %d pages of\n%s\nwant\n%s", c.query, pages, strings.Join(got, "\n"), strings.Join(want, "\n"))
+		}
+	}
+}
+
+// TestPageFitFacts: what the page shows of the vehicle beside candidates
+// whose option text it cannot check (#366). Over the candidates it draws
+// what the decode says of the vehicle that a catalog's options name, the
+// Vehicle card's rows but the model, and the VIN's characters 4 to 8,
+// each with its position, so "VIN G, 8th digit" is matched at a glance.
+// The mark on such a candidate says in plain words that the options are
+// the reader's to match. Nothing is drawn with no part type pressed, or
+// over candidates with no option text.
+func TestPageFitFacts(t *testing.T) {
+	h := demoPages(t, true)
+	const pickup = "/?from.vin=1FTEW1EG7FFA12345"
+	s := fitSection(t, h, pickup+"&part.id=alternator")
+	for _, want := range []string{
+		`<dl class="vfacts" aria-label="This vehicle, to match the options against">`,
+		`<div><dt>Body</dt><dd>Pickup</dd></div>`,
+		`<div><dt>Engine</dt><dd>3.5 L · 6 cyl · Gasoline</dd></div>`,
+		`<div class="vchars"><dt>VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>`,
+		`<span class="mk text">Match the options yourself</span>`,
+	} {
+		if !strings.Contains(s, want) {
+			t.Errorf("the alternators lack %s\n%s", want, s)
+		}
+	}
+	if strings.Contains(s, "Catalog text only") || strings.Contains(s, `<dt>Model</dt>`) {
+		t.Errorf("the alternators keep the old mark, or repeat the model the strip names\n%s", s)
+	}
+	if i, j := strings.Index(s, `class="vfacts"`), strings.Index(s, `<ol class="cands"`); i < 0 || j < i {
+		t.Errorf("the vehicle's facts are not over the candidates\n%s", s)
+	}
+	// Nothing pressed, and candidates with no option text: no facts.
+	for _, target := range []string{pickup, "/?from.vin=1GCVKREC6EZ123456&part.id=brake-rotor-rear"} {
+		if s := fitSection(t, h, target); strings.Contains(s, "vfacts") {
+			t.Errorf("%s: draws the vehicle's facts with no option text to match\n%s", target, s)
 		}
 	}
 }
