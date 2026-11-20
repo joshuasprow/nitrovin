@@ -495,16 +495,70 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
    letters struck as the plate's are, in the monospace face and the name's
    own case, its count in a small outlined pill. A control: raised, and the
    pressed one flush (aria-current), as a key is. */
-.ptypes { position: relative; z-index: 3; list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0 0; padding: 0; }
+.ptypes { list-style: none; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px; margin: 0; padding: 0; }
 .ptype { display: inline-flex; align-items: center; gap: 10px; box-sizing: border-box; min-height: 44px; padding: 0 14px; font: 900 14px var(--cell-font); letter-spacing: .06em; text-decoration: none; color: var(--on-metal); text-shadow: var(--emboss);
   background: var(--alu); border: 1px solid var(--steel); border-top-color: #fff; border-bottom-color: var(--steel-dark); border-radius: 2px; box-shadow: var(--raised); }
 .ptype .n { padding: 1px 7px; border: 1px solid rgb(35 41 48 / .55); border-radius: 9px; font-size: 11px; text-shadow: none; }
 .ptype:active, .ptype[aria-current] { transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed); }
-.ptype[aria-current] { anchor-name: --fit-part; }
+.ptypes .ptype[aria-current] { anchor-name: --fit-part; }
+/* Two rows of part types, then "N more" (#324), held without a script.
+   The strip (.ptwrap) clips its list at two rows of tape and keeps a
+   column at their end for the key. Each part type carries the count of
+   those after it (.ptmore), drawn in that column at its own row's
+   height, so each row's last count lies on top there. The first row's is
+   covered with the ground (::before), the third's and on are clipped,
+   and the last part type's count is the ground itself (.none): the
+   second row ends in the count of what the strip has no room for, or in
+   nothing. The key under the counts is the button the counts let a press
+   through to. Without a script, a keyboard in the strip shows every row
+   while it is there, without counts.
+   plate.js hides what the clip hides (.over), and names the key with
+   its count. */
+.ptwrap { --row: 54px; --more-w: 92px; --top: 6px; --pad: 12px; position: relative; z-index: 3; max-height: calc(2 * var(--row) - 10px); margin: 8px calc(-1 * var(--pad)) -10px; padding: var(--top) var(--pad) 10px; overflow: clip; }
+.ptwrap::before { content: ""; position: absolute; z-index: 2; top: 0; right: 0; width: calc(var(--more-w) + var(--pad) + 10px); height: calc(var(--top) + 49px); background: var(--bg); }
+.ptwrap .ptypes { padding-right: calc(var(--more-w) + 10px); }
+.ptypes > li { display: flex; }
+.ptypes > li[hidden] { display: none; }
+.ptypes > li.over { visibility: hidden; }
+.ptwrap .ptype { white-space: nowrap; }
+.ptmore, #more-types { position: absolute; right: var(--pad); box-sizing: border-box; width: var(--more-w); height: 44px; }
+/* A count is the key's face, and casts no shadow: the key under it casts
+   the one, so the stack of counts reads as one key. */
+.ptmore { z-index: 1; display: flex; align-items: center; justify-content: center; pointer-events: none; font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8);
+  background: var(--metal); border: 1px solid var(--steel); border-radius: 3px; box-shadow: inset 0 1px 0 #fff; }
+.ptmore.none { pointer-events: auto; background: var(--bg); border: 0; box-shadow: 0 0 0 8px var(--bg), 0 14px 0 8px var(--bg); }
+#more-types { z-index: 0; top: calc(var(--top) + var(--row)); padding: 0; }
+#more-types[hidden] { display: none; }
+.ptwrap:has(#more-types:active) .ptmore:not(.none), .fit:has(#part-types:popover-open) .ptmore:not(.none) { transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed); }
+.fit:has(#part-types:popover-open) #more-types { --key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed); }
+.ptwrap:not(.live):has(.ptype:focus-visible) { max-height: none; }
+.ptwrap:not(.live):has(.ptype:focus-visible) .ptmore { display: none; }
+/* With a script: the filter, the page's recessed field, leads the first
+   row; recent part types lead the rest, each with a "Recent" stamp of
+   the same tape joined to its leading edge. */
+.ptypes > .ptf { flex: 0 0 230px; }
+.ptfind { width: 100%; min-height: 44px; }
+.rstamp { display: flex; align-items: center; padding: 0 8px; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-metal); text-shadow: var(--emboss);
+  background: var(--alu); border: 1px solid var(--steel); border-top-color: #fff; border-bottom-color: var(--steel-dark); border-right-color: rgb(35 41 48 / .3); border-radius: 2px 0 0 2px; box-shadow: var(--raised); }
+.rstamp + .ptype { border-left: 0; border-radius: 0 2px 2px 0; }
+.ptnone { margin: 14px 0 0; color: var(--muted); }
+/* The part types dialog: the filter, what it lists, the recent part
+   types, then every part type under its vocabulary's headings, two
+   columns of them, in the dialogs' section style with the entry in its
+   own case. */
+.ptdialog .hint { margin: .6rem 0 1rem; font-size: 13px; }
+.ptdialog .ptnone { margin: 0 0 1rem; }
+.ptgroups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem 1.5rem; }
+.ptgroups:has(> .ptgroup:only-child:not(:has(.pthead))) { grid-template-columns: minmax(0, 1fr); }
+.ptrecent { margin-bottom: 1.1rem; }
+.ptgroup[hidden], .ptlist > li[hidden] { display: none; }
+.pthead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 .5rem; margin: 0 0 .6rem; border-bottom: 3px solid var(--c-vds); }
+.pthead h3 { margin: 0; padding: 0 0 3px; border: 0; letter-spacing: .04em; text-transform: none; }
+.ptlist { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0 0 6px; }
 /* An empty place: the page's blank strip, a dashed outline in the faint
    colour with its sentence, and in it a key of metal or a link on. */
 .fit .blank { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; box-sizing: border-box; min-height: 46px; margin: 30px 0 0; padding: .5rem .75rem; color: var(--muted); border: 3px dashed var(--faint); border-radius: 2px; }
-.fit .ptypes ~ .blank { margin-top: 14px; }
+.fit .ptwrap ~ .blank { margin-top: 14px; }
 /* The candidates: manila tags as the cards are (.cand-in, its stock its
    ::before), three to a row, hung on two rails of pinstripe tape, the
    vehicle's and the model year's. The rails come down from the pressed
@@ -771,6 +825,7 @@ button.linkish:active { transform: none; box-shadow: none; }
    labels have no room: their cards name them. */
 @media (max-width: 46rem) {
   body { --gutter: .5rem; }
+  .ptwrap { --pad: 8px; }
   .plate, .labels { --plate-pad: 18px; }
   .under { padding-inline: 18px; }
   .cell { margin: 0 1px; border-bottom-width: 3px; }
@@ -821,6 +876,12 @@ button.linkish:active { transform: none; box-shadow: none; }
   .stock-col th, .stock-col td { padding: 0; border: 0; }
   .stock-col td:last-child { grid-column: 1 / -1; }
   .ptype { font-size: 13px; padding-inline: 10px; }
+  /* The key is narrower, and the filter is a line of its own above the
+     two rows. */
+  .ptwrap { --more-w: 80px; }
+  .ptwrap:has(.ptf:not([hidden])) { --top: 60px; }
+  .ptypes > .ptf { position: absolute; z-index: 3; top: 6px; left: var(--pad); right: var(--pad); }
+  .ptgroups { grid-template-columns: minmax(0, 1fr); }
   .labels, .cells, .under { grid-template-columns: repeat(9, minmax(0, 1fr)); }
   .cells { row-gap: 8px; }
   .cell { font-size: 9cqw; margin: 0 2px; border-bottom-width: 4px; }

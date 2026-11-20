@@ -303,10 +303,50 @@ catalog has for the vehicle, and the candidates of the one pressed.
   Vehicle and Model year that run on through the names. No line runs from a
   blank strip, or past the names' "more" switch. Narrow, the stamp is a line
   of its own above the two words and no line runs to it.
-- **The part types** are the second tape, a wrapping row, by name A to Z,
-  each with its count. Each is a link to the page with it pressed (the URL's
-  `part.id`); the pressed one's link presses nothing. Nothing is pressed
-  without the parameter, and a blank strip asks for a press.
+- **The part types** are the second tape, a wrapping row, each with its
+  count. Each is a link to the page with it pressed (the URL's `part.id`);
+  the pressed one's link presses nothing. Nothing is pressed without the
+  parameter, and a blank strip asks for a press.
+- **Their order:** the pressed one first, wherever it was, so a part type
+  chosen in the dialog is beside its candidates; then, with JavaScript, up
+  to two this browser opened recently that the vehicle has, newest first;
+  then the rest by name, A to Z. A recent one wears a small upper-case
+  "Recent" stamp of the same tape joined to its leading edge.
+- **Two rows, then "N more".** The strip shows two rows of part types,
+  however many fit them (about nine on a wide page, six at 768 px, four on
+  a phone), and holds a column at their end for "N more", N the count it
+  has no room for. "N more" is a key of metal, as high as the tape beside
+  it, which opens the part types dialog. It holds without a script: each
+  part type carries the count of those after it, drawn in that column at
+  its own row, so the second row's last one's lies on top; the first row's
+  is covered with the ground, the third's and on are clipped, and the last
+  part type's is the ground itself. With JavaScript the part types past the
+  rows are out of the keyboard's reach, and the key is gone when nothing is
+  past them. Without it, a keyboard in the strip shows every row while it
+  is there. A name never wraps on its tape, so every row is one tape high.
+- **The filter**, with JavaScript only, is the page's recessed field,
+  leading the first row, and a line of its own above the two rows under
+  34 rem. Typing narrows the strip by name across every part type, keeping
+  the pressed one, which the rails hang from; "N more" stays only if the
+  matches overflow, and none matching says so in a line.
+- **Recent part types** are kept in the browser as recent VINs are, the last
+  eight, newest first, and nothing is kept when storage fails. The VINs
+  menu's "Clear recent" forgets both; the dialog's forgets part types only.
+- **The part types dialog** is the page's own dialog, opened by "N more": a
+  head of metal with "Part types" struck in it and Close, the filter (with
+  JavaScript), a line naming the vehicle, the catalog and the part
+  vocabulary its headings come from, then, with JavaScript, the part types
+  this browser opened recently under "Opened recently" with its Clear
+  recent, then every part type, in two columns of headings (one under
+  34 rem). The headings are the entries of a part vocabulary on the
+  catalog's spine (the one the catalog files its fitments under, else the
+  first loaded), each over the part types it maps to, so a part type two
+  entries map to is under both, and "Other" last over the ones none maps
+  to; an entry mapping to none of the vehicle's has no heading. They are
+  the dialogs' section style in the entry's own case. With no part
+  vocabulary the dialog is one list by name. Its part types are the same
+  tape, the pressed one pressed; choosing one closes the dialog and leads
+  the strip with it.
 - **The candidates** are manila tags, three to a row, one to a row under
   34 rem, in the answer's order. A tag's number is a strip of label tape
   across it under the eyelet, where a card prints its band, with the years at
@@ -434,7 +474,7 @@ script. There are three sizes.
 
 | Kind | Used for | Width | Backdrop |
 | --- | --- | --- | --- |
-| Dialog (`dialog[popover]`) | Vocabularies, Developers, JSON, the check digit's sum | `min(56rem, 100vw - 2rem)` | `rgb(10 18 26 / .55)` |
+| Dialog (`dialog[popover]`) | Vocabularies, Developers, JSON, the check digit's sum, the part types | `min(56rem, 100vw - 2rem)` | `rgb(10 18 26 / .55)` |
 | Note (`.note[popover]`) | How a name on the tape was reached | up to `30rem` | `rgb(10 18 26 / .35)` |
 | Menu (`.menu[popover]`) | The VINs to try | `19rem` | none |
 | Header menu (`nav.top[popover]`) | The header's buttons and the release, at 46 rem and under | `16rem` | none |

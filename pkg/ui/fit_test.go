@@ -63,8 +63,21 @@ func fitSection(t *testing.T, h *Handler, target string) string {
 	if status != 200 || start < 0 {
 		t.Fatalf("GET %s: %d, no parts that fit\n%s", target, status, body)
 	}
-	s := body[start:]
-	return s[:strings.Index(s, "</section>")+len("</section>")]
+	// The section holds the dialog's sections: it ends at the close that
+	// balances its open.
+	depth := 0
+	for i := range len(body) - start {
+		switch s := body[start+i:]; {
+		case strings.HasPrefix(s, "<section"):
+			depth++
+		case strings.HasPrefix(s, "</section>"):
+			if depth--; depth == 0 {
+				return body[start : start+i+len("</section>")]
+			}
+		}
+	}
+	t.Fatalf("GET %s: the parts that fit never end\n%s", target, body)
+	return ""
 }
 
 var (
@@ -73,9 +86,12 @@ var (
 	numberRE   = regexp.MustCompile(`<b class="num">([^<]*)</b>`)
 )
 
-// partTypes are a section's part types: "name count", "*" before the
-// pressed one's name.
+// partTypes are a section's strip's part types: "name count", "*" before
+// the pressed one's name.
 func partTypes(s string) []string {
+	if i := strings.Index(s, `<ul class="ptypes"`); i >= 0 {
+		s = s[i : i+strings.Index(s[i:], "</ul>")]
+	}
 	var out []string
 	for _, m := range partTypeRE.FindAllStringSubmatch(s, -1) {
 		name := html.UnescapeString(m[3]) + " " + m[4]

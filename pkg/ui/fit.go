@@ -14,18 +14,22 @@ import (
 )
 
 // The page's fit card (ADR 0018, #322): under "Also known as", the part
-// types the loaded catalog has for the VIN's vehicle, by name, each with
-// its count of candidates, and the candidates of the one pressed. A part
-// type is pressed by a link to the page with it as the second parameter,
-// part.id, the fit request's own part by its id on the catalog's spine;
-// nothing is pressed without it, and no candidate is asked for. So the
-// card is a URL too, works without a script, and plate.js only swaps the
-// answer in place. A candidate is shown as the catalog has it, its option
-// text verbatim, with marks for what nitrovin did and did not check
-// against the decode (candidateMarks); nothing is chosen for the
-// visitor. Where there is nothing to list, the part types' place says
-// why, and where it can, offers a way on: the Vocabularies dialog, or the
-// catalog's lines (entries).
+// types the loaded catalog has for the VIN's vehicle, every page of them,
+// the pressed one first and the rest by name, each with its count of
+// candidates, and the candidates of the one pressed. The strip shows two
+// rows of them and "N more" (#324), which opens a dialog of all of them
+// under the headings of a part vocabulary (partGroups); plate.js leads
+// the strip with the ones this browser opened recently, and filters it. A
+// part type is pressed by a link to the page with it as the second
+// parameter, part.id, the fit request's own part by its id on the
+// catalog's spine; nothing is pressed without it, and no candidate is
+// asked for. So the card is a URL too, works without a script, and
+// plate.js only swaps the answer in place. A candidate is shown as the
+// catalog has it, its option text verbatim, with marks for what nitrovin
+// did and did not check against the decode (candidateMarks); nothing is
+// chosen for the visitor. Where there is nothing to list, the part types'
+// place says why, and where it can, offers a way on: the Vocabularies
+// dialog, or the catalog's lines (entries).
 //
 // The server's card is its own fit's; the browser's is its own catalog's,
 // over the page's decode, or the server's /v1/fit while the server holds
@@ -58,8 +62,21 @@ type fitCard struct {
 	// Model and Year are what the strip says was asked: the catalog's
 	// vehicle the decode reached, and the year, "any year" without one.
 	Model, Year string
-	// Types are the vehicle's part types, by name.
+	// Types are the vehicle's part types: the pressed one first, then
+	// the rest by name (#324). Spine is the catalog's spine, which names
+	// them, and which plate.js keeps recent part types by.
 	Types []partTypeLink
+	Spine string
+	// Groups are the part types dialog's: under each heading, an entry of
+	// GroupedBy, the part vocabulary the headings come from, the part
+	// types it maps to, then "Other"; without one, a group with no
+	// heading, by name. Vehicle is the vehicle the dialog says it lists.
+	Groups    []partGroup
+	GroupedBy string
+	Vehicle   string
+	// filedUnder is the loaded catalog's filed-under part vocabulary, ""
+	// when it names none.
+	filedUnder string
 	// Pressed is the pressed part type's name, "" with none, and Page
 	// the page's own URL with it pressed.
 	Pressed, Page string
@@ -89,12 +106,22 @@ type wayOn struct {
 	Text, Href string
 }
 
-// partTypeLink is a part type of the strip: its name and count, and the
-// page with it pressed, or, for the pressed one, with none.
+// partTypeLink is a part type of the strip or the dialog: its spine id,
+// its name and count, and the page with it pressed, or, for the pressed
+// one, with none. More, in the strip, is how many part types follow it:
+// the "N more" its row shows when it is the last the strip has room for.
 type partTypeLink struct {
-	Name, Href string
-	Count      int
-	Pressed    bool
+	ID, Name, Href string
+	Count          int
+	Pressed        bool
+	More           int
+}
+
+// partGroup is one heading of the part types dialog and its part types,
+// by name; Heading is "" in a dialog without headings.
+type partGroup struct {
+	Heading string
+	Types   []partTypeLink
 }
 
 // candidateTag is one candidate as its tag shows it.
@@ -153,7 +180,8 @@ func linesHref(catalog string, where url.Values) string {
 
 // idleFit is the card before a model is known: none loaded, or waiting.
 func (h *Handler) idleFit(info contract.Info) fitCard {
-	c := fitCard{Catalog: h.loadedCatalog(info).Name}
+	loaded := h.loadedCatalog(info)
+	c := fitCard{Catalog: loaded.Name, filedUnder: loaded.FiledUnder}
 	if c.Catalog == "" {
 		c.Blank, c.Add = "No catalog loaded.", true
 		return c
@@ -240,13 +268,38 @@ func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecod
 	})
 	names := map[string]string{}
 	pressed := false
+	var byName []partTypeLink
 	for _, t := range types {
 		names[t.Type] = partTypeName(t)
-		l := partTypeLink{Name: partTypeName(t), Count: t.Count, Href: fitHref(d.VIN, t.Type, "")}
+		l := partTypeLink{ID: t.Type, Name: partTypeName(t), Count: t.Count, Href: fitHref(d.VIN, t.Type, "")}
 		if t.Type == part {
 			l.Pressed, l.Href, c.Pressed, pressed = true, vinHref(d.VIN), l.Name, true
 		}
-		c.Types = append(c.Types, l)
+		byName = append(byName, l)
+	}
+	// The strip leads with the pressed part type, so a part type pressed
+	// from the dialog is in sight beside its candidates, whatever the
+	// strip has room for; each says how many follow it.
+	c.Spine = fit.Catalog.Spine
+	c.Types = slices.Clone(byName)
+	if i := slices.IndexFunc(c.Types, func(l partTypeLink) bool { return l.Pressed }); i > 0 {
+		l := c.Types[i]
+		copy(c.Types[1:i+1], c.Types[:i])
+		c.Types[0] = l
+	}
+	for i := range c.Types {
+		c.Types[i].More = len(c.Types) - i - 1
+	}
+	voc := headingVocabulary(cat, c.Spine, c.filedUnder)
+	if c.Groups, err = h.partGroups(byName, voc); err != nil {
+		return err
+	}
+	if voc != nil {
+		c.GroupedBy = voc.Name
+	}
+	c.Vehicle = strings.Join(modelNames(fit.Models, fields, true), " / ")
+	if fit.Vehicle != nil && fit.Vehicle.ModelYear.Valid {
+		c.Vehicle = year + " " + c.Vehicle
 	}
 	switch {
 	case part == "":
@@ -314,6 +367,81 @@ func partTypeName(t contract.FitPartType) string {
 		return t.Name
 	}
 	return t.Type
+}
+
+// headingVocabulary is the part vocabulary the part types dialog's
+// headings come from, of cat, what is loaded: the catalog's filed-under
+// one (filedUnder) when it names one, otherwise the first loaded on the
+// catalog's spine; nil with none.
+func headingVocabulary(cat []contract.CatalogEntry, spine, filedUnder string) *contract.CatalogEntry {
+	onSpine := func(e contract.CatalogEntry) bool {
+		return e.Kind == string(vocab.KindVocabulary) && e.Subject == string(vocab.SubjectPart) && e.Spine == spine
+	}
+	if i := slices.IndexFunc(cat, func(e contract.CatalogEntry) bool { return e.Name == filedUnder && onSpine(e) }); filedUnder != "" && i >= 0 {
+		return &cat[i]
+	}
+	if i := slices.IndexFunc(cat, onSpine); i >= 0 {
+		return &cat[i]
+	}
+	return nil
+}
+
+// partGroups are the part types dialog's groups of types, which are by
+// name: under each entry of voc, in its list order, the types it maps
+// to, then under "Other" the ones no entry maps to. An entry mapping to
+// none of them is no heading. A type two entries map to is under both.
+// Without voc, one group with no heading holds them all.
+func (h *Handler) partGroups(types []partTypeLink, voc *contract.CatalogEntry) ([]partGroup, error) {
+	if voc == nil {
+		return []partGroup{{Types: types}}, nil
+	}
+	var groups []partGroup
+	claimed := map[string]bool{}
+	req := contract.ListRequest{Of: voc.Name, Limit: contract.MaxListLimit}
+	for {
+		l, err := h.p.List(req)
+		if err != nil {
+			return nil, err
+		}
+		for _, e := range l.Entries {
+			entry, ok := e.(contract.VocabularyEntry)
+			if !ok {
+				continue
+			}
+			ids := map[string]bool{}
+			for _, m := range entry.Mappings {
+				ids[m.ID] = true
+			}
+			var words []string
+			for _, f := range voc.Fields {
+				words = append(words, entry.Entry[f])
+			}
+			g := partGroup{Heading: strings.Join(words, " ")}
+			for _, t := range types {
+				if ids[t.ID] {
+					g.Types = append(g.Types, t)
+					claimed[t.ID] = true
+				}
+			}
+			if len(g.Types) > 0 {
+				groups = append(groups, g)
+			}
+		}
+		if l.Next == "" {
+			break
+		}
+		req.After = l.Next
+	}
+	other := partGroup{Heading: "Other"}
+	for _, t := range types {
+		if !claimed[t.ID] {
+			other.Types = append(other.Types, t)
+		}
+	}
+	if len(other.Types) > 0 {
+		groups = append(groups, other)
+	}
+	return groups, nil
 }
 
 // yearWords is a year as "nothing in it fits" ends: "a 2015", or "this

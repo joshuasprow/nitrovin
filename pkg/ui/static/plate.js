@@ -20,7 +20,9 @@
 //   selection, by click, drag, touch or key, fall on the cells, which
 //   draw them. A whole VIN takes no more: nothing is pushed off its end;
 // - whole VINs that decoded are kept in this browser (the last 8) and
-//   offered as chips in the examples' place.
+//   offered as chips in the examples' place;
+// - the part types a page pressed are kept too, and lead the strip of
+//   part types, which the visitor can filter as they type (strip).
 //
 // The listeners are the document's, so a page htmx swaps in needs no more
 // than init.
@@ -82,6 +84,7 @@
       }
     }
     remember(answer);
+    parts(answer);
   };
 
   let timer = 0;
@@ -391,21 +394,25 @@
   // candidate's stock strip, is a link to the page (page.html's fit): its
   // answer is swapped in place, as a VIN's is, and is a history entry of
   // its own. The link the visitor followed keeps the focus, in the answer
-  // that replaced it: the element of its id, else the link in its place.
-  // "Show all", which the answer it brings has no more, leaves the focus
-  // on what it names (data-focus), the rows it showed.
+  // that replaced it: a part type, pressed from the strip or the dialog,
+  // is the strip's own; anything else the element of its id, else the
+  // link in its place. "Show all", which the answer it brings has no
+  // more, leaves the focus on what it names (data-focus), the rows it
+  // showed.
   document.addEventListener('click', (e) => {
     const a = e.target.closest && e.target.closest('#answer a.swap');
     if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
-    const kind = a.classList.contains('ptype') ? 'a.ptype' : 'a.swap:not(.ptype)';
-    const i = [...document.querySelectorAll('#answer ' + kind)].indexOf(a);
+    const part = a.classList.contains('ptype') && a.parentElement.dataset.part;
+    const i = [...document.querySelectorAll('#answer a.swap:not(.ptype)')].indexOf(a);
     const focused = document.activeElement === a;
     const id = a.dataset.focus || a.id;
+    const dialog = a.closest('[popover]');
+    if (dialog) dialog.hidePopover();
     const u = new URL(a.href);
     ask(u.pathname + u.search, 'push').then(() => {
-      const again = (id && document.getElementById(id)) || document.querySelectorAll('#answer ' + kind)[i];
-      if (focused && again) again.focus({ preventScroll: true });
+      const again = part ? document.querySelector('#answer .ptypes > li[data-part="' + CSS.escape(part) + '"] > a.ptype') : (id && document.getElementById(id)) || document.querySelectorAll('#answer a.swap:not(.ptype)')[i];
+      if ((focused || dialog) && again) again.focus({ preventScroll: true });
     }).catch(console.error);
   });
 
@@ -450,7 +457,7 @@
     }));
     list.hidden = kept.length === 0;
     document.getElementById('examples').hidden = kept.length > 0;
-    document.getElementById('clear-recent').hidden = kept.length === 0;
+    document.getElementById('clear-recent').hidden = kept.length === 0 && recentParts().length === 0;
   };
   function remember(answer) {
     if (!answer || !('complete' in answer.dataset) || !answer.dataset.label || answer.querySelector('.card.bad')) return;
@@ -465,8 +472,158 @@
   }
   document.addEventListener('click', (e) => {
     if (e.target.id !== 'clear-recent') return;
-    localStorage.removeItem(STORE);
+    try {
+      localStorage.removeItem(STORE);
+      localStorage.removeItem(PARTS);
+    } catch {
+      // no storage: nothing was kept
+    }
     chips();
+    strip(document.getElementById('answer'));
+  });
+
+  // The strip of part types (page.html's fit, #324). Without this script
+  // it is two rows of part types by name, the pressed one first, ending in
+  // "N more", which opens the part types dialog, every part type under its
+  // headings. With it:
+  //
+  // - a part type a page presses is kept in this browser (the last 8,
+  //   newest first, by its spine), and up to two the vehicle has lead the
+  //   strip, each with a Recent stamp; the dialog lists every one it has
+  //   under "Opened recently", whose Clear recent forgets them, as the VINs
+  //   menu's forgets them and the VINs;
+  // - each filter narrows its list as it is typed, by name: the strip's,
+  //   across every part type, the pressed one kept, which the rails hang
+  //   from; the dialog's, the dialog;
+  // - what the strip's clip hides is out of the keyboard's reach, and its
+  //   key says how many that is, or is gone when nothing is.
+  //
+  // Nothing is kept when storage fails.
+  const PARTS = 'nitrovin.recent-parts';
+  const LEAD = 2;
+  const recentParts = () => {
+    try {
+      return JSON.parse(localStorage.getItem(PARTS) || '[]').filter((r) => r && r.spine && r.id).slice(0, KEPT);
+    } catch {
+      return [];
+    }
+  };
+  const stripItems = (wrap) => [...wrap.querySelectorAll('.ptypes > li[data-part]')];
+  // keep keeps the part type answer presses, when its strip has it.
+  const keep = (answer) => {
+    const wrap = answer && answer.querySelector('.ptwrap');
+    const id = answer && answer.dataset.part;
+    if (!wrap || !id || !stripItems(wrap).some((li) => li.dataset.part === id)) return;
+    const spine = wrap.dataset.spine;
+    const kept = [{ spine, id }, ...recentParts().filter((r) => r.spine !== spine || r.id !== id)].slice(0, KEPT);
+    try {
+      localStorage.setItem(PARTS, JSON.stringify(kept));
+    } catch {
+      return; // no storage: no recent part types
+    }
+    chips();
+  };
+  // measure hides what the clip hides from the keyboard, and names the
+  // key with how many that is, or hides it.
+  const measure = (wrap) => {
+    let over = 0;
+    for (const li of stripItems(wrap)) {
+      const out = !li.hidden && li.offsetTop >= wrap.clientHeight;
+      li.classList.toggle('over', out);
+      if (out) over++;
+    }
+    const key = wrap.querySelector('#more-types');
+    key.hidden = over === 0;
+    key.setAttribute('aria-label', over + ' more part types');
+  };
+  // lay gives each part type shown the count of those after it, which the
+  // stylesheet shows for the last the strip has room for, and measures.
+  const lay = (wrap) => {
+    const shown = stripItems(wrap).filter((li) => !li.hidden);
+    shown.forEach((li, i) => {
+      const more = li.querySelector('.ptmore');
+      const n = shown.length - i - 1;
+      more.textContent = n ? n + ' more' : '';
+      more.classList.toggle('none', n === 0);
+    });
+    measure(wrap);
+  };
+  const nameOf = (li) => li.querySelector('.ptype').firstChild.nodeValue.trim().toLowerCase();
+  // filter narrows input's list to the names holding what it has: the
+  // strip's or the dialog's, which hides a heading left with none.
+  const filter = (input) => {
+    const q = input.value.trim().toLowerCase();
+    const wrap = input.closest('.ptwrap');
+    const scope = wrap || input.closest('.ptdialog');
+    let found = 0;
+    for (const li of wrap ? stripItems(wrap) : scope.querySelectorAll('.ptlist > li')) {
+      const match = nameOf(li).includes(q);
+      if (match) found++;
+      li.hidden = !match && !(wrap && li.querySelector('.ptype[aria-current]'));
+    }
+    for (const sec of wrap ? [] : scope.querySelectorAll('.ptgroup')) sec.hidden = !sec.querySelector('.ptlist > li:not([hidden])');
+    const none = wrap ? wrap.nextElementSibling : scope.querySelector('.ptnone');
+    none.hidden = found > 0;
+    none.textContent = found ? '' : 'No part type’s name has “' + input.value.trim() + '”.';
+    if (wrap) lay(wrap);
+  };
+  document.addEventListener('input', (e) => {
+    if (e.target.classList && e.target.classList.contains('ptfind')) filter(e.target);
+  });
+  const resized = new ResizeObserver((entries) => {
+    for (const e of entries) if (e.target.isConnected) measure(e.target);
+  });
+  // strip draws answer's strip and dialog as this browser has them: the
+  // filters shown, the recent part types first and in the dialog's head,
+  // and the counts laid.
+  function strip(answer) {
+    const wrap = answer && answer.querySelector('.ptwrap');
+    if (!wrap) return;
+    wrap.classList.add('live');
+    answer.querySelectorAll('.ptf').forEach((f) => { f.hidden = false; });
+    const items = stripItems(wrap);
+    items.forEach((li, i) => { li.dataset.at ??= i; });
+    const has = new Set(items.map((li) => li.dataset.part));
+    const recent = recentParts().filter((r) => r.spine === wrap.dataset.spine && has.has(r.id)).map((r) => r.id);
+    const lead = recent.slice(0, LEAD);
+    const rank = (li) => (lead.includes(li.dataset.part) ? lead.indexOf(li.dataset.part) : LEAD + Number(li.dataset.at));
+    items.sort((a, b) => rank(a) - rank(b));
+    wrap.querySelector('.ptypes').append(...items);
+    for (const li of items) {
+      const stamp = li.querySelector('.rstamp');
+      if (lead.includes(li.dataset.part) && !stamp) {
+        const s = document.createElement('span');
+        s.className = 'rstamp';
+        s.textContent = 'Recent';
+        li.prepend(s);
+      } else if (!lead.includes(li.dataset.part) && stamp) {
+        stamp.remove();
+      }
+    }
+    const dialog = answer.querySelector('.ptdialog');
+    if (dialog) {
+      const sec = dialog.querySelector('.ptrecent');
+      sec.querySelector('.ptlist').replaceChildren(...recent.map((id) => dialog.querySelector('.ptgroups li[data-part="' + CSS.escape(id) + '"]').cloneNode(true)));
+      sec.hidden = recent.length === 0;
+    }
+    for (const input of answer.querySelectorAll('.ptfind')) if (input.value) filter(input);
+    lay(wrap);
+    resized.disconnect();
+    resized.observe(wrap);
+  }
+  const parts = (answer) => {
+    keep(answer);
+    strip(answer);
+  };
+  document.addEventListener('click', (e) => {
+    if (!e.target.classList || !e.target.classList.contains('clear-parts')) return;
+    try {
+      localStorage.removeItem(PARTS);
+    } catch {
+      // no storage: nothing was kept
+    }
+    chips();
+    strip(document.getElementById('answer'));
   });
 
   const init = () => {
@@ -502,6 +659,7 @@
     if (!history.state) history.replaceState({ whole: input.value.length === LENGTH }, '', location.href);
     chips();
     remember(document.getElementById('answer'));
+    parts(document.getElementById('answer'));
   };
   init();
   document.addEventListener('htmx:afterSettle', (e) => {
