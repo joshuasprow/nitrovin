@@ -386,7 +386,7 @@ row is tagged with, and "This VIN" on the yard's vehicle the VIN on the
 plate is. */}}
 {{define "stock-table" -}}
 <table><tbody>
-{{range .}}<tr><th scope="row" class="id">{{.ID}}</th><td>{{.Location}}</td><td>{{range $i, $f := .Fields}}{{if $i}} · {{end}}<span class="fk">{{.Name}}</span> {{.Value}}{{end}}{{with .Retired}}<span class="note">Tagged with a retired number, {{.}}</span>{{end}}{{if .ThisVIN}}<span class="note"><strong>This VIN</strong>: the vehicle being looked up</span>{{end}}</td></tr>
+{{range .}}<tr><th scope="row" class="id">{{.ID}}</th><td class="loc">{{.Location}}</td><td class="fds">{{range $i, $f := .Fields}}{{if $i}}<span class="fsep"> · </span>{{end}}<span class="fd"><span class="fk">{{.Name}}</span> <span class="fv">{{.Value}}</span></span>{{end}}{{with .Retired}}<span class="note">Tagged with a retired number, {{.}}</span>{{end}}{{if .ThisVIN}}<span class="note"><strong>This VIN</strong>: the vehicle being looked up</span>{{end}}</td></tr>
 {{end}}</tbody></table>
 {{- end}}
 
