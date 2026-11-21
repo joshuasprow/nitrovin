@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Proposal: the shelf list, thermal receipt, dark</title>
+<title>Proposal: the shelf list on thermal paper, dark</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -80,6 +80,7 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 .stock-col .fk, .stock-none{color: var(--muted)}
 .stock-col .note{display: block; font-size: 12px; color: var(--muted)}
 .stock-col .note strong{color: var(--fg)}
+.stock-none, .more-rows{margin: 8px 0 0; font-size: 13px}
 .cand::before, .cand::after, .hook::before, .hook::after, .rails::before, .rails::after, .risers::before, .risers::after{content: ""; position: absolute; box-sizing: border-box; pointer-events: none; border: 0 solid var(--c-vds); filter: var(--stripe-lift)}
 .cand::before, .hook::before, .rails::before, .risers::before{z-index: 1}
 .cand::after, .hook::after, .rails::after, .risers::after{z-index: 2; border-color: var(--c-year)}
@@ -104,7 +105,8 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 .cands:not(:has(> .cand:nth-child(4 of .cand))) > .cand:nth-child(1 of .cand)::after{left: calc(50% + 2px)}
 .cands:not(:has(> .cand:nth-child(4 of .cand))) ~ .rails::before{left: calc(min(anchor(--fit-part center), anchor(--fit-first center)) - 7px); right: calc(min(anchor(--fit-part center), anchor(--fit-last center)) + 2px)}
 .cands:not(:has(> .cand:nth-child(4 of .cand))) ~ .rails::after{left: calc(min(anchor(--fit-part center), anchor(--fit-first center)) + 2px); right: calc(min(anchor(--fit-part center), anchor(--fit-last center)) - 7px)}
-.rows.at1 .notch{left: calc((100% - 2 * var(--gap)) / 6 - 9px)}}
+.rows.at1 .notch{left: calc((100% - 2 * var(--gap)) / 6 - 9px)}
+.rows.at3 .notch{left: calc(100% - (100% - 2 * var(--gap)) / 6 - 9px)}}
 .vp{
 .fit{--xv: 52.206%; --xy: 87.5%}}
 .vp{@supports not (anchor-name: --a){
@@ -181,27 +183,30 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 .stock-col th, .stock-col td{padding: 0; border: 0}
 .stock-col td:last-child{grid-column: 1 / -1}}
 .vp{
-.mat-receipt{--thermal: linear-gradient(rgb(8 7 15 / .3), rgb(8 7 15 / .06) 7px, transparent 16px), linear-gradient(90deg, rgb(255 255 255 / .5), transparent 12% 88%, rgb(8 7 15 / .04)), #f4f2ec; --thermal-ink: #25242c; --thermal-faint: #6a6873}
-:is(.rows, .prows, .stock-panel).mat-receipt{background: none; border: 0; border-radius: 0; box-shadow: none; filter: drop-shadow(0 2px 1px rgb(8 7 15 / .35)) drop-shadow(0 10px 12px rgb(8 7 15 / .28))}
+.mat-receipt{--thermal-base: #f6f4ee; --thermal-ink: #232229; --thermal-faint: #62606b; --thermal: linear-gradient(rgb(8 7 15 / .32), rgb(8 7 15 / .07) 6px, transparent 15px), linear-gradient(90deg, rgb(8 7 15 / .05), transparent 5% 95%, rgb(8 7 15 / .05)), var(--thermal-base)}
+:is(.rows, .prows, .nonum > .stock-panel).mat-receipt{background: none; border: 0; border-radius: 0; box-shadow: none; filter: drop-shadow(0 2px 1px rgb(8 7 15 / .35)) drop-shadow(0 10px 12px rgb(8 7 15 / .28))}
 .rows.mat-receipt{margin-top: -40px}
 .prows.mat-receipt{margin-top: 0}
 .mat-receipt .notch{display: none}
-.mat-receipt .stock-cols, .stock-panel.mat-receipt{position: relative; display: block; box-sizing: border-box; width: min(100%, 23rem); padding: 20px 16px 34px; color: var(--thermal-ink); font: 13px/1.45 var(--cell-font); background: var(--thermal); mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / 9px 9px repeat-x, linear-gradient(#000 0 0) top / 100% calc(100% - 8px) no-repeat}
+.mat-receipt :is(.stock-cols, .stock-cols.one), .stock-panel.mat-receipt > .stock-col{position: relative; display: block; box-sizing: border-box; width: min(100%, 23rem); padding: 22px 16px 30px; color: var(--thermal-ink); font: 13px/1.45 var(--cell-font); background: var(--thermal); mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / 9px 9px repeat-x, linear-gradient(#000 0 0) top / 100% calc(100% - 8px) no-repeat}
 .rows.mat-receipt .stock-cols{width: calc((100% - 2 * var(--gap)) / 3); min-width: min(100%, 19rem)}
-.mat-receipt .stock-cols::before{content: ""; position: absolute; z-index: 1; top: 0; bottom: 0; left: 37%; width: 1px; background: #f4f2ec; pointer-events: none}
-.mat-receipt .stock-cols::after{content: attr(aria-label); display: block; margin-top: 16px; padding-top: 44px; text-align: center; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; background: repeating-linear-gradient(90deg, currentColor 0 2px, transparent 2px 3px, currentColor 3px 4px, transparent 4px 7px, currentColor 7px 10px, transparent 10px 11px, currentColor 11px 12px, transparent 12px 14px, currentColor 14px 16px, transparent 16px 19px) top center / 76% 38px no-repeat}
+.rows.mat-receipt.at2 .stock-cols{margin-inline: auto}
+.rows.mat-receipt.at3 .stock-cols{margin-left: auto}
+.mat-receipt .stock-cols:is(:focus-visible,.is-fv){outline: 3px solid var(--link); outline-offset: -5px}
+.mat-receipt .stock-cols::before{content: attr(aria-label); display: block; margin: 4px 0 16px; text-align: center; font: 700 15px/1.2 var(--cell-font); letter-spacing: .08em; text-transform: uppercase; transform: scaleY(1.7)}
+.mat-receipt .stock-cols::after{content: attr(data-number); display: block; margin-top: 18px; padding-top: 46px; text-align: center; font-size: 12px; letter-spacing: .3em; background: repeating-linear-gradient(90deg, currentColor 0 2px, transparent 2px 3px, currentColor 3px 4px, transparent 4px 7px, currentColor 7px 10px, transparent 10px 11px, currentColor 11px 12px, transparent 12px 14px, currentColor 14px 16px, transparent 16px 19px) top center / 190px 40px no-repeat}
 .mat-receipt .stock-col{padding: 0}
-.mat-receipt .stock-col + .stock-col{margin-top: 14px; padding-top: 14px; border: 0; border-top: 3px double var(--thermal-ink)}
-.mat-receipt .stock-col :is(h3, h4){display: block; margin: 0 0 8px; padding: 0 0 8px; text-align: center; color: inherit; font: 700 13px/1.3 var(--cell-font); letter-spacing: .1em; border-bottom: 1px dashed var(--thermal-ink)}
-.mat-receipt .stock-col :is(h3, h4) > span:first-child{display: block; font-size: 15px; transform: scaleY(1.7); margin: 5px 0 9px}
-.mat-receipt .stock-col .asof{display: block; font: 400 12px var(--cell-font); letter-spacing: .06em; text-transform: uppercase; color: inherit}
+.mat-receipt .stock-cols > .stock-col + .stock-col{margin-top: 18px; border: 0}
+.mat-receipt .stock-col :is(h3, h4){display: block; margin: 0 0 6px; padding: 0; color: inherit; font: 400 12px/1.5 var(--cell-font); letter-spacing: .04em; text-transform: uppercase; border: 0}
+.mat-receipt .stock-col :is(h3, h4) > span:first-child{display: block; padding: 3px 8px; font: 700 13px/1.5 var(--cell-font); letter-spacing: .1em; color: var(--thermal-base); background: var(--thermal-ink)}
+.mat-receipt .stock-col .asof{display: block; padding: 3px 0 5px; text-align: right; font: 400 12px/1.5 var(--cell-font); letter-spacing: .04em; text-transform: uppercase; color: inherit; border-bottom: 1px dashed var(--thermal-ink)}
 .mat-receipt .stock-col table, .mat-receipt .stock-col tbody{display: block; font-size: 13px}
 .mat-receipt .stock-col tr{display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1px 0; padding: 7px 0 8px; border: 0; border-top: 1px dashed var(--thermal-ink)}
-.mat-receipt .stock-col tr:first-child{border-top: 0; padding-top: 0}
+.mat-receipt .stock-col tr:first-child{border-top: 0; padding-top: 2px}
 .mat-receipt .stock-col :is(th, td){padding: 0; border: 0; color: inherit}
 .mat-receipt .stock-col th.id{display: flex; align-items: baseline; font: 700 15px var(--cell-font); letter-spacing: .04em}
 .mat-receipt .stock-col th.id::after, .mat-receipt .fk::after{content: ""; flex: 1; min-width: 12px; margin: 0 6px; border-bottom: 2px dotted currentColor; transform: translateY(-3px)}
-.mat-receipt .stock-col td.loc{text-transform: uppercase}
+.mat-receipt .stock-col td.loc{text-transform: uppercase; white-space: normal; text-align: right}
 .mat-receipt .stock-col td.fds{grid-column: 1 / -1}
 .mat-receipt .fsep{display: none}
 .mat-receipt .fd{display: flex; align-items: baseline}
@@ -209,7 +214,10 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 .mat-receipt .fv{max-width: 64%; text-align: right; overflow-wrap: anywhere}
 .mat-receipt .stock-col .note{margin-top: 4px; font-size: 12px; text-transform: uppercase; color: var(--thermal-faint)}
 .mat-receipt .stock-col .note::before{content: "* "}
-.mat-receipt .stock-col .note strong{padding: 0 5px; color: #f4f2ec; background: var(--thermal-ink)}}
+.mat-receipt .stock-col .note strong{padding: 0 5px; color: var(--thermal-base); background: var(--thermal-ink)}
+.mat-receipt .stock-none{margin: 8px 0 2px; color: inherit; text-align: center; text-transform: uppercase; letter-spacing: .1em}
+.mat-receipt .stock-none::before{content: "*** "}
+.mat-receipt .stock-none::after{content: " ***"}}
 .sheet{--bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint: #a9bccb; --card-bg: #ffffff; --link: #0b4fa8; --bad: #b91c1c; --c-wmi: #c8102e; --c-vds: #0b4fa8; --c-check: #5b2d8e; --c-year: #a34c09; --c-plant: #0f6b46; --c-serial: #3d4650; --on: #ffffff; --label-font: "Arial Black", "Helvetica Neue", system-ui, sans-serif; --cell-font: ui-monospace, monospace; --steel: #6f7b86; --steel-dark: #58626c; --on-metal: #232930; --metal: url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0 / 600px 120px, linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc); --emboss: 0 1px 0 rgb(255 255 255 / .9), 0 -1px 1px rgb(0 0 0 / .45); --lift-stuck: 0 2px 3px rgb(8 7 15 / .32); --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 9px rgb(8 7 15 / .38); --raised: inset 0 1px 0 #fff, var(--lift-raised); --pressed: inset 0 3px 4px rgb(8 7 15 / .4); --alu-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .12) 2px 3px), linear-gradient(#8e99a3, #aab4bd); --alu: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .07) 2px 3px), var(--metal); --tape: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .13) 2px 3px), linear-gradient(#30363d, #171a1e); --tape-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .2) 2px 3px), linear-gradient(#0c0e10, #1d2125); --tape-edge: #050607; --tape-lit: #69727c; --on-tape: #f6f8fa; --tape-emboss: -1px -1px 0 rgb(8 7 15 / .67), 1px 1px 0 rgb(255 255 255 / .33), 0 2px 2px rgb(8 7 15 / .53); --stripe-lift: drop-shadow(-1px -1px 0 rgb(255 255 255 / .4)) drop-shadow(1.5px 2px 1px rgb(8 7 15 / .3)); --manila: url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f); --on-manila: #2b2418; --manila-muted: #5c4c2e; --manila-patch: #c39a5c; --manila-bad: #a01414; --gutter: 1rem; font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 1rem var(--gutter) 3rem; color: var(--fg); background: var(--bg);--bg: #16222d; --fg: #eef2f5; --muted: #a9b6c2; --line: #45566a; --faint: #3a4a5c; --card-bg: #1f2d3a; --link: #8ec5ff; --bad: #ff8a8a; --c-wmi: #ff6b81; --c-vds: #7db4ff; --c-check: #c9a2ff; --c-year: #ffb067; --c-plant: #6fdcab; --c-serial: #b8c4cf; --on: #14181d; --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 10px rgb(0 0 0 / .7);--gutter: .5rem;}
 .sheet{box-sizing:border-box;margin:0;padding:40px;display:flex;flex-direction:column;gap:26px}
 .sheet .sh-h1{margin:0;font:900 21px/1.2 var(--label-font);letter-spacing:.04em;text-transform:uppercase;border:0;padding:0}
@@ -227,10 +235,10 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 
 </style>
 </helmet>
-<div class="root sheet" data-scheme="dark" style="width: 1280px; height: 3250px; color: var(--fg); background: var(--bg)">
-<div><h1 class="sh-h1">The shelf list: thermal receipt</h1><p class="sh-intro">Thermal paper. One strip the tag's width, fed out from under the tag's stock strip: shelf over yard on the one tape, torn at the foot. The print is the printer's: one face, double-height heads, rules of dashes, a field's name led by dots to its value, a barcode at the foot.</p></div>
+<div class="root sheet" data-scheme="dark" style="width: 1280px; height: 5070px; color: var(--fg); background: var(--bg)">
+<div><h1 class="sh-h1">The shelf list on thermal paper</h1><p class="sh-intro">One strip of an 80 mm roll, the tag's width, fed out from under the tag's stock strip and torn at the foot: about 42 columns of the printer's one face. What a printer can do is all there is: double height for what the strip is of, a reversed bar over each kind of stock, a rule of dashes between rows, a field's name led by dots to its value, a barcode over the number at the foot. The paper is the same in both colour schemes.</p></div>
 <section>
-<p class="sh-cap">Under a candidate <span>The first candidate's stock strip is open.</span></p>
+<p class="sh-cap">Under the first candidate <span>Shelf over yard on the one strip. A row's notes are starred; This VIN is reversed.</span></p>
 <div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px">
 
 <main id="ui-main" class="is-fw">
@@ -248,7 +256,7 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 <a class="stk swap" id="stk-1" href="#" aria-expanded="true" aria-controls="stock-rows"><span>Stock · 2 shelf · 2 yard<span class="visually-hidden">, DEMO-1001</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 10l5-5 5 5"></path></svg></a>
 </div></li>
 <li class="rows at1 more-narrow mat-receipt" id="stock-rows"><span class="notch" aria-hidden="true"></span>
-<div class="stock-cols" id="stock-region" role="region" aria-label="Stock of DEMO-1001" tabindex="0">
+<div class="stock-cols" id="stock-region" role="region" aria-label="Stock of DEMO-1001" data-number="DEMO-1001" tabindex="0">
 <div class="stock-col">
 <h3 id="stock-shelf-h"><span>On the shelf · 2</span> <span class="asof">as of 2026-11-12</span></h3>
 <table><tbody>
@@ -293,9 +301,131 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 
 </div>
 </section>
+<section>
+<p class="sh-cap">Under the second, nothing on the shelf <span>The strip is under the tag whose stock strip is pressed. An empty kind of stock keeps its bar.</span></p>
+<div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px">
+
+<main id="ui-main" class="is-fw">
+<div id="answer" class="stage" data-vin="1FTEW1EG7FFA12345" data-label="2015 FORD F-150" data-complete="" data-done="wmi vds check year plant serial " data-part="alternator" data-number="DEMO-1002">
+<section class="fit" id="fit" aria-labelledby="fit-h">
+<ol class="cands" aria-label="Candidates: Alternator" tabindex="0">
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1001</b> <span class="yrs">2015–2017</span></p>
+<dl>
+<div><dt>Options</dt><dd>3.5L V6 EcoBoost (VIN G, 8th digit)</dd></div>
+<div><dt>Note</dt><dd>demo: 200 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-1" href="#" aria-expanded="false"><span>Stock · 2 shelf · 2 yard<span class="visually-hidden">, DEMO-1001</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
+</div></li>
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1002</b> <span class="yrs">2015–2020</span></p>
+<dl>
+<div><dt>Options</dt><dd>5.0L V8 (VIN F, 8th digit)</dd></div>
+<div><dt>Note</dt><dd>demo: 200 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-2" href="#" aria-expanded="true" aria-controls="stock-rows"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1002</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 10l5-5 5 5"></path></svg></a>
+</div></li>
+<li class="rows at2 more-narrow mat-receipt" id="stock-rows"><span class="notch" aria-hidden="true"></span>
+<div class="stock-cols" id="stock-region" role="region" aria-label="Stock of DEMO-1002" data-number="DEMO-1002" tabindex="0">
+<div class="stock-col">
+<h3 id="stock-shelf-h"><span>On the shelf · 0</span> <span class="asof">as of 2026-11-12</span></h3>
+<p class="stock-none">None.</p>
+</div>
+<div class="stock-col">
+<h3 id="stock-yard-h"><span>In the yard · 2</span> <span class="asof">as of 2026-11-12</span></h3>
+<table><tbody>
+<tr><th scope="row" class="id">DEMO-Y-01</th><td class="loc">demo-north</td><td class="fds"><span class="fd"><span class="fk">stock_number</span> <span class="fv">DEMO-Y-01</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">color</span> <span class="fv">demo: white</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">row</span> <span class="fv">D-1</span></span><span class="note"><strong>This VIN</strong>: the vehicle being looked up</span></td></tr>
+<tr><th scope="row" class="id">DEMO-Y-02</th><td class="loc">demo-south</td><td class="fds"><span class="fd"><span class="fk">stock_number</span> <span class="fv">DEMO-Y-02</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">color</span> <span class="fv">demo: blue</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">row</span> <span class="fv">D-1</span></span></td></tr>
+</tbody></table>
+</div>
+</div>
+</li>
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1003</b> <span class="yrs">2015–2020</span></p>
+<dl>
+<div><dt>Options</dt><dd>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</dd></div>
+<div><dt>Note</dt><dd>demo: 240 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-3" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1003</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
+</div></li>
+</ol>
+<span class="rails" aria-hidden="true"></span>
+</section>
+</div>
+</main>
+
+</div>
+</section>
+<section>
+<p class="sh-cap">Under the third <span></span></p>
+<div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px">
+
+<main id="ui-main" class="is-fw">
+<div id="answer" class="stage" data-vin="1FTEW1EG7FFA12345" data-label="2015 FORD F-150" data-complete="" data-done="wmi vds check year plant serial " data-part="alternator" data-number="DEMO-1003">
+<section class="fit" id="fit" aria-labelledby="fit-h">
+<ol class="cands" aria-label="Candidates: Alternator" tabindex="0">
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1001</b> <span class="yrs">2015–2017</span></p>
+<dl>
+<div><dt>Options</dt><dd>3.5L V6 EcoBoost (VIN G, 8th digit)</dd></div>
+<div><dt>Note</dt><dd>demo: 200 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-1" href="#" aria-expanded="false"><span>Stock · 2 shelf · 2 yard<span class="visually-hidden">, DEMO-1001</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
+</div></li>
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1002</b> <span class="yrs">2015–2020</span></p>
+<dl>
+<div><dt>Options</dt><dd>5.0L V8 (VIN F, 8th digit)</dd></div>
+<div><dt>Note</dt><dd>demo: 200 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-2" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1002</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
+</div></li>
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1003</b> <span class="yrs">2015–2020</span></p>
+<dl>
+<div><dt>Options</dt><dd>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</dd></div>
+<div><dt>Note</dt><dd>demo: 240 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-3" href="#" aria-expanded="true" aria-controls="stock-rows"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1003</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 10l5-5 5 5"></path></svg></a>
+</div></li>
+<li class="rows at3 mat-receipt" id="stock-rows"><span class="notch" aria-hidden="true"></span>
+<div class="stock-cols" id="stock-region" role="region" aria-label="Stock of DEMO-1003" data-number="DEMO-1003" tabindex="0">
+<div class="stock-col">
+<h3 id="stock-shelf-h"><span>On the shelf · 0</span> <span class="asof">as of 2026-11-12</span></h3>
+<p class="stock-none">None.</p>
+</div>
+<div class="stock-col">
+<h3 id="stock-yard-h"><span>In the yard · 2</span> <span class="asof">as of 2026-11-12</span></h3>
+<table><tbody>
+<tr><th scope="row" class="id">DEMO-Y-01</th><td class="loc">demo-north</td><td class="fds"><span class="fd"><span class="fk">stock_number</span> <span class="fv">DEMO-Y-01</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">color</span> <span class="fv">demo: white</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">row</span> <span class="fv">D-1</span></span><span class="note"><strong>This VIN</strong>: the vehicle being looked up</span></td></tr>
+<tr><th scope="row" class="id">DEMO-Y-02</th><td class="loc">demo-south</td><td class="fds"><span class="fd"><span class="fk">stock_number</span> <span class="fv">DEMO-Y-02</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">color</span> <span class="fv">demo: blue</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">row</span> <span class="fv">D-1</span></span></td></tr>
+</tbody></table>
+</div>
+</div>
+</li>
+</ol>
+<span class="rails" aria-hidden="true"></span>
+</section>
+</div>
+</main>
+
+</div>
+</section>
 <div class="sh-row">
 <section>
-<p class="sh-cap">Narrow <span></span></p>
+<p class="sh-cap">Narrow <span>No narrower than 19rem.</span></p>
 <div class="vp vp-tab pad" style="width: 768px; --vw: 768px">
 
 <main id="ui-main" class="is-fw">
@@ -313,7 +443,7 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 <a class="stk swap" id="stk-1" href="#" aria-expanded="true" aria-controls="stock-rows"><span>Stock · 2 shelf · 2 yard<span class="visually-hidden">, DEMO-1001</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 10l5-5 5 5"></path></svg></a>
 </div></li>
 <li class="rows at1 more-narrow mat-receipt" id="stock-rows"><span class="notch" aria-hidden="true"></span>
-<div class="stock-cols" id="stock-region" role="region" aria-label="Stock of DEMO-1001" tabindex="0">
+<div class="stock-cols" id="stock-region" role="region" aria-label="Stock of DEMO-1001" data-number="DEMO-1001" tabindex="0">
 <div class="stock-col">
 <h3 id="stock-shelf-h"><span>On the shelf · 2</span> <span class="asof">as of 2026-11-12</span></h3>
 <table><tbody>
@@ -359,7 +489,7 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 </div>
 </section>
 <section>
-<p class="sh-cap">Phone <span>Under its tag.</span></p>
+<p class="sh-cap">Phone <span>Under its tag, the tag's width.</span></p>
 <div class="vp vp-phone pad" style="width: 390px; --vw: 390px">
 
 <main id="ui-main" class="is-fw">
@@ -377,7 +507,7 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 <a class="stk swap" id="stk-1" href="#" aria-expanded="true" aria-controls="stock-rows"><span>Stock · 2 shelf · 2 yard<span class="visually-hidden">, DEMO-1001</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 10l5-5 5 5"></path></svg></a>
 </div></li>
 <li class="rows at1 more-narrow mat-receipt" id="stock-rows"><span class="notch" aria-hidden="true"></span>
-<div class="stock-cols" id="stock-region" role="region" aria-label="Stock of DEMO-1001" tabindex="0">
+<div class="stock-cols" id="stock-region" role="region" aria-label="Stock of DEMO-1001" data-number="DEMO-1001" tabindex="0">
 <div class="stock-col">
 <h3 id="stock-shelf-h"><span>On the shelf · 2</span> <span class="asof">as of 2026-11-12</span></h3>
 <table><tbody>
@@ -424,7 +554,7 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 </section>
 </div>
 <section>
-<p class="sh-cap">Part-number mode <span>Under the part's tag, a column.</span></p>
+<p class="sh-cap">Part-number mode <span>Under the part's tag.</span></p>
 <div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px">
 
 <main id="ui-main" class="is-fw">
@@ -448,7 +578,7 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 <a class="stk swap" id="stk-part" href="#" aria-expanded="true" aria-controls="stock-rows"><span>Stock · 2 shelf · 2 yard<span class="visually-hidden">, DEMO-1001</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 10l5-5 5 5"></path></svg></a>
 </div></div>
 <div class="prows mat-receipt" id="stock-rows"><span class="notch" aria-hidden="true"></span>
-<div class="stock-cols" id="stock-region" role="region" aria-label="Stock of DEMO-1001" tabindex="0">
+<div class="stock-cols" id="stock-region" role="region" aria-label="Stock of DEMO-1001" data-number="DEMO-1001" tabindex="0">
 <div class="stock-col">
 <h3 id="stock-shelf-h"><span>On the shelf · 2</span> <span class="asof">as of 2026-11-12</span></h3>
 <table><tbody>
@@ -484,7 +614,7 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 </section>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3250}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":5070}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};

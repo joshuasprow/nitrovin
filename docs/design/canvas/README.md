@@ -47,10 +47,13 @@ names by issue. When the proposal is built its frames are folded into the
 six and the page goes. The part type picker of #366 was the first, and this
 folder's history holds its frames.
 
-One is open: the shelf list in new materials, four frames and their dark
-twins, `Proposal-Shelf-{Receipt,Placard,Tyvek,Marker}`, captured from the
+One is open, on a page of its own, "Proposal: shelf list": the shelf list on
+thermal paper, `Proposal-Shelf-Receipt` and its dark twin, captured from the
 prototype on branch `shelf-list-materials` by `scripts/canvas/proposal.mjs`
-there. No issue is filed for it yet.
+there. Three other materials were drawn beside it first (a tire placard,
+Tyvek wire tags, paint marker on steel); this folder's history holds them.
+No issue is filed for it yet. A proposal takes a page of its own, named for
+what it proposes, since more than one session draws on the canvas at once.
 
 Under the page's two rows are three swatch boards, `Swatches-Thermal`,
 `Swatches-Yard` and `Swatches-Vehicle`: materials found by a web search,
@@ -64,7 +67,7 @@ The wireframes and texture frames that proposed the fitment slices (#320 to
 
 ## This snapshot
 
-Canvas version `1795227917-2a08`, published on 2026-11-20.
+Canvas version `1795228646-9bd6`, published on 2026-11-20.
 
 ## Rebuilding a canvas from a snapshot
 
