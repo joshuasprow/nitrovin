@@ -13,7 +13,34 @@
       "https://www.quill.com/pre-wired-heavy-duty-manila-shipping-tags-5-4-3-4-x-2-3-8-1000-case/cbs/53322408.html",
       "https://staples.com/shipping-pre-wired-tag-10-pt-4-3-4-x-2-3-8-manila-1000-case/product_948600"
     ],
-    "notes": "Sourced: #5 size 4-3/4 x 2-3/8 in, 13 pt (also 10 pt) board, reinforced eyelet, 12 in of 26-gauge wire. Hex values and clipped corners are estimates, unverified."
+    "checks": [
+      {
+        "url": "https://staples.com/si-products-pre-wired-heavy-duty-shipping-tags-5-4-75-x-2-375-manila-1000-case/product_496199",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "WebFetch returned HTTP 403 twice; search summary of the listing: 3/16 in reinforced, tear-resistant eyelet; wired with 12 in, 26 gauge wire; #5 4.75 x 2.375 manila."
+      },
+      {
+        "url": "https://www.quill.com/pre-wired-heavy-duty-manila-shipping-tags-5-4-3-4-x-2-3-8-1000-case/cbs/53322408.html",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "'Heavy duty 13 point manila'; 'Reinforced, tear resistant eyelet'; 'Pre-wired with 12\", 26 gauge wire'. Shape listed as Rectangle; no eyelet diameter."
+      },
+      {
+        "url": "https://staples.com/shipping-pre-wired-tag-10-pt-4-3-4-x-2-3-8-manila-1000-case/product_948600",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "WebFetch returned HTTP 403 twice; search summary: 10 pt manila cardstock, 4 3/4 x 2 3/8 in, 3/16 in reinforced tear-resistant eyelet, 12 in 26 gauge wire. Note: 10 pt, not the entry's 13 pt."
+      }
+    ],
+    "unsupported": [
+      "Use on pulled parts on warehouse shelves and repair-shop work in progress: sources describe shipping identification only",
+      "3/16 in eyelet diameter: only in search summaries of the blocked Staples pages; the fetched Quill page gives no diameter",
+      "Darker fibre-patch ring around the eyelet",
+      "Clipped corners (Quill lists the shape as Rectangle)",
+      "Faint fibre fleck; matte finish",
+      "'Strung' attachment: the sources read are pre-wired tags"
+    ]
   },
   {
     "name": "Yellow Tyvek wire tag",
@@ -29,7 +56,33 @@
       "https://staples.com/Tyvek-5-1-4-x-2-5-8-Pre-Wired-Shipping-Tag-Yellow-100-Case/product_191358",
       "https://www.zoro.com/i/G1645402/"
     ],
-    "notes": "Sourced: spunbonded olefin resisting chemicals/mildew/moisture; 3/16 in metal eyelet; 26 ga double wire 12 in; stock colours white, yellow, orange, red, blue, green; sizes 2-3/4 x 1-3/8 to 6-1/4 x 3-1/8 in. No source maps a colour to a meaning in salvage yards (shop-defined). Hex and fibre-swirl description unverified."
+    "checks": [
+      {
+        "url": "https://www.mcmaster.com/tyvek-tags",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Tyvek tags 'almost impossible to tear', 'resist mild acids and alkalis'; metal grommet; yellow offered; steel wire holder. Hole is 1/4 in on most sizes, 3/16 in only on the largest; does not say spunbonded olefin."
+      },
+      {
+        "url": "https://staples.com/Tyvek-5-1-4-x-2-5-8-Pre-Wired-Shipping-Tag-Yellow-100-Case/product_191358",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "WebFetch returned HTTP 403 twice; search summary: chemical and mildew resistant spunbonded olefin; 3/16 in metal eyelet; pre-wired with 12 in wire; yellow."
+      },
+      {
+        "url": "https://www.zoro.com/i/G1645402/",
+        "verdict": "blocked",
+        "read": "not read",
+        "evidence": "WebFetch returned HTTP 403 twice; a search for the item number G1645402 returned no listing or summary of it."
+      }
+    ],
+    "unsupported": [
+      "Used on parts stored outdoors or oily, where paper would rot or tear: sources give chemical, mildew, acid and tear resistance, not this use",
+      "Swirled random-fibre mottle; translucent edges (McMaster says only 'cloth-like texture')",
+      "'Twisted double wire': the pages read give a 12 in wire or a 6 in steel wire holder, not double or twisted",
+      "3/16 in eyelet: only in a search summary; the fetched McMaster page gives 1/4 in on most sizes and 3/16 in only on the largest",
+      "'Spunbonded olefin': only in a search summary"
+    ]
   },
   {
     "name": "Inspection tag: rejected (red)",
@@ -45,7 +98,32 @@
       "https://www.staples.com/4-3-4-x-2-3-8-rejected-inspection-tag-pre-wired-1000-case/product_949185",
       "https://en.wikipedia.org/wiki/Aviation_parts_tag"
     ],
-    "notes": "Sourced: catalogue convention Rejected/Non-Conforming = red, Hold = yellow, OK to Use/Accepted = green, Inspected = yellow; 4-3/4 x 2-3/8 in 13 pt; red = scrap in aviation tagging. Convention is supplier/industry habit, not a regulation. Hex unverified."
+    "checks": [
+      {
+        "url": "https://www.uline.com/BL_3003/1-Part-Inspection-Tags",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Lists 'Rejected' and 'Non-Conforming' tags as red; 'Color coded for easy identification'; use 'Quality control'."
+      },
+      {
+        "url": "https://www.staples.com/4-3-4-x-2-3-8-rejected-inspection-tag-pre-wired-1000-case/product_949185",
+        "verdict": "partial",
+        "read": "search summary",
+        "evidence": "WebFetch returned HTTP 403 twice; search summary: a 'Rejected' pre-wired inspection tag, #5 4-3/4 x 2-3/8 in, 13 point, 3/16 in eyelet. The summary does not state the colour or the printed layout."
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Aviation_parts_tag",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Red tag: 'component is scrap or unusable'."
+      }
+    ],
+    "unsupported": [
+      "Solid colour both sides",
+      "Bold condensed capital headline over ruled write-in lines",
+      "Parts-return areas as a place of use",
+      "Matte finish"
+    ]
   },
   {
     "name": "Inspection tag: hold (yellow)",
@@ -58,10 +136,36 @@
     "css": "background: linear-gradient(180deg, #111 0 26%, transparent 26%), repeating-linear-gradient(180deg, transparent 0 21px, rgba(0,0,0,.3) 21px 22px), #FFD400;",
     "sources": [
       "https://www.uline.com/BL_3003/1-Part-Inspection-Tags",
-      "https://www.zoro.com/partners-brand-inspection-tags-pre-strung-inspected-4-34-x-2-38-yellow-1000case-g20062/i/G4975945/",
-      "https://www.aviationpros.com/aircraft-maintenance-technology/aircraft-technology/defense/article/12008258/faa-feedback-the-yellow-tag"
+      "https://www.zoro.com/partners-brand-inspection-tags-pre-strung-inspected-4-34-x-2-38-yellow-1000case-g20062/i/G4975945/"
     ],
-    "notes": "Sourced: Hold = yellow and Inspected = yellow in industrial catalogues; black-on-yellow Re-Work tags exist; in aviation a yellow tag instead means serviceable (meanings conflict across industries). Black header band is a design choice, unverified."
+    "checks": [
+      {
+        "url": "https://www.uline.com/BL_3003/1-Part-Inspection-Tags",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Lists 'Hold' as yellow and 'Inspected' as yellow; 'Color coded for easy identification'."
+      },
+      {
+        "url": "https://www.zoro.com/partners-brand-inspection-tags-pre-strung-inspected-4-34-x-2-38-yellow-1000case-g20062/i/G4975945/",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "WebFetch returned HTTP 403 twice; search summary: 'Inspected' pre-strung inspection tag, yellow, 13-point cardstock, 4-3/4 x 2-3/8 in. Legend is Inspected, not Hold; print colour not stated."
+      }
+    ],
+    "dropped": [
+      {
+        "url": "https://www.aviationpros.com/aircraft-maintenance-technology/aircraft-technology/defense/article/12008258/faa-feedback-the-yellow-tag",
+        "verdict": "unrelated",
+        "read": "fetched",
+        "evidence": "Contradicts the hold meaning: yellow tag marks a serviceable component, from 'the military tradition of using yellow tags as a serviceable item'. The entry's notes admit the conflict."
+      }
+    ],
+    "unsupported": [
+      "Black headline and ruled fields",
+      "No gloss / matte",
+      "Parts waiting for rework or a customer: sources give only the legend 'Hold'",
+      "Shop holding areas as a place of use"
+    ]
   },
   {
     "name": "Inspection tag: accepted (green)",
@@ -77,7 +181,32 @@
       "https://www.uline.com/BL_3003/1-Part-Inspection-Tags",
       "https://en.wikipedia.org/wiki/Aviation_parts_tag"
     ],
-    "notes": "Sourced: Accepted / OK to Use = green in industrial catalogues; aviation sources disagree (green = repairable in the US, serviceable in Canada). Hex unverified."
+    "checks": [
+      {
+        "url": "https://staples.com/4-3-4-x-2-3-8-accepted-green-inspection-tag-pre-wired-1000-case/product_949184",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "WebFetch returned HTTP 403 twice; search summary: 'Accepted' green pre-wired inspection tag, 13 point, 3/16 in reinforced eyelet, 12 in 26 ga wire."
+      },
+      {
+        "url": "https://www.uline.com/BL_3003/1-Part-Inspection-Tags",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Lists 'OK to Use' as green; an 'Accepted' tag is listed, 13 point, but the page text gives it no colour."
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Aviation_parts_tag",
+        "verdict": "partial",
+        "read": "fetched",
+        "evidence": "Mixed: US green tag means 'not airworthy but is repairable'; in Canada 'a green tag is used for a serviceable and airworthy part'."
+      }
+    ],
+    "unsupported": [
+      "Bold capital headline and ruled fields",
+      "Matte finish",
+      "Cleared for 'sale': sources say Accepted / OK to Use only",
+      "US aviation use of green contradicts it (green = repairable, not airworthy)"
+    ]
   },
   {
     "name": "Yellow paint marker on steel",
@@ -94,7 +223,39 @@
       "https://www.forabodiesonly.com/mopar/threads/wrecking-yard-recyler-ink-pen.504629/latest",
       "https://www.bodyshopbusiness.com/?p=4506"
     ],
-    "notes": "Sourced (retail listing and forums, anecdotal): yellow is the customary salvage-yard marker colour; metal ball-point squeeze bottles (2 oz) mark greasy, oily or rusty parts. No formal standard found. Hex values unverified."
+    "checks": [
+      {
+        "url": "https://www.ebay.com/p/15017679565",
+        "verdict": "blocked",
+        "read": "not read",
+        "evidence": "WebFetch returned HTTP 403 twice; a search for the URL returned only generic eBay category pages."
+      },
+      {
+        "url": "https://classicmotorsports.com/forum/off-topic-discussion/junkyard-yellow-paint-source/186232/page1",
+        "verdict": "blocked",
+        "read": "not read",
+        "evidence": "WebFetch returned HTTP 403 twice; a search for the thread title returned other forums only, nothing from this site."
+      },
+      {
+        "url": "https://www.forabodiesonly.com/mopar/threads/wrecking-yard-recyler-ink-pen.504629/latest",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Original post asks for 'the yellow paint markers that junk yards use to identify their auto parts'. Does not state ball tip or what is written; one member says the markers 'despise oil/ grease'."
+      },
+      {
+        "url": "https://www.bodyshopbusiness.com/?p=4506",
+        "verdict": "blocked",
+        "read": "not read",
+        "evidence": "WebFetch returned HTTP 403 twice; a search surfaced only the page title, 'Interchangeable Heads - BodyShop Business', with no summary of its text. The title does not suggest paint markers."
+      }
+    ],
+    "unsupported": [
+      "Stock numbers and vehicle details as what is written: the one readable source says only 'identify their auto parts'",
+      "Engine blocks and glass as the surfaces marked",
+      "Glossy enamel line, rounded ends, uneven width",
+      "Ball-tip markers leaving a raised bead: no readable source states the tip type",
+      "Marking on rust or oily metal: the readable forum says wire-brush rust first and that the markers 'despise oil/ grease'"
+    ]
   },
   {
     "name": "Tire crayon on rubber",
@@ -111,7 +272,38 @@
       "https://www.walmart.com/ip/39586891",
       "https://www.mcmaster.com/rubber-marking-crayons"
     ],
-    "notes": "Sourced: wax crayons 1/2 x 4-5/8 in, sold in white and yellow; mark wet, cold, smooth or coarse rubber, metal, glass; semi-permanent but rub off. Hex and stroke appearance unverified."
+    "checks": [
+      {
+        "url": "https://zoro.com/markal-wax-tire-marker-12w-x-4-58l-white-51420/i/G1521581",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "WebFetch returned HTTP 403 twice; search summary: Markal wax tire marker, white, 1/2 in wide x 4-5/8 in long, Mfr 51420; 130 F maximum temperature."
+      },
+      {
+        "url": "https://www.zoro.com/markal-wax-tire-marker-12w-x-4-58l-yellow-51421/i/G0272142",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "WebFetch returned HTTP 403 twice; search summary: Markal wax tire marker, yellow, 1/2 x 4-5/8 in; wax tire crayon for temporary marking of tires, marks wet or cold surfaces."
+      },
+      {
+        "url": "https://www.walmart.com/ip/39586891",
+        "verdict": "partial",
+        "read": "search summary",
+        "evidence": "Fetch returned a 'Robot or human?' captcha page twice. Search result gives the title only: 'STEELMAN 00063 White Tire Marking Crayons, Box of 12'. No specs read."
+      },
+      {
+        "url": "https://www.mcmaster.com/rubber-marking-crayons",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Wax crayons for rubber, white and yellow, 1/2 in diameter, 4 1/2 in long; write on 'wet and cold rubber'; stroke 2 to 12.7 mm; removable with a dry cloth. Does not mention tires."
+      }
+    ],
+    "unsupported": [
+      "Sizes, positions and stock numbers as what is written",
+      "Sidewalls and treads; tire and repair shops as the place (sources say only tires / rubber)",
+      "Stroke 'about 1/2 in wide': sources give a 1/2 in crayon and a 2 to 12.7 mm stroke range",
+      "Broken, slightly translucent stroke that skips over sidewall ribs"
+    ]
   },
   {
     "name": "Soapstone on plate steel",
@@ -127,7 +319,32 @@
       "https://airgas.com/product/Welding-Products/Welding-Support-Equipment/Markers-Soapstone-%26-Scribes/p/RAD64002311",
       "https://zoro.com/soapstones/c/6803/?page=2"
     ],
-    "notes": "Sourced: talc sticks, flat 1/16 x 1/2 x 5 in, marks temporary like chalk and do not burn off under heat. Hex values unverified."
+    "checks": [
+      {
+        "url": "https://www.mcmaster.com/soapstone-markers",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Soapstone sticks, white, for metal: 'make temporary marks like chalk' that 'won't burn at high temperatures'; 'Commonly used in welding applications'."
+      },
+      {
+        "url": "https://airgas.com/product/Welding-Products/Welding-Support-Equipment/Markers-Soapstone-%26-Scribes/p/RAD64002311",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch failed twice with 'Parse Error: Header overflow'. Search summary: RADNOR flat soapstone 1/16 x 1/2 x 5 in, for temporary marking of metal during welding and fabricating; marks easily removed."
+      },
+      {
+        "url": "https://zoro.com/soapstones/c/6803/?page=2",
+        "verdict": "partial",
+        "read": "search summary",
+        "evidence": "WebFetch returned HTTP 403 twice; search summary of the category: flat and round soapstone markers, 'largely comprised of the mineral talc'; entries mostly 3/16 in thick. Nothing on the mark's look or where it is used."
+      }
+    ],
+    "unsupported": [
+      "Cut lines and part numbers as what is marked",
+      "Frames and body shops: sources say metal, welding and fabricating",
+      "'Scratched' thin dusty grey-white line: sources say white sticks, marks 'like chalk'",
+      "Blue-grey mill-scale steel with a satin sheen"
+    ]
   },
   {
     "name": "Chartreuse windshield numbers",
@@ -143,7 +360,33 @@
       "https://zoro.com/ez-line-5-12-chartreuse-windshield-numbers-kit-20-doz-pk-125/i/G5197432",
       "https://zoro.com/car-dealer-depot-7-12-white-blue-adhesive-windshield-numbers12-pk-164-6/i/G5198062"
     ],
-    "notes": "Sourced: adhesive digits 5-1/2, 7-1/2 (7-1/2 x 4 in) and 11-1/2 in tall, colour named chartreuse / fluorescent lime-yellow; a white-and-blue variant exists. Here the 'base' is the digit colour shown on dark glass (css). Hex unverified."
+    "checks": [
+      {
+        "url": "https://zoro.com/car-dealer-depot-7-12-chartreuse-adhesive-windshield-numbers-0-pk-109-0/i/G5199727",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "WebFetch returned HTTP 403 twice; search result gives the title only: Car Dealer Depot 7 1/2 in chartreuse adhesive windshield numbers, Mfr 109-0. No description read."
+      },
+      {
+        "url": "https://zoro.com/ez-line-5-12-chartreuse-windshield-numbers-kit-20-doz-pk-125/i/G5197432",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "WebFetch returned HTTP 403 twice; search summary: 5 1/2 in tall x 2 1/2 in wide chartreuse windshield numbers, 'a low-cost sales tool for advertising a model year or price'."
+      },
+      {
+        "url": "https://zoro.com/car-dealer-depot-7-12-white-blue-adhesive-windshield-numbers12-pk-164-6/i/G5198062",
+        "verdict": "partial",
+        "read": "search summary",
+        "evidence": "WebFetch returned HTTP 403 twice; search summary: a different colourway, 'blue number on a white background, with a 3-D shaded design, adhesive windshield number'. Not chartreuse; supports only the accent variant in the notes."
+      }
+    ],
+    "unsupported": [
+      "Vinyl as the material: nothing read names it",
+      "'Fluorescent lime-yellow': sources read say only 'chartreuse'",
+      "Die-cut heavy block digits, flat with no gradient",
+      "'Large' digits spanning the windshield and reading against dark glass: sizes read are 5 1/2 and 7 1/2 in tall",
+      "7 1/2 in listing was read as a title only"
+    ]
   },
   {
     "name": "Stock-number window sticker",
@@ -159,7 +402,32 @@
       "https://zoro.com/car-dealer-depot-dealer-stock-stickers-3-x-4-100-per-box-blue-pk-409-bl/i/G9148637",
       "https://zoro.com/car-dealer-depot-dealer-stock-stickers-3-x-4-100-per-box-orange-pk-409-or/i/G9147228"
     ],
-    "notes": "Sourced: 3 x 4 in self-adhering stock stickers for the inside of the windshield, sold in yellow, blue, orange, red. Layout (header band) and hex unverified."
+    "checks": [
+      {
+        "url": "https://zoro.com/car-dealer-depot-dealer-stock-stickers-3-x-4-100-per-box-yellow-pk-409-ye/i/G9148591",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch 403 twice; read via search for the title. Summary: 3 x 4 in self-adhering stickers attach to the inside of the windshield."
+      },
+      {
+        "url": "https://zoro.com/car-dealer-depot-dealer-stock-stickers-3-x-4-100-per-box-blue-pk-409-bl/i/G9148637",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch 403 twice; read via search for the title. Only the listing title surfaced: Dealer Stock Stickers, 3 x 4, 100 per box, Blue. Size and colour only."
+      },
+      {
+        "url": "https://zoro.com/car-dealer-depot-dealer-stock-stickers-3-x-4-100-per-box-orange-pk-409-or/i/G9147228",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch 403 twice; read via search for the title. Title gives 3 x 4 stock stickers, orange; summary adds a clear polyester backing and that the sticker becomes a delivery receipt."
+      }
+    ],
+    "unsupported": [
+      "semi-gloss finish",
+      "pre-printed heading with one large blank",
+      "number hand-written in marker",
+      "placed in a windshield corner (sources say only inside of the windshield)"
+    ]
   },
   {
     "name": "Poly key tag",
@@ -175,7 +443,36 @@
       "https://zoro.com/car-dealer-depot-round-corner-self-laminating-key-tags-250-per-box-green-pk-407-gr/i/G5207162",
       "https://www.gppinc.com/versa-key-tags.html"
     ],
-    "notes": "Sourced: pre-printed fields New/Used, Stk#, Year, Make, Model, Color, Series, VIN; colours yellow, white, purple, green, grey, orange; about 1.3 x 2.8 in (self-laminating folds to 1-1/4 x 3 in); 7/8 in plated rings. Hex unverified."
+    "checks": [
+      {
+        "url": "https://zoro.com/car-dealer-depot-poly-key-tags-250-per-box-yellow-pk-426-ye/i/G1730370",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch 403 twice; read via search for the title. Summary: polyethylene tags, 1 3/8 x 3 in, box includes chrome plated rings and 2 fine black pens."
+      },
+      {
+        "url": "https://zoro.com/car-dealer-depot-round-corner-self-laminating-key-tags-250-per-box-green-pk-407-gr/i/G5207162",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch 403 twice; read via search for the title. Summary: imprinted fields New, Used, Year, Make, Model, Body, Color; but this tag is 100 lb stock folded under plastic, not a poly strip."
+      },
+      {
+        "url": "https://www.gppinc.com/versa-key-tags.html",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "\"Easy to use with pen, pencil or marker\"; laminated, rings included, colour-coded. No size, fields or ring size stated."
+      }
+    ],
+    "unsupported": [
+      "semi-gloss finish",
+      "split ring (sources say only chrome plated rings)",
+      "punched hole",
+      "hung on a key board",
+      "field labels printed in black",
+      "notes: 7/8 in ring size not seen",
+      "notes: Stk#, Series and VIN fields not seen (fields seen: New, Used, Year, Make, Model, Body, Color)",
+      "notes: 1.3 x 2.8 in not seen (summary gives 1 3/8 x 3 in)"
+    ]
   },
   {
     "name": "Embossed label tape",
@@ -191,7 +488,33 @@
       "https://www.staples.com/dymo-embossing-520102-label-maker-tape-3-8-x-12-white-on-red-520102/product_533224",
       "https://www.staples.com/dymo-embossing-520106-label-maker-tape-3-8-x-12-white-on-blue-520106/product_533240"
     ],
-    "notes": "Sourced: 3/8 in x 12 ft glossy adhesive-backed vinyl, 0.007 in thick, white-on-red / -blue / -black. The stress-whitening mechanism and all hex values (black #0A0A0A, blue ~#1746A2) are unverified."
+    "checks": [
+      {
+        "url": "https://www.mcmaster.com/products/label-printer-tape/manufacturer-series~lt-embossing",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "3/8 in wide, 0.007 in thick \"Vinyl Plastic with Adhesive Back\", white on red/blue/black, raised characters. But lists appearance as matte and length 9 ft."
+      },
+      {
+        "url": "https://www.staples.com/dymo-embossing-520102-label-maker-tape-3-8-x-12-white-on-red-520102/product_533224",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch 403 twice; search summary: 3/8 in wide, 144 in long, red, for embossing label makers; resists moisture and weather."
+      },
+      {
+        "url": "https://www.staples.com/dymo-embossing-520106-label-maker-tape-3-8-x-12-white-on-blue-520106/product_533240",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch 403 twice; search summary: 3/8 in x 12 ft, white on blue, for embossing label makers, indoor/outdoor."
+      }
+    ],
+    "unsupported": [
+      "glossy: the one page read in full (McMaster) says matte",
+      "letters turn chalky white where the plastic is stretched",
+      "soft halos and specular highlight",
+      "use on bin fronts, drawer edges and tool cabinets in parts rooms",
+      "notes: 12 ft length conflicts with McMaster's 9 ft"
+    ]
   },
   {
     "name": "Write-on aluminium tag",
@@ -207,7 +530,33 @@
       "https://www.usabluebook.com/aluminum-write-on-tags-5-eyelet-hole-2-7-x-4-7-25-51718",
       "https://www.smartsign.com/dead-soft-metal-tags"
     ],
-    "notes": "Sourced: 0.020 in (24 ga) double-sided soft aluminium laminated over tagboard; 2 x 4, 1-3/8 x 3-1/8, 0.75 x 3 in; 3/16 in plain or eyelet hole; wired dead-soft versions up to 5 x 3 in. Hex values unverified."
+    "checks": [
+      {
+        "url": "https://www.panduit.com/en/products/signs-labels-identification/tags/safety-compliance-tags/pidt011.html",
+        "verdict": "partial",
+        "read": "search summary",
+        "evidence": "Fetch returned an empty page twice; search summary of the page: 2 x 4 in write-on aluminium tag, eyelet hole, 25/pk. The 24 ga laminate-over-tagboard detail came from a different Panduit catalogue, not this page."
+      },
+      {
+        "url": "https://www.usabluebook.com/aluminum-write-on-tags-5-eyelet-hole-2-7-x-4-7-25-51718",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch 403 twice; search summary: 0.020 in thick, soft aluminium laminate on both sides bonded to tagboard; writing legible after ink wears off."
+      },
+      {
+        "url": "https://www.smartsign.com/dead-soft-metal-tags",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch 403 twice; search summary: text is hand engraved into the soft aluminium and debossed, readable after ink fades; with or without wires; 5 x 3 in."
+      }
+    ],
+    "unsupported": [
+      "used on parts that get hot, washed or left outside",
+      "dull satin sheen",
+      "stylus (sources say pen or pencil)",
+      "notes: 3/16 in hole size not seen",
+      "notes: 0.75 x 3 in size seen only on a sibling Panduit page"
+    ]
   },
   {
     "name": "Stamped data plate",
@@ -224,7 +573,38 @@
       "https://www.summitracing.com/search/product-line/kaferlab-vw-vin-data-plates",
       "https://www.carcheckervin.com/vin-plate-rivets"
     ],
-    "notes": "Sourced: rosette (5- or 6-point star-head) rivets fix identification plates from about the mid-1960s; plates are steel or anodised aluminium (also stainless, brass); factory stamping is even in depth, font and spacing. Black finish and hex values unverified."
+    "checks": [
+      {
+        "url": "https://www.classicindustries.com/product/mm1856.html",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch 403 twice; search summary: page title \"1968-74 Chrysler, Dodge, Plymouth; NOS VIN Plate Rosette Rivets; Pair\"."
+      },
+      {
+        "url": "https://mpofcinci.com/vin-tags/",
+        "verdict": "partial",
+        "read": "fetched",
+        "evidence": "Custom Metalphoto VIN tags: photosensitive anodized aluminum, also stainless and brass, satin finish offered. Photo-imaged, not stamped; attached by adhesive or holes; no rivets, no plain steel."
+      },
+      {
+        "url": "https://www.summitracing.com/search/product-line/kaferlab-vw-vin-data-plates",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Plates \"made from the correct gauge steel or anodized aluminum\"; steel blanks are unstamped for the buyer to stamp. No black finish, no rivets."
+      },
+      {
+        "url": "https://www.carcheckervin.com/vin-plate-rivets",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "\"5-point or 6-point star-head rivets\"; every original character has \"the same font, size, and depth of impression\"."
+      }
+    ],
+    "unsupported": [
+      "satin black finish",
+      "monospaced characters",
+      "riveted to a component housing",
+      "notes: rosette rivets from about the mid-1960s (no source read gives that date; one names 1968-74, one FMVSS 1969)"
+    ]
   },
   {
     "name": "Stack-and-hang bin (blue)",
@@ -240,7 +620,32 @@
       "https://www.shelving.com/products/9d-x-6w-ultra-stacking-and-hanging-bins-12-pack",
       "https://www.alimed.com/quantum-ultra-stack-and-hang-bin-8-1-4-w-x-8-h-x-13-5-8-d.html"
     ],
-    "notes": "Sourced: high-density polypropylene; colours blue, red, yellow, semi-clear white, black, clear; moulded front label slot taking card inserts; rear full-width hanger for louvred panels; sizes from 5-3/8 x 4-1/8 x 3 in to 16 x 11 x 8 in. Hex (red ~#C9252B, yellow ~#F2C200) and ribs unverified."
+    "checks": [
+      {
+        "url": "https://www.mcmaster.com/products/hangable-bin-boxes",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "\"Polypropylene with Label Holder\"; \"A lip on the back allows bins to hang from rails or louvered panels\"; blue, red, yellow among colours; stackable."
+      },
+      {
+        "url": "https://www.shelving.com/products/9d-x-6w-ultra-stacking-and-hanging-bins-12-pack",
+        "verdict": "partial",
+        "read": "search summary",
+        "evidence": "Fetch 429 three times; search summary gave only title and price: 9 in d x 6 in w Ultra Stacking and Hanging Bins, 12 pack. No material, colour or label slot."
+      },
+      {
+        "url": "https://www.alimed.com/quantum-ultra-stack-and-hang-bin-8-1-4-w-x-8-h-x-13-5-8-d.html",
+        "verdict": "blocked",
+        "read": "not read",
+        "evidence": "Fetch 429 three times; a title search did not surface this URL, only sibling Alimed pages (those say high density polypropylene and a rear hanger for louvered panels)."
+      }
+    ],
+    "unsupported": [
+      "low waxy sheen",
+      "vertical stiffening ribs",
+      "recessed white card slot taking a card (source says only a built-in label holder)",
+      "notes: 'high-density' polypropylene and exact size range seen only on pages other than the listed URLs"
+    ]
   },
   {
     "name": "Masking tape and marker",
@@ -256,7 +661,33 @@
       "https://www.webstaurantstore.com/shurtape-cp-106-1-x-60-yards-natural-general-purpose-grade-masking-tape/562101006.html",
       "https://www.officecrave.com/highland-260048a.html"
     ],
-    "notes": "Sourced: natural/beige/tan crepe-paper backing, 1 in x 60 yd, backing accepts pen, pencil and marker, sold for labelling. Hex and wrinkle direction unverified."
+    "checks": [
+      {
+        "url": "https://www.webstaurantstore.com/cp-105-nat-24mm-x-55m-36-rls-cs/562140431.html",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "\"crepe-paper backing that accepts writing\"; beige/natural; 1 in x 60 yd; for bundling and labeling."
+      },
+      {
+        "url": "https://www.webstaurantstore.com/shurtape-cp-106-1-x-60-yards-natural-general-purpose-grade-masking-tape/562101006.html",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "\"Crepe-paper backing accepts writing\"; beige/natural; 1 in x 60 yd; ideal for labeling and identification."
+      },
+      {
+        "url": "https://www.officecrave.com/highland-260048a.html",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch 403 twice; search summary: crepe paper backing, can be written on with pens, pencils and markers for labeling. This item is 1.88 in x 60.1 yd, tan."
+      }
+    ],
+    "unsupported": [
+      "fine cross-wise wrinkles",
+      "slightly translucent",
+      "ends torn ragged (hand-tearing appears only in a review of another width)",
+      "marker ink feathers into the crepe",
+      "matte"
+    ]
   },
   {
     "name": "Hardboard pegboard",
@@ -272,7 +703,31 @@
       "https://www.lowes.com/pd/1-Piece-Hardboard-Pegboard-Actual-47-75-in-x-0-1875-in/3014320",
       "https://www.mcmaster.com/products/pegboards/material~hardboard/"
     ],
-    "notes": "Sourced: brown tempered hardboard, 1/8 to 1/4 in thick, holes 1/4 in nominal (9/32 in actual) on 1 in centres; white-faced version exists. Hex unverified."
+    "checks": [
+      {
+        "url": "https://www.doitbest.com/product/112639/dpi-4-ft-x-8-ft-x-1-4-in-brown-green-core-hardboard-pegboard-112639/",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Brown, 1/4 in; \"1/4 In. perforated holes are 9/32 In. in diameter and 1 In. on-center\"; \"Ultra smooth surface\". Tempered not stated."
+      },
+      {
+        "url": "https://www.lowes.com/pd/1-Piece-Hardboard-Pegboard-Actual-47-75-in-x-0-1875-in/3014320",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch 403 twice; search summary: brown hardboard, 3/16 in, smooth sides, 9/32 in holes spaced 1 in apart."
+      },
+      {
+        "url": "https://www.mcmaster.com/products/pegboards/material~hardboard/",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Brown hardboard; 1/8 in with 3/16 in holes or 1/4 in with 9/32 in holes; holes 1 in centre to centre. Tempered not mentioned."
+      }
+    ],
+    "unsupported": [
+      "tempered (none of the three listed pages says so)",
+      "faint satin sheen",
+      "behind a parts counter or bench"
+    ]
   },
   {
     "name": "Static-cling service reminder",
@@ -289,6 +744,39 @@
       "https://stickermule.com/en-de/uses/oil-change-stickers",
       "https://oreillyauto.com/detail/c/slip-n-grip/petoskey-plastics-slip-n-grip-stickers/pky0/fbp993345a"
     ],
-    "notes": "Sourced: 2 x 2 in, clear or white, static cling without adhesive, on perforated rolls, with write-in areas for date, mileage and oil grade under a 'next service due' heading. Red header band and hex unverified."
+    "checks": [
+      {
+        "url": "https://www.walmart.com/ip/18435865651",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch hit a bot-check page twice; search summary: 100 pcs, 2 x 2 in oil change reminder stickers for windshields, clear, next service due, no residue. Static cling not confirmed in the summary."
+      },
+      {
+        "url": "https://www.ebay.com/itm/204799698300",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch 403 twice; search summary, title: \"600 Pc Oil Change Stickers Next Service Due Reminder Sticker Roll Window 2\\\" X 2\\\"\"; 4 rolls of 200. Cling not stated."
+      },
+      {
+        "url": "https://stickermule.com/en-de/uses/oil-change-stickers",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Holds to a car window \"using natural static, with no adhesive\"; white vinyl; smallest size 50 x 50 mm. No rolls, perforation or write-in fields."
+      },
+      {
+        "url": "https://oreillyauto.com/detail/c/slip-n-grip/petoskey-plastics-slip-n-grip-stickers/pky0/fbp993345a",
+        "verdict": "partial",
+        "read": "search summary",
+        "evidence": "Fetch 403 twice; search summary: Petoskey Slip-N-Grip stickers, sold per roll, red, plastic. No size, cling, or write-in detail."
+      }
+    ],
+    "unsupported": [
+      "rolls perforated between stickers",
+      "two ruled write-in lines",
+      "write-in fields for date and mileage (only a 'next service due' heading is seen)",
+      "placed in the top corner of the windshield",
+      "glossy",
+      "notes: oil grade write-in"
+    ]
   }
 ]

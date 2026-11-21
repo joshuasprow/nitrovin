@@ -13,9 +13,30 @@
       "https://patents.google.com/patent/US9824610",
       "https://www.law.cornell.edu/cfr/text/40/86.1807-01"
     ],
-    "unverified": [
-      "base hex (visual estimate; the rule fixes only contrast and letter height)",
-      "brushed sheen"
+    "checks": [
+      {
+        "url": "https://www.law.cornell.edu/cfr/text/49/567.4",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "567.4(c),(f),(g): label on 'hinge pillar, door-latch post, or the door edge'; block capitals 'not less than three thirty-seconds of an inch high'; contrasting colour; maker, month/year, GVWR, GAWR, VIN. No material or size."
+      },
+      {
+        "url": "https://patents.google.com/patent/US9824610",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "GM tamper-evident VIN label patent: 'approximately 10 cm by 2 cm'; facestock 'vinyl or polyester', 'white or silver'. Primary location is the dashboard; door jambs listed as another location."
+      },
+      {
+        "url": "https://www.law.cornell.edu/cfr/text/40/86.1807-01",
+        "verdict": "partial",
+        "read": "fetched",
+        "evidence": "States block letters, contrasting colour and 3/32 in height, but for the EPA emission-control label 'in the engine compartment', not the door certification label."
+      }
+    ],
+    "unsupported": [
+      "matte finish and faint horizontal brushed sheen",
+      "lettering 'set in ruled rows'",
+      "silver polyester as the usual certification-label stock (patent offers it only as one option, for a VIN label)"
     ]
   },
   {
@@ -32,9 +53,32 @@
       "https://www.govinfo.gov/content/pkg/CFR-2020-title49-vol6/pdf/CFR-2020-title49-vol6-sec571-110.pdf",
       "https://regulations.justia.com/regulations/fedreg/2005/03/22/05-5580.html"
     ],
-    "unverified": [
-      "exact yellow/black/white arrangement (Figure 1 is an image; a proposal describes yellow text on black)",
-      "all hex values"
+    "checks": [
+      {
+        "url": "https://www.law.cornell.edu/cfr/text/49/571.110",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "S4.3: placard on driver's side B-pillar or door edge, must 'conform in color and format ... as shown in the example set forth in Figure 1'; S4.3(e) heading 'Tire and Loading Information'. Text names no placard colour."
+      },
+      {
+        "url": "https://www.govinfo.gov/content/pkg/CFR-2020-title49-vol6/pdf/CFR-2020-title49-vol6-sec571-110.pdf",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Fetched as PDF; text extracted locally with pdftotext. Same S4.3 wording: 'conform in color and format ... Figure 1'; heading 'Tire and Loading Information'. Black-on-yellow wording appears only for RV load labels (S9.3)."
+      },
+      {
+        "url": "https://regulations.justia.com/regulations/fedreg/2005/03/22/05-5580.html",
+        "verdict": "partial",
+        "read": "search summary",
+        "evidence": "Fetch returned HTTP 403. Search summary: NHTSA 'Tire Safety Information' final rule, 22 Mar 2005, amending the FMVSS 110 placard's content, format and location; the summary does not state colours."
+      }
+    ],
+    "unsupported": [
+      "glossy white stock",
+      "black header band",
+      "yellow emphasis",
+      "ruled table cells",
+      "'door jamb' (standard says driver's side B-pillar, else door edge)"
     ]
   },
   {
@@ -54,8 +98,50 @@
       "https://en.wikipedia.org/wiki/ISO_3864",
       "https://blog.ansi.org/ansi/ansi-z535-1-2022-safety-colors-standard/"
     ],
-    "unverified": [
-      "hex values are screen approximations of the Pantone 109 C / 151 C references; the standard defines the colours by Munsell and CIE chromaticity, and safety orange is also given as #FF7900"
+    "checks": [
+      {
+        "url": "https://alsco.com/resources/industry-standard-safety-colors-as-defined-by-the-ansi",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Yellow 'designates that one should be cautious'; red tied to DANGER; yellow PANTONE 109 C, orange PANTONE 151 C. Does not call orange 'warning'; no hex."
+      },
+      {
+        "url": "https://gist.github.com/humhei/1d680b4f2774f316b11dacc806ee6a2b",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "F# Pantone enum: PMS-109-C = 0xffd100, PMS-151-C = 0xff8200. Matches the entry's hexes for the named Pantone references; says nothing about safety use."
+      },
+      {
+        "url": "https://tapemonster.de/en/pantone-colors",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Second attempt (first was rate-limited). Pantone 109 C = FFD100, 151 C = FF8200; page notes screen colours are approximations."
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Safety_orange",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Safety orange hex #FF7900, 'Pantone number 151c', defined by ANSI Z535.1-1998 in several notation systems. Confirms the #FF7900 note; no 'warning' meaning stated."
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/ISO_3864",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "ISO 3864-2 panels: CAUTION yellow, WARNING orange, DANGER red, black contrast on yellow/orange; ANSI Z535.1 'Yellow (Pantone 109)', 'Orange (Pantone 151)'. Gives Munsell for orange; no CIE."
+      },
+      {
+        "url": "https://blog.ansi.org/ansi/ansi-z535-1-2022-safety-colors-standard/",
+        "verdict": "partial",
+        "read": "search summary",
+        "evidence": "Fetch rate-limited then HTTP 403. Search summary: blog says Z535.1-2022 'establishes the safety colors' and harmonises with ISO 3864-4; colour meanings in the summary came from other sites."
+      }
+    ],
+    "unsupported": [
+      "placement on sun visors, battery covers, radiator shrouds and jack points",
+      "semi-gloss vinyl stock",
+      "sans-serif capitals",
+      "signal-word panel sits above the message",
+      "CIE chromaticity definition (notes field; only Munsell seen)"
     ]
   },
   {
@@ -72,8 +158,29 @@
       "https://en.wikipedia.org/wiki/Chromate_conversion_coating",
       "https://www.finishing.com/113/53.shtml"
     ],
-    "unverified": [
-      "all hex values (visual estimates; sources give only 'iridescent, greenish-yellow, rainbow')"
+    "checks": [
+      {
+        "url": "https://www.gattoplaters.com/capabilities/finishes/zinc-plating/yellow-zinc",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Second attempt (first was rate-limited). Yellow zinc has 'a rainbow or iridescent appearance with dominant yellow tones'. No named parts or uses."
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Chromate_conversion_coating",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "'distinctively iridescent, greenish-yellow color'; 'commonly applied to items such as screws, hardware and tools'; zinc colours run clear/blue, yellow, gold, olive drab, black."
+      },
+      {
+        "url": "https://www.finishing.com/113/53.shtml",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Thread on yellow vs clear zinc: 'The iridescent hues of yellow/blue/pink exist because the chromate coating is very, very thin'; mentions automotive application."
+      }
+    ],
+    "unsupported": [
+      "specific parts: brackets, brake fittings, hose clamps, engine bay and chassis (sources say only screws, hardware, tools)",
+      "satin sheen"
     ]
   },
   {
@@ -90,10 +197,30 @@
       "https://www.xometry.com/resources/machining/anodized-aluminum-colors",
       "https://www.saf.com/how-to-specify/anodizing-dye-colors/"
     ],
-    "unverified": [
-      "all hex values",
-      "satin sheen",
-      "use on hose fittings (no source found)"
+    "checks": [
+      {
+        "url": "https://www.protocase.com/products/finishes/anodizing/",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Offers Red, Blue, black and Clear anodize (Mil-A-8625 Type II); 'dyed from many color choices, using organic dyes'; colour uniformity not guaranteed. No sealing, translucency or fittings."
+      },
+      {
+        "url": "https://www.xometry.com/resources/machining/anodized-aluminum-colors",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "'final color will also be dependent on things like film thickness, dye concentration, metal type'; sealing traps dye 'in the pores'; 'transparent anodic finish'. No automotive fittings."
+      },
+      {
+        "url": "https://www.saf.com/how-to-specify/anodizing-dye-colors/",
+        "verdict": "partial",
+        "read": "fetched",
+        "evidence": "Second attempt (first was rate-limited). Says an 'almost infinite number of colors' are available, commonly clear, bronze, black; nothing on shade variation, translucency or sealing."
+      }
+    ],
+    "unsupported": [
+      "use on hose fittings, fuel rail fittings, strut-top hardware and aftermarket caps",
+      "soft satin band of highlight",
+      "'alloy' as a shade factor (source says 'metal type'; only a welding note elsewhere)"
     ]
   },
   {
@@ -109,9 +236,25 @@
       "https://www.russelmetals.com/en/company/russel-metals-manitoba/product/aluminum/aluminum-tread-plate/",
       "https://monarchmetal.com/products/architectural-metals/aluminum-diamond-tread-plates/"
     ],
-    "unverified": [
-      "hex values",
-      "lug length and height (not found)"
+    "checks": [
+      {
+        "url": "https://www.russelmetals.com/en/company/russel-metals-manitoba/product/aluminum/aluminum-tread-plate/",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "'Raised four-way Diamond Pattern' at 'an approximate 1\" center'; 3003-H22 'Bright Finish'; for 'skid resistant floors'. No toolboxes, running boards or trailers."
+      },
+      {
+        "url": "https://monarchmetal.com/products/architectural-metals/aluminum-diamond-tread-plates/",
+        "verdict": "partial",
+        "read": "fetched",
+        "evidence": "Only lists diamond tread plate as a custom-fabricated shape in aluminium and stainless: 'diamond-tread plates tailored to your project requirements'. No pattern, spacing or uses."
+      }
+    ],
+    "unsupported": [
+      "truck bed toolboxes, running boards and trailer decks (source gives only floors)",
+      "polished",
+      "elongated diamonds",
+      "each lug at right angles to its neighbours"
     ]
   },
   {
@@ -129,8 +272,36 @@
       "https://www.zoro.com/wall-control-pegboard-panel-round-14-in-holes-1-in-hole-spacing-32-in-h-x-96-in-w-x-34-in-d-silver-35-p-3296gv/i/G7428312",
       "https://www.w3schools.com/colors/colors_ral.asp"
     ],
-    "unverified": [
-      "base hex (RAL 7001 silver grey is used as a stand-in; panels are sold in several colours)"
+    "checks": [
+      {
+        "url": "https://engineerfix.com/what-are-the-standard-pegboard-hole-sizes/",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Second attempt (first was rate-limited). 'one inch on-center spacing' is standard; sizes '1/8 inch and 1/4 inch'. No 9/32 in, no gauge, no finish."
+      },
+      {
+        "url": "https://www.mcmaster.com/hangers/pegboards-and-slatwall/",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Weak: an accessories catalogue page whose peg-hole-diameter filters include 1/4\" and 9/32\". No panel spacing, gauge, or painted/galvanised finish."
+      },
+      {
+        "url": "https://www.zoro.com/wall-control-pegboard-panel-round-14-in-holes-1-in-hole-spacing-32-in-h-x-96-in-w-x-34-in-d-silver-35-p-3296gv/i/G7428312",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch returned HTTP 403. Search summary of the listing: steel panel, round 1/4 in holes, 1 in hole spacing, zinc-plated/galvanised finish. Gauge not stated."
+      },
+      {
+        "url": "https://www.w3schools.com/colors/colors_ral.asp",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "RAL 7001 'Silver grey' = #8F999F, matching the base hex named as a RAL 7001 stand-in."
+      }
+    ],
+    "unsupported": [
+      "20-gauge sheet",
+      "painted finish",
+      "low sheen"
     ]
   },
   {
@@ -144,12 +315,35 @@
     "css": "background: radial-gradient(circle, #050505 0 1.2px, transparent 1.4px) 0 0 / 4px 6.93px, radial-gradient(circle, #050505 0 1.2px, transparent 1.4px) 2px 3.465px / 4px 6.93px, #2A2B2E;",
     "sources": [
       "https://www.accurateperforating.com/applications/audio",
-      "https://proav.de/audio/perforated.html",
       "https://www.b2audiousa.com/products/3-x-5-black-metal-finish-mesh-grill-sheet-staggered-row-with-5-32-holes"
     ],
-    "unverified": [
-      "hex values",
-      "the 3/32-on-5/32 pattern as typical for vehicles (a common stock pattern; open area is arithmetic, not sourced)"
+    "checks": [
+      {
+        "url": "https://www.accurateperforating.com/applications/audio",
+        "verdict": "partial",
+        "read": "fetched",
+        "evidence": "Generic audio-grille page: 'thin sheet of perforated metal ... with small holes punched in it', customisable open area and finishes. No hole size, pitch, 60-degree pattern, black or vehicle use."
+      },
+      {
+        "url": "https://www.b2audiousa.com/products/3-x-5-black-metal-finish-mesh-grill-sheet-staggered-row-with-5-32-holes",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "'Finish: Black', 'Hole Pattern: Staggered Rows', steel, for car audio. But hole diameter is 4 mm (about 5/32 in): 5/32 is the hole, not the centres; contradicts the entry's 3/32-on-5/32."
+      }
+    ],
+    "dropped": [
+      {
+        "url": "https://proav.de/audio/perforated.html",
+        "verdict": "dead",
+        "read": "not read",
+        "evidence": "First attempt rate-limited; second returned HTTP 404 Not Found."
+      }
+    ],
+    "unsupported": [
+      "60-degree stagger",
+      "3/32 in hole on 5/32 in centres (the one product page gives a 5/32 in hole and no centres)",
+      "about 33 percent open area (arithmetic only, and on an unsourced pattern)",
+      "door-card and dashboard placement"
     ]
   },
   {
@@ -166,9 +360,32 @@
       "https://www.easycomposites.co.uk/240g-22-twill-3k-carbon-fibre-cloth",
       "https://elevatedmaterials.com/carbon-fiber-weaves-what-they-are-and-why-to-use-them"
     ],
-    "unverified": [
-      "hex values",
-      "2 mm pitch is derived from the 5 ends/cm figure"
+    "checks": [
+      {
+        "url": "https://media.easycomposites.co.uk/datasheets/EC-TDS-210g-Twill-Weave-Carbon-Cloth.pdf",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Fetched as PDF (second attempt); text extracted locally. 'Weave Type 2x2 Twill', 'Pyrofil TR30S 3K', 'Ends /cm 5', 'Picks /cm 5'; uses: motorsport panels, skinning."
+      },
+      {
+        "url": "https://www.easycomposites.co.uk/240g-22-twill-3k-carbon-fibre-cloth",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "'a classic 2x2 twill weave', 3k tow, used in 'cosmetic' prepregs and skinning. This product is 240 g with 6 ends per cm, not 5; no trim parts named."
+      },
+      {
+        "url": "https://elevatedmaterials.com/carbon-fiber-weaves-what-they-are-and-why-to-use-them",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Twill gives 'a diagonal arrowhead look, known as a \"twill line\"'; 2x2 'used in many cosmetic and decorative applications'. Clear coat only in a reader comment."
+      }
+    ],
+    "unsupported": [
+      "trim inlays, mirror caps, splitters and engine covers (sources say motorsport panels, cosmetic parts)",
+      "'stair-step' description",
+      "high-gloss clear coat",
+      "alternating tows read as light and dark grey",
+      "2 mm pitch (derived from 5 ends/cm, not stated)"
     ]
   },
   {
@@ -183,12 +400,41 @@
     "sources": [
       "https://jalopnik.com/heres-what-those-little-dots-are-on-the-edges-of-your-c-1791075995",
       "https://www.motor1.com/news/803150/why-car-windshields-have-black-dots/",
-      "https://bangautoglass.com/blog/general/windshield-markings-dot-codes-as-ratings-date-codes",
       "https://www.slashgear.com/1786532/windshield-glass-number-letter-code-meaning"
     ],
-    "unverified": [
-      "hex values",
-      "dot diameter and pitch (not found)"
+    "checks": [
+      {
+        "url": "https://jalopnik.com/heres-what-those-little-dots-are-on-the-edges-of-your-c-1791075995",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Frit is a baked-on ceramic paint; the pattern works by 'gradually decreasing the size of the black dots' from edge toward middle. No dot dimensions."
+      },
+      {
+        "url": "https://www.motor1.com/news/803150/why-car-windshields-have-black-dots/",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "'a ceramic enamel that's permanently fused to the windshield'; solid black strip fades through 'progressively smaller dots'. No dot dimensions."
+      },
+      {
+        "url": "https://www.slashgear.com/1786532/windshield-glass-number-letter-code-meaning",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Markings are 'either etched, printed, or affixed'; the number after 'DOT' designates the glass manufacturer; AS1 and approval numbers are stamped. But it puts AS1 'about 5 inches from the top', not a lower corner."
+      }
+    ],
+    "dropped": [
+      {
+        "url": "https://bangautoglass.com/blog/general/windshield-markings-dot-codes-as-ratings-date-codes",
+        "verdict": "dead",
+        "read": "search summary",
+        "evidence": "HTTP 410 Gone on two fetches. A search summary of the old page says most windshields carry an etched cluster of markings called the 'bug' or stamp, with a DOT code; that text could not be read on the page."
+      }
+    ],
+    "unsupported": [
+      "the monogram sits in a lower corner (the one readable source places AS1 near the top; only the VIN is said to be at a lower corner)",
+      "the monogram reads as pale grey frosted lettering (source says only etched, printed or a label)",
+      "the enamel is matte",
+      "the frit is a border around the rear window as well as the windshield (sources speak of windshields/car glass generally)"
     ]
   },
   {
@@ -205,9 +451,30 @@
       "https://jegs.com/p/VDO/VDO-Cockpit-Gauges/753599/10002/-1",
       "https://en.wikipedia.org/wiki/Safety_orange"
     ],
-    "unverified": [
-      "hex values (the pointer orange borrows the safety-orange approximation)",
-      "typeface"
+    "checks": [
+      {
+        "url": "https://issautomotive.com/blogs/news/anatomy-of-an-instrument-cluster",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Gauge faces 'very often feature white lettering and numbers on a black or dark gray background'; at night backlighting lets light through. No pointer colour, no tick marks."
+      },
+      {
+        "url": "https://jegs.com/p/VDO/VDO-Cockpit-Gauges/753599/10002/-1",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch refused twice (HTTP 403). Search snippet of this URL: 'fire red or black pointer... flat black or white dial... white numerals'. Read only as a summary."
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Safety_orange",
+        "verdict": "partial",
+        "read": "fetched",
+        "evidence": "About the colour only: hex #FF7900, ANSI Z535.1-1998, Pantone 151c, which matches the entry's accent #FF7900. It never mentions gauges, pointers or dashboards."
+      }
+    ],
+    "unsupported": [
+      "the pointer is orange (the only pointer colours a source gives are fire red or black; safety orange is not tied to gauges by any source)",
+      "tick marks are white and backlit (sources speak of lettering and numbers only)",
+      "matte finish of the dial (the summary says 'flat black', which may mean the same; not read on the page)"
     ]
   },
   {
@@ -223,9 +490,25 @@
       "https://patents.google.com/patent/US5128063",
       "https://patents.google.com/patent/JPH0524192B2/en"
     ],
-    "unverified": [
-      "hex values (screen approximations of a 505 nm blue-green)",
-      "grid-wire mesh"
+    "checks": [
+      {
+        "url": "https://patents.google.com/patent/US5128063",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Title 'ZnO:Zn phosphor for vacuum fluorescent display'; calls ZnO:Zn 'one indispensable material for the vacuum fluorescent display'. It gives no emission colour and no wavelength."
+      },
+      {
+        "url": "https://patents.google.com/patent/JPH0524192B2/en",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "'The emission spectrum of 505nm is blue-green, so it can be used in clocks, car instrument panels...'; names 'blue-green luminescent ZnO:Zn phosphor'."
+      }
+    ],
+    "unsupported": [
+      "the 1980s and 1990s as the era",
+      "radio displays (the patent names clocks, car instrument panels, measuring instruments and VTRs)",
+      "dark filter glass in front (the patent speaks of a colour filter, not a dark one)",
+      "a visible mesh of fine grid wires (the patent mentions only a grid voltage)"
     ]
   },
   {
@@ -241,9 +524,24 @@
       "https://uk.rs-online.com/web/p/lcd-monochrome-displays/1847737",
       "https://uk.rs-online.com/web/p/lcd-monochrome-displays/2156436"
     ],
-    "unverified": [
-      "hex values; sources say 'black on grey', the green cast is an estimate",
-      "ghost segments"
+    "checks": [
+      {
+        "url": "https://uk.rs-online.com/web/p/lcd-monochrome-displays/1847737",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch refused twice (HTTP 403). Search result title for this URL: 'RS PRO 7-Segment LCD Display, Black on Grey, 1 Row by 6 Characters, Reflective'; snippet names instrument panels."
+      },
+      {
+        "url": "https://uk.rs-online.com/web/p/lcd-monochrome-displays/2156436",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch refused twice (HTTP 403). Search result title for this URL: 'RS PRO 7-Segment LCD Display, Black on Grey, 1 Row by 3-1/2 Characters, Reflective'. Other RS listings of the part mention an LED backlight."
+      }
+    ],
+    "unsupported": [
+      "use as the odometer and trip-meter window of a vehicle cluster (both sources are generic component listings)",
+      "faint ghosts of the unlit segments",
+      "the panel is flat grey with a green cast (sources say only 'black on grey')"
     ]
   },
   {
@@ -260,8 +558,32 @@
       "https://science.howstuffworks.com/engineering/structural/blueprints-blue-.htm",
       "https://hexpot.com/003153-color"
     ],
-    "unverified": [
-      "grid overlay and its pitch"
+    "checks": [
+      {
+        "url": "https://en.wikipedia.org/wiki/Cyanotype",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "'widespread adoption for architectural and engineering blueprints'; exposed areas form 'an insoluble, blue pigment (ferric ferrocyanide) known as Prussian blue'. It does not say white lines, and gives no hex. First 100,000 of 131,518 characters read."
+      },
+      {
+        "url": "https://science.howstuffworks.com/engineering/structural/blueprints-blue-.htm",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch refused twice (HTTP 403). Search summary: the article says blueprints got their colour from Prussian blue and credits Herschel's cyanotype copying process. White lines not confirmed from this page."
+      },
+      {
+        "url": "https://hexpot.com/003153-color",
+        "verdict": "blocked",
+        "read": "not read",
+        "evidence": "Fetch refused twice (HTTP 403); a search did not return the page. Other pages in that search give Prussian blue as #003153, the entry's base, but this page was not read."
+      }
+    ],
+    "unsupported": [
+      "white lines and lettering on the blue (not stated on the one page fetched; implied only by a search summary of other sites)",
+      "tone is slightly uneven",
+      "often carries a ruled grid (Wikipedia's only grid is a painter's transfer grid drawn over a photograph)",
+      "matte paper",
+      "Prussian blue = #003153 (no readable source in the list gives the value)"
     ]
   },
   {
@@ -278,10 +600,30 @@
       "https://www.w3schools.com/colors/colors_ral.asp",
       "https://hextoral.com/color-matching-tables/ral-rgb-cmyk-patone-table/"
     ],
-    "unverified": [
-      "that vehicle primers match RAL 3009 (the RAL name is the nearest standard reference)",
-      "ink hex",
-      "flatness"
+    "checks": [
+      {
+        "url": "https://gist.github.com/lunohodov/1995178",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "RAL 3009: RGB 109-52-45, HEX #6D342D, 'Oxide red'. This is exactly the entry's base #6D342D. No mention of primer or vehicles."
+      },
+      {
+        "url": "https://www.w3schools.com/colors/colors_ral.asp",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "'RAL 3009 | #703731 | Oxide red'. Name agrees; hex differs from the entry's #6D342D. No mention of primer or vehicles."
+      },
+      {
+        "url": "https://hextoral.com/color-matching-tables/ral-rgb-cmyk-patone-table/",
+        "verdict": "partial",
+        "read": "fetched",
+        "evidence": "Row 'ral 3009 | 181 | 31 88 84 37 | 6d312b': a Pantone number, CMYK and hex, but no colour name; hex differs from the entry's. No primer or vehicles."
+      }
+    ],
+    "unsupported": [
+      "that red oxide primer is seen on floor pans, chassis rails and body shells (no source mentions primer or vehicles at all)",
+      "dead-flat, chalky finish with no highlight",
+      "the three tables give three different hex values for RAL 3009 (#6D342D, #703731, #6D312B); only the first matches the entry"
     ]
   },
   {
@@ -299,10 +641,38 @@
       "https://prod-origin.txdmv.gov/sites/default/files/body-files/License_Plate_Specifications.pdf",
       "https://aamva.org/getmedia/7ffefe23-e5d7-4e7b-9393-744be0d25be2/License-Plate-Standard-Edition-3_final.pdf"
     ],
-    "unverified": [
-      "hex values",
-      "sparkle pattern",
-      "the national standard's own character-height text was not retrieved"
+    "checks": [
+      {
+        "url": "https://multimedia.3m.com/mws/media/1216215O/3m-reflective-lic-plate-sheeting-product-bulletin-3750-3750p.pdf",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch refused twice (HTTP 403). Search summary: reflective sheeting for multi-year plates, adhesive for aluminium plate substrates, has an embossing and rim debossing section. The 1.7 mm figure did not appear."
+      },
+      {
+        "url": "https://www.revenue.alabama.gov/wp-content/uploads/2022/02/License-Plate-Design-Specifications-040821.pdf",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "'finished plate size for passenger license plates is 6 X 12 inches'; characters 'no smaller than two and three-fourths inches in height'; printed on 3M reflective sheeting; 'debossing rim'."
+      },
+      {
+        "url": "https://prod-origin.txdmv.gov/sites/default/files/body-files/License_Plate_Specifications.pdf",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "'12\" width x 6\" height'; metal 'Aluminum', thickness .027\"; 'White Sheeting'; characters '1.0000\" (width) x 2.5625\" (height)'. No embossing depth; Texas plates are not described as embossed."
+      },
+      {
+        "url": "https://aamva.org/getmedia/7ffefe23-e5d7-4e7b-9393-744be0d25be2/License-Plate-Standard-Edition-3_final.pdf",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "'License plates are 12 inches by 6 inches'; 'Characters are at least 2.5 inches in height'; retro-reflective material; border 0.19 to 0.25 inch 'to where the embossed rim begins'."
+      }
+    ],
+    "unsupported": [
+      "embossed up to 1.7 mm (the only source that could carry it, the 3M bulletin, was not readable and its summary lacks the figure)",
+      "characters are inked on their raised faces (roll coating is only alluded to in the 3M summary)",
+      "a fine sparkle in the sheeting",
+      "the plate is at the rear of the vehicle",
+      "note: the entry's 'unverified' says the national standard's character height was not retrieved, but the AAMVA page does state it (at least 2.5 inches)"
     ]
   },
   {
@@ -315,13 +685,37 @@
     "texture": "Low-gloss black with a fine, tight crinkle of small ridges that scatters highlights and hides casting flaws.",
     "css": "background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.07) 0 1px, transparent 1.5px) 0 0 / 5px 4px, radial-gradient(circle at 70% 60%, rgba(0,0,0,.6) 0 1px, transparent 1.6px) 2px 1px / 4px 5px, #161616;",
     "sources": [
-      "https://www.gilroyblackout.com/blog/engine-bay-powder-coating-guide",
       "https://www.ford.com/product/ford-racing-logo-stamped-steel-valve-covers-black-crinkle-finish-p2811575885",
       "https://www.ferrarichat.com/forum/posts/135170060"
     ],
-    "unverified": [
-      "hex values",
-      "ridge size (sources say only 'very small')"
+    "checks": [
+      {
+        "url": "https://www.ford.com/product/ford-racing-logo-stamped-steel-valve-covers-black-crinkle-finish-p2811575885",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "'Ford Racing Valve Covers in a striking black crinkle finish'; stamped steel. It does not say powder coat and does not describe the texture."
+      },
+      {
+        "url": "https://www.ferrarichat.com/forum/posts/135170060",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch refused twice (HTTP 403). Search summary: thread 'Crinkle/bumpy valve cover paint?'; VHT Wrinkle Black on valve covers, wrinkle size depends on paint thickness, powder coat as an alternative."
+      }
+    ],
+    "dropped": [
+      {
+        "url": "https://www.gilroyblackout.com/blog/engine-bay-powder-coating-guide",
+        "verdict": "unrelated",
+        "read": "fetched",
+        "evidence": "The text served is about powder coating wheels ('Gloss black, satin, bronze, and custom colors'); nothing on wrinkle or crinkle finishes, valve covers, intakes or casting flaws."
+      }
+    ],
+    "unsupported": [
+      "use on intake plenums and older dashboard tops",
+      "that the finish is a powder coat (Ford says only 'crinkle finish'; the forum thread is about wrinkle paint)",
+      "low gloss",
+      "a fine, tight crinkle of small ridges ('very small' was not found in anything read)",
+      "scatters highlights and hides casting flaws"
     ]
   },
   {
@@ -338,9 +732,31 @@
       "https://technicalmanualspecsstandards.emilspec.com/MIL-STD-38784/page43.html",
       "https://iastate.pressbooks.pub/me270baughman/chapter/engineering-drawings/"
     ],
-    "unverified": [
-      "hex values",
-      "microfiche (white-on-dark film) conventions: nothing found"
+    "checks": [
+      {
+        "url": "https://en.wikipedia.org/wiki/Exploded-view_drawing",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "'used in parts catalogs, assembly and maintenance manuals'; 'Three-dimensional (isometric) illustration'; diagrams usually have 'the part identification number and a label'. Nothing on leader lines or dashed axes."
+      },
+      {
+        "url": "https://technicalmanualspecsstandards.emilspec.com/MIL-STD-38784/page43.html",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "MIL-STD-38784A p.34: index numbers 'shall start with Arabic numeral 1 and continue consecutively'; 'Lines and arrowheads shall not cross or come in contact with other callout lines'."
+      },
+      {
+        "url": "https://iastate.pressbooks.pub/me270baughman/chapter/engineering-drawings/",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Fetch refused twice (HTTP 403). Search summary: the chapter shows a sub-assembly with an exploded view, balloon-numbered parts and a title block, and a bill of materials on a companion page."
+      }
+    ],
+    "unsupported": [
+      "dashed axis lines",
+      "matte off-white paper",
+      "thin black line art (the MIL-STD page has only the heading 'Line drawing details', no text)",
+      "the table is a parts list beside the drawing (only the unread Iowa State page speaks of a bill of materials)"
     ]
   }
 ]

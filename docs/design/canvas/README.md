@@ -59,9 +59,11 @@ and fittings made of them, each chip the stylesheet's own value; and
 aside, each naming where its drawing is kept. The second row is what was
 found for the page's look, none of it settled: `Swatches-Thermal`,
 `Swatches-Yard` and `Swatches-Vehicle`, a web search's findings of
-2026-11-20. A found swatch's dimensions and conventions are its sources',
-each linked by its full address; its colours are estimates, since no source
-publishes one. `scripts/canvas/swatches.mjs` builds all five from the files
+2026-11-20. Each source of a found swatch is linked by its full address and was opened
+and checked against its card on 2026-11-21: a card marks a page that backs
+it only in part, one read as a search result's summary, and one that could
+not be read, and lists what it says that no source read does. Its colours
+are estimates, since no source publishes one. `scripts/canvas/swatches.mjs` builds all five from the files
 of `scripts/canvas/swatches/`. `scripts/canvas.sh` does not build these
 boards and leaves them alone.
 

@@ -10,8 +10,35 @@
     "css": "background: linear-gradient(90deg, rgba(0,0,0,.035), rgba(0,0,0,0) 6%, rgba(255,255,255,.5) 50%, rgba(0,0,0,0) 94%, rgba(0,0,0,.035)), #F7F6F1;",
     "sources": [
       "https://en.wikipedia.org/wiki/Thermal_paper",
-      "https://psap.library.illinois.edu/advanced-help/paper-unbound-officecopy-thermal",
-      "https://www.prindo.co.uk/Revista/thermal-paper/"
+      "https://psap.library.illinois.edu/advanced-help/paper-unbound-officecopy-thermal"
+    ],
+    "checks": [
+      {
+        "url": "https://en.wikipedia.org/wiki/Thermal_paper",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "\"Direct thermal made a strong comeback with point-of-sale receipt printing\"; surface \"coated with a substance which changes color when heated\". No widths, sheen or brightness."
+      },
+      {
+        "url": "https://psap.library.illinois.edu/advanced-help/paper-unbound-officecopy-thermal",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Describes a \"chemically coated, plastic-like frontside\". No brightness figure, roll widths or receipts."
+      }
+    ],
+    "dropped": [
+      {
+        "url": "https://www.prindo.co.uk/Revista/thermal-paper/",
+        "verdict": "dead",
+        "read": "not read",
+        "evidence": "HTTP 404 on two fetches; a search for the URL found no copy or summary of the page."
+      }
+    ],
+    "unsupported": [
+      "80 mm or 58 mm roll widths",
+      "about 85-87% brightness from spec sheets (presumably from the dead prindo page)",
+      "faint satin sheen, almost no visible fibre",
+      "pick tickets at a parts counter"
     ]
   },
   {
@@ -27,6 +54,32 @@
       "https://psap.library.illinois.edu/advanced-help/paper-unbound-officecopy-thermal",
       "https://en.wikipedia.org/wiki/Thermal_paper",
       "https://www.sunavin.com/receipt-paper-why-it-fades-and-how-to-restore-it/"
+    ],
+    "checks": [
+      {
+        "url": "https://psap.library.illinois.edu/advanced-help/paper-unbound-officecopy-thermal",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "\"the coatings may turn brown or yellow even in dark storage\"; \"Coated thermal papers tend to curl\"; \"dramatic reduction of contrast\"; fading within five years."
+      },
+      {
+        "url": "https://en.wikipedia.org/wiki/Thermal_paper",
+        "verdict": "partial",
+        "read": "fetched",
+        "evidence": "Mentions UV fading of the image and dyes reverting to colourless in hot or humid storage; nothing on yellowing, browning, edges or curl."
+      },
+      {
+        "url": "https://www.sunavin.com/receipt-paper-why-it-fades-and-how-to-restore-it/",
+        "verdict": "partial",
+        "read": "fetched",
+        "evidence": "Vendor guide on why receipts fade (heat, humidity, light) and restoring them; yellow/brown mentioned only in passing; no edges, curl, years or storage places."
+      }
+    ],
+    "unsupported": [
+      "darker toward the edges (the PSAP edge-darkening passage appears to describe other paper, not thermal coatings)",
+      "image turns grey-brown specifically",
+      "curls along its length (source says only that coated thermal papers tend to curl)",
+      "glovebox, wallet or file drawer as the setting"
     ]
   },
   {
@@ -40,6 +93,18 @@
     "css": "background: radial-gradient(circle at 70% 30%, rgba(40,36,38,.35), rgba(40,36,38,0) 45%), linear-gradient(100deg, rgba(40,36,38,0) 40%, rgba(40,36,38,.18) 41%, rgba(40,36,38,0) 43%), #CFCBC6;",
     "sources": [
       "https://en.wikipedia.org/wiki/Thermal_paper"
+    ],
+    "checks": [
+      {
+        "url": "https://en.wikipedia.org/wiki/Thermal_paper",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "\"An unintended heat source, such as a coffee cup, can discolour the paper and obscure any printing\"; a fingernail's friction can \"produce a mark\"."
+      }
+    ],
+    "unsupported": [
+      "dashboard as the heat source",
+      "cloudy grey bloom appearance (appearance is not described)"
     ]
   },
   {
@@ -54,6 +119,24 @@
     "sources": [
       "https://www.possupply.com/blog/end-of-roll-warning-stripe-replace-paper",
       "https://community.squareup.com/t5/Questions-How-To/Is-there-a-notice-when-thermal-paper-is-runnuing-out/td-p/111344"
+    ],
+    "checks": [
+      {
+        "url": "https://www.possupply.com/blog/end-of-roll-warning-stripe-replace-paper",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Stripe is \"typically on the last 3-6 feet of the paper roll\", on \"the edges of a paper roll, or down the middle\", applied with \"an ink wheel or a marking pen\"; mostly red, sometimes pink or green."
+      },
+      {
+        "url": "https://community.squareup.com/t5/Questions-How-To/Is-there-a-notice-when-thermal-paper-is-runnuing-out/td-p/111344",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "Two fetches returned an empty body. Search summary of the thread: the one reply says the paper has red diagonal stripes across the last several feet as a low-paper marker."
+      }
+    ],
+    "unsupported": [
+      "the band is translucent and the print shows through it",
+      "one edge versus both edges (source says only 'the edges')"
     ]
   },
   {
@@ -69,6 +152,30 @@
       "https://support.bradyid.com/articles/en_US/Knowledge/White-lines-or-vertical-voids-in-the-same-spot-on-every-label",
       "https://midcomdata.com/thermal-printer-warning-signs-need-service/",
       "https://docs.zebra.com/us/en/printers/desktop/zd411d-direct-thermal-link-os-printer/types-of-thermal-media/general-media-and-print-specifications.html"
+    ],
+    "checks": [
+      {
+        "url": "https://support.bradyid.com/articles/en_US/Knowledge/White-lines-or-vertical-voids-in-the-same-spot-on-every-label",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "A void that \"always occurs in the same location on every label\" is \"likely a damaged print head pixel\"; cleaning the head is the first step."
+      },
+      {
+        "url": "https://midcomdata.com/thermal-printer-warning-signs-need-service/",
+        "verdict": "partial",
+        "read": "fetched",
+        "evidence": "Says white lines indicate \"failed heating elements\" and blames dirt, but describes them as \"horizontal white lines\", not vertical; no dot size."
+      },
+      {
+        "url": "https://docs.zebra.com/us/en/printers/desktop/zd411d-direct-thermal-link-os-printer/types-of-thermal-media/general-media-and-print-specifications.html",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Zebra ZD411D spec: dot pitch at 203 dpi is \"0.125mm (0.0049 in.)\"."
+      }
+    ],
+    "unsupported": [
+      "lines are exactly one dot wide (sources give dot pitch and failed elements, not the line width)",
+      "worn counter (receipt) printer: the sources are label printers"
     ]
   },
   {
@@ -81,8 +188,29 @@
     "texture": "Solid thermal black, slightly uneven and soft-edged because it is built from 0.125 mm dots; large solids often print a shade lighter than text (unverified).",
     "css": "background: repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 1px, rgba(255,255,255,0) 1px 2px), #232021;",
     "sources": [
-      "https://download4.epson.biz/sec_pubs/pos/reference_en/escpos/gs_cb.html",
-      "https://download4.epson.biz/sec_pubs/pos/reference_en/escpos/gs_exclamation.html"
+      "https://download4.epson.biz/sec_pubs/pos/reference_en/escpos/gs_cb.html"
+    ],
+    "checks": [
+      {
+        "url": "https://download4.epson.biz/sec_pubs/pos/reference_en/escpos/gs_cb.html",
+        "verdict": "supports",
+        "read": "search summary",
+        "evidence": "HTTP 403 on two fetches. Search summary of the page: GS B, \"Turn white/black reverse print mode on/off\", hex 1D 42 n."
+      }
+    ],
+    "dropped": [
+      {
+        "url": "https://download4.epson.biz/sec_pubs/pos/reference_en/escpos/gs_exclamation.html",
+        "verdict": "unrelated",
+        "read": "search summary",
+        "evidence": "HTTP 403 on two fetches. Search summary of the page: GS !, \"Select character size\"; nothing about reverse printing or solid black."
+      }
+    ],
+    "unsupported": [
+      "0.125 mm dots (not in this entry's sources; the Zebra page cited by entry 4 gives it for 203 dpi)",
+      "solid black is slightly uneven and soft-edged",
+      "large solids print a shade lighter than text (the entry itself marks this unverified)",
+      "use as a ticket header or section band"
     ]
   },
   {
@@ -97,6 +225,25 @@
     "sources": [
       "https://en.wikipedia.org/wiki/Thermal_paper",
       "https://www.zywell.net/what-s-the-difference-between-color-thermal-paper-and-standard-black-and-white-thermal-paper.html"
+    ],
+    "checks": [
+      {
+        "url": "https://en.wikipedia.org/wiki/Thermal_paper",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "\"Most thermal papers' coatings turn black when heated\" but \"coatings that turn blue or red, and multicolor coatings, are sometimes used\"; lists blue and black leuco dyes."
+      },
+      {
+        "url": "https://www.zywell.net/what-s-the-difference-between-color-thermal-paper-and-standard-black-and-white-thermal-paper.html",
+        "verdict": "partial",
+        "read": "fetched",
+        "evidence": "Printer maker's article comparing two-colour thermal paper with black-and-white; says nothing about blue image, leuco dyes, older or budget rolls."
+      }
+    ],
+    "unsupported": [
+      "blue image is typical of older or budget rolls",
+      "the blue is dull or blue-black",
+      "same smooth coated face as black-image paper"
     ]
   },
   {
@@ -110,6 +257,18 @@
     "css": "background: linear-gradient(90deg, rgba(120,90,0,.06), rgba(120,90,0,0) 6%, rgba(120,90,0,0) 94%, rgba(120,90,0,.06)), #F6E79A;",
     "sources": [
       "https://psap.library.illinois.edu/advanced-help/paper-unbound-officecopy-thermal"
+    ],
+    "checks": [
+      {
+        "url": "https://psap.library.illinois.edu/advanced-help/paper-unbound-officecopy-thermal",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "\"Other thermal paper colors include brilliant white, beige, and yellow.\" (An archival guide on office copies, not receipt rolls.)"
+      }
+    ],
+    "unsupported": [
+      "coloured rolls used to tell a shop copy or pick ticket from the customer's white receipt",
+      "tinted base stock (source does not say whether the colour is in the base or the coating)"
     ]
   },
   {
@@ -122,9 +281,36 @@
     "texture": "Heavier, flatter and brighter than receipt paper with a matte top coat; square die-cut corners and a barcode block (appearance and hexes unverified, tag contents sourced).",
     "css": "background: linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,0) 30%), #FAFAF6; border: 1px solid #D9D6CC;",
     "sources": [
-      "https://www.SharpAutoParts.com/wp-content/uploads/2017/03/Green-Lean-Sustainable.pdf",
       "https://products.car-part.com/checkmate/details.html",
       "https://www.raw2k.co.uk/news/how-to-create-an-inventory-system-for-salvaged-parts"
+    ],
+    "checks": [
+      {
+        "url": "https://products.car-part.com/checkmate/details.html",
+        "verdict": "partial",
+        "read": "fetched",
+        "evidence": "Product page for salvage-yard inventory software; mentions scanning barcodes to move parts between locations, but never describes a part tag or its contents."
+      },
+      {
+        "url": "https://www.raw2k.co.uk/news/how-to-create-an-inventory-system-for-salvaged-parts",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "Part ID is \"a unique identifier marked on the physical part\"; \"Some yards use barcode or QR code systems, printing labels for each part\"; shelving with location codes."
+      }
+    ],
+    "dropped": [
+      {
+        "url": "https://www.SharpAutoParts.com/wp-content/uploads/2017/03/Green-Lean-Sustainable.pdf",
+        "verdict": "dead",
+        "read": "search summary",
+        "evidence": "HTTP 404 on two fetches (also lower-case host). A search fragment of the PDF says each inventoried part gets a tag with stock number, VIN, description, year/make/model."
+      }
+    ],
+    "unsupported": [
+      "tags are direct-thermal printed",
+      "tag is wired or stuck to the part",
+      "tag carries the location (only the dead PDF's fragment lists tag fields, and location is not among them)",
+      "heavier, flatter, brighter stock with matte top coat and square die-cut corners (the entry itself marks appearance unverified)"
     ]
   },
   {
@@ -139,6 +325,24 @@
     "sources": [
       "https://www.POSSUPPLY.COM/how-to-fix-printing-faded-receipts",
       "https://www.hprt.com/Product/POS-PRINTERS/Fix-Blurry-Receipts-POS-Printers.html"
+    ],
+    "checks": [
+      {
+        "url": "https://www.POSSUPPLY.COM/how-to-fix-printing-faded-receipts",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "\"These cheaper rolls often have poor coatings, leading to illegible and uneven text\"; contaminants on the head \"cause streaks and fading\"."
+      },
+      {
+        "url": "https://www.hprt.com/Product/POS-PRINTERS/Fix-Blurry-Receipts-POS-Printers.html",
+        "verdict": "supports",
+        "read": "fetched",
+        "evidence": "\"Faded or blurry receipts usually mean the print head is dirty or worn\"; \"Cheap paper can produce uneven prints\"; low print density affects quality."
+      }
+    ],
+    "unsupported": [
+      "lighter patches run across the width specifically",
+      "grey and patchy from the first day"
     ]
   }
 ]
