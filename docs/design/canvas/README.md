@@ -7,7 +7,10 @@ kept together.
 
 ## What is here
 
-`project/` holds the canvas's own files, exactly as read down:
+`project/` holds the canvas's own files, as read down, for the pages
+"nitrovin UI" and "Swatches" only. A proposal's frames and a hand-made
+artboard stay on the canvas and out of this folder; `canvas.json` is the
+whole index all the same, so it names frames this folder does not hold:
 
 - `canvas.json`: the index. Each frame's place and size, the pages, the notes.
 - One `.dc.html` per frame.
@@ -40,17 +43,19 @@ colour-scheme queries are resolved for that box: the page at 1280, 768 and
 edited by hand: a change to the page is a rerun, and the diff of this folder
 is what to publish.
 
-A second page, "Proposals", appears when something is drawn before it is
-built. Its frames are not `scripts/canvas.sh`'s: each is captured the same
-way from a prototype running on a throwaway branch, which its row's title
-names by issue. When the proposal is built its frames are folded into the
-six and the page goes. None is open now: the part type picker of #366 was
-the first, and this folder's history holds its frames.
+A page per proposal appears when something is drawn before it is
+built, named for what it proposes. Its frames are not `scripts/canvas.sh`'s:
+each is captured the same way from a prototype running on a throwaway
+branch, and that branch, not this folder, is their record. When the
+proposal is built its frames are folded into the six and the page goes.
+The part type picker of #366 was the first.
 
-A page, "Swatches", holds three boards of materials found for the page's
-look, none of them settled: `Swatches-Thermal`, `Swatches-Yard` and
-`Swatches-Vehicle`. `scripts/canvas/swatches.mjs` builds them from the files
-of `scripts/canvas/swatches/`, a web search's findings of 2026-11-20. A
+A page, "Swatches", holds four boards. `Swatches-Page` is the page's own
+materials, settled, each chip the stylesheet's own value. `Swatches-Thermal`,
+`Swatches-Yard` and `Swatches-Vehicle` are materials found for the page's
+look, none of them settled. `scripts/canvas/swatches.mjs` builds all four
+from the files of `scripts/canvas/swatches/`; the three are a web search's
+findings of 2026-11-20. A
 swatch's dimensions and conventions are its sources', which it names; its
 colours are estimates, since no source publishes one. `scripts/canvas.sh`
 does not build these boards and leaves them alone.
@@ -60,7 +65,7 @@ The wireframes and texture frames that proposed the fitment slices (#320 to
 
 ## This snapshot
 
-Canvas version `1795210908-ce3e`, published on 2026-11-20.
+Canvas version `1795230967-1763`, published on 2026-11-20.
 
 ## Rebuilding a canvas from a snapshot
 

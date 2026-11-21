@@ -12,6 +12,9 @@
 body{margin:0}
 @keyframes caret{ 50% { box-shadow: none; } }
 @keyframes blink{ 50% { opacity: 0; } }
+@property --nt-l{ syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --nt-r{ syntax: "<length>"; inherits: false; initial-value: 0px; }
+@keyframes nt-fade{ 0% { --nt-l: 0px; --nt-r: 48px; } 6% { --nt-l: 48px; --nt-r: 48px; } 94% { --nt-l: 48px; --nt-r: 48px; } 100% { --nt-l: 48px; --nt-r: 0px; } }
 @keyframes bracket{ from { transform: scaleX(0); } }
 @keyframes draw{ from { stroke-dashoffset: 1; } }
 @keyframes pop{ from { transform: translateY(-8px) scale(.92); opacity: 0; } }
@@ -24,6 +27,7 @@ body{margin:0}
 &{--bg: #16222d; --fg: #eef2f5; --muted: #a9b6c2; --line: #45566a; --faint: #3a4a5c; --card-bg: #1f2d3a; --link: #8ec5ff; --bad: #ff8a8a; --c-wmi: #ff6b81; --c-vds: #7db4ff; --c-check: #c9a2ff; --c-year: #ffb067; --c-plant: #6fdcab; --c-serial: #b8c4cf; --on: #14181d; --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 10px rgb(0 0 0 / .7)}
 header, main, #ui-error{max-width: 62rem; margin-inline: auto}
 h2{font-size: 1.1rem; margin: 1.5rem 0 .5rem}
+h3{font: 900 12px var(--label-font); letter-spacing: .08em; text-transform: uppercase; margin: 1.5rem 0 .5rem; padding-bottom: .2rem; border-bottom: 3px solid var(--c-vds)}
 a:is(:focus-visible,.is-fv), button:is(:focus-visible,.is-fv), summary:is(:focus-visible,.is-fv), input:is(:focus-visible,.is-fv), pre:is(:focus-visible,.is-fv), .hang:is(:focus-visible,.is-fv){outline: 3px solid var(--link); outline-offset: 2px}
 code, pre, .mono{font-family: var(--cell-font)}
 .visually-hidden, .plbl{position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap}
@@ -65,7 +69,6 @@ label{font-weight: 600}
 .joins{height: 28px}
 .leaders path, .joins path{fill: none; stroke: var(--faint); stroke-width: 3; stroke-dasharray: 1}
 #answer[data-done~="wmi"] path.g-wmi, #answer[data-done~="vds"] path.g-vds, #answer[data-done~="check"] path.g-check, #answer[data-done~="year"] path.g-year, #answer[data-done~="plant"] path.g-plant, #answer[data-done~="serial"] path.g-serial{stroke: var(--c); stroke-width: 5; stroke-linejoin: round; filter: var(--stripe-lift)}
-.joins:has(+ .aka .stack:first-child .tagplate.blank) path{display: none}
 .plate-form .decode{margin-top: .75rem}
 .live .plate textarea{position: absolute; inset: 0; display: block; width: 100%; height: 100%; box-sizing: border-box; margin: 0; padding: 10px var(--plate-pad); border: 0; border-radius: 0; outline: 0; box-shadow: none; resize: none; overflow: hidden; appearance: none; background: transparent; color: transparent; caret-color: transparent; cursor: text; font: 16px/var(--cell-h) var(--cell-font); letter-spacing: calc(100cqw / 17 - 1ch); text-align: left; text-transform: uppercase; white-space: pre}
 .live .plate textarea:placeholder-shown{text-align: center}
@@ -97,68 +100,90 @@ ol.years{list-style: none; margin: .15rem 0 0; padding: 0; font-size: 11px; colo
 ol.years li{display: inline; white-space: nowrap}
 ol.years li:not(:last-child)::after{content: " ·"; font-weight: 400; color: var(--manila-muted)}
 ol.years li.current{color: var(--on-manila); font-weight: 700}
-.aka{position: relative; isolation: isolate; display: flow-root; margin: 0 16px}
-.aka h2, .more-voc{padding: .2rem .5rem; font: 900 9px/1.2 var(--cell-font); letter-spacing: .14em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 2px solid var(--tape-edge); border-radius: 1px; box-shadow: var(--lift-stuck)}
-.aka h2{position: absolute; top: 6px; left: 0; margin: 0}
-ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
-.stack{position: relative; --under: 0px; --lead: 30px; --prev: 0px; --strip-shadow: var(--lift-stuck); padding-bottom: var(--under)}
-.stack:has(.fan:not(:checked)):not(:has(.seg:is(:target,.is-target))){& .tagplate.below { position: absolute; inset: 0 0 auto; margin: 0; visibility: hidden; } &.d1 { --under: 12px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), var(--lift-stuck); } &.d2 { --under: 22px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), var(--lift-stuck); } &.d3 { --under: 32px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), 0 30px 0 -15px #1e2226, 0 31px 0 -14px var(--tape-edge), var(--lift-stuck); } &.d1 + .stack { --prev: 12px; } &.d2 + .stack { --prev: 22px; } &.d3 + .stack { --prev: 32px; }}
-.tagplate{position: relative; display: grid; grid-template-columns: 130fr 170fr 465fr 255fr; align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape)}
-.tagplate::before{content: ""; grid-area: 1 / 1 / 2 / -1; align-self: stretch; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--strip-shadow)}
-.tagplate > .lbl, .tagplate > .seg{grid-row: 1}
-.tagplate > .lbl{grid-column: 1}
-.tagplate > .g-wmi{grid-column: 2}
-.tagplate > .g-vds{grid-column: 3}
-.tagplate > .g-year{grid-column: 4}
-.tagplate .g-wmi{--cm: #ff6b81}
-.tagplate .g-vds{--cm: #7db4ff}
-.tagplate .g-year{--cm: #ffb067}
-.lbl{align-self: stretch; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 4px; padding: .3rem .5rem .3rem .7rem; border-right: 1px solid rgb(255 255 255 / .18); min-width: 0}
-.tagplate .stamp{display: flex; align-items: center; gap: .35rem; min-width: 0; max-width: 100%; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss)}
-.stamp .voc{min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis}
+.aka{--lane: 3rem; position: relative; z-index: 3; margin: 0 0 0 var(--lane)}
+.aka:has(.nametags:is(:focus-visible,.is-fv)){outline: 3px solid var(--link); outline-offset: 2px}
+.nametags{list-style: none; display: flex; align-items: stretch; gap: 10px; margin: 0; padding: 36px 4px 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding-inline: 4px}
+.name{flex: none; scroll-snap-align: start; box-sizing: border-box; min-width: 11rem; max-width: min(40rem, 72vw); margin: 0; padding-bottom: .6rem}
+.nametags:is(:focus-visible,.is-fv){outline: 0}
+.nrows{display: grid; grid-template-rows: repeat(2, auto); grid-auto-flow: column; grid-auto-columns: max-content; justify-content: start; align-content: start; gap: 0 1.4rem}}
+.vp{@supports (animation-timeline: scroll()){
+.nametags{mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline)}}}
+.vp{
+.name::after{content: ""; position: absolute; left: calc(50% - 1px); top: -36px; width: 2px; height: 50px; background: var(--steel); pointer-events: none}
+.nrow{position: relative}
+.name .how{position: absolute; inset: 0; width: 100%; padding: 0; background: none; border: 0; box-shadow: none; cursor: pointer}
+.name .how:is(:hover,.is-hover), .name .how:is(:focus-visible,.is-fv){background: rgb(0 0 0 / .07)}
+.name .nvoc{margin: -.2rem -.6rem .45rem; padding: .25rem .6rem; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border: 0; border-block: 1px solid var(--tape-edge)}
+.nw{width: fit-content; max-width: 100%; margin: 0 0 .3rem; font: 700 .95rem/1.25 var(--cell-font); letter-spacing: .04em; border-bottom: 3px solid var(--cm)}
+.nrow{display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; margin: 0 0 .3rem}
+.nrow .nw{margin: 0}
+.nrow .g-year{font-weight: 400; font-size: .85rem}
 .seg{position: relative; align-self: stretch; display: flex; align-items: center; justify-content: center; padding: .35rem .6rem; text-align: center; min-width: 0}
 .seg .w{font: 900 1.05rem/1.2 var(--cell-font); letter-spacing: .08em; text-shadow: var(--tape-emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere}
 .seg::after{content: ""; position: absolute; left: calc(50% - 2.5px); top: calc(-1px - var(--lead) - var(--prev)); height: calc(var(--lead) + var(--prev) + 1px); border-left: 5px solid var(--c); filter: var(--stripe-lift)}
-.seg:is(:target,.is-target){scroll-margin: 16rem 2rem 4rem}
-.seg:is(:target,.is-target) .w{outline: 2px solid var(--cm); outline-offset: 4px}
-.tagplate.blank{grid-template-columns: 130fr 890fr; color: var(--muted); border: 3px dashed var(--faint)}
-.tagplate.blank::before{display: none}
-.tagplate.blank .none{grid-column: 2; padding: .5rem .75rem}
-.tagplate.blank .none:first-child{grid-column: 1 / -1}
-.tagplate .info{position: absolute; right: .45rem; top: 50%; transform: translateY(-50%); width: 1.35rem; height: 1.35rem; padding: 0; border-radius: 50%; font: italic 700 12px Georgia, serif; text-transform: none; letter-spacing: 0}
-.tagplate .info:is(:active,.is-active){transform: translateY(calc(-50% + 2px))}
-.aka:has(.more:not(:checked)) .stack.rest{display: none}
-.more:checked ~ .more-voc .n, .more:not(:checked) ~ .more-voc .less{display: none}}
-.vp-wide{
-.stack:has(.fan:not(:checked)):not(:has(.seg:is(:target,.is-target))){&.d1 { --under: 7px; } &.d2 { --under: 12px; } &.d3 { --under: 17px; }}}
-.vp{
-.ptgroups:has(> .ptgroup:only-child:not(:has(.pthead))){grid-template-columns: minmax(0, 1fr)}}
+.fit{--rail-x: 3px; position: relative; isolation: isolate; display: flow-root; margin: 0 16px}
+.fitstrip{--lead: 30px; --prev: 0px; display: grid; grid-template-columns: 170fr 170fr 170fr 510fr; align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck)}
+.fitstrip .stamp{align-self: stretch; display: flex; align-items: center; min-width: 0; margin: 0; padding: 0 .5rem 0 .7rem; border-right: 1px solid rgb(255 255 255 / .18); font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss)}
+.fitstrip .g-wmi{--cm: #ff6b81; grid-column: 1}
+.fitstrip .g-vds{--cm: #7db4ff; grid-column: 2}
+.fitstrip .g-year{--cm: #ffb067; grid-column: 3}
+.fitstrip .seg{grid-row: 2}
+.fitstrip .vfacts{grid-row: 2; grid-column: 4}
+.fitstrip .stamp{grid-row: 1; grid-column: 1 / -1; padding-block: .3rem; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18)}
+.vfacts{display: flex; flex-wrap: wrap; align-items: center; gap: 4px 22px; min-width: 0; margin: 0; padding: .45rem .7rem; border-left: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss)}
+.vfacts dt{font-size: 11px; line-height: 1.2; letter-spacing: .04em; text-transform: uppercase; color: #aeb7c0; text-shadow: none}
+.vfacts dd{margin: 0; font: 900 .95rem/1.25 var(--cell-font); letter-spacing: .06em}
+.vchars dd{display: flex; gap: 3px}
+.vc{display: grid; justify-items: center; min-width: 1.15rem}
+.vc b{width: 100%; text-align: center; border-bottom: 3px solid #7db4ff}
+.vc small{font: 400 10px/1.3 var(--cell-font); letter-spacing: 0; color: #aeb7c0; text-shadow: none}
+.ptgroups:has(> .ptgroup:only-child:not(:has(.pthead))){grid-template-columns: minmax(0, 1fr)}
+:is(.fit, .part, .choice) .blank{display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; box-sizing: border-box; min-height: 46px; margin: 30px 0 0; padding: .5rem .75rem; color: var(--muted); border: 3px dashed var(--faint); border-radius: 2px}
+.drops, .carry{display: none}
+.fitstrip{anchor-name: --fit-strip}}
 :is(.vp-tab,.vp-phone){
 .leaders, .joins{display: none}
 .hang{--col: 12.5rem; --lbl-h: 1.5rem; --gap: 12px; overflow-x: auto; overscroll-behavior-x: contain; margin: .75rem calc(-1 * var(--gutter)) 0; padding: 4px var(--gutter) 14px}
 .hang:is(:focus-visible,.is-fv){outline-offset: -3px}
 .cards{grid-template-columns: repeat(6, var(--col)); width: max-content; padding: 0}
-.aka{width: calc(6 * var(--col)); margin: 0}
-.aka h2, .more-voc, .tagplate.blank{position: sticky; left: calc(var(--gutter) + 4px)}
-.aka h2{top: auto; width: fit-content; margin: 14px 0 -6px 4px}
-.aka.done h2{position: absolute; left: auto; width: 1px; height: 1px; margin: 0; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap}
-.aka.done .stack:first-child .tagplate:first-child .stamp::before{content: "Also known as ·"; content: "Also known as ·" / ""; flex: none}
-.stack{--lead: calc(var(--gap) + var(--lbl-h) + 16px)}
-.tagplate{grid-template-columns: repeat(6, var(--col)); margin-top: var(--gap); min-height: 0}
-.tagplate::before{grid-area: 2 / 1 / 3 / 5; margin: 0 4px; min-height: 2.9rem}
-.tagplate > .seg{grid-row: 2; margin: 0 4px}
-.tagplate > .g-wmi{grid-column: 1}
-.tagplate > .g-vds{grid-column: 2}
-.tagplate > .g-year{grid-column: 4; padding-inline: 1.9rem}
-.tagplate > .lbl{grid-area: 1 / 1 / 2 / -1; justify-self: start; position: sticky; left: calc(var(--gutter) + 4px); z-index: 1; flex-direction: row; align-items: center; gap: .4rem; box-sizing: border-box; height: var(--lbl-h); max-width: calc(var(--vw) - 2 * var(--gutter) - 8px); margin: 0 0 16px 4px; padding: 0; border: 0}
-.lbl .stamp{flex-wrap: nowrap; padding: .2rem .5rem; background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 2px solid var(--tape-edge); border-radius: 1px; box-shadow: var(--lift-stuck)}
 .seg .w{font-size: .9rem; letter-spacing: .04em}
-.tagplate .info{right: auto; left: calc(4 * var(--col) - 4px - 1.7rem); top: auto; bottom: calc(1.45rem - .675rem); transform: none}
-.tagplate .info:is(:active,.is-active){transform: translateY(2px)}}
+.fit{margin: 0}
+.fitstrip{grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 30px}
+.fitstrip .g-vds{grid-column: 1}
+.fitstrip .g-year{grid-column: 2}
+.fitstrip:has(.g-wmi){grid-template-columns: repeat(3, minmax(0, 1fr))}
+.fitstrip:has(.g-wmi) .g-vds{grid-column: 2}
+.fitstrip:has(.g-wmi) .g-year{grid-column: 3}
+.fitstrip .vfacts{grid-row: 3; grid-column: 1 / -1; border-left: 0; border-top: 1px solid rgb(255 255 255 / .18)}
+.aka{margin-right: calc(-1 * var(--gutter))}
+.nametags{padding-right: var(--gutter); scroll-padding-right: var(--gutter)}
+.fitstrip .seg::after{display: none}}
 :is(.vp-tab,.vp-phone){@supports (animation-timeline: --a) and (timeline-scope: --a){
 #answer{timeline-scope: --hang; --col: 12.5rem}
 .hang{scroll-timeline: --hang x}
-.aka.done .stacks{position: relative; --tail: 14px}}}
+.cards{position: relative}
+#answer:has(.fitstrip) .cards::before, #answer:has(.fitstrip) .cards::after{content: ""; position: absolute; top: 100%; height: 12px; left: calc(1.5 * var(--col) - 2.5px); border-left: 5px solid var(--c-vds); filter: var(--stripe-lift); pointer-events: none}
+#answer:has(.fitstrip) .cards::after{left: calc(3.5 * var(--col) - 2.5px); border-left-color: var(--c-year)}
+.carry{display: block; position: absolute; z-index: -1; top: -3px; left: calc(-1 * var(--gutter)); right: calc(-1 * var(--gutter)); height: 35px; overflow: clip; pointer-events: none; animation: hang-p linear both; animation-timeline: --hang; --w: calc(100% - 2 * var(--gutter)); --r: calc(6 * var(--col) - var(--w)); --mv: calc(var(--gutter) + 1.5 * var(--col) - round(var(--hang-p) * var(--r), .02px)); --my: calc(var(--gutter) + 3.5 * var(--col) - round(var(--hang-p) * var(--r), .02px)); --fv: calc(var(--gutter) + .25 * var(--w)); --fy: calc(var(--gutter) + .75 * var(--w))}
+.carry span{position: absolute; inset: 0}
+.carry span::before, .carry span::after{content: ""; position: absolute; box-sizing: border-box; border: 0 solid var(--c-vds); filter: var(--stripe-lift)}
+.carry span::after{border-color: var(--c-year)}
+.carry span:nth-child(1)::before, .carry span:nth-child(1)::after{top: 0; width: 5px; border-left-width: 5px}
+.carry span:nth-child(1)::before{left: calc(var(--mv) - 2.5px); height: 12px}
+.carry span:nth-child(1)::after{left: calc(var(--my) - 2.5px); height: 21px}
+.carry span:nth-child(2)::before, .carry span:nth-child(2)::after{height: 5px; border-top-width: 5px}
+.carry span:nth-child(2)::before{top: 7px; left: calc(min(var(--mv), var(--fv)) - 2.5px); right: calc(100% - max(var(--mv), var(--fv)) - 2.5px)}
+.carry span:nth-child(2)::after{top: 16px; left: calc(min(var(--my), var(--fy)) - 2.5px); right: calc(100% - max(var(--my), var(--fy)) - 2.5px)}
+.carry span:nth-child(3)::before, .carry span:nth-child(3)::after{bottom: 0; width: 5px; border-left-width: 5px}
+.carry span:nth-child(3)::before{top: 7px; left: calc(var(--fv) - 2.5px)}
+.carry span:nth-child(3)::after{top: 16px; left: calc(var(--fy) - 2.5px)}
+.carry:has(span:nth-child(4)){--mm: calc(var(--gutter) + .5 * var(--col) - round(var(--hang-p) * var(--r), .02px)); --fm: calc(var(--gutter) + var(--w) / 6); --fv: calc(var(--gutter) + .5 * var(--w)); --fy: calc(var(--gutter) + var(--w) * 5 / 6)}
+.carry span:nth-child(n + 4)::after{display: none}
+.carry span:nth-child(n + 4)::before{border-color: var(--c-wmi)}
+.carry span:nth-child(4)::before{top: 0; left: calc(var(--mm) - 2.5px); width: 5px; height: 30px; border-left-width: 5px}
+.carry span:nth-child(5)::before{top: 25px; height: 5px; border-top-width: 5px; left: calc(min(var(--mm), var(--fm)) - 2.5px); right: calc(100% - max(var(--mm), var(--fm)) - 2.5px)}
+.carry span:nth-child(6)::before{top: 25px; bottom: 0; left: calc(var(--fm) - 2.5px); width: 5px; border-left-width: 5px}
+#answer:has(.fitstrip .g-wmi) .cards > .card:first-child::after{content: ""; position: absolute; top: 100%; height: 12px; left: calc(50% - 2.5px); border-left: 5px solid var(--c-wmi); pointer-events: none}}}
 :is(.vp-tab,.vp-phone){
 .hang{scroll-behavior: smooth}}
 .vp-phone{
@@ -171,7 +196,7 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 .plate{--cell-h: 15cqw}
 .hang, #answer{--col: 9.5rem}
 .seg .w{font-size: .8rem; letter-spacing: .03em}
-.aka:has(.more:not(:checked)) .stack.third{display: none}
+.fit{--tag: calc(100% - 2.5rem)}
 .labels, .cells, .under{grid-template-columns: repeat(9, minmax(0, 1fr))}
 .cells{row-gap: 8px}
 .cell{font-size: 9cqw; margin: 0 2px; border-bottom-width: 4px}
@@ -203,10 +228,10 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 
 </style>
 </helmet>
-<div class="root sheet" data-scheme="dark" style="width: 1280px; height: 1940px; color: var(--fg); background: var(--bg)">
-<div><h1 class="sh-h1">Cards, brackets and lines</h1><p class="sh-intro">Each card is a manila tag hung by its eyelet from its group's line. A row is a label over its value, both left-aligned. Under the cards, the names are one block of label tape; the Vehicle and Model year lines run through it and on down the page.</p></div>
+<div class="root sheet" data-scheme="dark" style="width: 1280px; height: 2360px; color: var(--fg); background: var(--bg)">
+<div><h1 class="sh-h1">Cards, brackets and lines</h1><p class="sh-intro">Each card is a manila tag hung by its eyelet from its group's line. A row is a label over its value, both left-aligned. Under the cards, the vehicle's block of label tape takes the Vehicle and Model year lines and says what the vehicle is; its names hang under it as manila tags, a vocabulary each, in a row that scrolls sideways.</p></div>
 <section>
-<p class="sh-cap">Decoded <span>Brackets, leader lines, cards, join lines and the names.</span></p>
+<p class="sh-cap">Decoded <span>Brackets, leader lines, cards, join lines, the vehicle's block and its names.</span></p>
 <div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px">
 
 <main id="ui-main">
@@ -265,7 +290,7 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 <path class="g-plant" pathLength="1" d="M630 0V18H765V36" vector-effect="non-scaling-stroke"></path>
 <path class="g-serial" pathLength="1" d="M840 0V18H935V36" vector-effect="non-scaling-stroke"></path>
 </svg>
-<div class="hang" role="region" aria-label="Cards and names" tabindex="0">
+<div class="hang" role="region" aria-label="Cards" tabindex="0">
 <div class="cards">
 <section class="card g-wmi done" data-group="wmi" aria-labelledby="card-wmi">
 <h2 id="card-wmi">Maker <span class="pos">1–3</span></h2>
@@ -314,28 +339,35 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 </section>
 </div>
 <svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-<path class="g-wmi" pathLength="1" d="M85 0V18H215V28" vector-effect="non-scaling-stroke"></path>
-<path class="g-vds" pathLength="1" d="M255 0V9H532.5V28" vector-effect="non-scaling-stroke"></path>
-<path class="g-year" pathLength="1" d="M595 0V18H892.5V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-wmi" pathLength="1" d="M85 0V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-vds" pathLength="1" d="M255 0V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-year" pathLength="1" d="M595 0V14H425V28" vector-effect="non-scaling-stroke"></path>
 </svg>
+</div>
+<section class="fit" id="fit" aria-labelledby="fit-h">
+<span class="carry" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></span>
+<div class="fitstrip">
+<p class="stamp">This vehicle · demo-catalog</p>
+<span class="seg g-wmi"><span class="w">Ford</span></span>
+<span class="seg g-vds"><span class="w">F150</span></span>
+<span class="seg g-year"><span class="w">2015</span></span>
+<dl class="vfacts" aria-label="This vehicle, to match the options against">
+<div><dt>Body</dt><dd>Pickup</dd></div>
+<div><dt>Engine</dt><dd>3.5 L · 6 cyl · Gasoline</dd></div>
+<div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>
+</dl>
+</div>
 <section class="aka done" id="aka" aria-labelledby="aka-h">
-<h2 id="aka-h">Also known as</h2>
-<ol class="stacks">
-<li class="stack d0">
-<ol class="tags">
-<li class="tagplate">
-<span class="lbl"><span class="stamp" title="demo-vehicles"><span class="voc">demo-vehicles</span></span>
-</span>
-<span class="seg g-wmi" title="From the maker, positions 1–3"><span class="w">Ford</span></span>
-<span class="seg g-vds" title="From the vehicle, positions 4–8"><span class="w">F150</span></span>
-<span class="seg g-year" title="The years this name holds for"><span class="w">any year</span></span>
-<button class="info" aria-label="How Ford F150 was reached" type="button">i</button>
-</li>
-</ol>
-</li>
+<h2 id="aka-h" class="visually-hidden">Also known as</h2>
+<ol class="nametags" aria-label="Also known as" tabindex="0">
+<li class="card done name">
+<h3 class="nvoc">demo-vehicles</h3>
+<p class="nw g-wmi">Ford</p>
+<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="how" aria-label="How Ford F150 was reached" type="button"></button></p>
+</div></li>
 </ol>
 </section>
-</div>
+</section>
 </div>
 </main>
 
@@ -401,7 +433,7 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 <path class="g-plant" pathLength="1" d="M630 0V18H765V36" vector-effect="non-scaling-stroke"></path>
 <path class="g-serial" pathLength="1" d="M840 0V18H935V36" vector-effect="non-scaling-stroke"></path>
 </svg>
-<div class="hang" role="region" aria-label="Cards and names" tabindex="0">
+<div class="hang" role="region" aria-label="Cards" tabindex="0">
 <div class="cards">
 <section class="card g-wmi done" data-group="wmi" aria-labelledby="card-wmi">
 <h2 id="card-wmi">Maker <span class="pos">1–3</span></h2>
@@ -427,18 +459,13 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 <h2 id="card-serial">Serial <span class="pos">12–17</span></h2>
 </section>
 </div>
-<svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-<path class="g-wmi" pathLength="1" d="M85 0V18H215V28" vector-effect="non-scaling-stroke"></path>
-<path class="g-vds" pathLength="1" d="M255 0V9H532.5V28" vector-effect="non-scaling-stroke"></path>
-<path class="g-year" pathLength="1" d="M595 0V18H892.5V28" vector-effect="non-scaling-stroke"></path>
-</svg>
-<section class="aka" id="aka" aria-labelledby="aka-h">
-<h2 id="aka-h">Also known as</h2>
-<ol class="stacks">
-<li class="stack"><ol class="tags"><li class="tagplate blank"><span class="none">Names turn up once the model is known.</span></li></ol></li>
-</ol>
-</section>
 </div>
+<section class="fit" id="fit" aria-labelledby="fit-h">
+<section class="aka" id="aka" aria-labelledby="aka-h">
+<h2 id="aka-h" class="visually-hidden">Also known as</h2>
+<p class="blank"><span>Names turn up once the model is known.</span></p>
+</section>
+</section>
 </div>
 </main>
 
@@ -446,7 +473,7 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 </section>
 <div class="sh-row">
 <section>
-<p class="sh-cap">Narrow <span>Below 64rem the cards and the names are one sideways-scrolling row; no leader lines.</span></p>
+<p class="sh-cap">Narrow <span>Below 64rem the cards are one sideways-scrolling row, with no leader lines; the names' row scrolls by itself.</span></p>
 <div class="vp vp-tab pad" style="width: 768px; --vw: 768px">
 
 <main id="ui-main">
@@ -505,7 +532,7 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 <path class="g-plant" pathLength="1" d="M630 0V18H765V36" vector-effect="non-scaling-stroke"></path>
 <path class="g-serial" pathLength="1" d="M840 0V18H935V36" vector-effect="non-scaling-stroke"></path>
 </svg>
-<div class="hang" role="region" aria-label="Cards and names" tabindex="0">
+<div class="hang" role="region" aria-label="Cards" tabindex="0">
 <div class="cards">
 <section class="card g-wmi done" data-group="wmi" aria-labelledby="card-wmi">
 <h2 id="card-wmi">Maker <span class="pos">1–3</span></h2>
@@ -554,28 +581,35 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 </section>
 </div>
 <svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-<path class="g-wmi" pathLength="1" d="M85 0V18H215V28" vector-effect="non-scaling-stroke"></path>
-<path class="g-vds" pathLength="1" d="M255 0V9H532.5V28" vector-effect="non-scaling-stroke"></path>
-<path class="g-year" pathLength="1" d="M595 0V18H892.5V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-wmi" pathLength="1" d="M85 0V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-vds" pathLength="1" d="M255 0V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-year" pathLength="1" d="M595 0V14H425V28" vector-effect="non-scaling-stroke"></path>
 </svg>
+</div>
+<section class="fit" id="fit" aria-labelledby="fit-h">
+<span class="carry" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></span>
+<div class="fitstrip">
+<p class="stamp">This vehicle · demo-catalog</p>
+<span class="seg g-wmi"><span class="w">Ford</span></span>
+<span class="seg g-vds"><span class="w">F150</span></span>
+<span class="seg g-year"><span class="w">2015</span></span>
+<dl class="vfacts" aria-label="This vehicle, to match the options against">
+<div><dt>Body</dt><dd>Pickup</dd></div>
+<div><dt>Engine</dt><dd>3.5 L · 6 cyl · Gasoline</dd></div>
+<div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>
+</dl>
+</div>
 <section class="aka done" id="aka" aria-labelledby="aka-h">
-<h2 id="aka-h">Also known as</h2>
-<ol class="stacks">
-<li class="stack d0">
-<ol class="tags">
-<li class="tagplate">
-<span class="lbl"><span class="stamp" title="demo-vehicles"><span class="voc">demo-vehicles</span></span>
-</span>
-<span class="seg g-wmi" title="From the maker, positions 1–3"><span class="w">Ford</span></span>
-<span class="seg g-vds" title="From the vehicle, positions 4–8"><span class="w">F150</span></span>
-<span class="seg g-year" title="The years this name holds for"><span class="w">any year</span></span>
-<button class="info" aria-label="How Ford F150 was reached" type="button">i</button>
-</li>
-</ol>
-</li>
+<h2 id="aka-h" class="visually-hidden">Also known as</h2>
+<ol class="nametags" aria-label="Also known as" tabindex="0">
+<li class="card done name">
+<h3 class="nvoc">demo-vehicles</h3>
+<p class="nw g-wmi">Ford</p>
+<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="how" aria-label="How Ford F150 was reached" type="button"></button></p>
+</div></li>
 </ol>
 </section>
-</div>
+</section>
 </div>
 </main>
 
@@ -641,7 +675,7 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 <path class="g-plant" pathLength="1" d="M630 0V18H765V36" vector-effect="non-scaling-stroke"></path>
 <path class="g-serial" pathLength="1" d="M840 0V18H935V36" vector-effect="non-scaling-stroke"></path>
 </svg>
-<div class="hang" role="region" aria-label="Cards and names" tabindex="0">
+<div class="hang" role="region" aria-label="Cards" tabindex="0">
 <div class="cards">
 <section class="card g-wmi done" data-group="wmi" aria-labelledby="card-wmi">
 <h2 id="card-wmi">Maker <span class="pos">1–3</span></h2>
@@ -690,28 +724,35 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 </section>
 </div>
 <svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-<path class="g-wmi" pathLength="1" d="M85 0V18H215V28" vector-effect="non-scaling-stroke"></path>
-<path class="g-vds" pathLength="1" d="M255 0V9H532.5V28" vector-effect="non-scaling-stroke"></path>
-<path class="g-year" pathLength="1" d="M595 0V18H892.5V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-wmi" pathLength="1" d="M85 0V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-vds" pathLength="1" d="M255 0V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-year" pathLength="1" d="M595 0V14H425V28" vector-effect="non-scaling-stroke"></path>
 </svg>
+</div>
+<section class="fit" id="fit" aria-labelledby="fit-h">
+<span class="carry" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></span>
+<div class="fitstrip">
+<p class="stamp">This vehicle · demo-catalog</p>
+<span class="seg g-wmi"><span class="w">Ford</span></span>
+<span class="seg g-vds"><span class="w">F150</span></span>
+<span class="seg g-year"><span class="w">2015</span></span>
+<dl class="vfacts" aria-label="This vehicle, to match the options against">
+<div><dt>Body</dt><dd>Pickup</dd></div>
+<div><dt>Engine</dt><dd>3.5 L · 6 cyl · Gasoline</dd></div>
+<div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>
+</dl>
+</div>
 <section class="aka done" id="aka" aria-labelledby="aka-h">
-<h2 id="aka-h">Also known as</h2>
-<ol class="stacks">
-<li class="stack d0">
-<ol class="tags">
-<li class="tagplate">
-<span class="lbl"><span class="stamp" title="demo-vehicles"><span class="voc">demo-vehicles</span></span>
-</span>
-<span class="seg g-wmi" title="From the maker, positions 1–3"><span class="w">Ford</span></span>
-<span class="seg g-vds" title="From the vehicle, positions 4–8"><span class="w">F150</span></span>
-<span class="seg g-year" title="The years this name holds for"><span class="w">any year</span></span>
-<button class="info" aria-label="How Ford F150 was reached" type="button">i</button>
-</li>
-</ol>
-</li>
+<h2 id="aka-h" class="visually-hidden">Also known as</h2>
+<ol class="nametags" aria-label="Also known as" tabindex="0">
+<li class="card done name">
+<h3 class="nvoc">demo-vehicles</h3>
+<p class="nw g-wmi">Ford</p>
+<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="how" aria-label="How Ford F150 was reached" type="button"></button></p>
+</div></li>
 </ol>
 </section>
-</div>
+</section>
 </div>
 </main>
 
@@ -720,7 +761,7 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1940}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2360}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};

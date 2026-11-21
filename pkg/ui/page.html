@@ -157,19 +157,18 @@ is open and the panel shown whole, which plate.js tells a history entry by. */}}
 <path class="g-plant" pathLength="1" d="M630 0V18H765V36" vector-effect="non-scaling-stroke"/>
 <path class="g-serial" pathLength="1" d="M840 0V18H935V36" vector-effect="non-scaling-stroke"/>
 </svg>
-<div class="hang" role="region" aria-label="Cards and names" tabindex="0">
+<div class="hang" role="region" aria-label="Cards" tabindex="0">
 <div class="cards">
 {{range .Groups}}{{template "card" .}}
 {{end}}</div>
-{{if not .Ways}}<svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-<path class="g-wmi" pathLength="1" d="M85 0V18H215V28" vector-effect="non-scaling-stroke"/>
-<path class="g-vds" pathLength="1" d="M255 0V9H532.5V28" vector-effect="non-scaling-stroke"/>
-<path class="g-year" pathLength="1" d="M595 0V18H892.5V28" vector-effect="non-scaling-stroke"/>
+{{if and (not .Ways) .Fit.Types}}<svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+{{if .Fit.Make}}<path class="g-wmi" pathLength="1" d="M85 0V28" vector-effect="non-scaling-stroke"/>
+{{end}}<path class="g-vds" pathLength="1" d="M255 0V28" vector-effect="non-scaling-stroke"/>
+<path class="g-year" pathLength="1" d="M595 0V14H425V28" vector-effect="non-scaling-stroke"/>
 </svg>
-{{template "aka" .Names}}
 {{end}}</div>
 {{with .Ways}}<div class="choice"><p class="blank"><span>{{$.Error}}</span>{{range .}}<a href="{{.Href}}">{{.Text}}</a>{{end}}</p></div>
-{{else}}{{template "fit" .Fit}}
+{{else}}{{template "fit" .FitView}}
 {{with .Error}}<p class="error" role="alert">{{.}}</p>{{end}}{{end}}
 {{if or .Problems .Fix}}<div class="problems" role="status">
 {{range .Problems}}<p>{{.}}</p>
@@ -211,78 +210,50 @@ carries the codes around it, one run of small text. */}}
 </section>
 {{- end}}
 
-{{/* aka is "Also known as", the first derived card, with no box of its
-own: the maker's, the vehicle's and the year's lines run on down into
-its stacks, one for each vocabulary loaded, which on a wide page are one
-block, strip against strip. A stack is the vocabulary's
-names as plates (aka-tag), the first on top and the rest under it, their
-edges showing. The vocabulary's name on the top plate is the stack's
-switch, the label of a checkbox (no script): on, the stack is one plate,
-a row to a name, under the one stamp. The columns are fixed fractions of
-the width (130, 170, 465 and 255 of 1020), which the lines above are drawn
-to. A vocabulary with no name, and the card before the model is known or
-with no vocabulary loaded, keep a blank plate in their place. On a narrow
-page the columns are the cards' six: the make under Maker, the model
-under Vehicle and the years under Model year.
-
-The block shows three vocabularies, two on a phone, and keeps the rest
-(a stack's Late) behind the "more" switch after them, a checkbox's label
-as a stack's switch is. */}}
+{{/* aka is "Also known as" (#366): the vehicle's names in the
+vocabularies loaded, a manila tag a vocabulary, in one row that scrolls
+sideways under the vehicle's block (fit). A tag has the vocabulary's name
+on a strip of label tape across it, with its count where it holds several
+names; the make once, where every name shares it; then a line a name: the
+model, and the years its mapping holds for. No word has a label: each
+stands over its group's colour, the Maker's, the Vehicle's or the Model
+year's. A dashed underline is a doubt (akaTag), which the word's title and
+the name's note, a popover behind its button, say in words. A vocabulary
+with no name keeps a tag that says so. Before the model is known, or with
+no vocabulary loaded, the names' place is a blank strip. */}}
 {{define "aka" -}}
 <section class="aka{{if not (or .Waiting .None)}} done{{end}}" id="aka" aria-labelledby="aka-h">
-<h2 id="aka-h">Also known as</h2>
-{{if .Capped}}<input type="checkbox" class="more visually-hidden" id="aka-more" aria-label="Show every vocabulary">
-{{end}}<ol class="stacks">
-{{if .None}}<li class="stack"><ol class="tags"><li class="tagplate blank"><span class="none">No vocabulary loaded. <button type="button" popovertarget="vocabularies">Add a vocabulary</button></span></li></ol></li>
-{{else if .Waiting}}<li class="stack"><ol class="tags"><li class="tagplate blank"><span class="none">Names turn up once the model is known.</span></li></ol></li>
-{{else}}{{range .Rows}}<li class="stack d{{.Depth}}{{with .Late}} {{.}}{{end}}">
-{{if .Fan}}<input type="checkbox" class="fan visually-hidden" id="{{.Fan}}" aria-label="Show every name in {{.Vocabulary}}">{{end}}
-<ol class="tags">
-{{range .Names}}{{template "aka-tag" .}}
-{{else}}<li class="tagplate blank"><span class="stamp">{{.Vocabulary}}</span><span class="none">No name for this one yet.</span></li>
+<h2 id="aka-h" class="visually-hidden">Also known as</h2>
+{{if .None}}<p class="blank"><span>No vocabulary loaded.</span><button type="button" popovertarget="vocabularies">Add a vocabulary</button></p>
+{{else if .Waiting}}<p class="blank"><span>Names turn up once the model is known.</span></p>
+{{else}}<ol class="nametags" aria-label="Also known as" tabindex="0">
+{{range .Rows}}{{$make := .Make}}<li class="card done name{{if .Rule}} rule{{end}}">
+<h3 class="nvoc">{{.Vocabulary}}{{if gt (len .Names) 1}} <span class="count">{{len .Names}}<span class="visually-hidden"> names</span></span>{{end}}</h3>
+{{with $make}}<p class="nw g-wmi">{{.}}</p>
+{{end}}{{if .Names}}<div class="nrows">{{range .Names}}{{$n := .}}<p class="nrow{{if .Rule}} rule{{end}}">{{if and .Make (not $make)}}<span class="nw g-wmi" title="{{.MakeNote}}">{{.Make}}</span>{{end}}<span class="nw g-vds{{if .ModelUnsure}} unsure{{end}}" title="{{.ModelNote}}">{{.Model}}</span><span class="nw g-year{{if .YearUnsure}} unsure{{end}}" title="{{.YearNote}}">{{.Years}}</span>{{with .Details}}<button type="button" class="{{if $n.Doubt}}info{{else}}how{{end}}" popovertarget="{{$n.ID}}" aria-label="How {{$n.Make}} {{$n.Model}} was reached">{{if $n.Doubt}}i{{end}}</button>{{end}}</p>
+{{with .Details}}<div class="note" id="{{$n.ID}}" popover>{{.}}</div>
+{{end}}{{end}}</div>{{else}}<p class="none">No name for this one yet.</p>
+{{end}}</li>
 {{end}}</ol>
-</li>
-{{end}}{{end}}</ol>
-{{if .Capped}}<label class="more-voc{{if not .More}} phone{{end}}" for="aka-more"><span class="n">{{with .More}}<span class="at3">{{.}}</span>{{end}}<span class="at2">{{.MorePhone}}</span></span><span class="less">Fewer vocabularies</span></label>
 {{end}}</section>
 {{- end}}
 
-{{/* aka-tag is one name: the vocabulary's stamp, then its make, model and
-years, each under its group's bracket on the line from above. The top
-plate of a stack of several carries the stamp as the stack's switch, with
-how many names it holds; the plates under it carry none. A dashed line,
-bracket or mark is a doubt (akaTag), which the segment's title and the
-tag's note, a popover behind its button, say in words. The stamp is in
-the plate's label (lbl), which on a narrow page is a line above the name
-that stays put while the region scrolls. A stack with years that are
-unsure has "Check years" there, a link to the first of them: following it
-scrolls them into view, and fans the stack out when they are under its
-top plate (ui.css), with no script. */}}
-{{define "aka-tag" -}}
-<li class="tagplate{{if .Rule}} rule{{end}}{{if .Under}} below{{end}}">
-<span class="lbl">{{if .Fan}}<label class="stamp switch" for="{{.Fan}}" title="{{.Vocabulary}}: {{.Count}} names"><span class="voc">{{.Vocabulary}}</span> <span class="count">{{.Count}}</span></label>
-{{else if not .Under}}<span class="stamp" title="{{.Vocabulary}}"><span class="voc">{{.Vocabulary}}</span></span>
-{{end}}{{with .Check}}<a class="check" href="#{{.}}">Check years<span class="visually-hidden"> in {{$.Vocabulary}}</span></a>{{end}}</span>
-<span class="seg g-wmi{{if not .Make}} none{{end}}" title="{{.MakeNote}}"><span class="w">{{.Make}}</span></span>
-<span class="seg g-vds{{if .ModelUnsure}} unsure{{end}}" title="{{.ModelNote}}"><span class="w">{{.Model}}</span></span>
-<span class="seg g-year{{if .YearUnsure}} unsure{{end}}"{{with .YearsID}} id="{{.}}"{{end}} title="{{.YearNote}}"><span class="w">{{.Years}}</span></span>
-{{with .Details}}<button type="button" class="info" popovertarget="{{$.ID}}" aria-label="How {{$.Make}} {{$.Model}} was reached">i</button>
-<div class="note" id="{{$.ID}}" popover>{{.}}</div>{{end}}
-</li>
-{{- end}}
-
-{{/* fit is the parts that fit (fit.go), under the names. Found, it is a
-strip of label tape saying what was asked (the catalog, and the model and
-year it asked with, on the lines from Vehicle and Model year through the
-names), the part type picker under it (#366), a key of the second tape on its own
+{{/* fit is the parts that fit (fit.go), under the cards. Found, it is the
+vehicle's block, a strip of label tape that says what the vehicle is: the
+model and the year it asked the catalog with, on the lines from the
+Vehicle and Model year cards, then "This vehicle", the catalog, and what
+the decode says of the vehicle to match a candidate's options against
+(.vfacts); the vehicle's names under it (aka), found or not;
+the part type picker under it (#366), a key of the second tape on its own
 piece of label tape that names the pressed part type and opens the part
 types dialog, every part type under the headings of a part vocabulary,
 which hangs from the picker as its list; a key beside the picker clears
-the pressed one, and plate.js lists up to three opened recently under it;
+the pressed one, and plate.js lists up to two opened recently beside it
+on the same tape, and all of them at the head of the list;
 and the pressed one's candidates as manila tags on two rails
-of pinstripe tape: Vehicle's and Model year's, carried from the names to
-the strip on a narrow page (.carry), out of the strip (.stems), along
-(.runs) and into the picker (.drops), then down from it
+of pinstripe tape: Vehicle's and Model year's, carried from the cards to
+the block on a narrow page (.carry), from the block down a lane into
+the picker (.drops), then down from it
 (.risers) and along (.rails) to each eyelet (ui.css). A tag's
 number is a strip of label tape across it; its rows are the catalog's
 words, verbatim; its marks are ink on it: a solid stamp checked, a dashed
@@ -295,20 +266,29 @@ Vocabularies dialog's button or a link on. Every link here is the page's
 own, which plate.js swaps in place (swap). */}}
 {{define "fit" -}}
 <section class="fit" id="fit" aria-labelledby="fit-h">
-{{if .Types}}<span class="carry" aria-hidden="true"><span></span><span></span><span></span></span>
+<h2 id="fit-h" class="visually-hidden">Parts that fit</h2>
+{{if .Types}}<span class="carry" aria-hidden="true"><span></span><span></span><span></span>{{if .Make}}<span></span><span></span><span></span>{{end}}</span>
 <div class="fitstrip">
-<h2 id="fit-h" class="stamp">Parts that fit · {{.Catalog}}</h2>
-<span class="seg g-vds"><span class="w">{{.Model}}</span></span>
+<p class="stamp">This vehicle · {{.Catalog}}</p>
+{{with .Make}}<span class="seg g-wmi"><span class="w">{{.}}</span></span>
+{{end}}<span class="seg g-vds"><span class="w">{{.Model}}</span></span>
 <span class="seg g-year"><span class="w">{{.Year}}</span></span>
-</div>
-<div class="ptwrap" data-spine="{{.Spine}}">
+{{with .Facts}}<dl class="vfacts" aria-label="This vehicle, to match the options against">
+{{range .Rows}}<div><dt>{{.Label}}</dt><dd>{{.Value}}</dd></div>
+{{end}}{{with .Chars}}<div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd>{{range .}}<span class="vc"><b>{{.Char}}</b><small>{{.Pos}}</small></span>{{end}}</dd></div>
+{{end}}</dl>
+{{end}}</div>
+{{end}}{{template "aka" .Names}}
+{{if .Types}}<div class="ptwrap" data-spine="{{.Spine}}">
 <div class="ptsel">
+<div class="ptkeys">
 <button type="button" id="pick-type" class="ptfield" popovertarget="part-types"><span class="plab">Part type</span><span class="nm">{{if .Pressed}}{{.Pressed}}{{else}}Choose a part type{{end}}</span><span class="n">{{.PickCount}}<span class="visually-hidden"> {{.PickNoun}}</span></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg></button>
 {{if .Pressed}}<a class="ptclear swap" id="clear-type" data-focus="pick-type" href="{{.Clear}}" aria-label="Clear {{.Pressed}}">×</a>
 {{end}}</div>
 <ul class="ptrecents" aria-label="Opened recently" hidden></ul>
 </div>
-{{if .Pressed}}<span class="stems" aria-hidden="true"></span><span class="runs" aria-hidden="true"></span><span class="drops" aria-hidden="true"></span>
+</div>
+{{if .Pressed}}<span class="drops" aria-hidden="true"></span>
 {{end}}{{template "part-types-dialog" .Dialog}}
 {{if .Invite}}<p class="blank"><span>Choose a part type to see what fits this vehicle.</span></p>
 {{end}}{{with .NoneFit}}<p class="blank"><span>{{.}}</span></p>
@@ -336,8 +316,7 @@ own, which plate.js swaps in place (swap). */}}
 {{end}}</div></div>
 </div>
 {{end}}{{if .Tags}}{{with .Next}}<p class="more-cands">This page shows {{len $.Tags}} of {{$.Total}} candidates. <a class="swap" href="{{.}}">Next page</a></p>
-{{end}}{{end}}{{else}}<h2 id="fit-h" class="visually-hidden">Parts that fit</h2>
-<p class="blank"><span>{{.Blank}}</span>{{if .Add}}<button type="button" popovertarget="vocabularies">Add a catalog</button>{{end}}{{range .Ways}}<a href="{{.Href}}">{{.Text}}</a>{{end}}</p>
+{{end}}{{end}}{{else}}<p class="blank"><span>{{.Blank}}</span>{{if .Add}}<button type="button" popovertarget="vocabularies">Add a catalog</button>{{end}}{{range .Ways}}<a href="{{.Href}}">{{.Text}}</a>{{end}}</p>
 {{end}}</section>
 {{- end}}
 

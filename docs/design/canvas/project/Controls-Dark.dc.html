@@ -12,6 +12,9 @@
 body{margin:0}
 @keyframes caret{ 50% { box-shadow: none; } }
 @keyframes blink{ 50% { opacity: 0; } }
+@property --nt-l{ syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --nt-r{ syntax: "<length>"; inherits: false; initial-value: 0px; }
+@keyframes nt-fade{ 0% { --nt-l: 0px; --nt-r: 48px; } 6% { --nt-l: 48px; --nt-r: 48px; } 94% { --nt-l: 48px; --nt-r: 48px; } 100% { --nt-l: 48px; --nt-r: 0px; } }
 @keyframes bracket{ from { transform: scaleX(0); } }
 @keyframes draw{ from { stroke-dashoffset: 1; } }
 @keyframes pop{ from { transform: translateY(-8px) scale(.92); opacity: 0; } }
@@ -94,58 +97,62 @@ table.sum td{text-align: center; padding: .2rem .45rem}
 table.sum .skip{color: var(--muted)}
 .problems{margin: .75rem 20px 0; color: var(--bad)}
 .problems p{margin: .2rem 0}
-.aka{position: relative; isolation: isolate; display: flow-root; margin: 0 16px}
-.aka h2, .more-voc{padding: .2rem .5rem; font: 900 9px/1.2 var(--cell-font); letter-spacing: .14em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 2px solid var(--tape-edge); border-radius: 1px; box-shadow: var(--lift-stuck)}
-.aka h2{position: absolute; top: 6px; left: 0; margin: 0}
-ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
-.stack{position: relative; --under: 0px; --lead: 30px; --prev: 0px; --strip-shadow: var(--lift-stuck); padding-bottom: var(--under)}
-.stack:has(.fan:not(:checked)):not(:has(.seg:is(:target,.is-target))){& .tagplate.below { position: absolute; inset: 0 0 auto; margin: 0; visibility: hidden; } &.d1 { --under: 12px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), var(--lift-stuck); } &.d2 { --under: 22px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), var(--lift-stuck); } &.d3 { --under: 32px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), 0 30px 0 -15px #1e2226, 0 31px 0 -14px var(--tape-edge), var(--lift-stuck); } &.d1 + .stack { --prev: 12px; } &.d2 + .stack { --prev: 22px; } &.d3 + .stack { --prev: 32px; }}
-.tagplate{position: relative; display: grid; grid-template-columns: 130fr 170fr 465fr 255fr; align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape)}
-.tagplate::before{content: ""; grid-area: 1 / 1 / 2 / -1; align-self: stretch; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--strip-shadow)}
-.tagplate > .lbl, .tagplate > .seg{grid-row: 1}
-.tagplate > .lbl{grid-column: 1}
-.tagplate > .g-wmi{grid-column: 2}
-.tagplate > .g-vds{grid-column: 3}
-.tagplate > .g-year{grid-column: 4}
-.tagplate .g-wmi{--cm: #ff6b81}
-.tagplate .g-vds{--cm: #7db4ff}
-.tagplate .g-year{--cm: #ffb067}
-.lbl{align-self: stretch; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 4px; padding: .3rem .5rem .3rem .7rem; border-right: 1px solid rgb(255 255 255 / .18); min-width: 0}
-.tagplate .stamp{display: flex; align-items: center; gap: .35rem; min-width: 0; max-width: 100%; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss)}
-.stamp .voc{min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis}
+.aka{--lane: 3rem; position: relative; z-index: 3; margin: 0 0 0 var(--lane)}
+.aka:has(.nametags:is(:focus-visible,.is-fv)){outline: 3px solid var(--link); outline-offset: 2px}
+.nametags{list-style: none; display: flex; align-items: stretch; gap: 10px; margin: 0; padding: 36px 4px 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding-inline: 4px}
+.name{flex: none; scroll-snap-align: start; box-sizing: border-box; min-width: 11rem; max-width: min(40rem, 72vw); margin: 0; padding-bottom: .6rem}
+.nametags:is(:focus-visible,.is-fv){outline: 0}
+.nrows{display: grid; grid-template-rows: repeat(2, auto); grid-auto-flow: column; grid-auto-columns: max-content; justify-content: start; align-content: start; gap: 0 1.4rem}}
+.vp{@supports (animation-timeline: scroll()){
+.nametags{mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline)}}}
+.vp{
+.name::after{content: ""; position: absolute; left: calc(50% - 1px); top: -36px; width: 2px; height: 50px; background: var(--steel); pointer-events: none}
+.nrow{position: relative}
+.name .how{position: absolute; inset: 0; width: 100%; padding: 0; background: none; border: 0; box-shadow: none; cursor: pointer}
+.name .how:is(:hover,.is-hover), .name .how:is(:focus-visible,.is-fv){background: rgb(0 0 0 / .07)}
+.name .nvoc{margin: -.2rem -.6rem .45rem; padding: .25rem .6rem; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border: 0; border-block: 1px solid var(--tape-edge)}
+.nw{width: fit-content; max-width: 100%; margin: 0 0 .3rem; font: 700 .95rem/1.25 var(--cell-font); letter-spacing: .04em; border-bottom: 3px solid var(--cm)}
+.nrow{display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; margin: 0 0 .3rem}
+.nrow .nw{margin: 0}
+.nrow .g-year{font-weight: 400; font-size: .85rem}
 .seg{position: relative; align-self: stretch; display: flex; align-items: center; justify-content: center; padding: .35rem .6rem; text-align: center; min-width: 0}
 .seg .w{font: 900 1.05rem/1.2 var(--cell-font); letter-spacing: .08em; text-shadow: var(--tape-emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere}
 .seg::after{content: ""; position: absolute; left: calc(50% - 2.5px); top: calc(-1px - var(--lead) - var(--prev)); height: calc(var(--lead) + var(--prev) + 1px); border-left: 5px solid var(--c); filter: var(--stripe-lift)}
-.seg:is(:target,.is-target){scroll-margin: 16rem 2rem 4rem}
-.seg:is(:target,.is-target) .w{outline: 2px solid var(--cm); outline-offset: 4px}
-.tagplate .info{position: absolute; right: .45rem; top: 50%; transform: translateY(-50%); width: 1.35rem; height: 1.35rem; padding: 0; border-radius: 50%; font: italic 700 12px Georgia, serif; text-transform: none; letter-spacing: 0}
-.tagplate .info:is(:active,.is-active){transform: translateY(calc(-50% + 2px))}
-.aka:has(.more:not(:checked)) .stack.rest{display: none}
-.more:checked ~ .more-voc .n, .more:not(:checked) ~ .more-voc .less{display: none}}
-.vp-wide{
-.stack:has(.fan:not(:checked)):not(:has(.seg:is(:target,.is-target))){&.d1 { --under: 7px; } &.d2 { --under: 12px; } &.d3 { --under: 17px; }}}
-.vp{
 .note.popover{box-sizing: border-box; max-width: min(30rem, calc(var(--vw) - 2rem)); padding: .75rem 1rem; border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .4)}
 .fit{--rail-x: 3px; position: relative; isolation: isolate; display: flow-root; margin: 0 16px}
-.fitstrip{--lead: 30px; --prev: 0px; display: grid; grid-template-columns: 300fr 465fr 255fr; align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck)}
+.fitstrip{--lead: 30px; --prev: 0px; display: grid; grid-template-columns: 170fr 170fr 170fr 510fr; align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck)}
 .fitstrip .stamp{align-self: stretch; display: flex; align-items: center; min-width: 0; margin: 0; padding: 0 .5rem 0 .7rem; border-right: 1px solid rgb(255 255 255 / .18); font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss)}
-.fitstrip .g-vds{--cm: #7db4ff}
-.fitstrip .g-year{--cm: #ffb067}
+.fitstrip .g-wmi{--cm: #ff6b81; grid-column: 1}
+.fitstrip .g-vds{--cm: #7db4ff; grid-column: 2}
+.fitstrip .g-year{--cm: #ffb067; grid-column: 3}
+.fitstrip .seg{grid-row: 2}
+.fitstrip .vfacts{grid-row: 2; grid-column: 4}
+.fitstrip .stamp{grid-row: 1; grid-column: 1 / -1; padding-block: .3rem; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18)}
+.vfacts{display: flex; flex-wrap: wrap; align-items: center; gap: 4px 22px; min-width: 0; margin: 0; padding: .45rem .7rem; border-left: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss)}
+.vfacts dt{font-size: 11px; line-height: 1.2; letter-spacing: .04em; text-transform: uppercase; color: #aeb7c0; text-shadow: none}
+.vfacts dd{margin: 0; font: 900 .95rem/1.25 var(--cell-font); letter-spacing: .06em}
+.vchars dd{display: flex; gap: 3px}
+.vc{display: grid; justify-items: center; min-width: 1.15rem}
+.vc b{width: 100%; text-align: center; border-bottom: 3px solid #7db4ff}
+.vc small{font: 400 10px/1.3 var(--cell-font); letter-spacing: 0; color: #aeb7c0; text-shadow: none}
 .ptype{display: inline-flex; align-items: center; gap: 10px; box-sizing: border-box; min-height: 44px; padding: 0 14px; font: 900 14px var(--cell-font); letter-spacing: .06em; text-decoration: none; color: var(--on-metal); text-shadow: var(--emboss); background: var(--alu); border: 1px solid var(--steel); border-top-color: #fff; border-bottom-color: var(--steel-dark); border-radius: 2px; box-shadow: var(--raised)}
 .ptype .n{padding: 1px 7px; border: 1px solid rgb(35 41 48 / .55); border-radius: 9px; font-size: 11px; text-shadow: none}
 .ptype:is(:active,.is-active), .ptype[aria-current]{transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed)}
 .ptype .n{flex: none}
 .ptwrap{position: relative; z-index: 3; margin: 30px 0 0}
-.ptsel{display: flex; align-items: stretch; gap: 6px; box-sizing: border-box; width: min(24rem, 100%); padding: 5px 6px; anchor-name: --fit-part, --pick-type; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck)}
+.ptsel{display: flex; flex-wrap: wrap; align-items: stretch; gap: 6px 12px; box-sizing: border-box; width: fit-content; max-width: 100%; padding: 5px 6px; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck)}
+.ptkeys{position: relative; flex: none; display: flex; align-items: stretch; gap: 6px; width: 24rem; max-width: 100%; anchor-name: --pick-type}
+.ptkeys::before{content: ""; position: absolute; inset: 0 auto 0 0; width: 3rem; pointer-events: none; anchor-name: --fit-part}
 .ptfield{--key: var(--alu); flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: .5rem; align-items: center; min-height: 44px; padding: .25rem .6rem; text-align: left; text-transform: none; letter-spacing: 0}
 .ptfield .plab{grid-column: 1 / -1; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase}
 .ptfield .nm{min-width: 0; font: 900 16px/1.2 var(--cell-font); letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
 .ptfield .n{padding: 1px 7px; border: 1px solid rgb(35 41 48 / .55); border-radius: 9px; font: 900 11px var(--cell-font); text-shadow: none}
 .ptfield svg{width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round}
 .fit:has(#part-types.is-open) .ptfield{--key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed)}
-.ptrecents{list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: fit-content; margin: 10px 0 0; padding: 0 8px 0 0; background: var(--bg)}
+.ptrecents{list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0 2px 0 12px; border-left: 1px solid rgb(255 255 255 / .18)}
 .ptrecents[hidden]{display: none}
-.ptrecents::before{content: "Recent"; font: 900 10px var(--label-font); letter-spacing: .08em; text-transform: uppercase; color: var(--muted)}
+.ptrecents .ptype{min-height: 38px; padding-inline: 10px; font-size: 13px}
+.ptrecents::before{content: "Recent"; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss)}
 .ptfind{width: 100%; min-height: 44px}
 .ptdialog .hint{margin: .6rem 0 1rem; font-size: 13px}
 .ptdialog .ptnone{margin: 0 0 1rem; color: var(--muted)}
@@ -158,13 +165,13 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 .ptlist{list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0 0 6px}}
 .vp{@supports (anchor-name: --a){
 .fit .ptdialog{position-anchor: --pick-type; inset: auto; top: calc(anchor(bottom) + 6px); left: anchor(left); width: anchor-size(width); max-height: min(30rem, calc(50vh - 3rem)); margin: 0; padding: .75rem; border-radius: 4px; position-try-fallbacks: flip-block}
-.fit .ptdialog :is(.dialog-head, .hint, .ptrecent){display: none}
+.fit .ptdialog :is(.dialog-head, .hint){display: none}
+.fit .ptdialog .ptrecent{margin-bottom: .75rem}
 .fit .ptdialog .ptf{margin: 0 0 .75rem}
 .fit .ptgroups{grid-template-columns: minmax(0, 1fr); gap: .75rem}
 .fit .ptlist{flex-direction: column; flex-wrap: nowrap; gap: 6px; padding: 0}
 .fit .ptlist .ptype{display: flex; justify-content: space-between}}}
 .vp{
-.fit{--xv: 52.206%; --xy: 87.5%}
 .fitstrip{anchor-name: --fit-strip}
 .part-form, .part-answer{--plate-pad: 16px}
 .part{margin: 0 var(--plate-pad)}
@@ -196,10 +203,10 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}
 .sheet .vp .popover.is-open{display:block !important;position:relative !important;inset:auto !important;margin:0 !important;max-height:none !important;overflow:visible !important}
 /* The part type picker's list hangs from the picker, over what follows it. */
 .sheet .vp #fit .ptdialog.is-open{position:absolute !important;z-index:5;width:min(24rem,calc(100% - 2 * var(--gutter))) !important;margin-top:6px !important}
-.sheet .vp .tagplate > .note.is-open{position:absolute !important;top:calc(100% + 10px) !important;right:0 !important;left:auto !important;width:30rem;z-index:2}
+.sheet .vp .name .note.is-open{position:absolute !important;top:calc(100% + 10px) !important;left:0 !important;width:26rem;z-index:2}
 </style>
 </helmet>
-<div class="root sheet" data-scheme="dark" style="width: 1280px; height: 4660px; color: var(--fg); background: var(--bg)">
+<div class="root sheet" data-scheme="dark" style="width: 1280px; height: 4950px; color: var(--fg); background: var(--bg)">
 <div><h1 class="sh-h1">Dialogs, forms and inputs</h1><p class="sh-intro">Everything behind a button is a popover. A dialog is a panel under a head of metal; a menu hangs from its button; a note has no head.</p></div>
 <h2 class="sh-h2">Dialogs</h2>
 <section>
@@ -312,31 +319,35 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 </section>
 <div class="sh-row">
 <section>
-<p class="sh-cap">Note <span>How a name on the tape was reached.</span></p>
-<div class="vp vp-wide pad" style="width: 760px; --vw: 1280px; padding-bottom: 80px">
+<p class="sh-cap">Note <span>How a name on a tag was reached, behind its "i".</span></p>
+<div class="vp vp-wide pad" style="width: 760px; --vw: 1280px; padding-bottom: 90px">
 
 <main id="ui-main" class="is-fw">
 <div id="answer" class="stage" data-vin="1FTEW1EG7FFA12345" data-label="2015 FORD F-150" data-complete="" data-done="wmi vds check year plant serial ">
-<div class="hang" role="region" aria-label="Cards and names" tabindex="0">
+<section class="fit" id="fit" aria-labelledby="fit-h">
+<div class="fitstrip">
+<p class="stamp">This vehicle · demo-catalog</p>
+<span class="seg g-wmi"><span class="w">Ford</span></span>
+<span class="seg g-vds"><span class="w">F150</span></span>
+<span class="seg g-year"><span class="w">2015</span></span>
+<dl class="vfacts" aria-label="This vehicle, to match the options against">
+<div><dt>Body</dt><dd>Pickup</dd></div>
+<div><dt>Engine</dt><dd>3.5 L · 6 cyl · Gasoline</dd></div>
+<div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>
+</dl>
+</div>
 <section class="aka done" id="aka" aria-labelledby="aka-h">
-<h2 id="aka-h">Also known as</h2>
-<ol class="stacks">
-<li class="stack d0">
-<ol class="tags">
-<li class="tagplate">
-<span class="lbl"><span class="stamp" title="demo-vehicles"><span class="voc">demo-vehicles</span></span>
-</span>
-<span class="seg g-wmi" title="From the maker, positions 1–3"><span class="w">Ford</span></span>
-<span class="seg g-vds" title="From the vehicle, positions 4–8"><span class="w">F150</span></span>
-<span class="seg g-year" title="The years this name holds for"><span class="w">any year</span></span>
-<button class="info" aria-label="How Ford F150 was reached" type="button">i</button>
+<h2 id="aka-h" class="visually-hidden">Also known as</h2>
+<ol class="nametags" aria-label="Also known as" tabindex="0">
+<li class="card done name">
+<h3 class="nvoc">demo-vehicles</h3>
+<p class="nw g-wmi">Ford</p>
+<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="how" aria-label="How Ford F150 was reached" type="button"></button></p>
 <div class="note is-open popover" id="aka-1">Matched through vPIC model 1801 (F-150): demo: vPIC spells it F-150.</div>
-</li>
-</ol>
-</li>
+</div></li>
 </ol>
 </section>
-</div>
+</section>
 </div>
 </main>
 
@@ -370,7 +381,7 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 
 <main id="ui-main" class="is-fw">
 <div id="answer" class="stage" data-vin="1FTEW1EG7FFA12345" data-label="2015 FORD F-150" data-complete="" data-done="wmi vds check year plant serial ">
-<div class="hang" role="region" aria-label="Cards and names" tabindex="0">
+<div class="hang" role="region" aria-label="Cards" tabindex="0">
 <div class="cards">
 <section class="card g-check done" data-group="check" aria-labelledby="card-check">
 <dialog id="check-sum" aria-labelledby="check-sum-h" class="is-open popover" open="">
@@ -521,22 +532,31 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 </section>
 <h2 class="sh-h2">Forms and inputs</h2>
 <section>
-<p class="sh-cap">Picker and Recent <span>The picker asks for a part type and counts the vehicle's. Up to three opened recently sit under it.</span></p>
+<p class="sh-cap">Picker and Recent <span>The picker asks for a part type and counts the vehicle's. Up to three opened recently sit beside it on its tape.</span></p>
 <div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px">
 
 <main id="ui-main" class="is-fw">
 <div id="answer" class="stage" data-vin="4T1B11HK7JU512345" data-label="2018 TOYOTA Camry" data-complete="" data-done="wmi vds check year plant serial ">
 <section class="fit" id="fit" aria-labelledby="fit-h">
 <div class="fitstrip">
-<h2 id="fit-h" class="stamp">Parts that fit · demo-catalog</h2>
+<p class="stamp">This vehicle · demo-catalog</p>
+<span class="seg g-wmi"><span class="w">Toyota</span></span>
 <span class="seg g-vds"><span class="w">Camry</span></span>
 <span class="seg g-year"><span class="w">2018</span></span>
+<dl class="vfacts" aria-label="This vehicle, to match the options against">
+<div><dt>Trim</dt><dd>L/LE/SE/XLE</dd></div>
+<div><dt>Body</dt><dd>Sedan/Saloon</dd></div>
+<div><dt>Engine</dt><dd>2.5 L · 4 cyl · Gasoline</dd></div>
+<div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>B</b><small>4</small></span><span class="vc"><b>1</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>H</b><small>7</small></span><span class="vc"><b>K</b><small>8</small></span></dd></div>
+</dl>
 </div>
 <div class="ptwrap live" data-spine="demo-part-types">
 <div class="ptsel">
+<div class="ptkeys">
 <button id="pick-type" class="ptfield" type="button"><span class="plab">Part type</span><span class="nm">Choose a part type</span><span class="n">6<span class="visually-hidden"> part types</span></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"></path></svg></button>
 </div>
 <ul class="ptrecents" aria-label="Opened recently"><li data-part="headlamp"><a class="ptype swap" href="#"><span class="nm">Headlamp Assembly</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li data-part="starter"><a class="ptype swap" href="#"><span class="nm">Starter Motor</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li></ul>
+</div>
 </div>
 </section>
 </div>
@@ -552,15 +572,24 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 <div id="answer" class="stage" data-vin="4T1B11HK7JU512345" data-label="2018 TOYOTA Camry" data-complete="" data-done="wmi vds check year plant serial ">
 <section class="fit" id="fit" aria-labelledby="fit-h">
 <div class="fitstrip">
-<h2 id="fit-h" class="stamp">Parts that fit · demo-catalog</h2>
+<p class="stamp">This vehicle · demo-catalog</p>
+<span class="seg g-wmi"><span class="w">Toyota</span></span>
 <span class="seg g-vds"><span class="w">Camry</span></span>
 <span class="seg g-year"><span class="w">2018</span></span>
+<dl class="vfacts" aria-label="This vehicle, to match the options against">
+<div><dt>Trim</dt><dd>L/LE/SE/XLE</dd></div>
+<div><dt>Body</dt><dd>Sedan/Saloon</dd></div>
+<div><dt>Engine</dt><dd>2.5 L · 4 cyl · Gasoline</dd></div>
+<div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>B</b><small>4</small></span><span class="vc"><b>1</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>H</b><small>7</small></span><span class="vc"><b>K</b><small>8</small></span></dd></div>
+</dl>
 </div>
 <div class="ptwrap live" data-spine="demo-part-types">
 <div class="ptsel">
+<div class="ptkeys">
 <button id="pick-type" class="ptfield" type="button"><span class="plab">Part type</span><span class="nm">Choose a part type</span><span class="n">6<span class="visually-hidden"> part types</span></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"></path></svg></button>
 </div>
 <ul class="ptrecents" aria-label="Opened recently" hidden=""></ul>
+</div>
 </div>
 <dialog id="part-types" class="ptdialog is-open popover" aria-labelledby="part-types-h" open="">
 <div class="dialog-head">
@@ -615,7 +644,7 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 
 <main id="ui-main" class="is-fw">
 <div id="answer" class="stage" data-vin="1FTEW1EG0FFA12345" data-label="2015 FORD F-150" data-complete="" data-done="wmi vds check year plant serial ">
-<div class="hang" role="region" aria-label="Cards and names" tabindex="0">
+<div class="hang" role="region" aria-label="Cards" tabindex="0">
 <div class="cards">
 <section class="card g-check done bad" data-group="check" aria-labelledby="card-check">
 <h2 id="card-check">Check digit <span class="pos">9</span></h2>
@@ -634,7 +663,7 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 </section>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":4660}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":4950}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};

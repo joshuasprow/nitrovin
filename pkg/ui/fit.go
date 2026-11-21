@@ -62,6 +62,9 @@ type fitCard struct {
 	// Model and Year are what the strip says was asked: the catalog's
 	// vehicle the decode reached, and the year, "any year" without one.
 	Model, Year string
+	// Make is the make the catalog files the vehicle under, in its own
+	// word; "" where its vehicles name none, or differ.
+	Make string
 	// Types are the vehicle's part types, by name. Spine is the catalog's
 	// spine, which names them, and which plate.js keeps recent part types
 	// by. PickCount and PickNoun are what the picker counts: the pressed
@@ -85,6 +88,10 @@ type fitCard struct {
 	// Pressed is the pressed part type's name, "" with none, and Page
 	// the page's own URL with it pressed.
 	Pressed, Page string
+	// Facts are what the decode says of the vehicle that a catalog's
+	// option text names, on the vehicle's block, for the reader to match a
+	// candidate's options against (#366); nil where the decode has none.
+	Facts *vehicleFacts
 	// Tags are its candidates, a page of them, of Total in every page;
 	// Next is the next page's URL, "" on the last.
 	Tags  []candidateTag
@@ -142,6 +149,42 @@ func (c fitCard) Dialog() ptDialog {
 		hint += " · grouped by " + c.GroupedBy
 	}
 	return ptDialog{Hint: hint, Groups: c.Groups}
+}
+
+// vehicleFacts are the vehicle as the decode has it, for matching a
+// candidate's option text by eye: the Vehicle card's rows but the model,
+// which the strip names, and the VIN's characters 4 to 8, the ones a
+// catalog cites by position ("VIN G, 8th digit"). The page reads no
+// option text: it puts the two side by side.
+type vehicleFacts struct {
+	Rows  []cardRow
+	Chars []vinChar
+}
+
+// vinChar is one character of the VIN and its position, from 1.
+type vinChar struct {
+	Char string
+	Pos  int
+}
+
+// newVehicleFacts are d's facts, nil when it has neither a row nor the
+// Vehicle group's five characters.
+func newVehicleFacts(d *diagram) *vehicleFacts {
+	var f vehicleFacts
+	for _, r := range d.group(groupVDS).Rows {
+		if r.Label != "Model" {
+			f.Rows = append(f.Rows, r)
+		}
+	}
+	if vin := []rune(d.VIN); len(vin) >= 8 {
+		for i := 3; i < 8; i++ {
+			f.Chars = append(f.Chars, vinChar{Char: string(vin[i]), Pos: i + 1})
+		}
+	}
+	if len(f.Rows) == 0 && len(f.Chars) == 0 {
+		return nil
+	}
+	return &f
 }
 
 // candidateTag is one candidate as its tag shows it.
@@ -279,6 +322,7 @@ func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecod
 	}
 	c.Blank = ""
 	c.Model, c.Year = strings.Join(modelNames(fit.Models, fields, false), " / "), year
+	c.Make = sharedMake(fit.Models)
 	vehicle := strings.Join(modelNames(fit.Models, fields, true), " / ")
 	if year != "any year" {
 		vehicle = year + " " + vehicle
@@ -300,6 +344,7 @@ func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecod
 	}
 	c.Spine = fit.Catalog.Spine
 	c.Types = byName
+	c.Facts = newVehicleFacts(d)
 	if !pressed {
 		c.PickCount, c.PickNoun = len(byName), plural(len(byName), "part type", "part types")
 	}
@@ -487,6 +532,20 @@ func modelNames(models []contract.FitModel, fields []string, withMake bool) []st
 	return out
 }
 
+// sharedMake is the make every one of the catalog's vehicles a fit
+// reached is filed under, "" where one names none or two differ.
+func sharedMake(models []contract.FitModel) string {
+	var make string
+	for i, m := range models {
+		s := m.Vehicle.Entry["make"]
+		if s == "" || i > 0 && s != make {
+			return ""
+		}
+		make = s
+	}
+	return make
+}
+
 // vehicleWhere is a catalog's vehicle as its lines' filter: its entry's
 // fields, or its vPIC make, model or extension.
 func vehicleWhere(v contract.CatalogVehicle) url.Values {
@@ -529,12 +588,12 @@ func newCandidateTag(c contract.FitCandidate, elements contract.Elements, names 
 // application earns its own marks from its confirmed and unconfirmed:
 // "Checked" names the elements a decoded value met; "Not checked" those
 // it could not check, and the model year when none was known; with
-// neither, "Catalog text only" when it has option text to read and "No
+// neither, "Match the options yourself" when it has option text to read and "No
 // conditions" when it has none. A confirmed model year alone checks
 // nothing a person needs told: every candidate's years held, or it would
 // not be one. The tag shows the union of its applications' marks, once
 // each kind, a kind's elements merged, the weaker first: Not checked,
-// Catalog text only, No conditions, then Checked. So one application
+// Match the options yourself, No conditions, then Checked. So one application
 // checked by Drive Type beside one with no condition reads "No
 // conditions" and "Checked · Drive Type", never Checked alone. A
 // candidate a redirect reached says so last, with the part type the
@@ -574,7 +633,7 @@ func candidateMarks(c contract.FitCandidate, elements contract.Elements, names m
 		out = append(out, fitMark{Kind: "unchecked", Text: "Not checked · " + strings.Join(words, ", ")})
 	}
 	if text {
-		out = append(out, fitMark{Kind: "text", Text: "Catalog text only"})
+		out = append(out, fitMark{Kind: "text", Text: "Match the options yourself"})
 	}
 	if none {
 		out = append(out, fitMark{Kind: "none", Text: "No conditions"})

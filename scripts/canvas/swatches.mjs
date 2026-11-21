@@ -1,5 +1,5 @@
-// Builds the canvas's swatch boards, the page "Swatches": materials found
-// for the page's look, none of them settled. One board per file of
+// Builds the canvas's swatch boards, the page "Swatches": the materials the
+// page is built from, then materials found for its look, none of those settled. One board per file of
 // scripts/canvas/swatches/, a card per material: a chip in its colours, where
 // it is seen, its texture, its colours and the sites it was found on.
 //
@@ -23,10 +23,14 @@ const c = await launch();
 // ---- the swatch boards: one per research file ----------------------------
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/\{\{/g, '{&#8203;{');
 const BOARDS = [
+  { file: 'Swatches-Page', src: 'page', title: 'Swatches: the page\'s own materials', settled: true, intro: 'What the page is built from today, as pkg/ui/static/ui.css defines it and DESIGN.md describes it. A chip is the stylesheet\'s own value. These are settled.' },
   { file: 'Swatches-Thermal', src: 'thermal', title: 'Swatches: thermal paper', intro: 'Direct-thermal paper and its print, as a counter\'s receipts and a yard\'s part tags come off the printer.' },
   { file: 'Swatches-Yard', src: 'yard', title: 'Swatches: the yard and the shelf', intro: 'What parts and vehicles are tagged, labelled and marked with in a yard, a warehouse and a shop.' },
   { file: 'Swatches-Vehicle', src: 'vehicle', title: 'Swatches: the vehicle and the garage', intro: 'Surfaces of the vehicle itself, its labels and instruments, and of the garage around it.' },
 ];
+const FOUND = " Found by a web search on 2026-11-20. Dimensions and conventions are the sources'; every colour is an estimate, since no source publishes one, and no recipe here is settled.";
+// The addresses of the page's two textures on the maintainer's canvas, as scripts/canvas/engine.mjs has them.
+const BLOB = { 'brushed.svg': '/_blob/9d26d515fa68a38e6638bb4a880cacf5', 'paper.svg': '/_blob/8df67eb7edb3679ce1a61d297a1fcd76' };
 const hex = (h) => /^#[0-9a-fA-F]{3,8}$/.test(h || '') ? h : null;
 const swatches = [];
 for (const b of BOARDS) {
@@ -35,7 +39,9 @@ for (const b of BOARDS) {
   list.forEach((s, i) => {
     const base = hex(s.base) || '#cccccc', ink = hex(s.ink) || '#111111', accent = hex(s.accent);
     let bg = String(s.css || '').trim().replace(/^background(-image)?\s*:/, '').replace(/;\s*$/, '').trim();
-    if (!bg || /url\(|[<>{}";]/.test(bg)) bg = base;
+    // The page's two textures are images uploaded to the canvas; no other url() is drawn.
+    bg = bg.replace(/url\((brushed|paper)\.svg\)/g, (_, f) => `url(${BLOB[f + '.svg']})`);
+    if (!bg || /url\((?!\/_blob\/[0-9a-f]{32}\))|[<>{}";]/.test(bg)) bg = base;
     css += `.sw-${i} .chip{background:${bg};color:${ink}}\n`;
     const dot = (h, l) => h ? `<span class="hx"><i style="background: ${h}"></i>${l} ${h.toLowerCase()}</span>` : '';
     const hosts = [...new Set((s.sources || []).map((u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (_) { return null; } }).filter(Boolean))];
@@ -46,7 +52,7 @@ for (const b of BOARDS) {
 <p>${esc(s.where_seen)}</p>
 <p class="tx">${esc(s.texture)}</p>
 <p class="hxs">${dot(base, 'base')}${dot(ink, 'ink')}${dot(accent, 'accent')}</p>
-<p class="src">${hosts.map(esc).join(' · ')}</p>
+<p class="src">${s.in ? 'ui.css: ' + esc(s.in) : hosts.map(esc).join(' · ')}</p>
 </article>\n`;
   });
   const w = 1280;
@@ -71,7 +77,7 @@ for (const b of BOARDS) {
 .sw .src{font-size:11px;overflow-wrap:anywhere}
 ${css}`;
   const body = (h) => `<div class="swb" style="height: ${h}">
-<div><h1>${esc(b.title)}</h1><p class="intro">${esc(b.intro)} Found by a web search on 2026-11-20. Dimensions and conventions are the sources'; every colour is an estimate, since no source publishes one, and no recipe here is settled.</p></div>
+<div><h1>${esc(b.title)}</h1><p class="intro">${esc(b.intro)}${b.settled ? '' : FOUND}</p></div>
 <div class="grid">
 ${cards}</div>
 </div>`;
@@ -121,6 +127,6 @@ swatches.forEach((s, i) => {
   idx.boards[k] = { ...(idx.boards[k] || {}), h: s.h, page: PAGE.id, title: s.title, w: s.w, x: i * 1360, y: 0 };
   if (!idx.order.includes(k)) idx.order.push(k);
 });
-idx.notes.swatches = { ...(idx.notes.swatches || {}), kind: 'title1', maxW: swatches.length * 1360 - 80, page: PAGE.id, text: 'Swatches: materials found, none settled', w: 240, x: 0, y: -300 };
+idx.notes.swatches = { ...(idx.notes.swatches || {}), kind: 'title1', maxW: swatches.length * 1360 - 80, page: PAGE.id, text: 'Swatches: the page\'s materials, and materials found', w: 240, x: 0, y: -300 };
 idx.noteOrder = idx.noteOrder || []; if (!idx.noteOrder.includes('swatches')) idx.noteOrder.push('swatches');
 writeFileSync(path, JSON.stringify(idx, null, 2) + '\n');

@@ -93,10 +93,15 @@ func TestPageDemoVPIC(t *testing.T) {
 		t.Errorf("the pickup's part types %q; want %q", got, want)
 	}
 	for _, want := range []string{
-		`<h2 id="fit-h" class="stamp">Parts that fit · demo-vpic-catalog</h2>`,
+		`<p class="stamp">This vehicle · demo-vpic-catalog</p>`,
 		`<span class="seg g-vds"><span class="w">F-150 / Ford</span></span>`,
 		"Choose a part type to see what fits this vehicle.",
 	} {
+		// A catalog on vPIC's own vehicles files under no make of its own:
+		// the block has no make, and the Maker's line is not brought down.
+		if strings.Contains(s, `class="seg g-wmi"`) {
+			t.Errorf("the block names a make the catalog does not\n%s", s)
+		}
 		if !strings.Contains(s, want) {
 			t.Errorf("the pickup lacks %s\n%s", want, s)
 		}
@@ -106,13 +111,13 @@ func TestPageDemoVPIC(t *testing.T) {
 		tags   []string
 	}{
 		{pickup + "&part.id=alternator", []string{
-			"DEMO-V1001 | text: Catalog text only", "DEMO-V1002 | text: Catalog text only", "DEMO-V1003 | text: Catalog text only"}},
+			"DEMO-V1001 | text: Match the options yourself", "DEMO-V1002 | text: Match the options yourself", "DEMO-V1003 | text: Match the options yourself"}},
 		// The qualified applications: the 4WD rotor by the decode's drive
 		// type; the Silverado's by its series, through the redirect.
 		{pickup + "&part.id=brake-rotor-front", []string{"DEMO-V1102 | checked: Checked · Drive Type"}},
 		{"/?from.vin=1GCVKREC6EZ123456&part.id=brake-rotor-rear", []string{"DEMO-V2101 | checked: Checked · Series | redirect: By redirect · Brake Rotor, Front"}},
 		// A make's application: every Toyota of its years.
-		{"/?from.vin=4T1B11HK7JU512345&part.id=starter", []string{"DEMO-V5501 | text: Catalog text only"}},
+		{"/?from.vin=4T1B11HK7JU512345&part.id=starter", []string{"DEMO-V5501 | text: Match the options yourself"}},
 	} {
 		if got := tags(fitSection(t, h, c.target)); !slices.Equal(got, c.tags) {
 			t.Errorf("%s: candidates %q; want %q", c.target, got, c.tags)
