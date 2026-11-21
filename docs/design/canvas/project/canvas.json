@@ -2,15 +2,24 @@
   "v": 3,
   "attachments": {},
   "boards": {
+    "Artboard-vknl.dc.html": {
+      "h": 600,
+      "handmade": true,
+      "page": "page-pchz95",
+      "title": "Artboard 1",
+      "w": 800,
+      "x": 0,
+      "y": 0
+    },
     "Controls-Dark.dc.html": {
-      "h": 4660,
+      "h": 4610,
       "title": "Dialogs, forms and inputs, dark",
       "w": 1280,
       "x": 5440,
-      "y": 4780
+      "y": 4730
     },
     "Controls.dc.html": {
-      "h": 4660,
+      "h": 4610,
       "title": "Dialogs, forms and inputs, light",
       "w": 1280,
       "x": 5440,
@@ -21,7 +30,7 @@
       "title": "Cards, brackets and lines, dark",
       "w": 1280,
       "x": 2720,
-      "y": 4780
+      "y": 4730
     },
     "Diagram.dc.html": {
       "h": 1940,
@@ -31,14 +40,14 @@
       "y": 0
     },
     "Fitment-Dark.dc.html": {
-      "h": 4350,
+      "h": 4580,
       "title": "The fitment card, dark",
       "w": 1280,
       "x": 4080,
-      "y": 4780
+      "y": 4730
     },
     "Fitment.dc.html": {
-      "h": 4350,
+      "h": 4580,
       "title": "The fitment card, light",
       "w": 1280,
       "x": 4080,
@@ -49,7 +58,7 @@
       "title": "The VIN input, both modes, dark",
       "w": 1280,
       "x": 0,
-      "y": 4780
+      "y": 4730
     },
     "Main.dc.html": {
       "h": 2100,
@@ -59,14 +68,14 @@
       "y": 0
     },
     "Materials-Dark.dc.html": {
-      "h": 1780,
+      "h": 1830,
       "title": "Materials and elevation, dark",
       "w": 1280,
       "x": 1360,
-      "y": 4780
+      "y": 4730
     },
     "Materials.dc.html": {
-      "h": 1780,
+      "h": 1830,
       "title": "Materials and elevation, light",
       "w": 1280,
       "x": 1360,
@@ -77,7 +86,7 @@
       "title": "States, dark",
       "w": 1280,
       "x": 6800,
-      "y": 4780
+      "y": 4730
     },
     "States.dc.html": {
       "h": 3450,
@@ -120,12 +129,17 @@
     "Diagram-Dark.dc.html",
     "Fitment-Dark.dc.html",
     "Controls-Dark.dc.html",
-    "States-Dark.dc.html"
+    "States-Dark.dc.html",
+    "Artboard-vknl.dc.html"
   ],
   "pages": [
     {
       "id": "page-1",
       "name": "nitrovin UI"
+    },
+    {
+      "id": "page-pchz95",
+      "name": "Page 2"
     }
   ],
   "title": "nitrovin UI Design"

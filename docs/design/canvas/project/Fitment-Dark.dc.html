@@ -94,7 +94,8 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 .ptype:is(:active,.is-active), .ptype[aria-current]{transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed)}
 .ptype .n{flex: none}
 .ptwrap{position: relative; z-index: 3; margin: 30px 0 0}
-.ptsel{display: flex; align-items: stretch; gap: 6px; box-sizing: border-box; width: min(24rem, 100%); padding: 5px 6px; anchor-name: --fit-part, --pick-type; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck)}
+.ptsel{display: flex; flex-wrap: wrap; align-items: stretch; gap: 6px 12px; box-sizing: border-box; width: fit-content; max-width: 100%; padding: 5px 6px; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck)}
+.ptkeys{flex: none; display: flex; align-items: stretch; gap: 6px; width: 24rem; max-width: 100%; anchor-name: --fit-part, --pick-type}
 .ptfield{--key: var(--alu); flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: .5rem; align-items: center; min-height: 44px; padding: .25rem .6rem; text-align: left; text-transform: none; letter-spacing: 0}
 .ptfield .plab{grid-column: 1 / -1; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase}
 .ptfield .nm{min-width: 0; font: 900 16px/1.2 var(--cell-font); letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
@@ -103,10 +104,21 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 .fit:has(#part-types.is-open) .ptfield{--key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed)}
 .ptclear{flex: none; display: flex; align-items: center; justify-content: center; min-width: 44px; font: 900 18px/1 var(--cell-font); text-decoration: none; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); background: var(--metal); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised)}
 .ptclear:is(:active,.is-active){transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed)}
-.ptrecents{list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: fit-content; margin: 10px 0 0; padding: 0 8px 0 0; background: var(--bg)}
+.ptrecents{list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0 2px 0 12px; border-left: 1px solid rgb(255 255 255 / .18)}
 .ptrecents[hidden]{display: none}
-.ptrecents::before{content: "Recent"; font: 900 10px var(--label-font); letter-spacing: .08em; text-transform: uppercase; color: var(--muted)}
+.ptrecents::before{content: "Recent"; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss)}
 .ptfind{width: 100%; min-height: 44px}
+.vfacts{display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 20px; width: fit-content; max-width: 100%; margin: 10px 0 0; padding-right: 8px; background: var(--bg)}
+.vfacts::before{content: "This vehicle"; align-self: center; font: 900 10px var(--label-font); letter-spacing: .08em; text-transform: uppercase; color: var(--muted)}
+.vfacts dt{font-size: 11px; line-height: 1.2; letter-spacing: .04em; text-transform: uppercase; color: var(--muted)}
+.vfacts dd{margin: 0; font-weight: 600; line-height: 1.3}
+.vchars dd{display: flex; gap: 3px}
+.vc{display: grid; justify-items: center; min-width: 1.15rem}
+.vc b{width: 100%; text-align: center; font: 700 16px/1.2 var(--cell-font); border-bottom: 3px solid var(--c-vds)}
+.vc small{font: 400 10px/1.3 var(--cell-font); color: var(--muted)}}
+.vp-phone{
+.ptrecents{display: none}}
+.vp{
 .ptdialog .hint{margin: .6rem 0 1rem; font-size: 13px}
 .ptdialog .ptnone{margin: 0 0 1rem; color: var(--muted)}
 .ptgroups{display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem 1.5rem}
@@ -117,7 +129,8 @@ ol.stacks, ol.tags{list-style: none; margin: 0; padding: 0}
 .ptlist{list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0 0 6px}}
 .vp{@supports (anchor-name: --a){
 .fit .ptdialog{position-anchor: --pick-type; inset: auto; top: calc(anchor(bottom) + 6px); left: anchor(left); width: anchor-size(width); max-height: min(30rem, calc(50vh - 3rem)); margin: 0; padding: .75rem; border-radius: 4px; position-try-fallbacks: flip-block}
-.fit .ptdialog :is(.dialog-head, .hint, .ptrecent){display: none}
+.fit .ptdialog :is(.dialog-head, .hint){display: none}
+.fit .ptdialog .ptrecent{margin-bottom: .75rem}
 .fit .ptdialog .ptf{margin: 0 0 .75rem}
 .fit .ptgroups{grid-template-columns: minmax(0, 1fr); gap: .75rem}
 .fit .ptlist{flex-direction: column; flex-wrap: nowrap; gap: 6px; padding: 0}
@@ -340,10 +353,10 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 
 </style>
 </helmet>
-<div class="root sheet" data-scheme="dark" style="width: 1280px; height: 4350px; color: var(--fg); background: var(--bg)">
+<div class="root sheet" data-scheme="dark" style="width: 1280px; height: 4580px; color: var(--fg); background: var(--bg)">
 <div><h1 class="sh-h1">The fitment card</h1><p class="sh-intro">The parts that fit: a strip naming the catalog's vehicle, a picker of its part types, and the candidates as manila tags on rails that come down from the picker. A candidate's stock strip opens its shelf and yard rows.</p></div>
 <section>
-<p class="sh-cap">Picker, candidates, marks and stock <span>Alternator pressed: the picker names it and counts its candidates, and × beside it clears. The first candidate's stock is open under its row.</span></p>
+<p class="sh-cap">Picker, candidates, marks and stock <span>Alternator pressed: the picker names it and counts its candidates, and × beside it clears. Under its tape, what the decode says of this vehicle, to match each candidate's options against. The first candidate's stock is open under its row.</span></p>
 <div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px">
 
 <main id="ui-main" class="is-fw">
@@ -376,10 +389,17 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 </div>
 <div class="ptwrap live" data-spine="demo-part-types">
 <div class="ptsel">
+<div class="ptkeys">
 <button id="pick-type" class="ptfield" type="button"><span class="plab">Part type</span><span class="nm">Alternator</span><span class="n">3<span class="visually-hidden"> candidates</span></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"></path></svg></button>
 <a class="ptclear swap" id="clear-type" data-focus="pick-type" href="#" aria-label="Clear Alternator">×</a>
 </div>
 <ul class="ptrecents" aria-label="Opened recently" hidden=""></ul>
+</div>
+<dl class="vfacts" aria-label="This vehicle, to match the options against">
+<div><dt>Body</dt><dd>Pickup</dd></div>
+<div><dt>Engine</dt><dd>3.5 L · 6 cyl · Gasoline</dd></div>
+<div class="vchars"><dt>VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>
+</dl>
 </div>
 <span class="stems" aria-hidden="true"></span><span class="runs" aria-hidden="true"></span><span class="drops" aria-hidden="true"></span>
 <ol class="cands" aria-label="Candidates: Alternator" tabindex="0">
@@ -389,7 +409,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div><dt>Options</dt><dd>3.5L V6 EcoBoost (VIN G, 8th digit)</dd></div>
 <div><dt>Note</dt><dd>demo: 200 A</dd></div>
 </dl>
-<p class="marks"><span class="mk text">Catalog text only</span>
+<p class="marks"><span class="mk text">Match the options yourself</span>
 </p>
 <a class="stk swap" id="stk-1" href="#" aria-expanded="true" aria-controls="stock-rows"><span>Stock · 2 shelf · 2 yard<span class="visually-hidden">, DEMO-1001</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 10l5-5 5 5"></path></svg></a>
 </div></li>
@@ -417,7 +437,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div><dt>Options</dt><dd>5.0L V8 (VIN F, 8th digit)</dd></div>
 <div><dt>Note</dt><dd>demo: 200 A</dd></div>
 </dl>
-<p class="marks"><span class="mk text">Catalog text only</span>
+<p class="marks"><span class="mk text">Match the options yourself</span>
 </p>
 <a class="stk swap" id="stk-2" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1002</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
 </div></li>
@@ -427,7 +447,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div><dt>Options</dt><dd>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</dd></div>
 <div><dt>Note</dt><dd>demo: 240 A</dd></div>
 </dl>
-<p class="marks"><span class="mk text">Catalog text only</span>
+<p class="marks"><span class="mk text">Match the options yourself</span>
 </p>
 <a class="stk swap" id="stk-3" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1003</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
 </div></li>
@@ -473,10 +493,17 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 </div>
 <div class="ptwrap live" data-spine="demo-part-types">
 <div class="ptsel">
+<div class="ptkeys">
 <button id="pick-type" class="ptfield" type="button"><span class="plab">Part type</span><span class="nm">Alternator</span><span class="n">3<span class="visually-hidden"> candidates</span></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"></path></svg></button>
 <a class="ptclear swap" id="clear-type" data-focus="pick-type" href="#" aria-label="Clear Alternator">×</a>
 </div>
 <ul class="ptrecents" aria-label="Opened recently" hidden=""></ul>
+</div>
+<dl class="vfacts" aria-label="This vehicle, to match the options against">
+<div><dt>Body</dt><dd>Pickup</dd></div>
+<div><dt>Engine</dt><dd>3.5 L · 6 cyl · Gasoline</dd></div>
+<div class="vchars"><dt>VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>
+</dl>
 </div>
 <span class="stems" aria-hidden="true"></span><span class="runs" aria-hidden="true"></span><span class="drops" aria-hidden="true"></span>
 <dialog id="part-types" class="ptdialog is-open popover" aria-labelledby="part-types-h" open="">
@@ -539,7 +566,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div><dt>Options</dt><dd>3.5L V6 EcoBoost (VIN G, 8th digit)</dd></div>
 <div><dt>Note</dt><dd>demo: 200 A</dd></div>
 </dl>
-<p class="marks"><span class="mk text">Catalog text only</span>
+<p class="marks"><span class="mk text">Match the options yourself</span>
 </p>
 <a class="stk swap" id="stk-1" href="#" aria-expanded="false"><span>Stock · 2 shelf · 2 yard<span class="visually-hidden">, DEMO-1001</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
 </div></li>
@@ -549,7 +576,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div><dt>Options</dt><dd>5.0L V8 (VIN F, 8th digit)</dd></div>
 <div><dt>Note</dt><dd>demo: 200 A</dd></div>
 </dl>
-<p class="marks"><span class="mk text">Catalog text only</span>
+<p class="marks"><span class="mk text">Match the options yourself</span>
 </p>
 <a class="stk swap" id="stk-2" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1002</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
 </div></li>
@@ -559,7 +586,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div><dt>Options</dt><dd>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</dd></div>
 <div><dt>Note</dt><dd>demo: 240 A</dd></div>
 </dl>
-<p class="marks"><span class="mk text">Catalog text only</span>
+<p class="marks"><span class="mk text">Match the options yourself</span>
 </p>
 <a class="stk swap" id="stk-3" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1003</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
 </div></li>
@@ -605,10 +632,12 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 </div>
 <div class="ptwrap live" data-spine="demo-part-types">
 <div class="ptsel">
+<div class="ptkeys">
 <button id="pick-type" class="ptfield" type="button"><span class="plab">Part type</span><span class="nm">Brake Rotor, Rear</span><span class="n">1<span class="visually-hidden"> candidate</span></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"></path></svg></button>
 <a class="ptclear swap" id="clear-type" data-focus="pick-type" href="#" aria-label="Clear Brake Rotor, Rear">×</a>
 </div>
 <ul class="ptrecents" aria-label="Opened recently" hidden=""></ul>
+</div>
 </div>
 <span class="stems" aria-hidden="true"></span><span class="runs" aria-hidden="true"></span><span class="drops" aria-hidden="true"></span>
 <ol class="cands" aria-label="Candidates: Brake Rotor, Rear" tabindex="0">
@@ -664,10 +693,17 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 </div>
 <div class="ptwrap live" data-spine="demo-part-types">
 <div class="ptsel">
+<div class="ptkeys">
 <button id="pick-type" class="ptfield" type="button"><span class="plab">Part type</span><span class="nm">Alternator</span><span class="n">3<span class="visually-hidden"> candidates</span></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"></path></svg></button>
 <a class="ptclear swap" id="clear-type" data-focus="pick-type" href="#" aria-label="Clear Alternator">×</a>
 </div>
 <ul class="ptrecents" aria-label="Opened recently" hidden=""></ul>
+</div>
+<dl class="vfacts" aria-label="This vehicle, to match the options against">
+<div><dt>Body</dt><dd>Pickup</dd></div>
+<div><dt>Engine</dt><dd>3.5 L · 6 cyl · Gasoline</dd></div>
+<div class="vchars"><dt>VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>
+</dl>
 </div>
 <span class="stems" aria-hidden="true"></span><span class="runs" aria-hidden="true"></span><span class="drops" aria-hidden="true"></span>
 <ol class="cands" aria-label="Candidates: Alternator" tabindex="0">
@@ -677,7 +713,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div><dt>Options</dt><dd>3.5L V6 EcoBoost (VIN G, 8th digit)</dd></div>
 <div><dt>Note</dt><dd>demo: 200 A</dd></div>
 </dl>
-<p class="marks"><span class="mk text">Catalog text only</span>
+<p class="marks"><span class="mk text">Match the options yourself</span>
 </p>
 <a class="stk swap" id="stk-1" href="#" aria-expanded="false"><span>Stock · 2 shelf · 2 yard<span class="visually-hidden">, DEMO-1001</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
 </div></li>
@@ -687,7 +723,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div><dt>Options</dt><dd>5.0L V8 (VIN F, 8th digit)</dd></div>
 <div><dt>Note</dt><dd>demo: 200 A</dd></div>
 </dl>
-<p class="marks"><span class="mk text">Catalog text only</span>
+<p class="marks"><span class="mk text">Match the options yourself</span>
 </p>
 <a class="stk swap" id="stk-2" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1002</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
 </div></li>
@@ -697,7 +733,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div><dt>Options</dt><dd>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</dd></div>
 <div><dt>Note</dt><dd>demo: 240 A</dd></div>
 </dl>
-<p class="marks"><span class="mk text">Catalog text only</span>
+<p class="marks"><span class="mk text">Match the options yourself</span>
 </p>
 <a class="stk swap" id="stk-3" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1003</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
 </div></li>
@@ -743,10 +779,17 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 </div>
 <div class="ptwrap live" data-spine="demo-part-types">
 <div class="ptsel">
+<div class="ptkeys">
 <button id="pick-type" class="ptfield" type="button"><span class="plab">Part type</span><span class="nm">Alternator</span><span class="n">3<span class="visually-hidden"> candidates</span></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"></path></svg></button>
 <a class="ptclear swap" id="clear-type" data-focus="pick-type" href="#" aria-label="Clear Alternator">×</a>
 </div>
 <ul class="ptrecents" aria-label="Opened recently" hidden=""></ul>
+</div>
+<dl class="vfacts" aria-label="This vehicle, to match the options against">
+<div><dt>Body</dt><dd>Pickup</dd></div>
+<div><dt>Engine</dt><dd>3.5 L · 6 cyl · Gasoline</dd></div>
+<div class="vchars"><dt>VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>
+</dl>
 </div>
 <span class="stems" aria-hidden="true"></span><span class="runs" aria-hidden="true"></span><span class="drops" aria-hidden="true"></span>
 <ol class="cands" aria-label="Candidates: Alternator" tabindex="0">
@@ -756,7 +799,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div><dt>Options</dt><dd>3.5L V6 EcoBoost (VIN G, 8th digit)</dd></div>
 <div><dt>Note</dt><dd>demo: 200 A</dd></div>
 </dl>
-<p class="marks"><span class="mk text">Catalog text only</span>
+<p class="marks"><span class="mk text">Match the options yourself</span>
 </p>
 <a class="stk swap" id="stk-1" href="#" aria-expanded="true" aria-controls="stock-rows"><span>Stock · 2 shelf · 2 yard<span class="visually-hidden">, DEMO-1001</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 10l5-5 5 5"></path></svg></a>
 </div></li>
@@ -784,7 +827,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div><dt>Options</dt><dd>5.0L V8 (VIN F, 8th digit)</dd></div>
 <div><dt>Note</dt><dd>demo: 200 A</dd></div>
 </dl>
-<p class="marks"><span class="mk text">Catalog text only</span>
+<p class="marks"><span class="mk text">Match the options yourself</span>
 </p>
 <a class="stk swap" id="stk-2" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1002</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
 </div></li>
@@ -794,7 +837,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div><dt>Options</dt><dd>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</dd></div>
 <div><dt>Note</dt><dd>demo: 240 A</dd></div>
 </dl>
-<p class="marks"><span class="mk text">Catalog text only</span>
+<p class="marks"><span class="mk text">Match the options yourself</span>
 </p>
 <a class="stk swap" id="stk-3" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1003</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
 </div></li>
@@ -868,7 +911,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 </section>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":4350}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":4580}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};
