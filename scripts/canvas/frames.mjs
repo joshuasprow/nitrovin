@@ -46,7 +46,7 @@ export const frames = [
       { h2: 'Manila' },
       { vp: 'wide', url: vin(F150, '&part.id=alternator&fitment.number=DEMO-1001'), keep: ['#answer > .leaders', '#answer > .hang > .cards', '#fit .cands', '#fit .rails'], cap: 'Tags', note: 'Paper stock with tooth, clipped corners, a reinforced eyelet, a band printed in the group\'s colour. A control on a tag is label tape; a candidate\'s stock strip is the one metal on a tag.' },
       { h2: 'Thermal paper' },
-      { vp: 'wide', url: vin(F150, '&part.id=alternator&fitment.number=DEMO-1002'), keep: ['#fit .cands', '#fit .rails'], cap: 'A strip', note: 'What a stock file says of a part: a receipt fed out from under its tag\'s stock strip, torn at the foot. One near-black in the monospace face; a reversed bar over each kind of stock, a rule of dashes between rows, a name led by dots to its value, a barcode over the number. A kind with nothing keeps its bar.' },
+      { vp: 'wide', url: vin(F150, '&part.id=alternator&fitment.number=DEMO-1002'), keep: ['#fit .cands', '#fit .rails'], cap: 'A receipt', note: 'What a stock file says of a part: a strip of paper fed out from under its tag\'s stock strip, torn at the foot. One near-black in the monospace face; a reversed bar over each kind of stock, a rule of dashes between rows, a name led by dots to its value, a barcode over the number. A kind with nothing keeps its bar.' },
     ],
   },
   {
@@ -65,16 +65,16 @@ export const frames = [
   {
     file: 'Fitment', title: 'The fitment card', w: W,
     heading: 'The fitment card',
-    intro: 'The parts that fit: the vehicle\'s block, which says what the vehicle is, its names as manila tags, a picker of the catalog\'s part types, and the candidates as manila tags on rails that come down from the picker. A candidate\'s stock strip feeds out its shelf and yard rows, a strip of thermal paper.',
+    intro: 'The parts that fit: the vehicle\'s block, which says what the vehicle is, its names as manila tags, a picker of the catalog\'s part types, and the candidates as manila tags on rails that come down from the picker. A candidate\'s stock strip feeds out its shelf and yard rows, a receipt on thermal paper.',
     items: [
       { vp: 'wide', url: vin(F150, '&part.id=alternator&fitment.number=DEMO-1001'), keep: ['#fit'], cap: 'Picker, candidates, marks and stock', note: 'Alternator pressed: the picker names it and counts its candidates, and × beside it clears. Under its tape, what the decode says of this vehicle, to match each candidate\'s options against. The first candidate\'s stock is open under its row.' },
       { vp: 'wide', url: vin(F150, '&part.id=alternator'), open: ['#part-types'], keep: ['#fit'], style: 'padding-bottom: 300px', cap: 'The picker\'s list', note: 'Hung from the picker at its width, over the candidates: every part type under the part vocabulary\'s headings, in an order that never changes. The pressed one is flush; pressing it again changes nothing.' },
       { vp: 'wide', url: vin(SILV, '&part.id=brake-rotor-rear'), keep: ['#fit'], cap: 'By redirect', note: 'One tag: the rails run from the riser to its eyelet. The mark names the part type the catalog lists it under.' },
       { row: [
         { vp: 'tab', url: vin(F150, '&part.id=alternator'), keep: ['#fit'], cap: 'Narrow', note: 'Three tags across down to 34rem. The names scroll; the strip does not.' },
-        { vp: 'phone', url: vin(F150, '&part.id=alternator&fitment.number=DEMO-1001'), keep: ['#fit'], cap: 'Phone', note: 'One sideways row of tags; the open strip is under its tag, the tag\'s width.' },
+        { vp: 'phone', url: vin(F150, '&part.id=alternator&fitment.number=DEMO-1001'), keep: ['#fit'], cap: 'Phone', note: 'One sideways row of tags; the open receipt is under its tag, the tag\'s width.' },
       ] },
-      { vp: 'wide', url: '/?from.fitment.type=alternator&from.fitment.number=DEMO-1001&fitment.number=DEMO-1001', keep: ['#answer'], cap: 'Part-number mode', note: 'The part\'s tag, its strip of stock under it, and the vehicles it fits as the catalog names them.' },
+      { vp: 'wide', url: '/?from.fitment.type=alternator&from.fitment.number=DEMO-1001&fitment.number=DEMO-1001', keep: ['#answer'], cap: 'Part-number mode', note: 'The part\'s tag, its receipt under it, and the vehicles it fits as the catalog names them.' },
     ],
   },
   {

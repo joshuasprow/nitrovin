@@ -178,7 +178,7 @@ func candidateList(c contract.FitCandidate, kind string) *contract.StockList {
 
 // stockPanel is the open candidate's rows: a column for each kind of
 // stock loaded. Col is its tag's column on a wide page, 1 to 3, which
-// the strip is under; MoreWide and MoreNarrow say that tags follow
+// the receipt is under; MoreWide and MoreNarrow say that tags follow
 // it, on a wide page and a narrow one, so the rails run on down past it.
 type stockPanel struct {
 	Number               string

@@ -65,7 +65,7 @@ is shown. One that breaks a rule says which, and why, where it is proposed.
    tape is the page's own word on something: a stamp, what was asked, a
    tag's heading. A manila tag is a thing found: a card, a name, a
    candidate. Thermal paper is what a stock file says of a thing found: a
-   print, not the thing. Metal is a control. Pinstripe tape is a connection. Before
+   receipt, a print and not the thing. Metal is a control. Pinstripe tape is a connection. Before
    content is placed, it is one of these, and it takes that material.
    *Sent back: names as strips of label tape. A name is found, so it is a
    tag.*
@@ -250,12 +250,12 @@ mode is in the URL, and nothing is remembered between visits.
   note on the retirement as a row.
 - **Its stock** behaves as a candidate's: the strip opens the shelf rows and
   the yard vehicles among the vehicles listed, named in the URL as a
-  candidate's are (`fitment.number`). They are a strip of
-  thermal paper under the tag, as a candidate's are, shelf over yard at
-  every width (thermal paper, above). The rows are the page's, paged with
+  candidate's are (`fitment.number`). They are a receipt
+  under the tag and its width, as a candidate's are, shelf over yard at
+  every width (thermal paper, below). The rows are the page's, paged with
   the vehicles; "Show all" is every one.
 - **The vehicles** are the page's own table panel beside the tag, with no
-  line or notch to it: the catalog's name for each vehicle (a vPIC
+  line to it: the catalog's name for each vehicle (a vPIC
   catalog's as VIN mode names one, "vPIC model 1801 (F-150)", where the
   answer carries the name), its years, its option text verbatim, and its
   names in the vehicle vocabularies loaded, each a strip of label tape
@@ -409,42 +409,58 @@ A decoded card is a manila parts tag, hung by its eyelet from its leader line.
 
 ## Signature: thermal paper
 
-What a stock file says of a part is a strip of thermal paper: a receipt, fed
+What a stock file says of a part is a receipt: a strip of thermal paper, fed
 out from under the stock strip of the tag it is of, and torn at its foot
-(#376). A tag is a thing found; the strip is a print about it, so it is
+(#376). A tag is a thing found; the receipt is a print about it, so it is
 neither hung nor stuck. It is drawn with only what a receipt printer does.
+"Strip" alone, here and in the stylesheet, is the tag's stock strip, the
+control; the paper is the receipt.
 
 - **Stock:** `--thermal` (`#f6f4ee`), the same in both colour schemes,
   shaded for 15 px where it leaves the tag and faintly down each edge. Its
-  `drop-shadow` is on the strip itself, so it follows the torn foot.
-- **Print:** `--on-thermal` (`#232229`), one near-black in the monospace
-  face at 13 px, about 42 columns across the strip. `--thermal-muted`
-  (`#62606b`) is a note's fainter print. No other colour is printed, and a
-  group's colour never is.
-- **Width:** a strip is no wider than 23 rem. A candidate's is its tag's
-  width and no narrower than 19 rem, under whichever tag is pressed.
+  `drop-shadow` is on the receipt itself, so it follows the torn foot.
+- **Print:** `--on-thermal` (`#232229`), one near-black in the page's
+  monospace face at 13 px: the system's, since the page ships no font file.
+  `--thermal-muted` (`#62606b`) is a note's fainter print. No other colour
+  is printed, and a group's colour never is.
+- **Width:** a receipt is its tag's width and no wider than 23 rem: about 35
+  columns under a candidate's tag on a wide page, 42 at its widest. Where
+  three tags share a row narrower than 64 rem it is no narrower than 19 rem,
+  and so wider than its tag, under whichever tag is pressed.
 - **Head:** "Stock of" and the number, centred, in double height
   (`scaleY(1.7)`).
 - **A kind of stock:** its name and count reversed, `--thermal` on a bar of
-  `--on-thermal`; its sources' dates on the line under it, at the right,
-  over a rule of dashes.
+  `--on-thermal`; its sources' dates on the line under it, at the right;
+  and a rule of dashes under both, dated or not.
 - **A row:** the id in bold, led by dots to its location; then each field,
   its name led by dots to its value at the right. A location too long for
-  the id's line takes the next. A rule of dashes parts two rows.
-- **A note** is a starred line under its row. "This VIN" is reversed.
+  the id's line takes the next. A rule of dashes parts two rows. A field is
+  printed as its file has it, so a file that repeats a row's id as a field
+  prints it twice.
+- **A note** is a starred line under its row, in the fainter print and as
+  the page writes it, not in capitals: it quotes a number as typed. "This
+  VIN" is reversed.
 - **Nothing in a kind** is "None." between asterisks, under its bar and date.
+- **Past ten rows** a kind says how many it prints, under a rule of dashes,
+  with "Show all" underlined.
 - **Foot:** a barcode over the number, then a torn edge of 9 px teeth. The
   bars are a fixed pattern and encode nothing.
-- **Case:** nothing typed into a stock file changes case on the strip: an
-  id, a location, a field's name and its value are as written. Only the
-  page's own words are capitals.
+- **Case:** nothing typed into a stock file changes case on a receipt: an
+  id, a location, a field's name and its value are as written. Of the
+  page's own words, a kind's name, "Stock of" and "None." are capitals.
 - **The head and the foot are print.** They are hidden from a screen reader,
   which is told the same by the region's name.
-- **It breaks composition rule 6, knowingly.** Shelf and yard are one strip,
-  one over the other, at every width, where a row would scroll sideways: a
-  receipt is one column, and two strips side by side are two prints. Rule 5
-  is kept by it: the strip is the same thing at 390, 768 and 1280 px.
-- **The rows with no number** are a strip with no head and no foot, under
+- **It breaks two composition rules, knowingly.**
+  - *Rule 6.* Shelf and yard are one receipt, one over the other, at every
+    width, where a row would scroll sideways: a receipt is one column, and
+    two side by side are two prints. Rule 5 is kept by it: the receipt is
+    the same thing at 390, 768 and 1280 px.
+  - *Rule 3.* The part's number is on its tag, at the receipt's head and
+    under its barcode. A print says what it is of, and the head is what
+    names the part once a long receipt has scrolled its tag away: a press
+    keeps the stock strip in sight, not the tag (the parts that fit,
+    below).
+- **The rows with no number** are a receipt with no head and no foot, under
   the label tape that names them.
 
 ## Good enough: what a card holds
@@ -643,12 +659,12 @@ for the vehicle, and the candidates of the one pressed.
   candidate open (the URL's `fitment.number`, with `fitment.side` for a
   sided fitment and `fitment.type` for one whose type is not the pressed
   part type's); the open one's links to the page with none, so one is
-  open at a time. The rows are a strip of thermal paper (thermal paper,
-  above), fed out from under the tag's stock strip: on a wide page in the
+  open at a time. The rows are a receipt (thermal paper, above), fed out
+  from under the tag's stock strip: on a wide page in the
   row under the tag's row, under the tag that is pressed, the tags after
   it filling theirs first, the rails running on down its leading edge to
   the next row of tags; under 34 rem right under the tag, in its column,
-  moving with it. Shelf is over yard on the one strip at every width, one
+  moving with it. Shelf is over yard on the one receipt at every width, one
   kind when one is loaded, each under its count on a reversed bar and its
   sources' as-of dates, or why one did not answer. A row is its id, led by
   dots to its location, and its source's fields verbatim, each name led to
@@ -660,8 +676,8 @@ for the vehicle, and the candidates of the one pressed.
   scripts run.
 - **Shelf rows with no number** belong to no candidate: after the first
   page's candidates, a strip of label tape, stuck on, names the part type
-  and the vehicle in their own case, over the same panel, headed by their
-  count and as-of dates. Past the candidates' page of them, "Show all" is
+  and the vehicle in their own case, over a receipt with no head and no
+  foot, under their count and as-of dates. Past the candidates' page of them, "Show all" is
   the page with every one (`rows=unnumbered`). They never keep the
   candidates' "Next page".
 
@@ -689,7 +705,7 @@ metal; a way on is a link.
 - **A card** not typed yet is a 2 px dashed outline (manila tags, above).
 - **A candidate's stock** with none for it is muted words over a dashed
   rule on its tag, and a kind of stock with none says "None." between
-  asterisks on the strip (the parts that fit, above).
+  asterisks on the receipt (the parts that fit, above).
 
 ## Good enough: where the brackets and lines run
 

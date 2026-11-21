@@ -92,7 +92,7 @@
     "accent": "#62606b",
     "texture": "Off-white coated paper, shaded where it leaves the tag, printed in one near-black in the monospace face: a reversed bar, a rule of dashes, a name led by dots to its value, a barcode. The same in both colour schemes.",
     "css": "linear-gradient(rgb(8 7 15 / .32), rgb(8 7 15 / .07) 6px, transparent 15px), linear-gradient(90deg, rgb(8 7 15 / .05), transparent 5% 95%, rgb(8 7 15 / .05)), #f6f4ee",
-    "in": "--thermal, --on-thermal, --thermal-muted, .strip",
+    "in": "--thermal, --on-thermal, --thermal-muted, .receipt",
     "sources": []
   },
   {

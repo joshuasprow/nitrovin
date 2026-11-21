@@ -510,8 +510,8 @@
       // What the press opened is shown: a stock strip's rows under it, a
       // part type's candidates, or the sentence in their place, under it.
       // The stock strip stays in sight, not its whole tag: the rows are a
-      // strip of paper as tall as its rows are many, and its head says
-      // which part it is of.
+      // receipt as tall as its rows are many, and its head says which part
+      // it is of.
       const fit = document.getElementById('fit');
       if (opens) {
         const strip = id && document.getElementById(id);
