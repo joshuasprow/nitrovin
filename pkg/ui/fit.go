@@ -341,6 +341,7 @@ func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecod
 	}
 	c.Spine = fit.Catalog.Spine
 	c.Types = byName
+	c.Facts = newVehicleFacts(d) // PROTOTYPE: the block always says what the vehicle is
 	if !pressed {
 		c.PickCount, c.PickNoun = len(byName), plural(len(byName), "part type", "part types")
 	}
@@ -376,9 +377,6 @@ func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecod
 	}
 	for _, cand := range fit.Candidates {
 		c.Tags = append(c.Tags, newCandidateTag(cand, elements, names))
-	}
-	if slices.ContainsFunc(c.Tags, func(t candidateTag) bool { return len(t.Options) > 0 }) {
-		c.Facts = newVehicleFacts(d)
 	}
 	c.Total = fit.Total
 	if err := h.fitStock(ctx, c, d.VIN, ask, req, fit, dec, vehicle, res); err != nil {

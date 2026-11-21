@@ -1,0 +1,53 @@
+/* PROTOTYPE, never for main (#366): the vehicle block and the name tags. */
+
+/* The names' strips of tape are gone, with the Maker's line into them. */
+body:is([data-proto="A"], [data-proto="B"]) #aka { display: none; }
+body:is([data-proto="A"], [data-proto="B"]) .joins .g-wmi { display: none; }
+
+/* The block: the strip, its second row "This vehicle", the catalog, and
+   what the decode says of it, raised white on the same black tape. */
+body:is([data-proto="A"], [data-proto="B"]) .fitstrip { grid-template-rows: minmax(2.9rem, auto) auto; }
+body:is([data-proto="A"], [data-proto="B"]) .fitstrip .seg { grid-row: 1; }
+body:is([data-proto="A"], [data-proto="B"]) .fitstrip .stamp { grid-row: 2; grid-column: 1; border-right: 0; border-top: 1px solid rgb(255 255 255 / .18); padding-block: .5rem; }
+.fitstrip .vfacts { grid-row: 2; grid-column: 2 / -1; align-items: center; gap: 4px 22px; width: auto; margin: 0; padding: .45rem .7rem; background: none; border-top: 1px solid rgb(255 255 255 / .18); color: var(--on-tape); text-shadow: var(--tape-emboss); }
+.fitstrip .vfacts::before { content: none; }
+.fitstrip .vfacts dt { color: #aeb7c0; text-shadow: none; }
+.fitstrip .vfacts dd { font: 900 .95rem/1.25 var(--cell-font); letter-spacing: .06em; }
+.fitstrip .vc b { border-bottom-color: #7db4ff; font-size: .95rem; }
+.fitstrip .vc small { color: #aeb7c0; text-shadow: none; }
+@media (width < 64rem) {
+  body:is([data-proto="A"], [data-proto="B"]) .fitstrip .stamp { grid-column: 1 / -1; }
+  .fitstrip .vfacts { grid-row: 3; grid-column: 1 / -1; }
+}
+
+/* The name tags: manila, as a card is, a vocabulary's name on a strip of
+   label tape across it, then its words with no labels, each over its
+   group's colour: red the make, blue the model, orange the years. */
+.pnames { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0 0; padding: 0 12px; position: relative; z-index: 3; }
+.pname { width: 11rem; margin: 0; padding-bottom: .6rem; }
+.pname .pvoc { margin: 0 -.6rem .45rem; padding: .25rem .6rem; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border-block: 1px solid var(--tape-edge); }
+.pname .pw { width: fit-content; max-width: 100%; margin: 0 0 .3rem; font: 700 .95rem/1.25 var(--cell-font); letter-spacing: .04em; border-bottom: 3px solid var(--cm, #3d4650); }
+.pname .pw.g-wmi { --cm: #c8102e; }
+.pname .pw.g-vds { --cm: #0b4fa8; }
+.pname .pw.g-year { --cm: #b3540a; }
+.pname .pw.unsure { border-bottom-style: dashed; }
+.pname .pnone { margin: 0; font-size: 13px; color: var(--manila-muted); }
+body[data-proto="B"] .ptwrap { display: inline-block; vertical-align: top; }
+body[data-proto="B"] .pnames { display: inline-flex; vertical-align: top; margin: 30px 0 0 8px; padding: 0; }
+@media (width <= 34rem) {
+  .pnames { padding: 0; }
+  .pname { width: calc(50% - 5px); box-sizing: border-box; }
+  body[data-proto="B"] .pnames { display: flex; margin: 12px 0 0; }
+}
+
+/* The bar: not part of any design. */
+.proto-bar { position: fixed; z-index: 9999; left: 50%; bottom: 10px; transform: translateX(-50%); display: grid; gap: 2px; justify-items: center; padding: 6px 10px; max-width: calc(100vw - 16px); box-sizing: border-box; color: #fff; background: #d6006c; border-radius: 14px; box-shadow: 0 6px 18px rgb(0 0 0 / .45); font: 600 13px system-ui, sans-serif; }
+.proto-bar .proto-top { display: flex; align-items: center; gap: 10px; }
+.proto-bar button { all: unset; cursor: pointer; padding: 2px 10px; font-size: 18px; border-radius: 8px; background: rgb(255 255 255 / .2); }
+.proto-bar .proto-state { font: 400 11px ui-monospace, monospace; opacity: .9; text-align: center; }
+@media (max-width: 34rem) { .proto-bar .proto-state { display: none; } }
+@media (width >= 64rem) {
+  body:is([data-proto="A"], [data-proto="B"]) .fitstrip .g-vds { grid-column: 2; }
+  body:is([data-proto="A"], [data-proto="B"]) .fitstrip .g-year { grid-column: 3; }
+}
+.pname .pvoc { margin-top: -.2rem; }

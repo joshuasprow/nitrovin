@@ -112,16 +112,18 @@ var static = func() map[string]asset {
 		return b
 	}
 	return map[string]asset{
-		"brushed.svg": {"image/svg+xml", read("brushed.svg")},
-		"compile.js":  {"text/javascript; charset=utf-8", read("compile.js")},
-		"copy.js":     {"text/javascript; charset=utf-8", read("copy.js")},
-		"disk.js":     {"text/javascript; charset=utf-8", read("disk.js")},
-		"htmx.min.js": {"text/javascript; charset=utf-8", read("htmx.min.js")},
-		"paper.svg":   {"image/svg+xml", read("paper.svg")},
-		"plate.js":    {"text/javascript; charset=utf-8", read("plate.js")},
-		"ui.css":      {"text/css; charset=utf-8", read("ui.css")},
-		"vocab.js":    {"text/javascript; charset=utf-8", read("vocab.js")},
-		"worker.js":   {"text/javascript; charset=utf-8", read("worker.js")},
+		"brushed.svg":   {"image/svg+xml", read("brushed.svg")},
+		"compile.js":    {"text/javascript; charset=utf-8", read("compile.js")},
+		"copy.js":       {"text/javascript; charset=utf-8", read("copy.js")},
+		"disk.js":       {"text/javascript; charset=utf-8", read("disk.js")},
+		"htmx.min.js":   {"text/javascript; charset=utf-8", read("htmx.min.js")},
+		"paper.svg":     {"image/svg+xml", read("paper.svg")},
+		"plate.js":      {"text/javascript; charset=utf-8", read("plate.js")},
+		"prototype.js":  {"text/javascript; charset=utf-8", read("prototype.js")},
+		"prototype.css": {"text/css; charset=utf-8", read("prototype.css")},
+		"ui.css":        {"text/css; charset=utf-8", read("ui.css")},
+		"vocab.js":      {"text/javascript; charset=utf-8", read("vocab.js")},
+		"worker.js":     {"text/javascript; charset=utf-8", read("worker.js")},
 	}
 }()
 
