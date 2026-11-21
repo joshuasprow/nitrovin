@@ -11,9 +11,9 @@ import (
 // wide. The control is put at the window's bottom edge and clicked, with
 // no focus on it, as a pointer leaves it. A part type pressed under the
 // picker scrolls its candidates into the window with the picker still
-// above them, and a
-// stock strip pressed scrolls its rows in with its candidate's tag above
-// them. CI (CI set) needs the browser; a machine without one skips.
+// above them, and a stock strip pressed scrolls its rows in with the
+// strip above them. CI (CI set) needs the browser; a machine without one
+// skips.
 func TestReveal(t *testing.T) {
 	path := chromePath()
 	if path == "" {
@@ -64,9 +64,9 @@ func TestReveal(t *testing.T) {
 				t.Errorf("Alternator pressed at the window's bottom edge: its candidates end %d px past the window and the picker starts at %d; want the candidates in the window under the picker", at[0], at[1])
 			}
 
-			at = eval[[]int](tb, press+`('#stk-1', '#stk-1[aria-expanded="true"]', '#stock-rows', '.cand:has(#stk-1)')`)
+			at = eval[[]int](tb, press+`('#stk-1', '#stk-1[aria-expanded="true"]', '#stock-rows', '#stk-1')`)
 			if len(at) != 2 || at[0] > 0 || at[1] < 0 {
-				t.Errorf("DEMO-1001's strip pressed at the window's bottom edge: its rows end %d px past the window and its tag starts at %d; want the rows in the window under the tag", at[0], at[1])
+				t.Errorf("DEMO-1001's strip pressed at the window's bottom edge: its rows end %d px past the window and the strip starts at %d; want the rows in the window under the strip", at[0], at[1])
 			}
 		})
 	}

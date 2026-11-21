@@ -14,7 +14,7 @@ Each part has one of two standings.
 
 | Standing | Parts | What it means for a change |
 | --- | --- | --- |
-| **Signature** | The VIN input, and the three materials: aluminum plates, vinyl tape, manila tags | These are the page's identity. New UI is built from them, and a change keeps every rule below. |
+| **Signature** | The VIN input, and the four materials: aluminum plates, vinyl tape, manila tags, thermal paper | These are the page's identity. New UI is built from them, and a change keeps every rule below. |
 | **Good enough** | What a decoded card holds, where the brackets and leader lines run, the dialogs, and the forms and inputs | These work and stay as they are. A change fixes a bug or follows a signature part; it does not rearrange them. |
 
 ## Ground rules
@@ -27,9 +27,10 @@ Each part has one of two standings.
   whatever VIN the URL carries. Scripts only make it live.
 - **Popovers, not scripted overlays.** Menus, dialogs and notes are
   `popover` elements opened by `popovertarget`.
-- **Two colour schemes, three fixed materials.** The ground, the text, the
+- **Two colour schemes, four fixed materials.** The ground, the text, the
   dialogs and the group colours change between light and dark. The metal, the
-  tape and the manila do not: each is the same object under either light.
+  tape, the manila and the thermal paper do not: each is the same object
+  under either light.
 - **Three heights: stuck, raised and pressed.** A static strip of tape is
   stuck on, with a small tight shadow, `--lift-stuck`. A control that is not
   pressed stands higher than anything static beside it, and every such
@@ -63,7 +64,8 @@ is shown. One that breaks a rule says which, and why, where it is proposed.
 2. **A material says what a thing is.** The plate is what is typed. Label
    tape is the page's own word on something: a stamp, what was asked, a
    tag's heading. A manila tag is a thing found: a card, a name, a
-   candidate. Metal is a control. Pinstripe tape is a connection. Before
+   candidate. Thermal paper is what a stock file says of a thing found: a
+   print, not the thing. Metal is a control. Pinstripe tape is a connection. Before
    content is placed, it is one of these, and it takes that material.
    *Sent back: names as strips of label tape. A name is found, so it is a
    tag.*
@@ -248,10 +250,10 @@ mode is in the URL, and nothing is remembered between visits.
   note on the retirement as a row.
 - **Its stock** behaves as a candidate's: the strip opens the shelf rows and
   the yard vehicles among the vehicles listed, named in the URL as a
-  candidate's are (`fitment.number`). They hang under the tag, in its
-  third, notched up at it, shelf over yard, a row's fields under its id
-  and location; under 34 rem shelf and yard are one row that scrolls sideways.
-  The rows are the page's, paged with the vehicles; "Show all" is every one.
+  candidate's are (`fitment.number`). They are a strip of
+  thermal paper under the tag, as a candidate's are, shelf over yard at
+  every width (thermal paper, above). The rows are the page's, paged with
+  the vehicles; "Show all" is every one.
 - **The vehicles** are the page's own table panel beside the tag, with no
   line or notch to it: the catalog's name for each vehicle (a vPIC
   catalog's as VIN mode names one, "vPIC model 1801 (F-150)", where the
@@ -404,6 +406,46 @@ A decoded card is a manila parts tag, hung by its eyelet from its leader line.
   than sitting on the paper as a control.
 - **Not yet typed**, a card keeps its place as a 2 px dashed `--faint` outline
   with its muted title, and no stock.
+
+## Signature: thermal paper
+
+What a stock file says of a part is a strip of thermal paper: a receipt, fed
+out from under the stock strip of the tag it is of, and torn at its foot
+(#376). A tag is a thing found; the strip is a print about it, so it is
+neither hung nor stuck. It is drawn with only what a receipt printer does.
+
+- **Stock:** `--thermal` (`#f6f4ee`), the same in both colour schemes,
+  shaded for 15 px where it leaves the tag and faintly down each edge. Its
+  `drop-shadow` is on the strip itself, so it follows the torn foot.
+- **Print:** `--on-thermal` (`#232229`), one near-black in the monospace
+  face at 13 px, about 42 columns across the strip. `--thermal-muted`
+  (`#62606b`) is a note's fainter print. No other colour is printed, and a
+  group's colour never is.
+- **Width:** a strip is no wider than 23 rem. A candidate's is its tag's
+  width and no narrower than 19 rem, under whichever tag is pressed.
+- **Head:** "Stock of" and the number, centred, in double height
+  (`scaleY(1.7)`).
+- **A kind of stock:** its name and count reversed, `--thermal` on a bar of
+  `--on-thermal`; its sources' dates on the line under it, at the right,
+  over a rule of dashes.
+- **A row:** the id in bold, led by dots to its location; then each field,
+  its name led by dots to its value at the right. A location too long for
+  the id's line takes the next. A rule of dashes parts two rows.
+- **A note** is a starred line under its row. "This VIN" is reversed.
+- **Nothing in a kind** is "None." between asterisks, under its bar and date.
+- **Foot:** a barcode over the number, then a torn edge of 9 px teeth. The
+  bars are a fixed pattern and encode nothing.
+- **Case:** nothing typed into a stock file changes case on the strip: an
+  id, a location, a field's name and its value are as written. Only the
+  page's own words are capitals.
+- **The head and the foot are print.** They are hidden from a screen reader,
+  which is told the same by the region's name.
+- **It breaks composition rule 6, knowingly.** Shelf and yard are one strip,
+  one over the other, at every width, where a row would scroll sideways: a
+  receipt is one column, and two strips side by side are two prints. Rule 5
+  is kept by it: the strip is the same thing at 390, 768 and 1280 px.
+- **The rows with no number** are a strip with no head and no foot, under
+  the label tape that names them.
 
 ## Good enough: what a card holds
 
@@ -595,28 +637,25 @@ for the vehicle, and the candidates of the one pressed.
 - **A press shows what it opened.** A part type's candidates and a strip's
   rows open under the control pressed, often below the window. Where
   scripts run the page scrolls down just far enough to bring them in, never
-  so far that the part types or the candidate's tag leave the top, and
+  so far that the part types or the pressed stock strip leave the top, and
   never up. It scrolls smoothly unless the visitor asks for less motion.
 - **The open candidate's rows.** A strip is a link to the page with its
   candidate open (the URL's `fitment.number`, with `fitment.side` for a
   sided fitment and `fitment.type` for one whose type is not the pressed
   part type's); the open one's links to the page with none, so one is
-  open at a time. The rows are the page's table panel (panel ground, a
-  2 px `--steel` edge on 3 px of `--steel-dark` and a soft shadow), notched
-  up at its tag: on a wide page the row under the tag's row, the tags after
+  open at a time. The rows are a strip of thermal paper (thermal paper,
+  above), fed out from under the tag's stock strip: on a wide page in the
+  row under the tag's row, under the tag that is pressed, the tags after
   it filling theirs first, the rails running on down its leading edge to
   the next row of tags; under 34 rem right under the tag, in its column,
-  moving with it. Shelf and yard are two equal halves divided by a rule
-  (under 34 rem, shelf over yard), one when one kind is loaded, each
-  under its count in the label face and, muted, its sources' as-of dates,
-  or why one did not answer. A row is its id in the monospace face, its
-  location, and its source's fields verbatim, each name muted before its
-  value. A shelf row tagged with a retired number says which in a muted
-  line under it; the yard's vehicle that is the VIN looked up says "This
-  VIN" in plain bold. Under 34 rem the halves are one row that scrolls
-  sideways, the next showing at the edge, a row's fields under its id and
-  location.
-- **Past ten rows** a column says how many it shows, and "Show all" is a
+  moving with it. Shelf is over yard on the one strip at every width, one
+  kind when one is loaded, each under its count on a reversed bar and its
+  sources' as-of dates, or why one did not answer. A row is its id, led by
+  dots to its location, and its source's fields verbatim, each name led to
+  its value. A shelf row tagged with a retired number says which in a
+  starred line under it; the yard's vehicle that is the VIN looked up says
+  "This VIN", reversed.
+- **Past ten rows** a kind of stock says how many it shows, and "Show all" is a
   link to the page with every row (`rows=all`), swapped in place where
   scripts run.
 - **Shelf rows with no number** belong to no candidate: after the first
@@ -649,8 +688,8 @@ metal; a way on is a link.
   each.
 - **A card** not typed yet is a 2 px dashed outline (manila tags, above).
 - **A candidate's stock** with none for it is muted words over a dashed
-  rule on its tag, and a column of its rows with none says "None." (the
-  parts that fit, above).
+  rule on its tag, and a kind of stock with none says "None." between
+  asterisks on the strip (the parts that fit, above).
 
 ## Good enough: where the brackets and lines run
 
@@ -764,8 +803,9 @@ Every other control is plain and small.
   label tape; one that can be pressed is the second tape.
 - A new fact about the VIN itself is a row on a tag, under its group's band.
 - A new connection between two things is a line of pinstripe tape.
-- A fourth material needs a reason, as manila had: something the page hangs,
-  sticks or bolts on that the three cannot be.
+- A fifth material needs a reason, as manila and thermal paper had:
+  something the page hangs, sticks, bolts on or prints that the four cannot
+  be.
 - A seventh colour needs a reason. The six group colours are the only hues
   besides `--link` and `--bad`.
 - Check it against each composition rule above.

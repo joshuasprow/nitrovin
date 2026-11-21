@@ -84,6 +84,18 @@
     "sources": []
   },
   {
+    "name": "Thermal paper",
+    "family": "paper strip",
+    "where_seen": "A candidate's open stock rows, and a part's: what a stock file says of a part, fed out from under its tag's stock strip and torn at the foot.",
+    "base": "#f6f4ee",
+    "ink": "#232229",
+    "accent": "#62606b",
+    "texture": "Off-white coated paper, shaded where it leaves the tag, printed in one near-black in the monospace face: a reversed bar, a rule of dashes, a name led by dots to its value, a barcode. The same in both colour schemes.",
+    "css": "linear-gradient(rgb(8 7 15 / .32), rgb(8 7 15 / .07) 6px, transparent 15px), linear-gradient(90deg, rgb(8 7 15 / .05), transparent 5% 95%, rgb(8 7 15 / .05)), #f6f4ee",
+    "in": "--thermal, --on-thermal, --thermal-muted, .strip",
+    "sources": []
+  },
+  {
     "name": "Ink stamp",
     "family": "mark on manila",
     "where_seen": "A candidate's mark for something checked: the decode met the catalog's condition, or the part is filed under another type or replaces a retired number.",

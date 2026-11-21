@@ -464,7 +464,7 @@
   // opened, when it opened below the window's bottom edge: the candidates
   // under a pressed part type, the rows under a candidate's stock strip.
   // It never scrolls what was pressed (from) off the top, so the part type
-  // or the candidate's tag stays in sight above its answer, and it never
+  // or the stock strip stays in sight above its answer, and it never
   // scrolls up. Following the link's focus would do as much for a
   // keyboard; a pointer has no focus to follow.
   const reveal = (what, from) => {
@@ -507,12 +507,15 @@
         const open = cands.querySelector('.cand:has(+ .rows)');
         if (open) open.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       }
-      // What the press opened is shown: a strip's rows under its tag, a
+      // What the press opened is shown: a stock strip's rows under it, a
       // part type's candidates, or the sentence in their place, under it.
+      // The stock strip stays in sight, not its whole tag: the rows are a
+      // strip of paper as tall as its rows are many, and its head says
+      // which part it is of.
       const fit = document.getElementById('fit');
       if (opens) {
         const strip = id && document.getElementById(id);
-        reveal(document.getElementById('stock-rows'), strip && (strip.closest('.cand') || strip.closest('.ptag')));
+        reveal(document.getElementById('stock-rows'), strip);
       } else if (part && fit && fit.querySelector('.ptype[aria-current]')) {
         reveal(fit.querySelector('.cands') || fit.querySelector('p.blank'), fit.querySelector('.ptwrap'));
       }

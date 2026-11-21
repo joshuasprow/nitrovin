@@ -55,7 +55,7 @@ var (
 	stripRE    = regexp.MustCompile(`(?s)<(a|p|button) [^>]*class="stk[^"]*"[^>]*>(.*?)</(?:a|p|button)>`)
 	stripTagRE = regexp.MustCompile(`<(?:a|p|button) [^>]*class="stk[^"]*"[^>]*>`)
 	hiddenRE   = regexp.MustCompile(`<span class="visually-hidden">[^<]*</span>`)
-	stockRowRE = regexp.MustCompile(`(?s)<tr><th scope="row" class="id">([^<]*)</th><td>([^<]*)</td><td>(.*?)</td></tr>`)
+	stockRowRE = regexp.MustCompile(`(?s)<tr><th scope="row" class="id">([^<]*)</th><td class="loc">([^<]*)</td><td class="fds">(.*?)</td></tr>`)
 )
 
 // moreStockNames are the stock fixtures with shelf-more among them, in
@@ -416,4 +416,44 @@ func demoStockWith(t *testing.T, paths []string, stock ...string) *nitrovin.Tran
 	}
 	t.Cleanup(tr.Close)
 	return tr
+}
+
+// TestReceipt: a candidate's open rows are one strip (#376). Its head
+// says what it is of and its foot repeats the number under a barcode,
+// both out of the accessibility tree, since the region is named the same;
+// a field is its name and its value, each its own element, for the strip
+// to lead one to the other; and the rows with no number are a strip with
+// neither head nor foot, under the tape that names them.
+func TestReceipt(t *testing.T) {
+	var asked []contract.FitRequest
+	fixture := stockPages(stockServerOf(t, embedded(t), moreStockNames()), &asked)
+	s := fitSection(t, fixture, "/?from.vin=1D7RV1GT5AS123456&part.id=brake-rotor-front&fitment.number=BR-2001")
+	at := strings.Index(s, `<li class="rows`)
+	if at < 0 {
+		t.Fatalf("BR-2001's rows are not open:\n%s", s)
+	}
+	rows := s[at : at+strings.Index(s[at:], "</li>")]
+	for _, want := range []string{
+		`id="stock-rows">` + "\n" + `<div class="strip">` + "\n" + `<p class="strip-head" aria-hidden="true"><span>Stock of</span> BR-2001</p>`,
+		`<div class="stock-cols" id="stock-region" role="region" aria-label="Stock of BR-2001" tabindex="0">`,
+		`<p class="strip-foot" aria-hidden="true">BR-2001</p>` + "\n" + `</div>`,
+		`<span class="fd"><span class="fk">stock_number</span> <span class="fv">`,
+		`</span></span><span class="fsep"> · </span><span class="fd">`,
+	} {
+		if !strings.Contains(rows, want) {
+			t.Errorf("BR-2001's rows lack %q:\n%s", want, rows)
+		}
+	}
+	if strings.Contains(rows, "notch") || strings.Count(rows, `class="strip-head"`) != 1 || strings.Count(rows, `class="strip-foot"`) != 1 {
+		t.Errorf("BR-2001's rows: want one head, one foot and no notch:\n%s", rows)
+	}
+
+	s = fitSection(t, fixture, "/?from.vin=1D7RV1GT5AS123456&part.id=mirror")
+	at = strings.Index(s, `<div class="nonum"`)
+	if at < 0 {
+		t.Fatalf("the mirrors have no rows with no number:\n%s", s)
+	}
+	if n := s[at:]; !strings.Contains(n, `</h3>`+"\n"+`<div class="strip"><div class="stock-col">`) || strings.Contains(n, "strip-head") || strings.Contains(n, "strip-foot") {
+		t.Errorf("the rows with no number: want a strip with no head and no foot:\n%s", n)
+	}
 }
