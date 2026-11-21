@@ -12,6 +12,9 @@
 body{margin:0}
 @keyframes caret{ 50% { box-shadow: none; } }
 @keyframes blink{ 50% { opacity: 0; } }
+@property --nt-l{ syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --nt-r{ syntax: "<length>"; inherits: false; initial-value: 0px; }
+@keyframes nt-fade{ 0% { --nt-l: 0px; --nt-r: 48px; } 6% { --nt-l: 48px; --nt-r: 48px; } 94% { --nt-l: 48px; --nt-r: 48px; } 100% { --nt-l: 48px; --nt-r: 0px; } }
 @keyframes bracket{ from { transform: scaleX(0); } }
 @keyframes draw{ from { stroke-dashoffset: 1; } }
 @keyframes pop{ from { transform: translateY(-8px) scale(.92); opacity: 0; } }
@@ -24,7 +27,7 @@ body{margin:0}
 header, main, #ui-error{max-width: 62rem; margin-inline: auto}
 h2{font-size: 1.1rem; margin: 1.5rem 0 .5rem}
 h3{font: 900 12px var(--label-font); letter-spacing: .08em; text-transform: uppercase; margin: 1.5rem 0 .5rem; padding-bottom: .2rem; border-bottom: 3px solid var(--c-vds)}
-a:is(:focus-visible,.is-fv), button:is(:focus-visible,.is-fv), summary:is(:focus-visible,.is-fv), input:is(:focus-visible,.is-fv), pre:is(:focus-visible,.is-fv), .hang:is(:focus-visible,.is-fv), .nametags:is(:focus-visible,.is-fv){outline: 3px solid var(--link); outline-offset: 2px}
+a:is(:focus-visible,.is-fv), button:is(:focus-visible,.is-fv), summary:is(:focus-visible,.is-fv), input:is(:focus-visible,.is-fv), pre:is(:focus-visible,.is-fv), .hang:is(:focus-visible,.is-fv){outline: 3px solid var(--link); outline-offset: 2px}
 code, pre, .mono{font-family: var(--cell-font)}
 .visually-hidden, .plbl{position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap}
 button{--key: var(--metal); font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase; padding: .45rem .9rem; cursor: pointer; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); background: var(--key); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised)}
@@ -96,9 +99,15 @@ ol.years{list-style: none; margin: .15rem 0 0; padding: 0; font-size: 11px; colo
 ol.years li{display: inline; white-space: nowrap}
 ol.years li:not(:last-child)::after{content: " ·"; font-weight: 400; color: var(--manila-muted)}
 ol.years li.current{color: var(--on-manila); font-weight: 700}
-.aka{position: relative; z-index: 3; margin: 14px 0 0}
-.nametags{list-style: none; display: flex; align-items: stretch; gap: 10px; margin: 0; padding: 6px 4px 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity}
-.name{flex: none; scroll-snap-align: start; box-sizing: border-box; min-width: 11rem; max-width: min(22rem, 80vw); margin: 0; padding-bottom: .6rem}
+.aka{--lane: 3rem; position: relative; z-index: 3; margin: 30px 0 0 var(--lane)}
+.aka:has(.nametags:is(:focus-visible,.is-fv)){outline: 3px solid var(--link); outline-offset: 2px}
+.nametags{list-style: none; display: flex; align-items: stretch; gap: 10px; margin: 0; padding: 6px 4px 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding-inline: 4px}
+.name{flex: none; scroll-snap-align: start; box-sizing: border-box; min-width: 11rem; max-width: min(40rem, 72vw); margin: 0; padding-bottom: .6rem}
+.nametags:is(:focus-visible,.is-fv){outline: 0}
+.nrows{display: grid; grid-template-rows: repeat(2, auto); grid-auto-flow: column; grid-auto-columns: max-content; justify-content: start; align-content: start; gap: 0 1.4rem}}
+.vp{@supports (animation-timeline: scroll()){
+.nametags{mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline)}}}
+.vp{
 .name .nvoc{margin: -.2rem -.6rem .45rem; padding: .25rem .6rem; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border: 0; border-block: 1px solid var(--tape-edge)}
 .nw{width: fit-content; max-width: 100%; margin: 0 0 .3rem; font: 700 .95rem/1.25 var(--cell-font); letter-spacing: .04em; border-bottom: 3px solid var(--cm)}
 .nrow{display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; margin: 0 0 .3rem}
@@ -141,8 +150,8 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 .fitstrip .g-year{grid-column: 2}
 .fitstrip .stamp{grid-column: 1 / -1; padding-block: .35rem}
 .vfacts{grid-row: 3; grid-column: 1 / -1}
-.aka{margin-inline: calc(-1 * var(--gutter))}
-.nametags{padding-inline: var(--gutter); scroll-padding-inline: var(--gutter)}
+.aka{margin-right: calc(-1 * var(--gutter))}
+.nametags{padding-right: var(--gutter); scroll-padding-right: var(--gutter)}
 .fitstrip .seg::after{display: none}}
 :is(.vp-tab,.vp-phone){@supports (animation-timeline: --a) and (timeline-scope: --a){
 #answer{timeline-scope: --hang; --col: 12.5rem}
@@ -207,7 +216,7 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 
 </style>
 </helmet>
-<div class="root sheet" data-scheme="light" style="width: 1280px; height: 2390px; color: var(--fg); background: var(--bg)">
+<div class="root sheet" data-scheme="light" style="width: 1280px; height: 2430px; color: var(--fg); background: var(--bg)">
 <div><h1 class="sh-h1">Cards, brackets and lines</h1><p class="sh-intro">Each card is a manila tag hung by its eyelet from its group's line. A row is a label over its value, both left-aligned. Under the cards, the vehicle's block of label tape takes the Vehicle and Model year lines and says what the vehicle is; its names hang under it as manila tags, a vocabulary each, in a row that scrolls sideways.</p></div>
 <section>
 <p class="sh-cap">Decoded <span>Brackets, leader lines, cards, join lines, the vehicle's block and its names.</span></p>
@@ -340,8 +349,8 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 <li class="card done name">
 <h3 class="nvoc">demo-vehicles</h3>
 <p class="nw g-wmi">Ford</p>
-<p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="info" aria-label="How Ford F150 was reached" type="button">i</button></p>
-</li>
+<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="info" aria-label="How Ford F150 was reached" type="button">i</button></p>
+</div></li>
 </ol>
 </section>
 </section>
@@ -580,8 +589,8 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 <li class="card done name">
 <h3 class="nvoc">demo-vehicles</h3>
 <p class="nw g-wmi">Ford</p>
-<p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="info" aria-label="How Ford F150 was reached" type="button">i</button></p>
-</li>
+<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="info" aria-label="How Ford F150 was reached" type="button">i</button></p>
+</div></li>
 </ol>
 </section>
 </section>
@@ -721,8 +730,8 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 <li class="card done name">
 <h3 class="nvoc">demo-vehicles</h3>
 <p class="nw g-wmi">Ford</p>
-<p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="info" aria-label="How Ford F150 was reached" type="button">i</button></p>
-</li>
+<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="info" aria-label="How Ford F150 was reached" type="button">i</button></p>
+</div></li>
 </ol>
 </section>
 </section>
@@ -734,7 +743,7 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2390}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2430}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};

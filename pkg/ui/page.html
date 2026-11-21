@@ -229,9 +229,9 @@ no vocabulary loaded, the names' place is a blank strip. */}}
 {{range .Rows}}{{$make := .Make}}<li class="card done name{{if .Rule}} rule{{end}}">
 <h3 class="nvoc">{{.Vocabulary}}{{if gt (len .Names) 1}} <span class="count">{{len .Names}}<span class="visually-hidden"> names</span></span>{{end}}</h3>
 {{with $make}}<p class="nw g-wmi">{{.}}</p>
-{{end}}{{range .Names}}{{$n := .}}<p class="nrow{{if .Rule}} rule{{end}}">{{if and .Make (not $make)}}<span class="nw g-wmi" title="{{.MakeNote}}">{{.Make}}</span>{{end}}<span class="nw g-vds{{if .ModelUnsure}} unsure{{end}}" title="{{.ModelNote}}">{{.Model}}</span><span class="nw g-year{{if .YearUnsure}} unsure{{end}}" title="{{.YearNote}}">{{.Years}}</span>{{with .Details}}<button type="button" class="info" popovertarget="{{$n.ID}}" aria-label="How {{$n.Make}} {{$n.Model}} was reached">i</button>{{end}}</p>
+{{end}}{{if .Names}}<div class="nrows">{{range .Names}}{{$n := .}}<p class="nrow{{if .Rule}} rule{{end}}">{{if and .Make (not $make)}}<span class="nw g-wmi" title="{{.MakeNote}}">{{.Make}}</span>{{end}}<span class="nw g-vds{{if .ModelUnsure}} unsure{{end}}" title="{{.ModelNote}}">{{.Model}}</span><span class="nw g-year{{if .YearUnsure}} unsure{{end}}" title="{{.YearNote}}">{{.Years}}</span>{{with .Details}}<button type="button" class="info" popovertarget="{{$n.ID}}" aria-label="How {{$n.Make}} {{$n.Model}} was reached">i</button>{{end}}</p>
 {{with .Details}}<div class="note" id="{{$n.ID}}" popover>{{.}}</div>
-{{end}}{{else}}<p class="none">No name for this one yet.</p>
+{{end}}{{end}}</div>{{else}}<p class="none">No name for this one yet.</p>
 {{end}}</li>
 {{end}}</ol>
 {{end}}</section>

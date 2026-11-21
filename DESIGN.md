@@ -383,23 +383,30 @@ for the vehicle, and the candidates of the one pressed.
   nothing: it marks no candidate as the match. Narrow, the stamp and the
   details are rows of their own.
 - **The names** ("Also known as") are manila tags, a tag a vocabulary, in
-  one row under the block that scrolls sideways at every width, the next
-  tag showing at the edge; narrow, it reaches both edges of the window. A
-  tag is a card's stock. Across it, the vocabulary's name on a strip of
+  one row under the block that scrolls sideways at every width; narrow, it
+  reaches the window's right edge. The row starts 3 rem in from the
+  block's left edge, which leaves a lane for the lines to the picker: no
+  tag is ever over a line. Where tags are out of sight past an end of the
+  row, that end fades over 48 px, and the fade goes when the row is
+  scrolled to that end; a row that fits has none. It needs scroll-driven
+  animation, and without it the row is cut square. A
+  tag is a card's stock, no wider than 72% of the window, so the next
+  one shows. Across it, the vocabulary's name on a strip of
   label tape, with how many names it holds where it has several. Under
   that its words, with no labels: each stands over its group's colour,
   which says what it is. The make is over the Maker's, once where every
   name of the tag shares it; then a line a name, the model over the
   Vehicle's and the years its mapping holds for, lighter, over the Model
-  year's. A dashed underline is a doubt, and the name's "i", a key of
+  year's. A tag's names fill two lines, then a second column, so no tag
+  is taller than its strip, a make and two names. A dashed underline is a doubt, and the name's "i", a key of
   label tape, opens a note that says it in words. A vocabulary with no
   name keeps a tag that says so, after those with names. Every vocabulary
   is on the page: nothing is stacked or kept behind a switch.
 - **From the strip to the picker**, at every width, each line comes down
   out of the strip under its word, turns in the 30 px under the strip
   (Vehicle's 9 px into it, Model year's 18 px), and runs along to drop
-  into the picker where its riser leaves it, behind the names' tags on the
-  way. So the lines from the two cards reach the eyelets in one piece. With nothing pressed they end on the strip. They
+  into the picker where its riser leaves it: 1.5 rem in from the picker's
+  left end, down the lane beside the names' tags. So the lines from the two cards reach the eyelets in one piece. With nothing pressed they end on the strip. They
   need anchor positioning, as the risers do.
 - **Narrow, the cards move and the block does not**, so the two lines are
   carried between them by the row's own scroll (a scroll timeline; no
