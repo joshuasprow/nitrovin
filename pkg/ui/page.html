@@ -370,7 +370,7 @@ sideways, the region that takes the focus. */}}
 region that takes the focus: a candidate's (stock-rows) or a part's
 (part-answer). */}}
 {{define "stock-cols" -}}
-<div class="stock-cols{{if eq (len .Columns) 1}} one{{end}}" id="stock-region" role="region" aria-label="Stock of {{.Number}}" tabindex="0">
+<div class="stock-cols{{if eq (len .Columns) 1}} one{{end}}" id="stock-region" role="region" aria-label="Stock of {{.Number}}" data-number="{{.Number}}" tabindex="0">
 {{range $col := .Columns}}<div class="stock-col">
 <h3 id="{{.ID}}-h"><span>{{.Heading}}</span>{{with .AsOf}} <span class="asof">{{.}}</span>{{end}}</h3>
 {{if .Rows}}{{template "stock-table" .Rows}}{{else}}<p class="stock-none">None.</p>{{end}}

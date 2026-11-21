@@ -1,5 +1,5 @@
-// PROTOTYPE: the Proposals page's frames for the shelf list in new
-// materials, and the swatch boards of the main page. Throwaway, with the
+// PROTOTYPE: the frames of the proposal's page, the shelf list on thermal
+// paper, and the swatch boards of the main page. Throwaway, with the
 // prototype it captures (pkg/ui/static/prototype.js).
 //
 //   NITROVIN_CANVAS_DEMO=http://127.0.0.1:8811 node scripts/canvas/proposal.mjs
@@ -12,26 +12,24 @@ import { open, buildFrame, dcFile, previewFile, REPO } from './engine.mjs';
 const OUT = `${REPO}/docs/design/canvas/project`, TMP = `${REPO}/build/canvas`;
 mkdirSync(TMP, { recursive: true });
 for (const f of ['brushed.svg', 'paper.svg']) copyFileSync(`${REPO}/pkg/ui/static/${f}`, `${TMP}/${f}`);
-const VIN = '/?from.vin=1FTEW1EG7FFA12345&part.id=alternator&fitment.number=DEMO-1001&variant=';
-const PART = '/?from.fitment.type=alternator&from.fitment.number=DEMO-1001&fitment.number=DEMO-1001&variant=';
-const VARIANTS = [
-  { key: 'receipt', file: 'Receipt', name: 'thermal receipt', intro: 'Thermal paper. One strip the tag\'s width, fed out from under the tag\'s stock strip: shelf over yard on the one tape, torn at the foot. The print is the printer\'s: one face, double-height heads, rules of dashes, a field\'s name led by dots to its value, a barcode at the foot.' },
-  { key: 'placard', file: 'Placard', name: 'tire placard', intro: 'The tire and loading placard of a door jamb: a white label, black bands and rules, one yellow. A ruled table, shelf beside yard, each row a line of cells: the id on yellow, a field\'s name small over its value.' },
-  { key: 'tyvek', file: 'Tyvek', name: 'Tyvek wire tags', intro: 'Wire-on tags of spunbonded olefin, yellow for the shelf and orange for the yard. There is no panel: each row is its own tag, a steel eyelet and a twist of wire at one end, its fields printed as blanks filled in.' },
-  { key: 'marker', file: 'Marker', name: 'paint marker on steel', intro: 'Yard paint on steel: a sheet of bare, rusting steel written on with a yellow paint marker and a white tire crayon. The id first and large, the rest beside it, no rule but the hand\'s.' },
-];
-const frames = VARIANTS.map((v) => ({
-  file: `Proposal-Shelf-${v.file}`, title: `Proposal: the shelf list, ${v.name}`, w: 1280,
-  heading: `The shelf list: ${v.name}`, intro: v.intro,
+const KEEP = ['#fit .cands', '#fit .rails'];
+const vin = (n) => `/?from.vin=1FTEW1EG7FFA12345&part.id=alternator&fitment.number=${n}&variant=receipt`;
+const PART = '/?from.fitment.type=alternator&from.fitment.number=DEMO-1001&fitment.number=DEMO-1001&variant=receipt';
+const frames = [{
+  file: 'Proposal-Shelf-Receipt', title: 'Proposal: the shelf list on thermal paper', w: 1280,
+  heading: 'The shelf list on thermal paper',
+  intro: 'One strip of an 80 mm roll, the tag\'s width, fed out from under the tag\'s stock strip and torn at the foot: about 42 columns of the printer\'s one face. What a printer can do is all there is: double height for what the strip is of, a reversed bar over each kind of stock, a rule of dashes between rows, a field\'s name led by dots to its value, a barcode over the number at the foot. The paper is the same in both colour schemes.',
   items: [
-    { vp: 'wide', url: VIN + v.key, keep: ['#fit .cands', '#fit .rails'], cap: 'Under a candidate', note: 'The first candidate\'s stock strip is open.' },
+    { vp: 'wide', url: vin('DEMO-1001'), keep: KEEP, cap: 'Under the first candidate', note: 'Shelf over yard on the one strip. A row\'s notes are starred; This VIN is reversed.' },
+    { vp: 'wide', url: vin('DEMO-1002'), keep: KEEP, cap: 'Under the second, nothing on the shelf', note: 'The strip is under the tag whose stock strip is pressed. An empty kind of stock keeps its bar.' },
+    { vp: 'wide', url: vin('DEMO-1003'), keep: KEEP, cap: 'Under the third' },
     { row: [
-      { vp: 'tab', url: VIN + v.key, keep: ['#fit .cands', '#fit .rails'], cap: 'Narrow' },
-      { vp: 'phone', url: VIN + v.key, keep: ['#fit .cands', '#fit .rails'], cap: 'Phone', note: 'Under its tag.' },
+      { vp: 'tab', url: vin('DEMO-1001'), keep: KEEP, cap: 'Narrow', note: 'No narrower than 19rem.' },
+      { vp: 'phone', url: vin('DEMO-1001'), keep: KEEP, cap: 'Phone', note: 'Under its tag, the tag\'s width.' },
     ] },
-    { vp: 'wide', url: PART + v.key, keep: ['#answer'], cap: 'Part-number mode', note: 'Under the part\'s tag, a column.' },
+    { vp: 'wide', url: PART, keep: ['#answer'], cap: 'Part-number mode', note: 'Under the part\'s tag.' },
   ],
-}));
+}];
 
 const c = await open();
 const built = [];
@@ -54,7 +52,7 @@ for (const frame of frames) {
 
 // ---- the swatch boards: one per research file ----------------------------
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/\{\{/g, '{&#8203;{');
-const USED = { 'Fresh direct-thermal receipt paper': 'receipt', 'Tire and loading placard': 'placard', 'Yellow Tyvek wire tag': 'Tyvek tags', 'Yellow paint marker on steel': 'marker' };
+const USED = { 'Fresh direct-thermal receipt paper': 'the shelf list' };
 const BOARDS = [
   { file: 'Swatches-Thermal', src: 'thermal', title: 'Swatches: thermal paper', intro: 'Direct-thermal paper and its print, as a counter\'s receipts and a yard\'s part tags come off the printer.' },
   { file: 'Swatches-Yard', src: 'yard', title: 'Swatches: the yard and the shelf', intro: 'What parts and vehicles are tagged, labelled and marked with in a yard, a warehouse and a shop.' },
@@ -148,13 +146,22 @@ await c.close();
 const path = `${OUT}/canvas.json`, idx = JSON.parse(readFileSync(path, 'utf8'));
 const add = (k, entry) => { idx.boards[k] = { ...(idx.boards[k] || {}), ...entry }; if (!idx.order.includes(k)) idx.order.push(k); };
 const note = (k, entry) => { idx.notes[k] = { ...(idx.notes[k] || {}), ...entry }; if (!idx.noteOrder.includes(k)) idx.noteOrder.push(k); };
-if (!idx.pages.some((p) => p.id === 'proposals')) idx.pages.push({ id: 'proposals', name: 'Proposals' });
+// The proposal has a page of its own. Frames of this proposal that are no
+// longer built leave the index; a page left with no board leaves it too.
+const PAGE = { id: 'proposal-shelf-list', name: 'Proposal: shelf list' };
+const mineNow = new Set(built.flatMap((f) => [`${f.file}.dc.html`, `${f.file}-Dark.dc.html`]));
+const gone = Object.keys(idx.boards).filter((k) => k.startsWith('Proposal-Shelf-') && !mineNow.has(k));
+for (const k of gone) { delete idx.boards[k]; idx.order = idx.order.filter((o) => o !== k); }
+if (!idx.pages.some((p) => p.id === PAGE.id)) idx.pages.push(PAGE);
 const darkY = Math.max(...built.map((f) => f.h)) + 120;
 built.forEach((f, i) => {
-  add(`${f.file}.dc.html`, { h: f.h, page: 'proposals', title: `${f.title}, light`, w: f.w, x: i * 1360, y: 0 });
-  add(`${f.file}-Dark.dc.html`, { h: f.h, page: 'proposals', title: `${f.title}, dark`, w: f.w, x: i * 1360, y: darkY });
+  add(`${f.file}.dc.html`, { h: f.h, page: PAGE.id, title: `${f.title}, light`, w: f.w, x: i * 1360, y: 0 });
+  add(`${f.file}-Dark.dc.html`, { h: f.h, page: PAGE.id, title: `${f.title}, dark`, w: f.w, x: i * 1360, y: darkY });
 });
-note('proposal-shelf-materials', { kind: 'title1', maxW: built.length * 1360 - 80, page: 'proposals', text: 'Proposal: the shelf list in new materials', w: 240, x: 0, y: -300 });
+delete idx.notes['proposal-shelf-materials']; idx.noteOrder = idx.noteOrder.filter((n) => n !== 'proposal-shelf-materials');
+idx.pages = idx.pages.filter((p) => p.id !== 'proposals' || Object.values(idx.boards).some((b) => b.page === 'proposals') || Object.values(idx.notes).some((n) => n.page === 'proposals'));
+note('proposal-shelf-list', { kind: 'title1', maxW: 1280, page: PAGE.id, text: 'Proposal: the shelf list on thermal paper', w: 240, x: 0, y: -300 });
+console.log('gone:', gone.join(' ') || 'none');
 // The swatches sit under the main page's rows, wherever those now end.
 const main = Object.entries(idx.boards).filter(([k, b]) => !b.page && !k.startsWith('Swatches-'));
 const swY = Math.max(...main.map(([, b]) => b.y + b.h)) + 520;

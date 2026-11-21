@@ -1,11 +1,11 @@
-// PROTOTYPE, not the page: three materials for the shelf list, switched by
+// PROTOTYPE, not the page: the shelf list on thermal paper, switched by
 // ?variant= on the page's own route. Throwaway; lives only on this branch.
 //
 // The variant's class, mat-<key>, goes on every stock panel (.rows, .prows,
 // .stock-panel), and the rules for it are the PROTOTYPE block at the foot of
 // ui.css. A floating bar cycles the variants; so do the arrow keys.
 (() => {
-  const VARIANTS = [['built', 'As built'], ['receipt', 'Thermal receipt'], ['placard', 'Tire placard'], ['tyvek', 'Tyvek wire tags'], ['marker', 'Paint marker on steel']];
+  const VARIANTS = [['built', 'As built'], ['receipt', 'Thermal receipt']];
   const key = () => { const v = new URLSearchParams(location.search).get('variant'); return VARIANTS.some(([k]) => k === v) ? v : 'built'; };
   const apply = () => {
     const v = key();
