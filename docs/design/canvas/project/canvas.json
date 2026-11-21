@@ -87,28 +87,44 @@
       "y": 0
     },
     "Swatches-Thermal.dc.html": {
-      "h": 1390,
+      "h": 1650,
       "title": "Swatches: thermal paper",
       "w": 1280,
       "x": 0,
-      "y": 0,
+      "y": 2180,
       "page": "swatches"
     },
     "Swatches-Yard.dc.html": {
-      "h": 2110,
+      "h": 2720,
       "title": "Swatches: the yard and the shelf",
       "w": 1280,
       "x": 1360,
-      "y": 0,
+      "y": 2180,
       "page": "swatches"
     },
     "Swatches-Vehicle.dc.html": {
-      "h": 2160,
+      "h": 2670,
       "title": "Swatches: the vehicle and the garage",
       "w": 1280,
       "x": 2720,
-      "y": 0,
+      "y": 2180,
       "page": "swatches"
+    },
+    "Swatches-Page.dc.html": {
+      "h": 1660,
+      "page": "swatches",
+      "title": "Swatches: in use",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "Swatches-Tried.dc.html": {
+      "h": 950,
+      "page": "swatches",
+      "title": "Swatches: tried",
+      "w": 1280,
+      "x": 1360,
+      "y": 0
     }
   },
   "createdOnFiles": {
@@ -121,7 +137,8 @@
   },
   "noteOrder": [
     "heading",
-    "swatches"
+    "swatches",
+    "swatches-found"
   ],
   "notes": {
     "heading": {
@@ -134,12 +151,21 @@
     },
     "swatches": {
       "kind": "title1",
-      "maxW": 4000,
-      "text": "Swatches: materials found, none settled",
+      "maxW": 2640,
+      "text": "Made: in use, and tried",
       "w": 240,
       "x": 0,
       "y": -300,
       "page": "swatches"
+    },
+    "swatches-found": {
+      "kind": "title1",
+      "maxW": 4000,
+      "page": "swatches",
+      "text": "Found: by a web search, none settled",
+      "w": 240,
+      "x": 0,
+      "y": 1880
     }
   },
   "order": [
@@ -157,7 +183,9 @@
     "States-Dark.dc.html",
     "Swatches-Thermal.dc.html",
     "Swatches-Yard.dc.html",
-    "Swatches-Vehicle.dc.html"
+    "Swatches-Vehicle.dc.html",
+    "Swatches-Page.dc.html",
+    "Swatches-Tried.dc.html"
   ],
   "pages": [
     {

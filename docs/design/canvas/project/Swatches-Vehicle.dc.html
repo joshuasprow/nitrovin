@@ -12,7 +12,7 @@
 body{margin:0}
 .swb{box-sizing:border-box;width:1280px;padding:40px;display:flex;flex-direction:column;gap:22px;font:14px/1.45 system-ui,sans-serif;color:#14181d;background:#e6ebef}
 .swb h1{margin:0;font:900 21px/1.2 "Arial Black","Helvetica Neue",system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase}
-.swb .intro{margin:6px 0 0;max-width:820px;color:#47515c}
+.swb .intro{margin:6px 0 0;max-width:1000px;color:#47515c}
 .swb .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
 .sw{display:flex;flex-direction:column;gap:5px;padding:0 0 12px;background:#fff;border:1px solid #9fb3c2;border-radius:4px;overflow:hidden}
 .sw .chip{position:relative;display:flex;flex-direction:column;justify-content:center;gap:2px;height:104px;padding:0 16px 0 34px;border-bottom:1px solid #9fb3c2}
@@ -28,6 +28,9 @@ body{margin:0}
 .sw .hxs{display:flex;flex-wrap:wrap;gap:2px 10px;margin-top:2px;font:11px/1.5 ui-monospace,monospace}
 .sw .hx i{display:inline-block;width:9px;height:9px;margin-right:4px;border:1px solid #47515c;vertical-align:-1px}
 .sw .src{font-size:11px;overflow-wrap:anywhere}
+.sw .src i{font-style:normal;color:#8a3b00}
+.sw .nb{font-size:11px;color:#47515c}.sw .nb b{color:#8a3b00}
+.sw .src a{color:#0b4fa8}.sw .src a:hover{color:#14181d}
 .sw-0 .chip{background:linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,0) 40%, rgba(0,0,0,.06)), repeating-linear-gradient(90deg, rgba(255,255,255,.08) 0 1px, rgba(0,0,0,.03) 1px 2px), #C9CCCE;color:#111111}
 .sw-1 .chip{background:linear-gradient(#000 0 1.6em, transparent 1.6em), repeating-linear-gradient(180deg, transparent 0 calc(2em - 1px), #000 calc(2em - 1px) 2em), #FFFFFF;color:#000000}
 .sw-2 .chip{background:linear-gradient(#FF8200 0 1.8em, transparent 1.8em), #FFD100;color:#000000}
@@ -48,8 +51,8 @@ body{margin:0}
 .sw-17 .chip{background:linear-gradient(90deg, transparent 0 2.4em, #111 2.4em calc(2.4em + 1px), transparent calc(2.4em + 1px)), repeating-linear-gradient(180deg, transparent 0 calc(1.8em - 1px), rgba(0,0,0,.35) calc(1.8em - 1px) 1.8em), #F4F1E8;color:#111111}
 </style>
 </helmet>
-<div class="swb" style="height: 2160px">
-<div><h1>Swatches: the vehicle and the garage</h1><p class="intro">Surfaces of the vehicle itself, its labels and instruments, and of the garage around it. Found by a web search on 2026-11-20. Dimensions and conventions are the sources'; every colour is an estimate, since no source publishes one, and no recipe here is settled.</p></div>
+<div class="swb" style="height: 2670px">
+<div><h1>Swatches: the vehicle and the garage</h1><p class="intro">Surfaces of the vehicle itself, its labels and instruments, and of the garage around it. Found by a web search on 2026-11-20; every source was opened and checked against its card on 2026-11-21. A link with nothing after it is a page read that states a fact of the card. "In part": the page is about the material and states none of the card's facts. "Summary": the page refused, and a search result's summary was read instead. "Unread": neither could be read. Dead and unrelated pages are gone from the cards. Where a page read says otherwise than a card did, the card now says what the page says. Every colour is an estimate, since no source publishes one, and no recipe here is settled.</p></div>
 <div class="grid">
 <article class="sw sw-0">
 <div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span></div>
@@ -58,16 +61,18 @@ body{margin:0}
 <p>The compliance label on the driver's door edge, hinge pillar or door-latch post, carrying the maker, build month, weight ratings and the VIN.</p>
 <p class="tx">Flat matte-silver film with a faint horizontal brushed sheen; block capitals at least 3/32 in (2.4 mm) high in a colour that contrasts with the background, set in ruled rows, about 10 cm by 2 cm for a bare VIN label.</p>
 <p class="hxs"><span class="hx"><i style="background: #C9CCCE"></i>base #c9ccce</span><span class="hx"><i style="background: #111111"></i>ink #111111</span></p>
-<p class="src">law.cornell.edu · patents.google.com</p>
+<p class="nb"><b>No source read says:</b> matte finish and faint horizontal brushed sheen; lettering 'set in ruled rows'; silver polyester as the usual certification-label stock (patent offers it only as one option, for a VIN label).</p>
+<p class="src"><a href="https://www.law.cornell.edu/cfr/text/49/567.4">law.cornell.edu</a> · <a href="https://patents.google.com/patent/US9824610">patents.google.com</a> · <a href="https://www.law.cornell.edu/cfr/text/40/86.1807-01">law.cornell.edu (2)</a> <i>in part</i></p>
 </article>
 <article class="sw sw-1">
 <div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #FFD100"></i></div>
 <h3>Tire and loading placard</h3>
 <p class="fam">label</p>
-<p>The tire pressure placard on the driver's door jamb, headed 'Tire and Loading Information'.</p>
+<p>The tire pressure placard on the driver's side B-pillar, or else the door's edge, headed 'Tire and Loading Information'.</p>
 <p class="tx">Flat glossy white label in ruled table cells with a black header band and yellow emphasis; colour and format are fixed by a figure in the standard, not by text.</p>
 <p class="hxs"><span class="hx"><i style="background: #FFFFFF"></i>base #ffffff</span><span class="hx"><i style="background: #000000"></i>ink #000000</span><span class="hx"><i style="background: #FFD100"></i>accent #ffd100</span></p>
-<p class="src">law.cornell.edu · govinfo.gov · regulations.justia.com</p>
+<p class="nb"><b>No source read says:</b> glossy white stock; black header band; yellow emphasis; ruled table cells.</p>
+<p class="src"><a href="https://www.law.cornell.edu/cfr/text/49/571.110">law.cornell.edu</a> · <a href="https://www.govinfo.gov/content/pkg/CFR-2020-title49-vol6/pdf/CFR-2020-title49-vol6-sec571-110.pdf">govinfo.gov</a> · <a href="https://regulations.justia.com/regulations/fedreg/2005/03/22/05-5580.html">regulations.justia.com</a> <i>in part, summary</i></p>
 </article>
 <article class="sw sw-2">
 <div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #FF8200"></i></div>
@@ -76,7 +81,8 @@ body{margin:0}
 <p>Caution and warning labels on sun visors, battery covers, radiator shrouds and jack points.</p>
 <p class="tx">Flat, saturated, semi-gloss vinyl; yellow marks caution, orange marks warning, red marks danger; black sans-serif capitals in a signal-word panel above the message.</p>
 <p class="hxs"><span class="hx"><i style="background: #FFD100"></i>base #ffd100</span><span class="hx"><i style="background: #000000"></i>ink #000000</span><span class="hx"><i style="background: #FF8200"></i>accent #ff8200</span></p>
-<p class="src">alsco.com · gist.github.com · tapemonster.de · en.wikipedia.org · blog.ansi.org</p>
+<p class="nb"><b>No source read says:</b> placement on sun visors, battery covers, radiator shrouds and jack points; semi-gloss vinyl stock; sans-serif capitals; signal-word panel sits above the message; CIE chromaticity definition (notes field; only Munsell seen).</p>
+<p class="src"><a href="https://alsco.com/resources/industry-standard-safety-colors-as-defined-by-the-ansi">alsco.com</a> · <a href="https://gist.github.com/humhei/1d680b4f2774f316b11dacc806ee6a2b">gist.github.com</a> · <a href="https://tapemonster.de/en/pantone-colors">tapemonster.de</a> · <a href="https://en.wikipedia.org/wiki/Safety_orange">en.wikipedia.org</a> · <a href="https://en.wikipedia.org/wiki/ISO_3864">en.wikipedia.org (2)</a> · <a href="https://blog.ansi.org/ansi/ansi-z535-1-2022-safety-colors-standard/">blog.ansi.org</a> <i>in part, summary</i></p>
 </article>
 <article class="sw sw-3">
 <div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #7FB58A"></i></div>
@@ -85,16 +91,18 @@ body{margin:0}
 <p>Plated bolts, brackets, brake fittings and hose clamps across the engine bay and chassis.</p>
 <p class="tx">Satin metallic gold with an iridescent rainbow cast that drifts to greenish yellow and pink across the surface.</p>
 <p class="hxs"><span class="hx"><i style="background: #C9A84A"></i>base #c9a84a</span><span class="hx"><i style="background: #1B1608"></i>ink #1b1608</span><span class="hx"><i style="background: #7FB58A"></i>accent #7fb58a</span></p>
-<p class="src">gattoplaters.com · en.wikipedia.org · finishing.com</p>
+<p class="nb"><b>No source read says:</b> specific parts: brackets, brake fittings, hose clamps, engine bay and chassis (sources say only screws, hardware, tools); satin sheen.</p>
+<p class="src"><a href="https://www.gattoplaters.com/capabilities/finishes/zinc-plating/yellow-zinc">gattoplaters.com</a> · <a href="https://en.wikipedia.org/wiki/Chromate_conversion_coating">en.wikipedia.org</a> · <a href="https://www.finishing.com/113/53.shtml">finishing.com</a></p>
 </article>
 <article class="sw sw-4">
 <div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #B3202A"></i></div>
 <h3>Dyed anodised aluminium</h3>
 <p class="fam">metal</p>
 <p>Hose fittings, fuel rail fittings, strut-top hardware and aftermarket caps, most often in blue, red, black or clear.</p>
-<p class="tx">Translucent dye in a sealed oxide layer over machined metal, so the colour reads as tinted metal with a soft satin band of highlight; shade varies with film thickness, dye concentration and alloy.</p>
+<p class="tx">Translucent dye in a sealed oxide layer over machined metal, so the colour reads as tinted metal with a soft satin band of highlight; shade varies with film thickness, dye concentration and metal type.</p>
 <p class="hxs"><span class="hx"><i style="background: #1F4E9E"></i>base #1f4e9e</span><span class="hx"><i style="background: #FFFFFF"></i>ink #ffffff</span><span class="hx"><i style="background: #B3202A"></i>accent #b3202a</span></p>
-<p class="src">protocase.com · xometry.com · saf.com</p>
+<p class="nb"><b>No source read says:</b> use on hose fittings, fuel rail fittings, strut-top hardware and aftermarket caps; soft satin band of highlight.</p>
+<p class="src"><a href="https://www.protocase.com/products/finishes/anodizing/">protocase.com</a> · <a href="https://www.xometry.com/resources/machining/anodized-aluminum-colors">xometry.com</a> · <a href="https://www.saf.com/how-to-specify/anodizing-dye-colors/">saf.com</a> <i>in part</i></p>
 </article>
 <article class="sw sw-5">
 <div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span></div>
@@ -103,7 +111,8 @@ body{margin:0}
 <p>Truck bed toolboxes, running boards, trailer decks and shop floors.</p>
 <p class="tx">Bright polished sheet with raised elongated diamonds in a four-way pattern on roughly 1 in (25 mm) centres, each lug at right angles to its neighbours.</p>
 <p class="hxs"><span class="hx"><i style="background: #B8BCC0"></i>base #b8bcc0</span><span class="hx"><i style="background: #15181B"></i>ink #15181b</span></p>
-<p class="src">russelmetals.com · monarchmetal.com</p>
+<p class="nb"><b>No source read says:</b> truck bed toolboxes, running boards and trailer decks (source gives only floors); polished; elongated diamonds; each lug at right angles to its neighbours.</p>
+<p class="src"><a href="https://www.russelmetals.com/en/company/russel-metals-manitoba/product/aluminum/aluminum-tread-plate/">russelmetals.com</a> · <a href="https://monarchmetal.com/products/architectural-metals/aluminum-diamond-tread-plates/">monarchmetal.com</a> <i>in part</i></p>
 </article>
 <article class="sw sw-6">
 <div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span></div>
@@ -112,16 +121,18 @@ body{margin:0}
 <p>The tool wall behind a workbench.</p>
 <p class="tx">Painted or galvanised 20-gauge sheet with round holes of 1/4 in to 9/32 in on a square 1 in (25.4 mm) grid; low sheen.</p>
 <p class="hxs"><span class="hx"><i style="background: #8F999F"></i>base #8f999f</span><span class="hx"><i style="background: #101315"></i>ink #101315</span></p>
-<p class="src">engineerfix.com · mcmaster.com · zoro.com · w3schools.com</p>
+<p class="nb"><b>No source read says:</b> 20-gauge sheet; painted finish; low sheen.</p>
+<p class="src"><a href="https://engineerfix.com/what-are-the-standard-pegboard-hole-sizes/">engineerfix.com</a> · <a href="https://www.mcmaster.com/hangers/pegboards-and-slatwall/">mcmaster.com</a> · <a href="https://www.zoro.com/wall-control-pegboard-panel-round-14-in-holes-1-in-hole-spacing-32-in-h-x-96-in-w-x-34-in-d-silver-35-p-3296gv/i/G7428312">zoro.com</a> <i>summary</i> · <a href="https://www.w3schools.com/colors/colors_ral.asp">w3schools.com</a></p>
 </article>
 <article class="sw sw-7">
 <div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span></div>
 <h3>Perforated speaker grille</h3>
 <p class="fam">interior</p>
 <p>Door-card and dashboard speaker covers.</p>
-<p class="tx">Black-finished sheet with round holes in 60-degree staggered rows; a 3/32 in hole on 5/32 in centres gives about 33 percent open area (calculated).</p>
+<p class="tx">Black-finished sheet with round holes in 60-degree staggered rows; one product gives a 5/32 in (4 mm) hole.</p>
 <p class="hxs"><span class="hx"><i style="background: #1C1D1F"></i>base #1c1d1f</span><span class="hx"><i style="background: #E8E8E6"></i>ink #e8e8e6</span></p>
-<p class="src">accurateperforating.com · proav.de · b2audiousa.com</p>
+<p class="nb"><b>No source read says:</b> 60-degree stagger; about 33 percent open area (arithmetic only, and on an unsourced pattern); door-card and dashboard placement.</p>
+<p class="src"><a href="https://www.accurateperforating.com/applications/audio">accurateperforating.com</a> <i>in part</i> · <a href="https://www.b2audiousa.com/products/3-x-5-black-metal-finish-mesh-grill-sheet-staggered-row-with-5-32-holes">b2audiousa.com</a></p>
 </article>
 <article class="sw sw-8">
 <div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span></div>
@@ -130,25 +141,28 @@ body{margin:0}
 <p>Trim inlays, mirror caps, splitters and engine covers under a clear gloss coat.</p>
 <p class="tx">Diagonal stair-step weave of 3K tows at about 5 ends per cm (roughly 2 mm pitch) under high-gloss clear; alternating tows catch the light as light and dark grey.</p>
 <p class="hxs"><span class="hx"><i style="background: #1A1A1C"></i>base #1a1a1c</span><span class="hx"><i style="background: #F2F2F2"></i>ink #f2f2f2</span></p>
-<p class="src">media.easycomposites.co.uk · easycomposites.co.uk · elevatedmaterials.com</p>
+<p class="nb"><b>No source read says:</b> trim inlays, mirror caps, splitters and engine covers (sources say motorsport panels, cosmetic parts); 'stair-step' description; high-gloss clear coat; alternating tows read as light and dark grey; 2 mm pitch (derived from 5 ends/cm, not stated).</p>
+<p class="src"><a href="https://media.easycomposites.co.uk/datasheets/EC-TDS-210g-Twill-Weave-Carbon-Cloth.pdf">media.easycomposites.co.uk</a> · <a href="https://www.easycomposites.co.uk/240g-22-twill-3k-carbon-fibre-cloth">easycomposites.co.uk</a> · <a href="https://elevatedmaterials.com/carbon-fiber-weaves-what-they-are-and-why-to-use-them">elevatedmaterials.com</a></p>
 </article>
 <article class="sw sw-9">
 <div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span></div>
 <h3>Glass frit band and dot fade</h3>
 <p class="fam">glass</p>
-<p>The black border around a windshield or rear window, fading into the clear glass through rows of shrinking dots, with the maker's monogram in a lower corner.</p>
-<p class="tx">Matte black ceramic enamel fused to the glass; a halftone of dots that shrink toward the clear area; the corner monogram (maker code, 'AS1', approval marks) reads as pale grey frosted lettering.</p>
+<p>The black border around a windshield or rear window, fading into the clear glass through rows of shrinking dots, with the glass's own marking near an edge: one source puts 'AS1' near the top.</p>
+<p class="tx">Matte black ceramic enamel fused to the glass; a halftone of dots that shrink toward the clear area; the marking (maker code, 'AS1', approval marks) is etched, printed or a label.</p>
 <p class="hxs"><span class="hx"><i style="background: #0B0B0C"></i>base #0b0b0c</span><span class="hx"><i style="background: #D9DDDA"></i>ink #d9ddda</span></p>
-<p class="src">jalopnik.com · motor1.com · bangautoglass.com · slashgear.com</p>
+<p class="nb"><b>No source read says:</b> the enamel is matte; the frit is a border around the rear window as well as the windshield (sources speak of windshields/car glass generally).</p>
+<p class="src"><a href="https://jalopnik.com/heres-what-those-little-dots-are-on-the-edges-of-your-c-1791075995">jalopnik.com</a> · <a href="https://www.motor1.com/news/803150/why-car-windshields-have-black-dots/">motor1.com</a> · <a href="https://www.slashgear.com/1786532/windshield-glass-number-letter-code-meaning">slashgear.com</a></p>
 </article>
 <article class="sw sw-10">
-<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #FF7900"></i></div>
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span></div>
 <h3>Analogue gauge face</h3>
 <p class="fam">instrument</p>
 <p>Speedometer and tachometer dials in the instrument cluster.</p>
-<p class="tx">Flat matte black dial with white numerals and tick marks that are backlit at night, and a single orange or red pointer.</p>
-<p class="hxs"><span class="hx"><i style="background: #0D0D0D"></i>base #0d0d0d</span><span class="hx"><i style="background: #F4F4F0"></i>ink #f4f4f0</span><span class="hx"><i style="background: #FF7900"></i>accent #ff7900</span></p>
-<p class="src">issautomotive.com · jegs.com · en.wikipedia.org</p>
+<p class="tx">Flat matte black dial with white numerals and tick marks that are backlit at night, and a single red or black pointer.</p>
+<p class="hxs"><span class="hx"><i style="background: #0D0D0D"></i>base #0d0d0d</span><span class="hx"><i style="background: #F4F4F0"></i>ink #f4f4f0</span></p>
+<p class="nb"><b>No source read says:</b> tick marks are white and backlit (sources speak of lettering and numbers only); matte finish of the dial (the summary says 'flat black', which may mean the same; not read on the page).</p>
+<p class="src"><a href="https://issautomotive.com/blogs/news/anatomy-of-an-instrument-cluster">issautomotive.com</a> · <a href="https://jegs.com/p/VDO/VDO-Cockpit-Gauges/753599/10002/-1">jegs.com</a> <i>summary</i> · <a href="https://en.wikipedia.org/wiki/Safety_orange">en.wikipedia.org</a> <i>in part</i></p>
 </article>
 <article class="sw sw-11">
 <div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span></div>
@@ -157,7 +171,8 @@ body{margin:0}
 <p>Dashboard clocks, radio displays and digital clusters of the 1980s and 1990s.</p>
 <p class="tx">Glowing blue-green segments (zinc oxide phosphor, peak near 505 nm) behind dark filter glass, with a faint mesh of fine grid wires in front.</p>
 <p class="hxs"><span class="hx"><i style="background: #0A1210"></i>base #0a1210</span><span class="hx"><i style="background: #5CF2D0"></i>ink #5cf2d0</span></p>
-<p class="src">patents.google.com</p>
+<p class="nb"><b>No source read says:</b> the 1980s and 1990s as the era; radio displays (the patent names clocks, car instrument panels, measuring instruments and VTRs); dark filter glass in front (the patent speaks of a colour filter, not a dark one); a visible mesh of fine grid wires (the patent mentions only a grid voltage).</p>
+<p class="src"><a href="https://patents.google.com/patent/US5128063">patents.google.com</a> · <a href="https://patents.google.com/patent/JPH0524192B2/en">patents.google.com (2)</a></p>
 </article>
 <article class="sw sw-12">
 <div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span></div>
@@ -166,7 +181,8 @@ body{margin:0}
 <p>Odometer and trip-meter windows in the cluster.</p>
 <p class="tx">Flat grey reflective panel with black seven-segment digits and faint ghosts of the unlit segments.</p>
 <p class="hxs"><span class="hx"><i style="background: #A8AD9E"></i>base #a8ad9e</span><span class="hx"><i style="background: #1C1F1A"></i>ink #1c1f1a</span></p>
-<p class="src">uk.rs-online.com</p>
+<p class="nb"><b>No source read says:</b> use as the odometer and trip-meter window of a vehicle cluster (both sources are generic component listings); faint ghosts of the unlit segments; the panel is flat grey with a green cast (sources say only 'black on grey').</p>
+<p class="src"><a href="https://uk.rs-online.com/web/p/lcd-monochrome-displays/1847737">uk.rs-online.com</a> <i>summary</i> · <a href="https://uk.rs-online.com/web/p/lcd-monochrome-displays/2156436">uk.rs-online.com (2)</a> <i>summary</i></p>
 </article>
 <article class="sw sw-13">
 <div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span></div>
@@ -175,7 +191,8 @@ body{margin:0}
 <p>Engineering drawings of parts and assemblies.</p>
 <p class="tx">Matte Prussian-blue paper with white lines and lettering, slightly uneven in tone, often with a ruled grid.</p>
 <p class="hxs"><span class="hx"><i style="background: #003153"></i>base #003153</span><span class="hx"><i style="background: #FFFFFF"></i>ink #ffffff</span></p>
-<p class="src">en.wikipedia.org · science.howstuffworks.com · hexpot.com</p>
+<p class="nb"><b>No source read says:</b> white lines and lettering on the blue (not stated on the one page fetched; implied only by a search summary of other sites); tone is slightly uneven; often carries a ruled grid (Wikipedia's only grid is a painter's transfer grid drawn over a photograph); matte paper; Prussian blue = #003153 (no readable source in the list gives the value).</p>
+<p class="src"><a href="https://en.wikipedia.org/wiki/Cyanotype">en.wikipedia.org</a> · <a href="https://science.howstuffworks.com/engineering/structural/blueprints-blue-.htm">science.howstuffworks.com</a> <i>summary</i> · <a href="https://hexpot.com/003153-color">hexpot.com</a> <i>unread</i></p>
 </article>
 <article class="sw sw-14">
 <div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span></div>
@@ -184,7 +201,8 @@ body{margin:0}
 <p>Bare floor pans, chassis rails and body shells before top coat.</p>
 <p class="tx">Dead-flat, chalky brown-red (RAL 3009 oxide red) with no highlight.</p>
 <p class="hxs"><span class="hx"><i style="background: #6D342D"></i>base #6d342d</span><span class="hx"><i style="background: #F3EDE4"></i>ink #f3ede4</span></p>
-<p class="src">gist.github.com · w3schools.com · hextoral.com</p>
+<p class="nb"><b>No source read says:</b> that red oxide primer is seen on floor pans, chassis rails and body shells (no source mentions primer or vehicles at all); dead-flat, chalky finish with no highlight; the three tables give three different hex values for RAL 3009 (#6D342D, #703731, #6D312B); only the first matches the entry.</p>
+<p class="src"><a href="https://gist.github.com/lunohodov/1995178">gist.github.com</a> · <a href="https://www.w3schools.com/colors/colors_ral.asp">w3schools.com</a> · <a href="https://hextoral.com/color-matching-tables/ral-rgb-cmyk-patone-table/">hextoral.com</a> <i>in part</i></p>
 </article>
 <article class="sw sw-15">
 <div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span></div>
@@ -193,16 +211,18 @@ body{margin:0}
 <p>The registration plate at the rear of the vehicle.</p>
 <p class="tx">Retroreflective white sheeting with a fine sparkle over a 12 in by 6 in aluminium blank; characters about 2.5 to 2.75 in high, embossed up to 1.7 mm and inked on their raised faces, with a raised rim.</p>
 <p class="hxs"><span class="hx"><i style="background: #F5F6F1"></i>base #f5f6f1</span><span class="hx"><i style="background: #111111"></i>ink #111111</span></p>
-<p class="src">multimedia.3m.com · revenue.alabama.gov · prod-origin.txdmv.gov · aamva.org</p>
+<p class="nb"><b>No source read says:</b> embossed up to 1.7 mm (the only source that could carry it, the 3M bulletin, was not readable and its summary lacks the figure); characters are inked on their raised faces (roll coating is only alluded to in the 3M summary); a fine sparkle in the sheeting; the plate is at the rear of the vehicle.</p>
+<p class="src"><a href="https://multimedia.3m.com/mws/media/1216215O/3m-reflective-lic-plate-sheeting-product-bulletin-3750-3750p.pdf">multimedia.3m.com</a> <i>summary</i> · <a href="https://www.revenue.alabama.gov/wp-content/uploads/2022/02/License-Plate-Design-Specifications-040821.pdf">revenue.alabama.gov</a> · <a href="https://prod-origin.txdmv.gov/sites/default/files/body-files/License_Plate_Specifications.pdf">prod-origin.txdmv.gov</a> · <a href="https://aamva.org/getmedia/7ffefe23-e5d7-4e7b-9393-744be0d25be2/License-Plate-Standard-Edition-3_final.pdf">aamva.org</a></p>
 </article>
 <article class="sw sw-16">
 <div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span></div>
-<h3>Black wrinkle powder coat</h3>
+<h3>Black wrinkle finish</h3>
 <p class="fam">paint</p>
 <p>Valve covers, intake plenums and older dashboard tops.</p>
 <p class="tx">Low-gloss black with a fine, tight crinkle of small ridges that scatters highlights and hides casting flaws.</p>
 <p class="hxs"><span class="hx"><i style="background: #161616"></i>base #161616</span><span class="hx"><i style="background: #ECECEC"></i>ink #ececec</span></p>
-<p class="src">gilroyblackout.com · ford.com · ferrarichat.com</p>
+<p class="nb"><b>No source read says:</b> use on intake plenums and older dashboard tops; low gloss; a fine, tight crinkle of small ridges ('very small' was not found in anything read); scatters highlights and hides casting flaws.</p>
+<p class="src"><a href="https://www.ford.com/product/ford-racing-logo-stamped-steel-valve-covers-black-crinkle-finish-p2811575885">ford.com</a> · <a href="https://www.ferrarichat.com/forum/posts/135170060">ferrarichat.com</a> <i>summary</i></p>
 </article>
 <article class="sw sw-17">
 <div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span></div>
@@ -211,12 +231,13 @@ body{margin:0}
 <p>The illustrated parts catalogue and shop manual: an isometric line drawing with numbered callouts beside a parts list.</p>
 <p class="tx">Matte off-white paper with thin black line art, dashed axis lines, leader lines that never cross and numbered balloons keyed to a table whose index starts at 1.</p>
 <p class="hxs"><span class="hx"><i style="background: #F4F1E8"></i>base #f4f1e8</span><span class="hx"><i style="background: #111111"></i>ink #111111</span></p>
-<p class="src">en.wikipedia.org · technicalmanualspecsstandards.emilspec.com · iastate.pressbooks.pub</p>
+<p class="nb"><b>No source read says:</b> dashed axis lines; matte off-white paper; thin black line art (the MIL-STD page has only the heading 'Line drawing details', no text); the table is a parts list beside the drawing (only the unread Iowa State page speaks of a bill of materials).</p>
+<p class="src"><a href="https://en.wikipedia.org/wiki/Exploded-view_drawing">en.wikipedia.org</a> · <a href="https://technicalmanualspecsstandards.emilspec.com/MIL-STD-38784/page43.html">technicalmanualspecsstandards.emilspec.com</a> · <a href="https://iastate.pressbooks.pub/me270baughman/chapter/engineering-drawings/">iastate.pressbooks.pub</a> <i>summary</i></p>
 </article>
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2160}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2670}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};

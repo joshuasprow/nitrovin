@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Swatches: in use</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.swb{box-sizing:border-box;width:1280px;padding:40px;display:flex;flex-direction:column;gap:22px;font:14px/1.45 system-ui,sans-serif;color:#14181d;background:#e6ebef}
+.swb h1{margin:0;font:900 21px/1.2 "Arial Black","Helvetica Neue",system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase}
+.swb .intro{margin:6px 0 0;max-width:1000px;color:#47515c}
+.swb .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.sw{display:flex;flex-direction:column;gap:5px;padding:0 0 12px;background:#fff;border:1px solid #9fb3c2;border-radius:4px;overflow:hidden}
+.sw .chip{position:relative;display:flex;flex-direction:column;justify-content:center;gap:2px;height:104px;padding:0 16px 0 34px;border-bottom:1px solid #9fb3c2}
+.sw .chip b{font:700 17px/1.2 ui-monospace,monospace;letter-spacing:.03em}
+.sw .chip span{font-size:12px}
+.sw .chip i{position:absolute;right:0;top:0;bottom:0;width:10px}
+.sw h3,.sw p{margin:0;padding:0 12px}
+.sw h3{margin-top:6px;font:700 14px/1.3 system-ui,sans-serif}
+.sw h3 em{display:inline-block;padding:0 6px;font:700 10px/1.7 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:#0b4fa8;border-radius:2px;vertical-align:1px}
+.sw p{font-size:12px;color:#14181d}
+.sw .fam{font:700 10px/1.4 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#47515c}
+.sw .tx,.sw .src{color:#47515c}
+.sw .hxs{display:flex;flex-wrap:wrap;gap:2px 10px;margin-top:2px;font:11px/1.5 ui-monospace,monospace}
+.sw .hx i{display:inline-block;width:9px;height:9px;margin-right:4px;border:1px solid #47515c;vertical-align:-1px}
+.sw .src{font-size:11px;overflow-wrap:anywhere}
+.sw .src i{font-style:normal;color:#8a3b00}
+.sw .nb{font-size:11px;color:#47515c}.sw .nb b{color:#8a3b00}
+.sw .src a{color:#0b4fa8}.sw .src a:hover{color:#14181d}
+.sw-0 .chip{background:url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0 / 600px 120px, linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc);color:#232930}
+.sw-1 .chip{background:repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .12) 2px 3px), linear-gradient(#8e99a3, #aab4bd);color:#232930}
+.sw-2 .chip{background:repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .07) 2px 3px), url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0 / 600px 120px, linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc);color:#232930}
+.sw-3 .chip{background:repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .13) 2px 3px), linear-gradient(#30363d, #171a1e);color:#f6f8fa}
+.sw-4 .chip{background:repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .2) 2px 3px), linear-gradient(#0c0e10, #1d2125);color:#f6f8fa}
+.sw-5 .chip{background:url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f);color:#2b2418}
+.sw-6 .chip{background:linear-gradient(#c8102e 0 0) 0 10px / 100% 5px no-repeat, linear-gradient(#0b4fa8 0 0) 0 22px / 100% 5px no-repeat, linear-gradient(#5b2d8e 0 0) 0 78px / 100% 5px no-repeat, linear-gradient(#a34c09 0 0) 0 90px / 100% 5px no-repeat, linear-gradient(#0f6b46 0 0) 100% 0 / 5px 100% no-repeat, linear-gradient(#3d4650 0 0) calc(100% - 12px) 0 / 5px 100% no-repeat, #dcecf7;color:#14181d}
+.sw-7 .chip{background:linear-gradient(#2b2418 0 0) 24px 24px / 170px 2px no-repeat, linear-gradient(#2b2418 0 0) 24px calc(80px - 2px) / 170px 2px no-repeat, linear-gradient(#2b2418 0 0) 24px 24px / 2px 56px no-repeat, linear-gradient(#2b2418 0 0) calc(194px - 2px) 24px / 2px 56px no-repeat, url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f);color:#2b2418}
+.sw-8 .chip{background:repeating-linear-gradient(90deg, #2b2418 0 7px, transparent 7px 12px) 24px 24px / 170px 2px no-repeat, repeating-linear-gradient(90deg, #2b2418 0 7px, transparent 7px 12px) 24px calc(80px - 2px) / 170px 2px no-repeat, repeating-linear-gradient(0deg, #2b2418 0 7px, transparent 7px 12px) 24px 24px / 2px 56px no-repeat, repeating-linear-gradient(0deg, #2b2418 0 7px, transparent 7px 12px) calc(194px - 2px) 24px / 2px 56px no-repeat, url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f);color:#2b2418}
+.sw-9 .chip{background:repeating-linear-gradient(90deg, #a9bccb 0 7px, transparent 7px 12px) 24px 24px / 170px 3px no-repeat, repeating-linear-gradient(90deg, #a9bccb 0 7px, transparent 7px 12px) 24px calc(80px - 3px) / 170px 3px no-repeat, repeating-linear-gradient(0deg, #a9bccb 0 7px, transparent 7px 12px) 24px 24px / 3px 56px no-repeat, repeating-linear-gradient(0deg, #a9bccb 0 7px, transparent 7px 12px) calc(194px - 3px) 24px / 3px 56px no-repeat, #dcecf7;color:#47515c}
+.sw-10 .chip{background:linear-gradient(rgb(0 0 0 / .18), transparent 5px), color-mix(in srgb, #14181d 6%, #ffffff);color:#14181d}
+.sw-11 .chip{background:radial-gradient(circle at 16px 50%, #58626c 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0 / 600px 120px, linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc);color:#232930}
+.sw-12 .chip{background:#dcecf7;color:#14181d}
+.sw-13 .chip{background:#16222d;color:#eef2f5}
+</style>
+</helmet>
+<div class="swb" style="height: 1660px">
+<div><h1>Swatches: in use</h1><p class="intro">What the page is built from today, as pkg/ui/static/ui.css defines it and DESIGN.md describes it: its materials, then the marks and fittings made of them. A chip is the stylesheet's own value. These are settled.</p></div>
+<div class="grid">
+<article class="sw sw-0">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #6f7b86"></i></div>
+<h3>Brushed aluminum</h3>
+<p class="fam">metal</p>
+<p>The plate the VIN is struck on, the brand, a dialog's head, and every key: a button is a key of this metal, raised on a steel ledge.</p>
+<p class="tx">A fine horizontal brush over a light-to-mid grey gradient; characters are struck in, lit below and shadowed above. The same in both colour schemes.</p>
+<p class="hxs"><span class="hx"><i style="background: #cdd5dc"></i>base #cdd5dc</span><span class="hx"><i style="background: #232930"></i>ink #232930</span><span class="hx"><i style="background: #6f7b86"></i>accent #6f7b86</span></p>
+<p class="src">ui.css: --metal, --on-metal, --steel</p>
+</article>
+<article class="sw sw-1">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #58626c"></i></div>
+<h3>Aluminum, pressed</h3>
+<p class="fam">metal</p>
+<p>A key held down, the mode shown, and a stock strip that is open: flush, 2px down, with an inner shadow.</p>
+<p class="tx">The metal a step darker, the tape's ridges across it, no brush.</p>
+<p class="hxs"><span class="hx"><i style="background: #aab4bd"></i>base #aab4bd</span><span class="hx"><i style="background: #232930"></i>ink #232930</span><span class="hx"><i style="background: #58626c"></i>accent #58626c</span></p>
+<p class="src">ui.css: --alu-in, --pressed</p>
+</article>
+<article class="sw sw-2">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #58626c"></i></div>
+<h3>The second tape</h3>
+<p class="fam">vinyl tape</p>
+<p>The part type picker's key, a part type opened recently, and a candidate's stock strip: a name that is pressed.</p>
+<p class="tx">Embossing tape in the plate's own metal: the brushed aluminum with the tape's faint ridges over it.</p>
+<p class="hxs"><span class="hx"><i style="background: #cdd5dc"></i>base #cdd5dc</span><span class="hx"><i style="background: #232930"></i>ink #232930</span><span class="hx"><i style="background: #58626c"></i>accent #58626c</span></p>
+<p class="src">ui.css: --alu</p>
+</article>
+<article class="sw sw-3">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #69727c"></i></div>
+<h3>Label tape</h3>
+<p class="fam">vinyl tape</p>
+<p>A tag's number band, the names under the cards, and a strip naming what a panel holds: stuck on, static.</p>
+<p class="tx">Black label-maker vinyl with faint ridges across it and a lit top edge; letters are raised white. The same in both colour schemes.</p>
+<p class="hxs"><span class="hx"><i style="background: #171a1e"></i>base #171a1e</span><span class="hx"><i style="background: #f6f8fa"></i>ink #f6f8fa</span><span class="hx"><i style="background: #69727c"></i>accent #69727c</span></p>
+<p class="src">ui.css: --tape, --on-tape, --tape-edge, --tape-lit</p>
+</article>
+<article class="sw sw-4">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #050607"></i></div>
+<h3>Label tape, pressed</h3>
+<p class="fam">vinyl tape</p>
+<p>A control of label tape held down or chosen.</p>
+<p class="tx">The tape darker, its ridges stronger, its gradient turned over.</p>
+<p class="hxs"><span class="hx"><i style="background: #0c0e10"></i>base #0c0e10</span><span class="hx"><i style="background: #f6f8fa"></i>ink #f6f8fa</span><span class="hx"><i style="background: #050607"></i>accent #050607</span></p>
+<p class="src">ui.css: --tape-in</p>
+</article>
+<article class="sw sw-5">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #c39a5c"></i></div>
+<h3>Manila</h3>
+<p class="fam">paper tag</p>
+<p>Every card of the decode and every candidate: a parts tag hung by its eyelet from its group's line.</p>
+<p class="tx">A parts tag's stock with tooth, clipped corners and a reinforced patch around its eyelet; ink is printed on it. The same in both colour schemes.</p>
+<p class="hxs"><span class="hx"><i style="background: #e2c88f"></i>base #e2c88f</span><span class="hx"><i style="background: #2b2418"></i>ink #2b2418</span><span class="hx"><i style="background: #c39a5c"></i>accent #c39a5c</span></p>
+<p class="src">ui.css: --manila, --on-manila, --manila-muted, --manila-patch</p>
+</article>
+<article class="sw sw-6">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #0b4fa8"></i></div>
+<h3>Pinstripe tape</h3>
+<p class="fam">vinyl tape</p>
+<p>The brackets over the plate, the leader lines to the cards, and the rails to the candidates: one colour for each group of the VIN.</p>
+<p class="tx">A 5px line of coloured tape, lit on its upper left edge and casting a small shadow on the ground. Six colours, shown as the light scheme has them; the dark scheme's are lighter.</p>
+<p class="hxs"><span class="hx"><i style="background: #dcecf7"></i>base #dcecf7</span><span class="hx"><i style="background: #14181d"></i>ink #14181d</span><span class="hx"><i style="background: #0b4fa8"></i>accent #0b4fa8</span></p>
+<p class="src">ui.css: --c-wmi, --c-vds, --c-check, --c-year, --c-plant, --c-serial, --stripe-lift</p>
+</article>
+<article class="sw sw-7">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #2b2418"></i></div>
+<h3>Ink stamp</h3>
+<p class="fam">mark on manila</p>
+<p>A candidate's mark for something checked: the decode met the catalog's condition, or the part is filed under another type or replaces a retired number.</p>
+<p class="tx">A solid 2px box in the tag's ink around upper-case label face, turned a degree and a half, as a rubber stamp lands.</p>
+<p class="hxs"><span class="hx"><i style="background: #e2c88f"></i>base #e2c88f</span><span class="hx"><i style="background: #2b2418"></i>ink #2b2418</span><span class="hx"><i style="background: #2b2418"></i>accent #2b2418</span></p>
+<p class="src">ui.css: .mk.checked, .mk.redirect, .mk.replaces</p>
+</article>
+<article class="sw sw-8">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #5c4c2e"></i></div>
+<h3>Dashed stamp</h3>
+<p class="fam">mark on manila</p>
+<p>A candidate's mark for a doubt: the decode has no value for what the catalog asks. Dashed is a doubt everywhere on the page.</p>
+<p class="tx">The stamp's box, dashed and unturned. Plain muted words, with no box, are nothing checked.</p>
+<p class="hxs"><span class="hx"><i style="background: #e2c88f"></i>base #e2c88f</span><span class="hx"><i style="background: #2b2418"></i>ink #2b2418</span><span class="hx"><i style="background: #5c4c2e"></i>accent #5c4c2e</span></p>
+<p class="src">ui.css: .mk.unchecked, .mk.text, --manila-muted</p>
+</article>
+<article class="sw sw-9">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #a9bccb"></i></div>
+<h3>Blank strip</h3>
+<p class="fam">empty place</p>
+<p>Where the page has no answer the place stays: one sentence in a dashed outline, and in it a key of metal or a link on.</p>
+<p class="tx">A 3px dashed outline in the faint colour on the bare ground, muted words inside. No material: the mark of an empty place.</p>
+<p class="hxs"><span class="hx"><i style="background: #dcecf7"></i>base #dcecf7</span><span class="hx"><i style="background: #47515c"></i>ink #47515c</span><span class="hx"><i style="background: #a9bccb"></i>accent #a9bccb</span></p>
+<p class="src">ui.css: .blank, --faint, --muted</p>
+</article>
+<article class="sw sw-10">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #9fb3c2"></i></div>
+<h3>Recess</h3>
+<p class="fam">field</p>
+<p>Text to copy, and the filter over the part types: a field sunk into its panel.</p>
+<p class="tx">The panel's ground a step darker under an inner shadow along its top edge, inside a 1px line.</p>
+<p class="hxs"><span class="hx"><i style="background: #f1f1f2"></i>base #f1f1f2</span><span class="hx"><i style="background: #14181d"></i>ink #14181d</span><span class="hx"><i style="background: #9fb3c2"></i>accent #9fb3c2</span></p>
+<p class="src">ui.css: pre, --line, --card-bg</p>
+</article>
+<article class="sw sw-11">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #58626c"></i></div>
+<h3>Rivet</h3>
+<p class="fam">fastener</p>
+<p>One at the near end of a header's button and each end of the brand: what holds a piece of metal on.</p>
+<p class="tx">A dark dome ringed in light metal, drawn at the plate's edge. A dialog's head takes a slotted screw at each end.</p>
+<p class="hxs"><span class="hx"><i style="background: #cdd5dc"></i>base #cdd5dc</span><span class="hx"><i style="background: #232930"></i>ink #232930</span><span class="hx"><i style="background: #58626c"></i>accent #58626c</span></p>
+<p class="src">ui.css: --steel-dark, --metal</p>
+</article>
+<article class="sw sw-12">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #9fb3c2"></i></div>
+<h3>The ground, light</h3>
+<p class="fam">ground</p>
+<p>The page itself in the light scheme, behind every material.</p>
+<p class="tx">A flat pale blue. Not a material: what the materials sit on and cast their shadows on.</p>
+<p class="hxs"><span class="hx"><i style="background: #dcecf7"></i>base #dcecf7</span><span class="hx"><i style="background: #14181d"></i>ink #14181d</span><span class="hx"><i style="background: #9fb3c2"></i>accent #9fb3c2</span></p>
+<p class="src">ui.css: --bg, --fg, --line</p>
+</article>
+<article class="sw sw-13">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #45566a"></i></div>
+<h3>The ground, dark</h3>
+<p class="fam">ground</p>
+<p>The page itself in the dark scheme.</p>
+<p class="tx">A flat dark blue. The metal, the tape and the manila do not change over it; the pinstripes lighten.</p>
+<p class="hxs"><span class="hx"><i style="background: #16222d"></i>base #16222d</span><span class="hx"><i style="background: #eef2f5"></i>ink #eef2f5</span><span class="hx"><i style="background: #45566a"></i>accent #45566a</span></p>
+<p class="src">ui.css: --bg, --fg, --line (prefers-color-scheme: dark)</p>
+</article>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1660}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

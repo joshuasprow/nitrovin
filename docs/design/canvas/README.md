@@ -52,8 +52,20 @@ branch, and that branch, not this folder, is their record. When the
 proposal is built its frames are folded into the six and the page goes.
 The part type picker of #366 was the first.
 
-A page named "Swatches" holds three swatch sheets, `Swatches-*`: materials
-found, none settled.
+A page, "Swatches", holds five boards in two rows. The first row is what
+was made for the page: `Swatches-Page`, the materials in use and the marks
+and fittings made of them, each chip the stylesheet's own value; and
+`Swatches-Tried`, what was drawn and is not on the page, proposed or set
+aside, each naming where its drawing is kept. The second row is what was
+found for the page's look, none of it settled: `Swatches-Thermal`,
+`Swatches-Yard` and `Swatches-Vehicle`, a web search's findings of
+2026-11-20. Each source of a found swatch is linked by its full address and was opened
+and checked against its card on 2026-11-21: a card marks a page that backs
+it only in part, one read as a search result's summary, and one that could
+not be read, and lists what it says that no source read does. Its colours
+are estimates, since no source publishes one. `scripts/canvas/swatches.mjs` builds all five from the files
+of `scripts/canvas/swatches/`. `scripts/canvas.sh` does not build these
+boards and leaves them alone.
 
 The wireframes and texture frames that proposed the fitment slices (#320 to
 #325) are removed from the canvas. This folder's history holds them.
