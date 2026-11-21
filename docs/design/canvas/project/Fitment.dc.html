@@ -80,9 +80,12 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 .fit{--rail-x: 3px; position: relative; isolation: isolate; display: flow-root; margin: 0 16px}
 .fitstrip{--lead: 30px; --prev: 0px; display: grid; grid-template-columns: 170fr 170fr 170fr 510fr; align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck)}
 .fitstrip .stamp{align-self: stretch; display: flex; align-items: center; min-width: 0; margin: 0; padding: 0 .5rem 0 .7rem; border-right: 1px solid rgb(255 255 255 / .18); font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss)}
-.fitstrip .g-vds{--cm: #7db4ff}
-.fitstrip .g-year{--cm: #ffb067}
-.fitstrip .stamp{padding-block: .5rem}
+.fitstrip .g-wmi{--cm: #ff6b81; grid-column: 1}
+.fitstrip .g-vds{--cm: #7db4ff; grid-column: 2}
+.fitstrip .g-year{--cm: #ffb067; grid-column: 3}
+.fitstrip .seg{grid-row: 2}
+.fitstrip .vfacts{grid-row: 2; grid-column: 4}
+.fitstrip .stamp{grid-row: 1; grid-column: 1 / -1; padding-block: .3rem; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18)}
 .vfacts{display: flex; flex-wrap: wrap; align-items: center; gap: 4px 22px; min-width: 0; margin: 0; padding: .45rem .7rem; border-left: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss)}
 .vfacts dt{font-size: 11px; line-height: 1.2; letter-spacing: .04em; text-transform: uppercase; color: #aeb7c0; text-shadow: none}
 .vfacts dd{margin: 0; font: 900 .95rem/1.25 var(--cell-font); letter-spacing: .06em}
@@ -251,8 +254,12 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 .seg .w{font-size: .9rem; letter-spacing: .04em}
 .fit{margin: 0}
 .fitstrip{grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 30px}
-.fitstrip .stamp{grid-column: 1 / -1; padding-block: .35rem; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18)}
-.vfacts{grid-column: 1 / -1; border-left: 0; border-top: 1px solid rgb(255 255 255 / .18)}
+.fitstrip .g-vds{grid-column: 1}
+.fitstrip .g-year{grid-column: 2}
+.fitstrip:has(.g-wmi){grid-template-columns: repeat(3, minmax(0, 1fr))}
+.fitstrip:has(.g-wmi) .g-vds{grid-column: 2}
+.fitstrip:has(.g-wmi) .g-year{grid-column: 3}
+.fitstrip .vfacts{grid-row: 3; grid-column: 1 / -1; border-left: 0; border-top: 1px solid rgb(255 255 255 / .18)}
 .aka{margin-right: calc(-1 * var(--gutter))}
 .nametags{padding-right: var(--gutter); scroll-padding-right: var(--gutter)}
 .fitstrip .seg::after{display: none}}
@@ -263,14 +270,20 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 .carry span::before, .carry span::after{content: ""; position: absolute; box-sizing: border-box; border: 0 solid var(--c-vds); filter: var(--stripe-lift)}
 .carry span::after{border-color: var(--c-year)}
 .carry span:nth-child(1)::before, .carry span:nth-child(1)::after{top: 0; width: 5px; border-left-width: 5px}
-.carry span:nth-child(1)::before{left: calc(var(--mv) - 2.5px); height: 17px}
-.carry span:nth-child(1)::after{left: calc(var(--my) - 2.5px); height: 26px}
+.carry span:nth-child(1)::before{left: calc(var(--mv) - 2.5px); height: 12px}
+.carry span:nth-child(1)::after{left: calc(var(--my) - 2.5px); height: 21px}
 .carry span:nth-child(2)::before, .carry span:nth-child(2)::after{height: 5px; border-top-width: 5px}
-.carry span:nth-child(2)::before{top: 12px; left: calc(min(var(--mv), var(--fv)) - 2.5px); right: calc(100% - max(var(--mv), var(--fv)) - 2.5px)}
-.carry span:nth-child(2)::after{top: 21px; left: calc(min(var(--my), var(--fy)) - 2.5px); right: calc(100% - max(var(--my), var(--fy)) - 2.5px)}
+.carry span:nth-child(2)::before{top: 7px; left: calc(min(var(--mv), var(--fv)) - 2.5px); right: calc(100% - max(var(--mv), var(--fv)) - 2.5px)}
+.carry span:nth-child(2)::after{top: 16px; left: calc(min(var(--my), var(--fy)) - 2.5px); right: calc(100% - max(var(--my), var(--fy)) - 2.5px)}
 .carry span:nth-child(3)::before, .carry span:nth-child(3)::after{bottom: 0; width: 5px; border-left-width: 5px}
-.carry span:nth-child(3)::before{top: 12px; left: calc(var(--fv) - 2.5px)}
-.carry span:nth-child(3)::after{top: 21px; left: calc(var(--fy) - 2.5px)}}}
+.carry span:nth-child(3)::before{top: 7px; left: calc(var(--fv) - 2.5px)}
+.carry span:nth-child(3)::after{top: 16px; left: calc(var(--fy) - 2.5px)}
+.carry:has(span:nth-child(4)){--mm: calc(var(--gutter) + .5 * var(--col) - round(var(--hang-p) * var(--r), .02px)); --fm: calc(var(--gutter) + var(--w) / 6); --fv: calc(var(--gutter) + .5 * var(--w)); --fy: calc(var(--gutter) + var(--w) * 5 / 6)}
+.carry span:nth-child(n + 4)::after{display: none}
+.carry span:nth-child(n + 4)::before{border-color: var(--c-wmi)}
+.carry span:nth-child(4)::before{top: 0; left: calc(var(--mm) - 2.5px); width: 5px; height: 30px; border-left-width: 5px}
+.carry span:nth-child(5)::before{top: 25px; height: 5px; border-top-width: 5px; left: calc(min(var(--mm), var(--fm)) - 2.5px); right: calc(100% - max(var(--mm), var(--fm)) - 2.5px)}
+.carry span:nth-child(6)::before{top: 25px; bottom: 0; left: calc(var(--fm) - 2.5px); width: 5px; border-left-width: 5px}}}
 .vp-phone{
 &{--gutter: .5rem}
 .hang, #answer{--col: 9.5rem}
@@ -314,7 +327,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 
 </style>
 </helmet>
-<div class="root sheet" data-scheme="light" style="width: 1280px; height: 4830px; color: var(--fg); background: var(--bg)">
+<div class="root sheet" data-scheme="light" style="width: 1280px; height: 4900px; color: var(--fg); background: var(--bg)">
 <div><h1 class="sh-h1">The fitment card</h1><p class="sh-intro">The parts that fit: the vehicle's block, which says what the vehicle is, its names as manila tags, a picker of the catalog's part types, and the candidates as manila tags on rails that come down from the picker. A candidate's stock strip opens its shelf and yard rows.</p></div>
 <section>
 <p class="sh-cap">Picker, candidates, marks and stock <span>Alternator pressed: the picker names it and counts its candidates, and × beside it clears. Under its tape, what the decode says of this vehicle, to match each candidate's options against. The first candidate's stock is open under its row.</span></p>
@@ -324,9 +337,10 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div id="answer" class="stage" data-vin="1FTEW1EG7FFA12345" data-label="2015 FORD F-150" data-complete="" data-done="wmi vds check year plant serial " data-part="alternator" data-number="DEMO-1001">
 <section class="fit" id="fit" aria-labelledby="fit-h">
 <h2 id="fit-h" class="visually-hidden">Parts that fit</h2>
-<span class="carry" aria-hidden="true"><span></span><span></span><span></span></span>
+<span class="carry" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></span>
 <div class="fitstrip">
 <p class="stamp">This vehicle · demo-catalog</p>
+<span class="seg g-wmi"><span class="w">Ford</span></span>
 <span class="seg g-vds"><span class="w">F150</span></span>
 <span class="seg g-year"><span class="w">2015</span></span>
 <dl class="vfacts" aria-label="This vehicle, to match the options against">
@@ -420,9 +434,10 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div id="answer" class="stage" data-vin="1FTEW1EG7FFA12345" data-label="2015 FORD F-150" data-complete="" data-done="wmi vds check year plant serial " data-part="alternator">
 <section class="fit" id="fit" aria-labelledby="fit-h">
 <h2 id="fit-h" class="visually-hidden">Parts that fit</h2>
-<span class="carry" aria-hidden="true"><span></span><span></span><span></span></span>
+<span class="carry" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></span>
 <div class="fitstrip">
 <p class="stamp">This vehicle · demo-catalog</p>
+<span class="seg g-wmi"><span class="w">Ford</span></span>
 <span class="seg g-vds"><span class="w">F150</span></span>
 <span class="seg g-year"><span class="w">2015</span></span>
 <dl class="vfacts" aria-label="This vehicle, to match the options against">
@@ -551,9 +566,10 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div id="answer" class="stage" data-vin="1GCVKREC6EZ123456" data-label="2014 CHEVROLET Silverado" data-complete="" data-done="wmi vds check year plant serial " data-part="brake-rotor-rear">
 <section class="fit" id="fit" aria-labelledby="fit-h">
 <h2 id="fit-h" class="visually-hidden">Parts that fit</h2>
-<span class="carry" aria-hidden="true"><span></span><span></span><span></span></span>
+<span class="carry" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></span>
 <div class="fitstrip">
 <p class="stamp">This vehicle · demo-catalog</p>
+<span class="seg g-wmi"><span class="w">Chevrolet</span></span>
 <span class="seg g-vds"><span class="w">Silverado 1500</span></span>
 <span class="seg g-year"><span class="w">2014</span></span>
 <dl class="vfacts" aria-label="This vehicle, to match the options against">
@@ -610,9 +626,10 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div id="answer" class="stage" data-vin="1FTEW1EG7FFA12345" data-label="2015 FORD F-150" data-complete="" data-done="wmi vds check year plant serial " data-part="alternator">
 <section class="fit" id="fit" aria-labelledby="fit-h">
 <h2 id="fit-h" class="visually-hidden">Parts that fit</h2>
-<span class="carry" aria-hidden="true"><span></span><span></span><span></span></span>
+<span class="carry" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></span>
 <div class="fitstrip">
 <p class="stamp">This vehicle · demo-catalog</p>
+<span class="seg g-wmi"><span class="w">Ford</span></span>
 <span class="seg g-vds"><span class="w">F150</span></span>
 <span class="seg g-year"><span class="w">2015</span></span>
 <dl class="vfacts" aria-label="This vehicle, to match the options against">
@@ -688,9 +705,10 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div id="answer" class="stage" data-vin="1FTEW1EG7FFA12345" data-label="2015 FORD F-150" data-complete="" data-done="wmi vds check year plant serial " data-part="alternator" data-number="DEMO-1001">
 <section class="fit" id="fit" aria-labelledby="fit-h">
 <h2 id="fit-h" class="visually-hidden">Parts that fit</h2>
-<span class="carry" aria-hidden="true"><span></span><span></span><span></span></span>
+<span class="carry" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></span>
 <div class="fitstrip">
 <p class="stamp">This vehicle · demo-catalog</p>
+<span class="seg g-wmi"><span class="w">Ford</span></span>
 <span class="seg g-vds"><span class="w">F150</span></span>
 <span class="seg g-year"><span class="w">2015</span></span>
 <dl class="vfacts" aria-label="This vehicle, to match the options against">
@@ -838,7 +856,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 </section>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":4830}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":4900}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};

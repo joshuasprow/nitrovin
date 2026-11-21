@@ -148,7 +148,8 @@ func TestPageFit(t *testing.T) {
 	}
 	for _, want := range []string{
 		`<p class="stamp">This vehicle · demo-catalog</p>`,
-		`<span class="seg g-vds"><span class="w">F150</span></span>`,
+		// The catalog's make, in its own word, with the Maker's line to it.
+		`<span class="seg g-wmi"><span class="w">Ford</span></span>` + "\n" + `<span class="seg g-vds"><span class="w">F150</span></span>`,
 		`<span class="seg g-year"><span class="w">2015</span></span>`,
 		`<a class="ptype swap" href="/?from.vin=1FTEW1EG7FFA12345&amp;part.id=alternator">`,
 		`<a class="ptype swap" href="/?from.vin=1FTEW1EG7FFA12345&amp;part.id=mirror"><span class="nm">Door Mirror</span>`,

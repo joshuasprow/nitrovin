@@ -123,9 +123,12 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 .fit{--rail-x: 3px; position: relative; isolation: isolate; display: flow-root; margin: 0 16px}
 .fitstrip{--lead: 30px; --prev: 0px; display: grid; grid-template-columns: 170fr 170fr 170fr 510fr; align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck)}
 .fitstrip .stamp{align-self: stretch; display: flex; align-items: center; min-width: 0; margin: 0; padding: 0 .5rem 0 .7rem; border-right: 1px solid rgb(255 255 255 / .18); font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss)}
-.fitstrip .g-vds{--cm: #7db4ff}
-.fitstrip .g-year{--cm: #ffb067}
-.fitstrip .stamp{padding-block: .5rem}
+.fitstrip .g-wmi{--cm: #ff6b81; grid-column: 1}
+.fitstrip .g-vds{--cm: #7db4ff; grid-column: 2}
+.fitstrip .g-year{--cm: #ffb067; grid-column: 3}
+.fitstrip .seg{grid-row: 2}
+.fitstrip .vfacts{grid-row: 2; grid-column: 4}
+.fitstrip .stamp{grid-row: 1; grid-column: 1 / -1; padding-block: .3rem; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18)}
 .vfacts{display: flex; flex-wrap: wrap; align-items: center; gap: 4px 22px; min-width: 0; margin: 0; padding: .45rem .7rem; border-left: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss)}
 .vfacts dt{font-size: 11px; line-height: 1.2; letter-spacing: .04em; text-transform: uppercase; color: #aeb7c0; text-shadow: none}
 .vfacts dd{margin: 0; font: 900 .95rem/1.25 var(--cell-font); letter-spacing: .06em}
@@ -145,8 +148,12 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 .seg .w{font-size: .9rem; letter-spacing: .04em}
 .fit{margin: 0}
 .fitstrip{grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 30px}
-.fitstrip .stamp{grid-column: 1 / -1; padding-block: .35rem; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18)}
-.vfacts{grid-column: 1 / -1; border-left: 0; border-top: 1px solid rgb(255 255 255 / .18)}
+.fitstrip .g-vds{grid-column: 1}
+.fitstrip .g-year{grid-column: 2}
+.fitstrip:has(.g-wmi){grid-template-columns: repeat(3, minmax(0, 1fr))}
+.fitstrip:has(.g-wmi) .g-vds{grid-column: 2}
+.fitstrip:has(.g-wmi) .g-year{grid-column: 3}
+.fitstrip .vfacts{grid-row: 3; grid-column: 1 / -1; border-left: 0; border-top: 1px solid rgb(255 255 255 / .18)}
 .aka{margin-right: calc(-1 * var(--gutter))}
 .nametags{padding-right: var(--gutter); scroll-padding-right: var(--gutter)}
 .fitstrip .seg::after{display: none}}
@@ -161,14 +168,21 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 .carry span::before, .carry span::after{content: ""; position: absolute; box-sizing: border-box; border: 0 solid var(--c-vds); filter: var(--stripe-lift)}
 .carry span::after{border-color: var(--c-year)}
 .carry span:nth-child(1)::before, .carry span:nth-child(1)::after{top: 0; width: 5px; border-left-width: 5px}
-.carry span:nth-child(1)::before{left: calc(var(--mv) - 2.5px); height: 17px}
-.carry span:nth-child(1)::after{left: calc(var(--my) - 2.5px); height: 26px}
+.carry span:nth-child(1)::before{left: calc(var(--mv) - 2.5px); height: 12px}
+.carry span:nth-child(1)::after{left: calc(var(--my) - 2.5px); height: 21px}
 .carry span:nth-child(2)::before, .carry span:nth-child(2)::after{height: 5px; border-top-width: 5px}
-.carry span:nth-child(2)::before{top: 12px; left: calc(min(var(--mv), var(--fv)) - 2.5px); right: calc(100% - max(var(--mv), var(--fv)) - 2.5px)}
-.carry span:nth-child(2)::after{top: 21px; left: calc(min(var(--my), var(--fy)) - 2.5px); right: calc(100% - max(var(--my), var(--fy)) - 2.5px)}
+.carry span:nth-child(2)::before{top: 7px; left: calc(min(var(--mv), var(--fv)) - 2.5px); right: calc(100% - max(var(--mv), var(--fv)) - 2.5px)}
+.carry span:nth-child(2)::after{top: 16px; left: calc(min(var(--my), var(--fy)) - 2.5px); right: calc(100% - max(var(--my), var(--fy)) - 2.5px)}
 .carry span:nth-child(3)::before, .carry span:nth-child(3)::after{bottom: 0; width: 5px; border-left-width: 5px}
-.carry span:nth-child(3)::before{top: 12px; left: calc(var(--fv) - 2.5px)}
-.carry span:nth-child(3)::after{top: 21px; left: calc(var(--fy) - 2.5px)}}}
+.carry span:nth-child(3)::before{top: 7px; left: calc(var(--fv) - 2.5px)}
+.carry span:nth-child(3)::after{top: 16px; left: calc(var(--fy) - 2.5px)}
+.carry:has(span:nth-child(4)){--mm: calc(var(--gutter) + .5 * var(--col) - round(var(--hang-p) * var(--r), .02px)); --fm: calc(var(--gutter) + var(--w) / 6); --fv: calc(var(--gutter) + .5 * var(--w)); --fy: calc(var(--gutter) + var(--w) * 5 / 6)}
+.carry span:nth-child(n + 4)::after{display: none}
+.carry span:nth-child(n + 4)::before{border-color: var(--c-wmi)}
+.carry span:nth-child(4)::before{top: 0; left: calc(var(--mm) - 2.5px); width: 5px; height: 30px; border-left-width: 5px}
+.carry span:nth-child(5)::before{top: 25px; height: 5px; border-top-width: 5px; left: calc(min(var(--mm), var(--fm)) - 2.5px); right: calc(100% - max(var(--mm), var(--fm)) - 2.5px)}
+.carry span:nth-child(6)::before{top: 25px; bottom: 0; left: calc(var(--fm) - 2.5px); width: 5px; border-left-width: 5px}
+#answer:has(.fitstrip .g-wmi) .cards > .card:first-child::after{content: ""; position: absolute; top: 100%; height: 12px; left: calc(50% - 2.5px); border-left: 5px solid var(--c-wmi); pointer-events: none}}}
 :is(.vp-tab,.vp-phone){
 .hang{scroll-behavior: smooth}}
 .vp-phone{
@@ -213,7 +227,7 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 
 </style>
 </helmet>
-<div class="root sheet" data-scheme="light" style="width: 1280px; height: 2340px; color: var(--fg); background: var(--bg)">
+<div class="root sheet" data-scheme="light" style="width: 1280px; height: 2360px; color: var(--fg); background: var(--bg)">
 <div><h1 class="sh-h1">Cards, brackets and lines</h1><p class="sh-intro">Each card is a manila tag hung by its eyelet from its group's line. A row is a label over its value, both left-aligned. Under the cards, the vehicle's block of label tape takes the Vehicle and Model year lines and says what the vehicle is; its names hang under it as manila tags, a vocabulary each, in a row that scrolls sideways.</p></div>
 <section>
 <p class="sh-cap">Decoded <span>Brackets, leader lines, cards, join lines, the vehicle's block and its names.</span></p>
@@ -324,14 +338,16 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 </section>
 </div>
 <svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+<path class="g-wmi" pathLength="1" d="M85 0V28" vector-effect="non-scaling-stroke"></path>
 <path class="g-vds" pathLength="1" d="M255 0V28" vector-effect="non-scaling-stroke"></path>
 <path class="g-year" pathLength="1" d="M595 0V14H425V28" vector-effect="non-scaling-stroke"></path>
 </svg>
 </div>
 <section class="fit" id="fit" aria-labelledby="fit-h">
-<span class="carry" aria-hidden="true"><span></span><span></span><span></span></span>
+<span class="carry" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></span>
 <div class="fitstrip">
 <p class="stamp">This vehicle · demo-catalog</p>
+<span class="seg g-wmi"><span class="w">Ford</span></span>
 <span class="seg g-vds"><span class="w">F150</span></span>
 <span class="seg g-year"><span class="w">2015</span></span>
 <dl class="vfacts" aria-label="This vehicle, to match the options against">
@@ -564,14 +580,16 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 </section>
 </div>
 <svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+<path class="g-wmi" pathLength="1" d="M85 0V28" vector-effect="non-scaling-stroke"></path>
 <path class="g-vds" pathLength="1" d="M255 0V28" vector-effect="non-scaling-stroke"></path>
 <path class="g-year" pathLength="1" d="M595 0V14H425V28" vector-effect="non-scaling-stroke"></path>
 </svg>
 </div>
 <section class="fit" id="fit" aria-labelledby="fit-h">
-<span class="carry" aria-hidden="true"><span></span><span></span><span></span></span>
+<span class="carry" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></span>
 <div class="fitstrip">
 <p class="stamp">This vehicle · demo-catalog</p>
+<span class="seg g-wmi"><span class="w">Ford</span></span>
 <span class="seg g-vds"><span class="w">F150</span></span>
 <span class="seg g-year"><span class="w">2015</span></span>
 <dl class="vfacts" aria-label="This vehicle, to match the options against">
@@ -705,14 +723,16 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 </section>
 </div>
 <svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+<path class="g-wmi" pathLength="1" d="M85 0V28" vector-effect="non-scaling-stroke"></path>
 <path class="g-vds" pathLength="1" d="M255 0V28" vector-effect="non-scaling-stroke"></path>
 <path class="g-year" pathLength="1" d="M595 0V14H425V28" vector-effect="non-scaling-stroke"></path>
 </svg>
 </div>
 <section class="fit" id="fit" aria-labelledby="fit-h">
-<span class="carry" aria-hidden="true"><span></span><span></span><span></span></span>
+<span class="carry" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></span>
 <div class="fitstrip">
 <p class="stamp">This vehicle · demo-catalog</p>
+<span class="seg g-wmi"><span class="w">Ford</span></span>
 <span class="seg g-vds"><span class="w">F150</span></span>
 <span class="seg g-year"><span class="w">2015</span></span>
 <dl class="vfacts" aria-label="This vehicle, to match the options against">
@@ -740,7 +760,7 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2340}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2360}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};

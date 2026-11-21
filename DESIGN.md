@@ -368,22 +368,28 @@ Under the cards, in the page's single column: the vehicle's block, its names
 in the vocabularies loaded, a picker of the part types the loaded catalog has
 for the vehicle, and the candidates of the one pressed.
 
-- **The vehicle's block** is one row of label tape, stuck on. From the
-  left: its stamp, "This vehicle ·" and the catalog's name; the catalog's
-  model the decode reached and the year it asked with ("any year" without
-  one), each over its group's underline; then what the decode says of the
+- **The vehicle's block** is label tape, stuck on: a strip across its top
+  with its stamp, "This vehicle ·" and the catalog's name, as a name tag
+  has its vocabulary, then one row. From the left: the make the catalog
+  files the vehicle under, in the catalog's word, where it has one; the
+  catalog's model the decode reached; and the year it asked with ("any
+  year" without one), each over its group's underline, the Maker's red,
+  the Vehicle's blue and the Model year's orange, lightened for the tape;
+  then what the decode says of the
   vehicle that a catalog's option text names, so a candidate's options
   are matched at a glance: the Vehicle card's rows but the model, a small
   label over each value, raised white on the tape, then the Vehicle
   group's five characters, each over the group's mark, as on the plate,
   with its position under it and no label: the positions say what they
-  are. On a wide page the model is at 25 % of the width, under the Vehicle
-  card, whose line comes straight down into the tape; the year is at 42 %,
-  and the Model year's line steps left to it. The page puts the vehicle
+  are. On a wide page the make is at 8 % of the width and the model at 25 %,
+  under the Maker and Vehicle cards, whose lines come straight down into
+  the tape; the year is at 42 %, and the Model year's line steps left to
+  it. A catalog on vPIC's own vehicles has no make of its own: the block
+  has none, and the Maker's line is not brought down. The page puts the vehicle
   and the candidates side by side and judges nothing: it marks no
-  candidate as the match. Narrow, the stamp is a row of its own, the model
-  and the year are at the middle of each half under it, and the details
-  are a third row.
+  candidate as the match. Narrow, the words are at the middle of each third
+  under the strip (of each half with no make), and the details are a row
+  under them.
 - **The names** ("Also known as") are manila tags, a tag a vocabulary, in
   one row under the block that scrolls sideways at every width; narrow, it
   reaches the window's right edge. The row starts 3 rem in from the
@@ -414,12 +420,14 @@ for the vehicle, and the candidates of the one pressed.
   out at its corner; nothing runs along under it, where the tags' wires
   are. With nothing pressed no line leaves the block. They need anchor
   positioning, as the risers do.
-- **Narrow, the cards move and the block does not**, so the two lines are
+- **Narrow, the cards move and the block does not**, so the lines are
   carried between them by the row's own scroll (a scroll timeline; no
   script reads a position). In the row each line runs on from its card to
   the row's bottom edge. In the 30 px above the block it comes down where
-  the row left it, turns (Vehicle's 9 px down, Model year's 18 px), and
-  runs along to drop into the block over its word. A line whose column is
+  the row left it, turns (Vehicle's 4 px down, Model year's 13 px, Maker's 22 px), and
+  runs along to drop into the block over its word. The Maker's, whose card
+  and word are both the first, turns deepest, so it crosses neither of
+  the others. A line whose column is
   off the window runs to the window's edge. A browser without scroll
   timelines draws no line between the cards and the block.
 - **The picker** is one key of the second tape on its own piece of label

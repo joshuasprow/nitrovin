@@ -97,6 +97,11 @@ func TestPageDemoVPIC(t *testing.T) {
 		`<span class="seg g-vds"><span class="w">F-150 / Ford</span></span>`,
 		"Choose a part type to see what fits this vehicle.",
 	} {
+		// A catalog on vPIC's own vehicles files under no make of its own:
+		// the block has no make, and the Maker's line is not brought down.
+		if strings.Contains(s, `class="seg g-wmi"`) {
+			t.Errorf("the block names a make the catalog does not\n%s", s)
+		}
 		if !strings.Contains(s, want) {
 			t.Errorf("the pickup lacks %s\n%s", want, s)
 		}

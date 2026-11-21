@@ -162,7 +162,8 @@ is open and the panel shown whole, which plate.js tells a history entry by. */}}
 {{range .Groups}}{{template "card" .}}
 {{end}}</div>
 {{if and (not .Ways) .Fit.Types}}<svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-<path class="g-vds" pathLength="1" d="M255 0V28" vector-effect="non-scaling-stroke"/>
+{{if .Fit.Make}}<path class="g-wmi" pathLength="1" d="M85 0V28" vector-effect="non-scaling-stroke"/>
+{{end}}<path class="g-vds" pathLength="1" d="M255 0V28" vector-effect="non-scaling-stroke"/>
 <path class="g-year" pathLength="1" d="M595 0V14H425V28" vector-effect="non-scaling-stroke"/>
 </svg>
 {{end}}</div>
@@ -266,10 +267,11 @@ own, which plate.js swaps in place (swap). */}}
 {{define "fit" -}}
 <section class="fit" id="fit" aria-labelledby="fit-h">
 <h2 id="fit-h" class="visually-hidden">Parts that fit</h2>
-{{if .Types}}<span class="carry" aria-hidden="true"><span></span><span></span><span></span></span>
+{{if .Types}}<span class="carry" aria-hidden="true"><span></span><span></span><span></span>{{if .Make}}<span></span><span></span><span></span>{{end}}</span>
 <div class="fitstrip">
 <p class="stamp">This vehicle · {{.Catalog}}</p>
-<span class="seg g-vds"><span class="w">{{.Model}}</span></span>
+{{with .Make}}<span class="seg g-wmi"><span class="w">{{.}}</span></span>
+{{end}}<span class="seg g-vds"><span class="w">{{.Model}}</span></span>
 <span class="seg g-year"><span class="w">{{.Year}}</span></span>
 {{with .Facts}}<dl class="vfacts" aria-label="This vehicle, to match the options against">
 {{range .Rows}}<div><dt>{{.Label}}</dt><dd>{{.Value}}</dd></div>

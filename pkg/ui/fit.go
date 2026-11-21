@@ -62,6 +62,9 @@ type fitCard struct {
 	// Model and Year are what the strip says was asked: the catalog's
 	// vehicle the decode reached, and the year, "any year" without one.
 	Model, Year string
+	// Make is the make the catalog files the vehicle under, in its own
+	// word; "" where its vehicles name none, or differ.
+	Make string
 	// Types are the vehicle's part types, by name. Spine is the catalog's
 	// spine, which names them, and which plate.js keeps recent part types
 	// by. PickCount and PickNoun are what the picker counts: the pressed
@@ -319,6 +322,7 @@ func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecod
 	}
 	c.Blank = ""
 	c.Model, c.Year = strings.Join(modelNames(fit.Models, fields, false), " / "), year
+	c.Make = sharedMake(fit.Models)
 	vehicle := strings.Join(modelNames(fit.Models, fields, true), " / ")
 	if year != "any year" {
 		vehicle = year + " " + vehicle
@@ -526,6 +530,20 @@ func modelNames(models []contract.FitModel, fields []string, withMake bool) []st
 		out = append(out, strings.Join(words, " "))
 	}
 	return out
+}
+
+// sharedMake is the make every one of the catalog's vehicles a fit
+// reached is filed under, "" where one names none or two differ.
+func sharedMake(models []contract.FitModel) string {
+	var make string
+	for i, m := range models {
+		s := m.Vehicle.Entry["make"]
+		if s == "" || i > 0 && s != make {
+			return ""
+		}
+		make = s
+	}
+	return make
 }
 
 // vehicleWhere is a catalog's vehicle as its lines' filter: its entry's
