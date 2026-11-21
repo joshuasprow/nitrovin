@@ -46,6 +46,70 @@ Each part has one of two standings.
   finished group draws its bracket and line and pops its card. The only
   motion that loops is the caret's blink on the focused plate, once a second.
 
+## Composition rules
+
+The ground rules say what the page is built with. These say how a change
+is put together, and each came from a correction: a version that was built,
+looked at, and sent back. A change is checked against every one before it
+is shown. One that breaks a rule says which, and why, where it is proposed.
+
+1. **Nothing floats.** A fact about the vehicle, an answer and a control
+   each sit on a material: the plate, a strip of tape or a tag. Bare text on
+   the ground beside them reads as a note left on the page, not as part of
+   it. The ground holds only what frames the page: the masthead, a
+   bracket's label, and the sentence of an empty place on its blank strip.
+   *Sent back: "This vehicle" and its facts as text under the picker. They
+   went onto the vehicle's block.*
+2. **A material says what a thing is.** The plate is what is typed. Label
+   tape is the page's own word on something: a stamp, what was asked, a
+   tag's heading. A manila tag is a thing found: a card, a name, a
+   candidate. Metal is a control. Pinstripe tape is a connection. Before
+   content is placed, it is one of these, and it takes that material.
+   *Sent back: names as strips of label tape. A name is found, so it is a
+   tag.*
+3. **Colour and texture before words.** A group's colour says which card a
+   word comes from, so no label repeats it. A label stays only where
+   nothing else says what a value is, as "Body" and "Engine" do. Nothing
+   in one view says the same thing twice.
+   *Sent back: "VIN 4–8" over five characters that each carry their
+   position; "Make" and "Model" over words already underlined in the
+   Maker's and the Vehicle's colours.*
+4. **One thing leads; the rest sit on it.** A block has one primary thing.
+   What serves it sits on the same piece of material, smaller, after it,
+   and is dropped first when the window narrows. It never gets a block of
+   its own beside the primary.
+   *Sent back: recent part types as a strip of their own under the picker.
+   They went onto the picker's tape, and a phone's tape is the picker
+   alone.*
+5. **One shape at every width.** A component is the same thing at 390,
+   768 and 1280 px. It wraps or scrolls; it does not turn into another
+   kind of control. A control has a largest width and keeps it: it does
+   not stretch to fill a wide window.
+   *Sent back: a strip of part types on a wide page and a list on a phone.
+   Both became the one picker, no wider than 24 rem.*
+6. **A row scrolls sideways before it stacks or hides.** Things of a kind
+   are one row. Past the window, the row scrolls by itself, shows the next
+   one at its edge, and fades at an end with more beyond it. Nothing is
+   kept behind a "more" switch, and nothing is stacked to be fanned out.
+   On a phone an item of a list is compact: several show at once.
+   *Sent back: names in stacks behind two switches; a list of part types
+   that showed four on a phone.*
+7. **What belongs together is joined, and a line crosses nothing.** A line
+   runs from a card to its word, and from what was asked to what answers
+   it; a tag hangs from what it names; a control's tape touches the
+   control. A line has a lane to itself: no tag, control or other line is
+   over it or under it.
+   *Sent back: a picker apart from its tape; lines to the picker running
+   behind the name tags.*
+8. **What opens hangs from its control and overlaps the page.** A list or a
+   note opened from a control is anchored to it, no wider than it where it
+   is a list, and lies over what is beneath. It does not push the page
+   down.
+   *Sent back: a list of part types as wide as the page that moved the
+   candidates.*
+9. **Bracket ends are the plate's.** Only the VIN input's brackets end in
+   a bracket. Every other line ends on the thing it reaches.
+
 ## Tokens
 
 All tokens are custom properties on `body` in `ui.css`.
@@ -248,9 +312,9 @@ copy sits in a recess: an inset shadow on a slightly darkened ground.
 
 ## Signature: vinyl tape
 
-Vinyl is three tapes. A name from a vocabulary is a strip of black
-label-maker tape. A name that can be pressed is the second tape, embossing
-tape in the plate's metal. A bracket or a leader line is pinstripe tape in
+Vinyl is three tapes. The page's own word on a thing, a stamp or a tag's
+heading, is a strip of black label-maker tape. A name that can be pressed
+is the second tape, embossing tape in the plate's metal. A bracket or a leader line is pinstripe tape in
 its group's colour.
 
 ### Label tape
@@ -696,13 +760,17 @@ Every other control is plain and small.
   opens and runs along the tag's edge, as the stock strip does. Either way
   it stands at the controls' one height, and pressed it is flush.
 - A new static strip of tape is stuck on, with `--lift-stuck`, never raised.
-- A new name from a vocabulary is a strip of label tape; one that can be
-  pressed is the second tape.
+- A new name from a vocabulary is on a manila tag, under a heading of
+  label tape; one that can be pressed is the second tape.
 - A new fact about the VIN itself is a row on a tag, under its group's band.
 - A new connection between two things is a line of pinstripe tape.
 - A fourth material needs a reason, as manila had: something the page hangs,
   sticks or bolts on that the three cannot be.
 - A seventh colour needs a reason. The six group colours are the only hues
   besides `--link` and `--bad`.
+- Check it against each composition rule above.
 - Check both colour schemes, a wide window (1280 px), a narrow one (768 px), a
-  390 px one, and the page with JavaScript off.
+  390 px one, and the page with JavaScript off. Check it with as much on
+  the page as a deployer has: several vocabularies, a vehicle with many
+  part types, a long body or engine. The demo set alone hides what
+  crowds.

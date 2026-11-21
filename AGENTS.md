@@ -136,6 +136,17 @@ uvx openapi-spec-validator docs/api/openapi.yaml
     `Release` takes about 18 minutes. Tags are never moved or reused, and every v0 tag is a prerelease (ADR 0007). The monthly refresh cuts its own patch tags. If a release goes red, follow CONTRIBUTING's "When a release is red".
   - **Downstream contract:** deployers run `cosign verify` against `release.yml@refs/tags/vX`, and require `/v1/info`'s `decoder_version` to equal the tag exactly. The version comes from Go's VCS stamp, so a dirty tree reports `+dirty`. Each of these breaks every pinned deploy: renaming `release.yml`, changing the signing identity or the tag format, or shipping a `+dirty` or `+meta` version.
 
+## Design Changes
+
+A change to how the page looks follows [DESIGN.md](DESIGN.md)'s "Composition rules". They are the maintainer's corrections, written down so that the same version is not built twice.
+
+- **Read the rules before proposing.** State which rule a change serves, and which it breaks, if any, where it is proposed.
+- **Prototype when a decision is reopened.** A request that questions what the page does gets two or three variants on the real page, on a throwaway branch, before any is built in. A variant differs in structure, not colour.
+- **Say what a change removes.** A redesign drops things: a switch, a link, a heading. List each one in the report and in the pull request, as a decision to review.
+- **Ask when a design word could mean two things.** Build the parts that are clear, and put the question once, with the reading taken and the reason against the other.
+- **Look at it full.** Load several vocabularies and a vehicle with many part types before showing a change. A row of one tag proves nothing about a row of five.
+- **A correction made twice becomes a rule.** Add it to DESIGN.md's list, with what was sent back, in the pull request that fixes it.
+
 ## Design Canvas
 
 UI that is not built yet is drawn on a Claude Design canvas before it is specified. The canvas is private to the maintainer. **The canvas is the source of truth; the repo holds snapshots of it.**
