@@ -44,15 +44,27 @@ A second page, "Proposals", appears when something is drawn before it is
 built. Its frames are not `scripts/canvas.sh`'s: each is captured the same
 way from a prototype running on a throwaway branch, which its row's title
 names by issue. When the proposal is built its frames are folded into the
-six and the page goes. None is open now: the part type picker of #366 was
-the first, and this folder's history holds its frames.
+six and the page goes. The part type picker of #366 was the first, and this
+folder's history holds its frames.
+
+One is open: the shelf list in new materials, four frames and their dark
+twins, `Proposal-Shelf-{Receipt,Placard,Tyvek,Marker}`, captured from the
+prototype on branch `shelf-list-materials` by `scripts/canvas/proposal.mjs`
+there. No issue is filed for it yet.
+
+Under the page's two rows are three swatch boards, `Swatches-Thermal`,
+`Swatches-Yard` and `Swatches-Vehicle`: materials found by a web search,
+none settled. Their colours are estimates; their sources are named on each
+swatch. The same script builds them, from `scripts/canvas/swatches/`.
+
+A third page, "Page 2", holds one empty artboard made by hand on the canvas.
 
 The wireframes and texture frames that proposed the fitment slices (#320 to
 #325) are removed from the canvas. This folder's history holds them.
 
 ## This snapshot
 
-Canvas version `1795210908-ce3e`, published on 2026-11-20.
+Canvas version `1795227917-2a08`, published on 2026-11-20.
 
 ## Rebuilding a canvas from a snapshot
 
