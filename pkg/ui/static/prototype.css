@@ -51,3 +51,10 @@ body[data-proto="B"] .pnames { display: inline-flex; vertical-align: top; margin
   body:is([data-proto="A"], [data-proto="B"]) .fitstrip .g-year { grid-column: 3; }
 }
 .pname .pvoc { margin-top: -.2rem; }
+
+/* One tag a vocabulary: a line a name, the model then its years. */
+.pname { width: auto; min-width: 11rem; max-width: 22rem; }
+.pname .prow2 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; margin: 0 0 .3rem; }
+.pname .prow2 .pw { margin: 0; }
+.pname .prow2 .pw.g-year { font-weight: 400; font-size: .85rem; }
+@media (width <= 34rem) { .pname { width: 100%; max-width: none; } }

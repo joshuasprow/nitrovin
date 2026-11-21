@@ -35,16 +35,27 @@
     // The names, a tag a name: read from the strips the page drew.
     const names = el('ol', 'pnames');
     names.setAttribute('aria-label', 'Also known as');
-    for (const plate of answer.querySelectorAll('#aka .tagplate')) {
-      const voc = plate.querySelector('.voc') || plate.closest('.stack').querySelector('.voc');
+    // One tag a vocabulary: its name on the tape, with its count where it
+    // has several names; the make once where every name shares it; then a
+    // line a name, the model and the years it holds for.
+    for (const stack of answer.querySelectorAll('#aka .stack')) {
+      const plates = [...stack.querySelectorAll('.tagplate')];
+      const voc = stack.querySelector('.voc') || stack.querySelector('.stamp');
       const tag = el('li', 'card done pname');
-      tag.append(el('p', 'pvoc', voc ? voc.textContent : 'Also known as'));
-      const none = plate.querySelector('.none');
-      if (none) tag.append(el('p', 'pnone', none.textContent));
-      for (const seg of plate.querySelectorAll('.seg')) {
-        const w = seg.querySelector('.w');
-        if (!w || !w.textContent.trim()) continue;
-        tag.append(el('p', 'pw ' + [...seg.classList].filter((c) => c.startsWith('g-') || c === 'unsure').join(' '), w.textContent));
+      const named = plates.filter((p) => !p.querySelector(':scope > .none'));
+      tag.append(el('p', 'pvoc', (voc ? voc.textContent.trim() : 'Also known as') + (named.length > 1 ? ' · ' + named.length : '')));
+      const word = (plate, g) => { const w = plate.querySelector('.seg.' + g + ' .w'); return w ? w.textContent.trim() : ''; };
+      const makes = [...new Set(named.map((p) => word(p, 'g-wmi')))];
+      const shared = makes.length === 1 && makes[0];
+      if (shared) tag.append(el('p', 'pw g-wmi', shared));
+      for (const plate of plates) {
+        const none = plate.querySelector(':scope > .none');
+        if (none) { tag.append(el('p', 'pnone', none.textContent)); continue; }
+        const row = el('p', 'prow2');
+        if (!shared && word(plate, 'g-wmi')) row.append(el('span', 'pw g-wmi', word(plate, 'g-wmi')));
+        row.append(el('span', 'pw g-vds' + (plate.querySelector('.seg.g-vds.unsure') ? ' unsure' : ''), word(plate, 'g-vds')));
+        row.append(el('span', 'pw g-year' + (plate.querySelector('.seg.g-year.unsure') ? ' unsure' : ''), word(plate, 'g-year')));
+        tag.append(row);
       }
       names.append(tag);
     }
