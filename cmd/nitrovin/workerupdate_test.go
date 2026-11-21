@@ -131,7 +131,7 @@ func TestWorkerUpdate(t *testing.T) {
 	entry := "/?from.vin=1D7RV1GT5AS123456"
 	since := len(wire.all())
 	tb.do(chromedp.Navigate(srv.URL + entry))
-	tb.wait("#aka #fan-fleet")
+	tb.wait("#aka li.name")
 	if served(since, entry) {
 		t.Fatalf("%s: the server answered it; want the worker, fleet is the browser's", entry)
 	}
@@ -211,7 +211,7 @@ func TestWorkerUpdate(t *testing.T) {
 	}
 	since = len(wire.all())
 	tb.do(chromedp.Navigate(srv.URL + entry))
-	tb.wait("#aka #fan-fleet")
+	tb.wait("#aka li.name")
 	if served(since, entry) {
 		t.Errorf("%s after Update now: the server answered it; want the next release's worker", entry)
 	}

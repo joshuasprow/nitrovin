@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"math"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/chromedp/cdproto/emulation"
@@ -14,17 +16,16 @@ import (
 
 // TestPageLayout lays the page out in headless Chrome or Chromium at the
 // widths its cards and names change at
-// (https://github.com/joshuasprow/nitrovin/issues/320), without JavaScript
-// and with it, on a server that loaded the fixture and three vocabularies
-// with no name for the VIN, four stacks in all. On a wide page (1280) the
-// six cards share one row, each holding its text with every value under
-// its label, the stacks are one block, and nothing scrolls sideways. On a narrow one (768, and a phone's 390) the cards and the
-// names are one region that scrolls sideways, each part of a name under
-// its card, while a vocabulary's label stays put. The names block shows
-// three vocabularies, two on a phone, and the rest at a press of its
-// switch. "Check years" brings years that are unsure into view, out of a
-// closed stack and from beyond the region's edge. axe audits each state.
-// CI (CI set) needs the browser; a machine without one skips.
+// (https://github.com/joshuasprow/nitrovin/issues/320, and #366), without
+// JavaScript and with it, on a server that loaded the fixture and three
+// vocabularies with no name for the VIN, four in all. On a wide page
+// (1280) the six cards share one row, each holding its text with every
+// value under its label, and nothing but the names' row scrolls sideways.
+// On a narrow one (768, and a phone's 390) the cards are a region that
+// scrolls sideways. At every width the names are one row of tags, a tag a
+// vocabulary, every one on the page, which scrolls sideways by itself:
+// the cards and the page stay. axe audits each state. CI (CI set) needs
+// the browser; a machine without one skips.
 func TestPageLayout(t *testing.T) {
 	path := chromePath()
 	if path == "" {
@@ -54,11 +55,8 @@ func TestPageLayout(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			tb := newTab(t, path, srv.URL, &requestLog{}, c.js)
 			tb.wide()
-			for _, w := range []struct {
-				width, height int64
-				shown         int
-			}{{768, 1024, 3}, {390, 844, 2}} {
-				tb.narrow(w.width, w.height, w.shown)
+			for _, w := range []struct{ width, height int64 }{{768, 1024}, {390, 844}} {
+				tb.narrow(w.width, w.height)
 			}
 			tb.mu.Lock()
 			defer tb.mu.Unlock()
@@ -68,10 +66,6 @@ func TestPageLayout(t *testing.T) {
 		})
 	}
 }
-
-// ramPartial is the fixture's Ram before its year is typed: fleet's name
-// for it holds to 2012, so its years are unsure.
-const ramPartial = "/?from.vin=1D7RV1GT5"
 
 // window sets the page's window to width by height CSS pixels.
 func (tb *tab) window(width, height int64) {
@@ -122,15 +116,21 @@ type laid struct {
 	// Ragged counts the cards' values that do not start under their label,
 	// at its leading edge.
 	Ragged int `json:"ragged"`
-	// Gaps are the room above each displayed stack's strip after the
-	// first, from the stack before it.
-	Gaps []float64 `json:"gaps"`
-	// Parts are the first name's make, model and years; Label its
-	// vocabulary's label.
-	Parts []box `json:"parts"`
-	Label box   `json:"label"`
-	// Region is the cards' and names' region: how wide it is and how wide
-	// what it holds, its name and whether a keyboard reaches it.
+	// Tags are the names' tags, a vocabulary each, in document order;
+	// Names their row: how wide it is and how wide what it holds, its
+	// name and whether a keyboard reaches it.
+	Tags        []box   `json:"tags"`
+	NamesWidth  float64 `json:"namesWidth"`
+	NamesScroll float64 `json:"namesScroll"`
+	NamesName   string  `json:"namesName"`
+	NamesTab    int     `json:"namesTab"`
+	// Lane is how far the names' row starts in from the section's left
+	// edge: the lane the lines to the picker come down. Fade is the row's
+	// mask, which fades an end with tags past it.
+	Lane float64 `json:"lane"`
+	Fade string  `json:"fade"`
+	// Region is the cards' region: how wide it is and how wide what it
+	// holds, its name and whether a keyboard reaches it.
 	RegionWidth  float64 `json:"regionWidth"`
 	RegionScroll float64 `json:"regionScroll"`
 	RegionName   string  `json:"regionName"`
@@ -139,20 +139,12 @@ type laid struct {
 	// window.
 	PageScroll float64 `json:"pageScroll"`
 	Window     float64 `json:"window"`
-	// Shown is how many vocabularies' stacks are displayed, of Stacks; More
-	// the words on the block's switch, in lower case (the tape's are
-	// capitals).
-	Shown  int    `json:"shown"`
-	Stacks int    `json:"stacks"`
-	More   string `json:"more"`
 }
 
 const layoutJS = `(() => {
 	const box = el => { const r = el.getBoundingClientRect(); return {left: r.left, right: r.right, top: r.top, bottom: r.bottom}; };
-	const hang = document.querySelector(".hang"), stacks = [...document.querySelectorAll("#aka li.stack")];
+	const hang = document.querySelector(".hang"), names = document.querySelector("#aka .nametags");
 	const cards = [...document.querySelectorAll(".cards .card")];
-	const plate = document.querySelector("#aka .tagplate:not(.blank)");
-	const more = document.querySelector("label.more-voc");
 	return {
 		cards: cards.map(box),
 		spills: cards.filter(c => {
@@ -164,14 +156,12 @@ const layoutJS = `(() => {
 			});
 		}).map(c => c.dataset.group),
 		ragged: cards.flatMap(c => [...c.querySelectorAll("dl")]).flatMap(dl => [...dl.querySelectorAll("dd")].filter(dd => { const v = dd.getBoundingClientRect(), k = dd.previousElementSibling.getBoundingClientRect(); return Math.abs(v.left - k.left) > 1 || v.top < k.bottom - 1; })).length,
-		gaps: stacks.filter(s => s.checkVisibility()).slice(1).map(s => s.querySelector(".tagplate").getBoundingClientRect().top - s.previousElementSibling.getBoundingClientRect().bottom),
-		parts: ["wmi", "vds", "year"].map(g => box(plate.querySelector(".seg.g-" + g))),
-		label: box(plate.querySelector(".lbl")),
+		tags: [...names.querySelectorAll(":scope > li.name")].map(box),
+		namesWidth: names.clientWidth, namesScroll: names.scrollWidth, namesName: names.getAttribute("aria-label"), namesTab: names.tabIndex,
+		lane: names.getBoundingClientRect().left - document.querySelector("#fit").getBoundingClientRect().left, fade: getComputedStyle(names).maskImage,
 		regionWidth: hang.clientWidth, regionScroll: hang.scrollWidth,
 		regionName: hang.getAttribute("role") + ": " + hang.getAttribute("aria-label"), regionTab: hang.tabIndex,
 		pageScroll: document.documentElement.scrollWidth, window: innerWidth,
-		shown: stacks.filter(s => s.checkVisibility()).length, stacks: stacks.length,
-		more: more && more.checkVisibility() ? more.innerText.trim().toLowerCase() : "",
 	};
 })()`
 
@@ -199,9 +189,8 @@ func (tb *tab) oneRow(step string, l laid) {
 	}
 }
 
-// wide: at 1280 the cards are one row across the page and nothing scrolls
-// sideways; three of the four vocabularies show, and the fourth at a press
-// of the block's switch, which needs no script.
+// wide: at 1280 the cards are one row across the page and the page does
+// not scroll sideways; the four vocabularies' tags are one row.
 func (tb *tab) wide() {
 	tb.t.Helper()
 	const step = "1280 wide"
@@ -210,43 +199,59 @@ func (tb *tab) wide() {
 	l := tb.layout()
 	tb.oneRow(step, l)
 	if l.RegionScroll > l.RegionWidth || l.PageScroll > l.Window {
-		tb.t.Errorf("%s: the region holds %v in %v, the page %v in %v; want nothing to scroll sideways", step, l.RegionScroll, l.RegionWidth, l.PageScroll, l.Window)
+		tb.t.Errorf("%s: the region holds %v in %v, the page %v in %v; want nothing but the names to scroll sideways", step, l.RegionScroll, l.RegionWidth, l.PageScroll, l.Window)
 	}
 	if first, last := l.Cards[0], l.Cards[5]; first.Left < 0 || last.Right > l.Window {
 		tb.t.Errorf("%s: cards from %v to %v in a window of %v; want all six in it", step, first.Left, last.Right, l.Window)
 	}
-	// The stacks are one block: a blank strip stands 8px off it, and
-	// nothing stands further.
-	for i, g := range l.Gaps {
-		if g > 8 {
-			tb.t.Errorf("%s: %vpx above stack %d; want the stacks one block, no more than 8px between them", step, g, i+2)
-		}
-	}
-	tb.more(step, l, 3, "1 more vocabulary")
+	tb.tags(step, l)
 	tb.audit(step)
 }
 
-// more checks the names block shows shown of its four vocabularies and
-// says how many more there are, and that a press of its switch shows them
-// all.
-func (tb *tab) more(step string, l laid, shown int, words string) {
+// tags checks the names are one row of four tags, a vocabulary each,
+// under the cards, in a row a keyboard reaches that scrolls by itself.
+func (tb *tab) tags(step string, l laid) {
 	tb.t.Helper()
-	if l.Stacks != 4 || l.Shown != shown || l.More != words {
-		tb.t.Errorf("%s: %d of %d vocabularies shown, the switch %q; want %d of 4 and %q", step, l.Shown, l.Stacks, l.More, shown, words)
+	if len(l.Tags) != 4 {
+		tb.t.Fatalf("%s: %d name tags; want 4, a vocabulary each", step, len(l.Tags))
 	}
-	tb.do(chromedp.Click(chromedp.CSS("label.more-voc")))
-	tb.wait("#aka-more:checked")
-	if l := tb.layout(); l.Shown != 4 || l.More != "fewer vocabularies" {
-		tb.t.Errorf("%s, the switch pressed: %d vocabularies shown, the switch %q; want 4 and %q", step, l.Shown, l.More, "fewer vocabularies")
+	for i, tag := range l.Tags[1:] {
+		if prev := l.Tags[i]; tag.Top != prev.Top || tag.Left < prev.Right {
+			tb.t.Errorf("%s: tag %d at %+v, tag %d at %+v; want one row, in order", step, i+1, prev, i+2, tag)
+		}
 	}
+	if l.Tags[0].Top < l.Cards[0].Bottom {
+		tb.t.Errorf("%s: the first tag at %+v; want it under the cards, which end at %v", step, l.Tags[0], l.Cards[0].Bottom)
+	}
+	if l.NamesName != "Also known as" || l.NamesTab != 0 {
+		tb.t.Errorf("%s: the names' row is %q, tabindex %d; want a named row a keyboard reaches", step, l.NamesName, l.NamesTab)
+	}
+	if l.Lane < 40 {
+		tb.t.Errorf("%s: the names' row starts %v px in from the section's edge; want a lane of 3rem for the lines to the picker", step, l.Lane)
+	}
+	if l.NamesScroll <= l.NamesWidth {
+		if strings.Contains(l.Fade, "48px") {
+			tb.t.Errorf("%s: the names' row fits and is masked %s; want no fade", step, l.Fade)
+		}
+		return
+	}
+	if !strings.HasSuffix(l.Fade, "calc(100% - 48px), rgba(0, 0, 0, 0))") {
+		tb.t.Errorf("%s: tags run past the row's right end and its mask is %s; want that end faded over 48px", step, l.Fade)
+	}
+	// Where the tags run past the row's edge, the row scrolls and the
+	// cards stay.
+	// It snaps to a tag, so it is scrolled to its end.
+	scrolled := measure[float64](tb, `(document.querySelector("#aka .nametags").scrollTo({left: 1e6, behavior: "instant"}), document.querySelector("#aka .nametags").scrollLeft)`)
+	s := tb.layout()
+	if scrolled <= 0 || math.Abs(s.Tags[0].Left-(l.Tags[0].Left-scrolled)) > 1 || s.Cards[0].Left != l.Cards[0].Left || s.PageScroll > s.Window {
+		tb.t.Errorf("%s: the names scrolled %v, the first tag from %v to %v and the first card from %v to %v; want the tags alone to move", step, scrolled, l.Tags[0].Left, s.Tags[0].Left, l.Cards[0].Left, s.Cards[0].Left)
+	}
+	measure[float64](tb, `(document.querySelector("#aka .nametags").scrollTo({left: 0, behavior: "instant"}), 0)`)
 }
 
-// narrow: at width the cards and the names are one region that scrolls
-// sideways, the cards one row in the VIN's order and each part of a name
-// under its card; scrolled, they move together and the vocabulary's label
-// stays. shown vocabularies show before the block's switch. Then "Check
-// years" on the Ram before its year is typed.
-func (tb *tab) narrow(width, height int64, shown int) {
+// narrow: at width the cards are a region that scrolls sideways, one row
+// in the VIN's order; the names' tags are a row of their own under them.
+func (tb *tab) narrow(width, height int64) {
 	tb.t.Helper()
 	step := strconv.FormatInt(width, 10) + " wide"
 	tb.window(width, height)
@@ -256,76 +261,15 @@ func (tb *tab) narrow(width, height int64, shown int) {
 	if l.RegionScroll <= l.RegionWidth || l.PageScroll > l.Window {
 		tb.t.Errorf("%s: the region holds %v in %v, the page %v in %v; want the region alone to scroll sideways", step, l.RegionScroll, l.RegionWidth, l.PageScroll, l.Window)
 	}
-	if l.RegionName != "region: Cards and names" || l.RegionTab != 0 {
+	if l.RegionName != "region: Cards" || l.RegionTab != 0 {
 		tb.t.Errorf("%s: the region is %q, tabindex %d; want a named region a keyboard reaches", step, l.RegionName, l.RegionTab)
 	}
-	// The make is under Maker, the model under Vehicle and the years under
-	// Model year: cards 1, 2 and 4.
-	under := func(step string, l laid) {
-		tb.t.Helper()
-		for i, card := range []int{0, 1, 3} {
-			part, c := l.Parts[i], l.Cards[card]
-			if part.Left < c.Left-1 || part.Right > c.Right+1 || part.Top < c.Bottom {
-				tb.t.Errorf("%s: part %d of the name at %+v; want it under card %d, at %+v", step, i+1, part, card+1, c)
-			}
-		}
-	}
-	under(step, l)
-
 	const by = 180
 	scrolled := measure[float64](tb, `(document.querySelector(".hang").scrollTo({left: `+strconv.Itoa(by)+`, behavior: "instant"}), document.querySelector(".hang").scrollLeft)`)
 	s := tb.layout()
-	if scrolled != by || s.Cards[0].Left != l.Cards[0].Left-by || s.Parts[0].Left != l.Parts[0].Left-by {
-		tb.t.Errorf("%s: scrolled %v, the first card from %v to %v and the make from %v to %v; want all three to move %d", step, scrolled, l.Cards[0].Left, s.Cards[0].Left, l.Parts[0].Left, s.Parts[0].Left, by)
+	if scrolled != by || s.Cards[0].Left != l.Cards[0].Left-by || s.Tags[0].Left != l.Tags[0].Left {
+		tb.t.Errorf("%s: scrolled %v, the first card from %v to %v and the first tag from %v to %v; want the cards alone to move %d", step, scrolled, l.Cards[0].Left, s.Cards[0].Left, l.Tags[0].Left, s.Tags[0].Left, by)
 	}
-	under(step+", scrolled", s)
-	if s.Label.Left != l.Label.Left {
-		tb.t.Errorf("%s: scrolled, the vocabulary's label moved from %v to %v; want it to stay", step, l.Label.Left, s.Label.Left)
-	}
-	tb.more(step, l, shown, map[int]string{3: "1 more vocabulary", 2: "2 more vocabularies"}[shown])
-	tb.audit(step)
-	tb.checkYears(step)
-}
-
-// checkYears follows fleet's "Check years" on the Ram before its year is
-// typed. The first of fleet's unsure years are under its stack's top plate
-// and, on a narrow page, in a column the region has not scrolled to: the
-// link leaves them in the window, and the stack fanned out to show them.
-func (tb *tab) checkYears(step string) {
-	tb.t.Helper()
-	step += ", Check years"
-	tb.load(ramPartial)
-	type seen struct {
-		Links  int    `json:"links"`
-		Href   string `json:"href"`
-		Unsure bool   `json:"unsure"`
-		In     bool   `json:"in"`
-	}
-	const seenJS = `(() => {
-		const links = [...document.querySelectorAll("#aka a.check")], link = links.find(a => a.closest(".stack").querySelector("#fan-fleet"));
-		const el = link && document.getElementById(link.getAttribute("href").slice(1));
-		const r = el && el.getBoundingClientRect();
-		return {
-			links: links.length, href: link ? link.getAttribute("href") : "", unsure: !!el && el.matches(".seg.g-year.unsure"),
-			in: !!el && el.checkVisibility({visibilityProperty: true}) && r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight,
-		};
-	})()`
-	before := measure[seen](tb, seenJS)
-	if before.Links != 1 || !before.Unsure || before.In {
-		tb.t.Fatalf("%s: %+v; want one link, fleet's, to unsure years not yet in view", step, before)
-	}
-	tb.do(chromedp.Click(chromedp.CSS(`#aka a.check`)))
-	// The region scrolls to them, smoothly where motion is welcome.
-	if !measure[bool](tb, `new Promise(resolve => {
-		const start = Date.now();
-		(function poll() {
-			if (`+seenJS+`.in && location.hash === `+jsString(before.Href)+`) resolve(true); else if (Date.now() - start > 10000) resolve(false); else setTimeout(poll, 50);
-		})();
-	})`) {
-		tb.t.Errorf("%s: the unsure years at %s never came into the window: %+v", step, before.Href, measure[seen](tb, seenJS))
-	}
-	if got := tb.at(); got != ramPartial+before.Href {
-		tb.t.Errorf("%s: at %s; want %s", step, got, ramPartial+before.Href)
-	}
+	tb.tags(step, s)
 	tb.audit(step)
 }

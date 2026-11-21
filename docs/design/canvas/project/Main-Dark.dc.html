@@ -12,6 +12,9 @@
 body{margin:0}
 @keyframes caret{ 50% { box-shadow: none; } }
 @keyframes blink{ 50% { opacity: 0; } }
+@property --nt-l{ syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --nt-r{ syntax: "<length>"; inherits: false; initial-value: 0px; }
+@keyframes nt-fade{ 0% { --nt-l: 0px; --nt-r: 48px; } 6% { --nt-l: 48px; --nt-r: 48px; } 94% { --nt-l: 48px; --nt-r: 48px; } 100% { --nt-l: 48px; --nt-r: 0px; } }
 @keyframes bracket{ from { transform: scaleX(0); } }
 @keyframes draw{ from { stroke-dashoffset: 1; } }
 @keyframes pop{ from { transform: translateY(-8px) scale(.92); opacity: 0; } }
@@ -74,12 +77,8 @@ label{font-weight: 600}
 .live .plate:is(:focus-within,.is-fw) .cell.caret::before, .live .plate:is(:focus-within,.is-fw) .cell.caret-end::before{content: ""; position: absolute; left: -4px; top: 10%; bottom: 10%; width: 4px; border-radius: 2px; background: var(--on-metal); animation: blink 1s steps(2) infinite}
 .live .plate:is(:focus-within,.is-fw) .cell.caret-end::before{left: auto; right: -4px}
 .live .cell.sel{background: #16202b; color: #fff; text-shadow: none; border-radius: 4px; box-shadow: inset 0 0 0 3px var(--c)}
-.stack:has(.fan:not(:checked)):not(:has(.seg:is(:target,.is-target))){& .tagplate.below { position: absolute; inset: 0 0 auto; margin: 0; visibility: hidden; } &.d1 { --under: 12px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), var(--lift-stuck); } &.d2 { --under: 22px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), var(--lift-stuck); } &.d3 { --under: 32px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), 0 30px 0 -15px #1e2226, 0 31px 0 -14px var(--tape-edge), var(--lift-stuck); } &.d1 + .stack { --prev: 12px; } &.d2 + .stack { --prev: 22px; } &.d3 + .stack { --prev: 32px; }}
-.aka:has(.more:not(:checked)) .stack.rest{display: none}
-.more:checked ~ .more-voc .n, .more:not(:checked) ~ .more-voc .less{display: none}}
-.vp-wide{
-.stack:has(.fan:not(:checked)):not(:has(.seg:is(:target,.is-target))){&.d1 { --under: 7px; } &.d2 { --under: 12px; } &.d3 { --under: 17px; }}}
-.vp{
+.name{flex: none; scroll-snap-align: start; box-sizing: border-box; min-width: 11rem; max-width: min(40rem, 72vw); margin: 0; padding-bottom: .6rem}
+.name::after{content: ""; position: absolute; left: calc(50% - 1px); top: -36px; width: 2px; height: 50px; background: var(--steel); pointer-events: none}
 .ptgroups:has(> .ptgroup:only-child:not(:has(.pthead))){grid-template-columns: minmax(0, 1fr)}
 .modes{display: inline-flex; margin: 0 0 14px}
 .mode{--key: var(--metal); display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 34px; padding: 0 1rem 0 1.6rem; font: 900 11px var(--label-font); letter-spacing: .1em; text-transform: uppercase; text-decoration: none; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); border: 1px solid var(--steel); box-shadow: var(--raised); background: radial-gradient(circle at .8rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--key)}
@@ -121,7 +120,6 @@ label{font-weight: 600}
 .lab.g-check span, .lab.g-year span, .lab.g-plant span{visibility: hidden}
 .plate{--cell-h: 15cqw}
 .hang, #answer{--col: 9.5rem}
-.aka:has(.more:not(:checked)) .stack.third{display: none}
 .labels, .cells, .under{grid-template-columns: repeat(9, minmax(0, 1fr))}
 .cells{row-gap: 8px}
 .cell{font-size: 9cqw; margin: 0 2px; border-bottom-width: 4px}

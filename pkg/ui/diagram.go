@@ -107,95 +107,59 @@ type vinGroup struct {
 	Years []yearCode
 }
 
-// akaTag is one name of the vehicle in a vocabulary, as a small plate of
-// its own: the vocabulary stamped on it, then its words under the brackets
-// of the VIN's groups they answer to, its make under the maker's, the rest
-// of the entry under the vehicle's, the years its mapping holds for under
-// the year's. Doubt is drawn where it applies: Rule (the mapping was
-// matched by rule, not listed) dashes the lines into the make and the
-// model and the marks under them, YearUnsure and ModelUnsure (the model
-// year, or a qualifier, could not be checked) dash that bracket and mark.
-// Each segment's note says so in words, and Details says how the name was
-// reached.
-//
-// In a stack of several, the top plate's stamp is the stack's switch: Fan
-// is the id of the checkbox it is the label of, and Count the names in
-// the stack. Under marks the plates below the top one, which carry no
-// stamp of their own.
-//
-// Check, on the top plate alone, is the id of the first years in the stack
-// that are unsure, "" when every name's are sure: where the label's "Check
-// years" link goes. Those years carry it (YearsID).
+// akaTag is one name of the vehicle in a vocabulary, a line of its
+// vocabulary's tag: its make, the rest of the entry as its model, and the
+// years its mapping holds for, each over the colour of the VIN's group it
+// answers to. Doubt is drawn where it applies: Rule (the mapping was
+// matched by rule, not listed) dashes the marks under the make and the
+// model, YearUnsure and ModelUnsure (the model year, or a qualifier, could
+// not be checked) dash that mark. Each word's note says so in words, and
+// Details says how the name was reached.
 type akaTag struct {
 	ID, Vocabulary                string
 	Make, Model, Years            string
 	Rule, YearUnsure, ModelUnsure bool
 	MakeNote, ModelNote, YearNote string
 	Details                       string
-	Fan                           string
-	Count                         int
-	Under                         bool
-	Check                         string
 }
 
-// YearsID is the id of the tag's years, which only unsure years carry: a
-// "Check years" link's target.
-func (t akaTag) YearsID() string {
-	if !t.YearUnsure {
+// Doubt says the name has something unchecked, which its "i" marks: a
+// rule's name, or one whose model or years were not verified.
+func (t akaTag) Doubt() bool { return t.Rule || t.YearUnsure || t.ModelUnsure }
+
+// akaRow is one vocabulary's tag of "Also known as": its names, a line
+// each. A vocabulary with no name keeps its tag, which says so.
+type akaRow struct {
+	Vocabulary string
+	Names      []akaTag
+}
+
+// Make is the make every name of the tag shares, written once on it; ""
+// when they differ, or have none, and each line says its own.
+func (r akaRow) Make() string {
+	if len(r.Names) == 0 {
 		return ""
 	}
-	return t.ID + "-years"
+	for _, n := range r.Names[1:] {
+		if n.Make != r.Names[0].Make {
+			return ""
+		}
+	}
+	return r.Names[0].Make
 }
 
-// akaRow is one vocabulary's stack of "Also known as": its names, the
-// first on top and the rest under it until the stack is fanned out. A
-// vocabulary with no name keeps its place. Fan is its switch's id, "" for
-// a stack of one. Late says where the stack falls past the block's cap
-// (akaShown): "third" for the one a phone keeps back, "rest" for those
-// every width does, "" for a stack always shown.
-type akaRow struct {
-	Vocabulary, Fan string
-	Names           []akaTag
-	Late            string
+// Rule says every name of the tag was matched by rule: the mark under
+// the make they share is dashed, as each line's is.
+func (r akaRow) Rule() bool {
+	return len(r.Names) > 0 && !slices.ContainsFunc(r.Names, func(n akaTag) bool { return !n.Rule })
 }
 
-// Depth is how many plates show under the top one of a closed stack: the
-// rest, three at most.
-func (r akaRow) Depth() int { return min(max(len(r.Names)-1, 0), 3) }
-
-// akaCard is "Also known as", the first derived card: the tags of every
-// vocabulary loaded, hung from the maker's, the vehicle's and the year's
-// lines. Waiting says the model is not known yet; None that no vocabulary
-// is loaded.
+// akaCard is "Also known as": a tag for every vocabulary loaded, under
+// the vehicle's block. Waiting says the model is not known yet; None that
+// no vocabulary is loaded.
 type akaCard struct {
 	Rows          []akaRow
 	Waiting, None bool
-}
-
-// The block's cap: the vocabularies "Also known as" shows before its
-// "more" switch, on a phone (34rem and narrower) and on anything wider.
-const (
-	akaShownPhone = 2
-	akaShown      = 3
-)
-
-// Capped says the block has vocabularies to keep back, at some width.
-func (c akaCard) Capped() bool { return len(c.Rows) > akaShownPhone }
-
-// More is the switch's words where three vocabularies show, "" when no
-// more are loaded; MorePhone its words where two do.
-func (c akaCard) More() string      { return moreText(len(c.Rows) - akaShown) }
-func (c akaCard) MorePhone() string { return moreText(len(c.Rows) - akaShownPhone) }
-
-// moreText is "N more vocabularies", "" for none.
-func moreText(n int) string {
-	switch {
-	case n <= 0:
-		return ""
-	case n == 1:
-		return "1 more vocabulary"
-	}
-	return strconv.Itoa(n) + " more vocabularies"
 }
 
 // diagram is the plate and everything hanging off it.
@@ -205,7 +169,8 @@ type diagram struct {
 	Cells  []cell
 	Groups []vinGroup
 	Names  akaCard
-	// Fit is the parts that fit, under the names (fit.go).
+	// Fit is the parts that fit (fit.go): the vehicle's block, the names
+	// under it (FitView), then the picker and the candidates.
 	Fit      fitCard
 	Complete bool
 	// Label names the vehicle, for the title and a recent chip: "2003
@@ -466,33 +431,13 @@ func (d *diagram) names(tr contract.Translation, cat []contract.CatalogEntry, el
 			all = append(all, n)
 		}
 		slices.SortStableFunc(all, akaLess(vinMake))
-		if len(all) > 1 {
-			row.Fan = "fan-" + t.Vocabulary
-			all[0].Fan, all[0].Count = row.Fan, len(all)
-			for i := range all[1:] {
-				all[i+1].Under = true
-			}
-		}
-		if i := slices.IndexFunc(all, func(n akaTag) bool { return n.YearUnsure }); i >= 0 {
-			all[0].Check = all[i].YearsID()
-		}
 		row.Names = all
 		d.Names.Rows = append(d.Names.Rows, row)
 	}
-	// The lines above end on the first stack, so a vocabulary with a name
-	// goes before one without: a line never ends on a blank plate while a
-	// name is there to take it.
+	// A vocabulary with a name goes before one without.
 	slices.SortStableFunc(d.Names.Rows, func(a, b akaRow) int {
 		return cmp.Compare(min(len(b.Names), 1), min(len(a.Names), 1))
 	})
-	for i := range d.Names.Rows {
-		switch {
-		case i >= akaShown:
-			d.Names.Rows[i].Late = "rest"
-		case i >= akaShownPhone:
-			d.Names.Rows[i].Late = "third"
-		}
-	}
 }
 
 // The check digit (49 CFR 565.15): each character's value, each
@@ -581,3 +526,13 @@ var surpriseVINs = []string{
 	"5NPE24AF0FH035854", "SAJWA3KD7F8731903", "1C4RJFAG1FC401177", "KNDJP3A58H7016879", "JH4UB1F53HA032806", "5YJ3E1EA7JF624080",
 	"JSA1NJ4C2JA804306", "1N4AL3AP7JC232819", "WA1AXAF7XLA009291", "4JGFB8KA0MA967423", "JKAVN2D11RA714730", "KMTGE4S13RU371707",
 }
+
+// fitView is the fit card as its template draws it: the card, and the
+// names that hang under its block.
+type fitView struct {
+	fitCard
+	Names akaCard
+}
+
+// FitView is d's fit card with its names.
+func (d diagram) FitView() fitView { return fitView{fitCard: d.Fit, Names: d.Names} }

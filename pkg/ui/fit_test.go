@@ -147,8 +147,9 @@ func TestPageFit(t *testing.T) {
 		t.Errorf("the pickup's part types %q; want %q", got, want)
 	}
 	for _, want := range []string{
-		`<h2 id="fit-h" class="stamp">Parts that fit · demo-catalog</h2>`,
-		`<span class="seg g-vds"><span class="w">F150</span></span>`,
+		`<p class="stamp">This vehicle · demo-catalog</p>`,
+		// The catalog's make, in its own word, with the Maker's line to it.
+		`<span class="seg g-wmi"><span class="w">Ford</span></span>` + "\n" + `<span class="seg g-vds"><span class="w">F150</span></span>`,
 		`<span class="seg g-year"><span class="w">2015</span></span>`,
 		`<a class="ptype swap" href="/?from.vin=1FTEW1EG7FFA12345&amp;part.id=alternator">`,
 		`<a class="ptype swap" href="/?from.vin=1FTEW1EG7FFA12345&amp;part.id=mirror"><span class="nm">Door Mirror</span>`,
@@ -179,7 +180,7 @@ func TestPageFit(t *testing.T) {
 		on      *Handler // nil: the demo set's pages
 	}{
 		{pickup + "&part.id=alternator", "*Alternator 3", []string{
-			"DEMO-1001 | text: Catalog text only", "DEMO-1002 | text: Catalog text only", "DEMO-1003 | text: Catalog text only"}, nil},
+			"DEMO-1001 | text: Match the options yourself", "DEMO-1002 | text: Match the options yourself", "DEMO-1003 | text: Match the options yourself"}, nil},
 		{pickup + "&part.id=brake-rotor-front", "*Brake Rotor, Front 1", []string{"DEMO-1102 | checked: Checked · Drive Type"}, nil},
 		{pickup + "&part.id=brake-rotor-rear", "*Brake Rotor, Rear 1", []string{"DEMO-1111 | none: No conditions"}, nil},
 		// The CR-V's decode has no drive type to check an AWD fitment by.
@@ -191,7 +192,7 @@ func TestPageFit(t *testing.T) {
 		// year a doubt before the drive type's check.
 		{"/?from.vin=1FTEW1EG&part.id=brake-rotor-front", "*Brake Rotor, Front 1", []string{"DEMO-1102 | unchecked: Not checked · Model year | checked: Checked · Drive Type"}, nil},
 		{"/?from.vin=1D7RV1GT5AS123456&part.id=mirror", "*Door Mirror 2", []string{
-			"MR-1001 | text: Catalog text only | checked: Checked · Drive Type", "MR-1001 | text: Catalog text only"}, fixture},
+			"MR-1001 | text: Match the options yourself | checked: Checked · Drive Type", "MR-1001 | text: Match the options yourself"}, fixture},
 	} {
 		on := h
 		if c.on != nil {
@@ -247,7 +248,7 @@ func TestPageFit(t *testing.T) {
 		t.Fatalf("the first page of alternators: %q\n%s", got, s)
 	}
 	s = fitSection(t, paged, html.UnescapeString(next[1]))
-	if got := tags(s); !slices.Equal(got, []string{"DEMO-1003 | text: Catalog text only"}) || strings.Contains(s, "more-cands") {
+	if got := tags(s); !slices.Equal(got, []string{"DEMO-1003 | text: Match the options yourself"}) || strings.Contains(s, "more-cands") {
 		t.Errorf("the next page of alternators: %q\n%s", got, s)
 	}
 
@@ -393,5 +394,46 @@ func TestCatalogEntries(t *testing.T) {
 		if slices.Sort(want); !slices.Equal(got, want) {
 			t.Errorf("%s: %d pages of\n%s\nwant\n%s", c.query, pages, strings.Join(got, "\n"), strings.Join(want, "\n"))
 		}
+	}
+}
+
+// TestPageFitFacts: what the vehicle's block says of the vehicle (#366),
+// for matching a candidate's option text, which the page cannot check.
+// On the block's tape, with the model and the year, it draws what the
+// decode says of the vehicle that a catalog's options name, the Vehicle
+// card's rows but the model, and the VIN's characters 4 to 8, each with
+// its position, so "VIN G, 8th digit" is matched at a glance. The mark on
+// such a candidate says in plain words that the options are the reader's
+// to match. The block says it whatever is pressed, and before the names
+// and the candidates.
+func TestPageFitFacts(t *testing.T) {
+	h := demoPages(t, true)
+	const pickup = "/?from.vin=1FTEW1EG7FFA12345"
+	s := fitSection(t, h, pickup+"&part.id=alternator")
+	for _, want := range []string{
+		`<dl class="vfacts" aria-label="This vehicle, to match the options against">`,
+		`<div><dt>Body</dt><dd>Pickup</dd></div>`,
+		`<div><dt>Engine</dt><dd>3.5 L · 6 cyl · Gasoline</dd></div>`,
+		`<div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>`,
+		`<span class="mk text">Match the options yourself</span>`,
+	} {
+		if !strings.Contains(s, want) {
+			t.Errorf("the alternators lack %s\n%s", want, s)
+		}
+	}
+	if strings.Contains(s, "Catalog text only") || strings.Contains(s, `<dt>Model</dt>`) {
+		t.Errorf("the alternators keep the old mark, or repeat the model the strip names\n%s", s)
+	}
+	facts, names, cands := strings.Index(s, `class="vfacts"`), strings.Index(s, `<ol class="nametags"`), strings.Index(s, `<ol class="cands"`)
+	if facts < 0 || names < facts || cands < names {
+		t.Errorf("want the vehicle's facts, then its names, then the candidates; they are at %d, %d and %d\n%s", facts, names, cands, s)
+	}
+	// A sure name has no "i": its note opens from the name itself.
+	if !strings.Contains(s, `<button type="button" class="how" popovertarget="aka-`) || strings.Contains(s, `class="stems"`) {
+		t.Errorf("a sure name lacks the key over its line, or the lines still run under the block\n%s", s)
+	}
+	// Nothing pressed: the block says the same.
+	if s := fitSection(t, h, pickup); !strings.Contains(s, `<div><dt>Engine</dt><dd>3.5 L · 6 cyl · Gasoline</dd></div>`) {
+		t.Errorf("nothing pressed, the block does not say what the vehicle is\n%s", s)
 	}
 }

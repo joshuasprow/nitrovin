@@ -54,8 +54,8 @@ func TestFitCard(t *testing.T) {
 			if got := tb.at(); got != pressed {
 				t.Errorf("pressed, the tab is at %s; want %s", got, pressed)
 			}
-			if n, text := tb.count(`#fit .cand .mk`), tb.count(`#fit .cand .mk.text`); n != 3 || text != 3 || !strings.Contains(tb.html(`#fit .cand .mk`), "Catalog text only") {
-				t.Errorf("the alternators' marks: %d, %d catalog text only; want 3 of 3", n, text)
+			if n, text := tb.count(`#fit .cand .mk`), tb.count(`#fit .cand .mk.text`); n != 3 || text != 3 || !strings.Contains(tb.html(`#fit .cand .mk`), "Match the options yourself") {
+				t.Errorf("the alternators' marks: %d, %d the reader's to match; want 3 of 3", n, text)
 			}
 			if js && eval[bool](tb, `document.activeElement !== document.getElementById("pick-type")`) {
 				t.Errorf("the picker lost the focus to %s", eval[string](tb, `document.activeElement.outerHTML`))
