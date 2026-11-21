@@ -172,7 +172,7 @@ func TestPagePartMode(t *testing.T) {
 	// again, they close.
 	s = partSection(t, h, alternator+"DEMO-4001&fitment.number=DEMO-4001")
 	if !strings.Contains(s, `<a class="stk swap" id="stk-part" href="/?from.fitment.type=alternator&amp;from.fitment.number=DEMO-4001" aria-expanded="true" aria-controls="stock-rows">`) ||
-		!strings.Contains(s, `<div class="prows" id="stock-rows"><span class="notch" aria-hidden="true"></span>`) ||
+		!strings.Contains(s, `<div class="prows" id="stock-rows">`+"\n"+`<div class="receipt">`+"\n"+`<p class="receipt-head" aria-hidden="true"><span>Stock of</span> DEMO-4001</p>`) ||
 		!strings.Contains(s, `aria-label="Stock of DEMO-4001"`) ||
 		strings.Count(s, `<th scope="row" class="id">`) != 3 || !strings.Contains(s, "DEMO-S-06") || !strings.Contains(s, "DEMO-Y-05") || !strings.Contains(s, "DEMO-Y-06") {
 		t.Errorf("DEMO-4001's stock open: want its shelf row and its two yard vehicles under its tag\n%s", s)

@@ -55,7 +55,7 @@ The part type picker of #366 was the first.
 A page, "Swatches", holds five boards in two rows. The first row is what
 was made for the page: `Swatches-Page`, the materials in use and the marks
 and fittings made of them, each chip the stylesheet's own value; and
-`Swatches-Tried`, what was drawn and is not on the page, proposed or set
+`Swatches-Tried`, what was drawn and is not on the page, set
 aside, each naming where its drawing is kept. The second row is what was
 found for the page's look, none of it settled: `Swatches-Thermal`,
 `Swatches-Yard` and `Swatches-Vehicle`, a web search's findings of
@@ -72,7 +72,7 @@ The wireframes and texture frames that proposed the fitment slices (#320 to
 
 ## This snapshot
 
-Canvas version `1795230967-1763`, published on 2026-11-20.
+Canvas version `1795235535-8cd0`, published on 2026-11-20.
 
 ## Rebuilding a canvas from a snapshot
 

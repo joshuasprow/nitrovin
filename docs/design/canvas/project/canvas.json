@@ -7,7 +7,7 @@
       "title": "Dialogs, forms and inputs, dark",
       "w": 1280,
       "x": 5440,
-      "y": 5070
+      "y": 5940
     },
     "Controls.dc.html": {
       "h": 4950,
@@ -21,7 +21,7 @@
       "title": "Cards, brackets and lines, dark",
       "w": 1280,
       "x": 2720,
-      "y": 5070
+      "y": 5940
     },
     "Diagram.dc.html": {
       "h": 2360,
@@ -31,14 +31,14 @@
       "y": 0
     },
     "Fitment-Dark.dc.html": {
-      "h": 4900,
+      "h": 5820,
       "title": "The fitment card, dark",
       "w": 1280,
       "x": 4080,
-      "y": 5070
+      "y": 5940
     },
     "Fitment.dc.html": {
-      "h": 4900,
+      "h": 5820,
       "title": "The fitment card, light",
       "w": 1280,
       "x": 4080,
@@ -49,7 +49,7 @@
       "title": "The VIN input, both modes, dark",
       "w": 1280,
       "x": 0,
-      "y": 5070
+      "y": 5940
     },
     "Main.dc.html": {
       "h": 2100,
@@ -59,14 +59,14 @@
       "y": 0
     },
     "Materials-Dark.dc.html": {
-      "h": 1910,
+      "h": 3320,
       "title": "Materials and elevation, dark",
       "w": 1280,
       "x": 1360,
-      "y": 5070
+      "y": 5940
     },
     "Materials.dc.html": {
-      "h": 1910,
+      "h": 3320,
       "title": "Materials and elevation, light",
       "w": 1280,
       "x": 1360,
@@ -77,7 +77,7 @@
       "title": "States, dark",
       "w": 1280,
       "x": 6800,
-      "y": 5070
+      "y": 5940
     },
     "States.dc.html": {
       "h": 3890,
@@ -91,7 +91,7 @@
       "title": "Swatches: thermal paper",
       "w": 1280,
       "x": 0,
-      "y": 2180,
+      "y": 2230,
       "page": "swatches"
     },
     "Swatches-Yard.dc.html": {
@@ -99,7 +99,7 @@
       "title": "Swatches: the yard and the shelf",
       "w": 1280,
       "x": 1360,
-      "y": 2180,
+      "y": 2230,
       "page": "swatches"
     },
     "Swatches-Vehicle.dc.html": {
@@ -107,11 +107,11 @@
       "title": "Swatches: the vehicle and the garage",
       "w": 1280,
       "x": 2720,
-      "y": 2180,
+      "y": 2230,
       "page": "swatches"
     },
     "Swatches-Page.dc.html": {
-      "h": 1660,
+      "h": 1710,
       "page": "swatches",
       "title": "Swatches: in use",
       "w": 1280,
@@ -165,7 +165,7 @@
       "text": "Found: by a web search, none settled",
       "w": 240,
       "x": 0,
-      "y": 1880
+      "y": 1930
     }
   },
   "order": [

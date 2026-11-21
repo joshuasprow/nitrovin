@@ -95,7 +95,7 @@ type on the plate, which plate.js keeps as a recent part type. */}}
 {{end}}</dl>
 {{template "stock-strip" .Strip}}
 </div></div>
-{{with .Panel}}<div class="prows" id="stock-rows"><span class="notch" aria-hidden="true"></span>
+{{with .Panel}}<div class="prows" id="stock-rows">
 {{template "stock-cols" .}}
 </div>
 {{end}}</div>
@@ -309,7 +309,7 @@ own, which plate.js swaps in place (swap). */}}
 <span class="rails" aria-hidden="true"></span><span class="risers" aria-hidden="true"></span>
 {{end}}{{with .NoNumber}}<div class="nonum" id="stock-nonum" tabindex="-1">
 <h3 class="nonum-tape" id="{{.ID}}-h">{{$.NoNumberName}}</h3>
-<div class="stock-panel"><div class="stock-col">
+<div class="receipt"><div class="stock-col">
 <h4><span>{{.Heading}}</span>{{with .AsOf}} <span class="asof">{{.}}</span>{{end}}</h4>
 {{template "stock-table" .Rows}}
 {{with .More}}<p class="more-rows">The first {{$.NoNumber.Shown}} of {{$.NoNumber.Total}}. <a class="swap" href="{{.}}" data-focus="stock-nonum">Show all</a></p>
@@ -334,38 +334,44 @@ with none loaded it opens the Vocabularies dialog. */}}
 {{- end}}
 
 {{/* stock-rows is the open candidate's rows, an item of the candidates'
-list after its tag: the page's table panel, notched up at its tag, which
-on a wide page spans the row under the tag's (ui.css). A column for each
-kind of stock loaded, shelf and yard, each under its count and its
-sources' dates; on a narrow page the columns are one row that scrolls
-sideways, the region that takes the focus. */}}
+list after its tag: a receipt, a strip of thermal paper, which on a wide page is in
+the row under the tag's, under the tag (ui.css). A kind of stock loaded
+after another, shelf over yard, each under its count and its sources'
+dates. */}}
 {{define "stock-rows" -}}
-<li class="rows at{{.Col}}{{if .MoreWide}} more-wide{{end}}{{if .MoreNarrow}} more-narrow{{end}}" id="stock-rows"><span class="notch" aria-hidden="true"></span>
+<li class="rows at{{.Col}}{{if .MoreWide}} more-wide{{end}}{{if .MoreNarrow}} more-narrow{{end}}" id="stock-rows">
 {{template "stock-cols" .}}
 </li>
 {{- end}}
 
-{{/* stock-cols is a stock panel's columns, a kind of stock each, the
-region that takes the focus: a candidate's (stock-rows) or a part's
-(part-answer). */}}
+{{/* stock-cols is a receipt of stock (#376): what it is of at its head, a
+kind of stock after another, and the number again under a barcode at its
+foot. The head and the foot are print, hidden from a screen reader, which
+is told the same by the region's name; the region takes the focus. A
+candidate's (stock-rows) or a part's (part-answer). */}}
 {{define "stock-cols" -}}
-<div class="stock-cols{{if eq (len .Columns) 1}} one{{end}}" id="stock-region" role="region" aria-label="Stock of {{.Number}}" tabindex="0">
+<div class="receipt">
+<p class="receipt-head" aria-hidden="true"><span>Stock of</span> {{.Number}}</p>
+<div class="stock-cols" id="stock-region" role="region" aria-label="Stock of {{.Number}}" tabindex="0">
 {{range $col := .Columns}}<div class="stock-col">
 <h3 id="{{.ID}}-h"><span>{{.Heading}}</span>{{with .AsOf}} <span class="asof">{{.}}</span>{{end}}</h3>
 {{if .Rows}}{{template "stock-table" .Rows}}{{else}}<p class="stock-none">None.</p>{{end}}
 {{with .More}}<p class="more-rows">The first {{$col.Shown}} of {{$col.Total}}. <a class="swap" href="{{.}}" data-focus="stock-region">Show all</a></p>
 {{end}}</div>
 {{end}}</div>
+<p class="receipt-foot" aria-hidden="true">{{.Number}}</p>
+</div>
 {{- end}}
 
-{{/* stock-table is stock rows, one panel's table: a row's id in the
-monospace face, its location and its source's fields, each name muted
-before its value, and its notes under them: the retired number a shelf
-row is tagged with, and "This VIN" on the yard's vehicle the VIN on the
-plate is. */}}
+{{/* stock-table is stock rows, one kind's: a row's id led to its
+location, then its source's fields, each a name and a value in elements
+of their own, which the receipt leads one to the other; a separator between
+fields stays in the text, for a page with no stylesheet. Its notes are
+under them: the retired number a shelf row is tagged with, and "This VIN"
+on the yard's vehicle the VIN on the plate is. */}}
 {{define "stock-table" -}}
 <table><tbody>
-{{range .}}<tr><th scope="row" class="id">{{.ID}}</th><td>{{.Location}}</td><td>{{range $i, $f := .Fields}}{{if $i}} · {{end}}<span class="fk">{{.Name}}</span> {{.Value}}{{end}}{{with .Retired}}<span class="note">Tagged with a retired number, {{.}}</span>{{end}}{{if .ThisVIN}}<span class="note"><strong>This VIN</strong>: the vehicle being looked up</span>{{end}}</td></tr>
+{{range .}}<tr><th scope="row" class="id">{{.ID}}</th><td class="loc">{{.Location}}</td><td class="fds">{{range $i, $f := .Fields}}{{if $i}}<span class="fsep"> · </span>{{end}}<span class="fd"><span class="fk">{{.Name}}</span> <span class="fv">{{.Value}}</span></span>{{end}}{{with .Retired}}<span class="note">Tagged with a retired number, {{.}}</span>{{end}}{{if .ThisVIN}}<span class="note"><strong>This VIN</strong>: the vehicle being looked up</span>{{end}}</td></tr>
 {{end}}</tbody></table>
 {{- end}}
 

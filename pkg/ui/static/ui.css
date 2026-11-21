@@ -56,6 +56,9 @@ body { --bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint:
      tooth over it, the ink printed on it, and the patch around its eyelet. */
   --manila: url(paper.svg) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f);
   --on-manila: #2b2418; --manila-muted: #5c4c2e; --manila-patch: #c39a5c; --manila-bad: #a01414;
+  /* The thermal paper, the same in both colour schemes: a receipt roll's
+     coated stock and the printer's one near-black. */
+  --thermal: #f6f4ee; --on-thermal: #232229; --thermal-muted: #62606b;
   /* The page's side margin, which the region of the cards and the names' row
      reaches across on a narrow page. */
   --gutter: 1rem;
@@ -552,37 +555,70 @@ table.sum .skip { color: var(--muted); }
 .stk u { text-transform: none; letter-spacing: 0; }
 .stk:not(.none):active, .stk[aria-expanded=true] { transform: none; padding-top: 2px; background: var(--alu-in); border-bottom-width: 1px; box-shadow: var(--pressed); }
 .stk.none { cursor: auto; color: var(--manila-muted); text-shadow: none; background: none; border: 0; border-top: 2px dashed var(--manila-muted); box-shadow: none; }
-/* The open candidate's rows: the page's table panel, notched up at its
-   tag. On a wide page it is the row under the tag's, which the tags
-   after it fill first (dense); the rails run on down past it to the next
-   row of tags. Shelf and yard are its two equal halves. */
-.rows { position: relative; grid-column: 1 / -1; min-width: 0; margin-top: -24px; }
-.rows, .stock-panel, .prows, .vehicles { background: var(--card-bg); border: 2px solid var(--steel); border-radius: 4px; box-shadow: 0 3px 0 var(--steel-dark), 0 8px 16px rgb(0 0 0 / .25); }
-:is(.rows, .prows) .notch { position: absolute; top: -10px; left: calc(50% - 9px); width: 16px; height: 16px; background: var(--card-bg); border-left: 2px solid var(--steel); border-top: 2px solid var(--steel); transform: rotate(45deg); }
+/* The open candidate's rows: a receipt, a strip of thermal paper the tag's
+   width, fed out from under the tag's stock strip (#376). On a wide page it is in
+   the row under the tag's, which the tags after it fill first (dense),
+   under whichever tag is pressed; the rails run on down past it to the
+   next row of tags. */
+.rows { position: relative; grid-column: 1 / -1; min-width: 0; margin-top: -40px; }
+.vehicles { background: var(--card-bg); border: 2px solid var(--steel); border-radius: 4px; box-shadow: 0 3px 0 var(--steel-dark), 0 8px 16px rgb(0 0 0 / .25); }
 .rows::before, .rows::after { position: absolute; top: -18px; box-sizing: border-box; width: 5px; pointer-events: none; border: 0 solid var(--c-vds); border-left-width: 5px; filter: var(--stripe-lift); }
 .rows::before { z-index: 0; left: calc(var(--rail-x) - 24px); bottom: -16px; }
 .rows::after { z-index: 1; left: calc(var(--rail-x) + 9px - 24px); bottom: -27px; border-color: var(--c-year); }
-.stock-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.stock-cols.one { grid-template-columns: minmax(0, 1fr); }
+/* The receipt: 35 to 42 columns of the printer's one face, shaded where it
+   leaves the tag, torn at its foot, its shadow on the ground. Only what a
+   receipt printer does is drawn: double height, a reversed bar, a rule of
+   dashes, a name led by dots to its value, a barcode. Nothing typed into
+   a stock file changes case on it. "Strip" alone is the tag's stock strip,
+   the control (.stk); the paper is the receipt. */
+.receipt { position: relative; box-sizing: border-box; width: min(100%, 23rem); padding: 22px 16px 26px; color: var(--on-thermal); font: 13px/1.45 var(--cell-font);
+  background: linear-gradient(rgb(8 7 15 / .32), rgb(8 7 15 / .07) 6px, transparent 15px), linear-gradient(90deg, rgb(8 7 15 / .05), transparent 5% 95%, rgb(8 7 15 / .05)), var(--thermal);
+  filter: drop-shadow(0 2px 1px rgb(8 7 15 / .35)) drop-shadow(0 10px 12px rgb(8 7 15 / .28)); }
+.receipt::after { content: ""; position: absolute; top: 100%; left: 0; right: 0; height: 5px; background: conic-gradient(from -45deg at 50% 100%, var(--thermal) 90deg, transparent 0) 0 0 / 9px 100% repeat-x; }
+.receipt a { color: inherit; font-weight: 700; text-underline-offset: 3px; }
+/* The head: what the receipt is of, in double height. The foot: a barcode
+   over the number. The bars are a fixed pattern and encode nothing. */
+.receipt-head { margin: 4px 0 16px; text-align: center; font: 700 15px/1.2 var(--cell-font); letter-spacing: .08em; transform: scaleY(1.7); }
+.receipt-head span { text-transform: uppercase; }
+.receipt-foot { margin: 18px 0 0; padding-top: 46px; text-align: center; font-size: 12px; letter-spacing: .3em; overflow-wrap: anywhere;
+  background: repeating-linear-gradient(90deg, currentColor 0 2px, transparent 2px 3px, currentColor 3px 4px, transparent 4px 7px, currentColor 7px 10px, transparent 10px 11px, currentColor 11px 12px, transparent 12px 14px, currentColor 14px 16px, transparent 16px 19px) top center / 190px 40px no-repeat; }
 .stock-cols:focus-visible, .nonum:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
-.stock-col { min-width: 0; padding: 12px 16px 14px; }
-.stock-col + .stock-col { border-left: 1px solid var(--line); }
-.stock-col :is(h3, h4) { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 .75rem; margin: 0 0 6px; padding: 0; border: 0; font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase; }
-.stock-col .asof { font: 400 12px system-ui, sans-serif; letter-spacing: 0; text-transform: none; color: var(--muted); }
-.stock-col table { font-size: 14px; }
-.stock-col th, .stock-col td { padding: 7px 8px 7px 0; font-weight: 400; overflow-wrap: anywhere; border-bottom: 0; border-top: 1px solid var(--line); }
-.stock-col th.id { font: 700 13px var(--cell-font); white-space: nowrap; }
-.stock-col th + td { white-space: nowrap; }
-.stock-col .fk, .stock-none { color: var(--muted); }
-.stock-col .note { display: block; font-size: 12px; color: var(--muted); }
-.stock-col .note strong { color: var(--fg); }
-.stock-none, .more-rows { margin: 8px 0 0; font-size: 13px; }
+/* A kind of stock: its name and count on a reversed bar, its sources'
+   dates on the line under it, and a rule of dashes under both, dated or
+   not. */
+.stock-col { min-width: 0; }
+.stock-col + .stock-col { margin-top: 18px; }
+.stock-col :is(h3, h4) { display: block; margin: 0 0 6px; padding: 0 0 5px; border: 0; border-bottom: 1px dashed var(--on-thermal); font: 400 12px/1.5 var(--cell-font); letter-spacing: .04em; text-transform: none; }
+.stock-col :is(h3, h4) > span:first-child { display: block; padding: 3px 8px; font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--thermal); background: var(--on-thermal); }
+.stock-col .asof { display: block; padding-top: 3px; text-align: right; }
+/* A row: its id led by dots to its location, which takes a line of its own
+   when the two do not fit on one; then each field, its name led to its
+   value. A rule of dashes between rows. */
+.stock-col table, .stock-col tbody { display: block; font-size: 13px; }
+.stock-col tr { display: flex; flex-wrap: wrap; align-items: baseline; gap: 1px 0; padding: 7px 0 8px; border-top: 1px dashed var(--on-thermal); }
+.stock-col tr:first-child { padding-top: 2px; border-top: 0; }
+.stock-col th, .stock-col td { padding: 0; font-weight: 400; overflow-wrap: anywhere; border: 0; }
+.stock-col th.id { flex: 1 0 auto; max-width: 100%; display: flex; align-items: baseline; font: 700 15px var(--cell-font); letter-spacing: .04em; }
+.stock-col th.id::after, .stock-col .fk::after { content: ""; flex: 1; min-width: 12px; margin: 0 6px; border-bottom: 2px dotted currentColor; transform: translateY(-3px); }
+.stock-col td.loc { flex: 0 1 auto; max-width: 100%; margin-left: auto; text-align: right; }
+.stock-col td.fds { flex: 0 0 100%; }
+.stock-col .fsep { display: none; }
+.stock-col .fd { display: flex; align-items: baseline; }
+.stock-col .fk { flex: 1; display: flex; align-items: baseline; min-width: 35%; }
+.stock-col .fv { max-width: 64%; text-align: right; }
+.stock-col .note { display: block; margin-top: 4px; font-size: 12px; color: var(--thermal-muted); }
+.stock-col .note::before { content: "* "; }
+.stock-col .note strong { padding: 0 5px; color: var(--thermal); background: var(--on-thermal); }
+.stock-none { margin: 8px 0 2px; text-align: center; text-transform: uppercase; letter-spacing: .1em; }
+.stock-none::before { content: "*** "; }
+.stock-none::after { content: " ***"; }
+.more-rows { margin: 0; padding-top: 8px; text-align: center; border-top: 1px dashed var(--on-thermal); }
 /* The shelf rows with no number, after the candidates: a strip of label
-   tape, stuck on, naming the part type and the vehicle, over a panel. */
+   tape, stuck on, naming the part type and the vehicle, and a receipt
+   under it with no head and no foot. */
 .nonum { margin: 30px 0 0 22px; }
 .nonum-tape { display: flex; align-items: center; box-sizing: border-box; min-height: 2.6rem; margin: 0; padding: .3rem .7rem; color: var(--on-tape); font: 700 12px var(--cell-font); letter-spacing: .04em; text-transform: none; text-shadow: var(--tape-emboss);
   background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck); }
-.stock-panel { margin-top: 10px; }
 /* The rails' pieces, each 5px of pinstripe tape: the vehicle's bar 9px
    into the 40px above a row, the year's 20px, their drops 4.5px either
    side of the eyelet's centre. */
@@ -626,10 +662,11 @@ table.sum .skip { color: var(--muted); }
   .cands:not(:has(> .cand:nth-child(4 of .cand))) > .cand:nth-child(1 of .cand)::after { left: calc(50% + 2px); }
   .cands:not(:has(> .cand:nth-child(4 of .cand))) ~ .rails::before { left: calc(min(anchor(--fit-part center), anchor(--fit-first center)) - 7px); right: calc(min(anchor(--fit-part center), anchor(--fit-last center)) + 2px); }
   .cands:not(:has(> .cand:nth-child(4 of .cand))) ~ .rails::after { left: calc(min(anchor(--fit-part center), anchor(--fit-first center)) + 2px); right: calc(min(anchor(--fit-part center), anchor(--fit-last center)) - 7px); }
-  /* The rows' notch is at their tag's column; the rails run past them
-     when a row of tags follows. */
-  .rows.at1 .notch { left: calc((100% - 2 * var(--gap)) / 6 - 9px); }
-  .rows.at3 .notch { left: calc(100% - (100% - 2 * var(--gap)) / 6 - 9px); }
+  /* The receipt is its tag's width and under it, and no narrower than a
+     row of it reads at; the rails run past it when a row of tags follows. */
+  .rows .receipt { width: calc((100% - 2 * var(--gap)) / 3); min-width: min(100%, 19rem); }
+  .rows.at2 .receipt { margin-inline: auto; }
+  .rows.at3 .receipt { margin-left: auto; }
   .rows.more-wide::before, .rows.more-wide::after { content: ""; }
 }
 /* From the vehicle's block to the picker (.drops): the two lines leave
@@ -706,15 +743,8 @@ table.sum .skip { color: var(--muted); }
 .ptag .cand-in { min-height: 12rem; }
 .ptag dl { margin-bottom: .8rem; }
 .numtape .ptn { font: 700 12px var(--cell-font); }
-/* The open part's rows, under its tag, notched up at it: a column, shelf
-   over yard, a row's fields under its id and location. */
-.prows { position: relative; margin-top: 18px; }
-.prows .stock-cols { grid-template-columns: minmax(0, 1fr); }
-.prows .stock-col + .stock-col { border-left: 0; border-top: 1px solid var(--line); }
-.prows .stock-col table, .prows .stock-col tbody { display: block; }
-.prows .stock-col tr { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; padding: 7px 0; border-top: 1px solid var(--line); }
-.prows .stock-col :is(th, td) { padding: 0; border: 0; }
-.prows .stock-col td:last-child { grid-column: 1 / -1; }
+/* The open part's rows (.prows) are the same receipt, under the part's tag
+   and its width. */
 /* The vehicles: the page's own table panel. Each name in a vocabulary is
    a strip of label tape, stuck on, after the vocabulary's name. */
 .vehicles { min-width: 0; margin-left: 12px; padding: .25rem 1rem .75rem; overflow-x: auto; }
@@ -962,21 +992,9 @@ button.linkish:active { transform: none; box-shadow: none; }
   .cand:nth-last-child(1 of .cand)::after { right: calc(50% - 7px); }
   .rails::before { left: min(calc(anchor(--fit-part center) - 7px), calc(var(--tag) / 2 - 7px)); right: min(calc(anchor(--fit-part center) + 2px), calc(var(--tag) / 2 + 2px)); }
   .rails::after { left: min(calc(anchor(--fit-part center) + 2px), calc(var(--tag) / 2 + 2px)); right: min(calc(anchor(--fit-part center) - 7px), calc(var(--tag) / 2 - 7px)); }
-  /* The open candidate's rows are under its tag, in its column, and move
-     with it; shelf is over yard. */
-  .rows { grid-row: 2; grid-column: auto; margin-top: 16px; }
-  .rows .stock-cols:not(.one) { grid-template-columns: minmax(0, 1fr); }
-  .rows .stock-col + .stock-col { border-left: 0; border-top: 1px solid var(--line); }
-  /* A part's rows (part-number mode) are one row that scrolls sideways,
-     the next column showing at the edge. */
-  .stock-cols:not(.one) { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: calc(100% - 2.5rem); overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; }
-  .rows .stock-cols:not(.one) { grid-auto-flow: row; grid-auto-columns: auto; overflow-x: visible; }
-  .stock-col { scroll-snap-align: start; }
-  /* A row's id and location share a line, its fields under them. */
-  .stock-col table, .stock-col tbody { display: block; }
-  .stock-col tr { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; padding: 7px 0; border-top: 1px solid var(--line); }
-  .stock-col th, .stock-col td { padding: 0; border: 0; }
-  .stock-col td:last-child { grid-column: 1 / -1; }
+  /* The open candidate's receipt is under its tag, in its column, and
+     moves with it. */
+  .rows { grid-row: 2; grid-column: auto; margin-top: 0; }
   .ptype { font-size: 13px; padding-inline: 10px; }
   .ptgroups { grid-template-columns: minmax(0, 1fr); }
   .labels, .cells, .under { grid-template-columns: repeat(9, minmax(0, 1fr)); }

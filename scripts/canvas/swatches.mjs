@@ -29,7 +29,7 @@ const c = await launch();
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/\{\{/g, '{&#8203;{');
 const BOARDS = [
   { file: 'Swatches-Page', src: 'page', row: 0, title: 'Swatches: in use', intro: 'What the page is built from today, as pkg/ui/static/ui.css defines it and DESIGN.md describes it: its materials, then the marks and fittings made of them. A chip is the stylesheet\'s own value. These are settled.' },
-  { file: 'Swatches-Tried', src: 'tried', row: 0, title: 'Swatches: tried', intro: 'What was drawn for the page and is not on it: one material proposed and open, and those set aside when another was chosen. Each names where its drawing is kept. A chip is the drawing\'s own value.' },
+  { file: 'Swatches-Tried', src: 'tried', row: 0, title: 'Swatches: tried', intro: 'What was drawn for the page and is not on it: those set aside when another was chosen. Each names where its drawing is kept. A chip is the drawing\'s own value.' },
   { file: 'Swatches-Thermal', src: 'thermal', row: 1, found: true, title: 'Swatches: thermal paper', intro: 'Direct-thermal paper and its print, as a counter\'s receipts and a yard\'s part tags come off the printer.' },
   { file: 'Swatches-Yard', src: 'yard', row: 1, found: true, title: 'Swatches: the yard and the shelf', intro: 'What parts and vehicles are tagged, labelled and marked with in a yard, a warehouse and a shop.' },
   { file: 'Swatches-Vehicle', src: 'vehicle', row: 1, found: true, title: 'Swatches: the vehicle and the garage', intro: 'Surfaces of the vehicle itself, its labels and instruments, and of the garage around it.' },
