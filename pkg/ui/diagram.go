@@ -123,6 +123,10 @@ type akaTag struct {
 	Details                       string
 }
 
+// Doubt says the name has something unchecked, which its "i" marks: a
+// rule's name, or one whose model or years were not verified.
+func (t akaTag) Doubt() bool { return t.Rule || t.YearUnsure || t.ModelUnsure }
+
 // akaRow is one vocabulary's tag of "Also known as": its names, a line
 // each. A vocabulary with no name keeps its tag, which says so.
 type akaRow struct {

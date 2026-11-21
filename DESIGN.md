@@ -368,20 +368,22 @@ Under the cards, in the page's single column: the vehicle's block, its names
 in the vocabularies loaded, a picker of the part types the loaded catalog has
 for the vehicle, and the candidates of the one pressed.
 
-- **The vehicle's block** is label tape, stuck on, in two rows. On the
-  first, the catalog's model the decode reached and the year it asked with
-  ("any year" without one), each over its group's underline, at 52 % and
-  88 % of the width on a wide page and at the middle of each half on a
-  narrow one, where the lines from the Vehicle and Model year cards come
-  straight down into the tape. On the second, its stamp, "This vehicle ·"
-  and the catalog's name, then what the decode says of the vehicle that a
-  catalog's option text names, so a candidate's options are matched at a
-  glance: the Vehicle card's rows but the model, a small label over each
-  value, raised white on the tape, then "VIN 4–8", the Vehicle group's
-  five characters, each over the group's mark, as on the plate, with its
-  position under it. The page puts the two side by side and judges
-  nothing: it marks no candidate as the match. Narrow, the stamp and the
-  details are rows of their own.
+- **The vehicle's block** is one row of label tape, stuck on. From the
+  left: its stamp, "This vehicle ·" and the catalog's name; the catalog's
+  model the decode reached and the year it asked with ("any year" without
+  one), each over its group's underline; then what the decode says of the
+  vehicle that a catalog's option text names, so a candidate's options
+  are matched at a glance: the Vehicle card's rows but the model, a small
+  label over each value, raised white on the tape, then the Vehicle
+  group's five characters, each over the group's mark, as on the plate,
+  with its position under it and no label: the positions say what they
+  are. On a wide page the model is at 25 % of the width, under the Vehicle
+  card, whose line comes straight down into the tape; the year is at 42 %,
+  and the Model year's line steps left to it. The page puts the vehicle
+  and the candidates side by side and judges nothing: it marks no
+  candidate as the match. Narrow, the stamp is a row of its own, the model
+  and the year are at the middle of each half under it, and the details
+  are a third row.
 - **The names** ("Also known as") are manila tags, a tag a vocabulary, in
   one row under the block that scrolls sideways at every width; narrow, it
   reaches the window's right edge. The row starts 3 rem in from the
@@ -390,7 +392,8 @@ for the vehicle, and the candidates of the one pressed.
   row, that end fades over 48 px, and the fade goes when the row is
   scrolled to that end; a row that fits has none. It needs scroll-driven
   animation, and without it the row is cut square. A
-  tag is a card's stock, no wider than 72% of the window, so the next
+  tag is a card's stock, hung from the block's bottom edge by a wire
+  2 px wide from its eyelet, which moves along the edge with it. It is no wider than 72% of the window, so the next
   one shows. Across it, the vocabulary's name on a strip of
   label tape, with how many names it holds where it has several. Under
   that its words, with no labels: each stands over its group's colour,
@@ -398,16 +401,19 @@ for the vehicle, and the candidates of the one pressed.
   name of the tag shares it; then a line a name, the model over the
   Vehicle's and the years its mapping holds for, lighter, over the Model
   year's. A tag's names fill two lines, then a second column, so no tag
-  is taller than its strip, a make and two names. A dashed underline is a doubt, and the name's "i", a key of
-  label tape, opens a note that says it in words. A vocabulary with no
+  is taller than its strip, a make and two names. A dashed underline is a doubt, and only a name with
+  one has the "i", a key of label tape. Every name opens a note that says
+  in words how it was reached: a doubtful one from its "i", a sure one
+  from the name itself, which darkens under a pointer. A vocabulary with no
   name keeps a tag that says so, after those with names. Every vocabulary
   is on the page: nothing is stacked or kept behind a switch.
-- **From the strip to the picker**, at every width, each line comes down
-  out of the strip under its word, turns in the 30 px under the strip
-  (Vehicle's 9 px into it, Model year's 18 px), and runs along to drop
-  into the picker where its riser leaves it: 1.5 rem in from the picker's
-  left end, down the lane beside the names' tags. So the lines from the two cards reach the eyelets in one piece. With nothing pressed they end on the strip. They
-  need anchor positioning, as the risers do.
+- **From the block to the picker**, at every width, the two lines leave
+  the block's bottom edge 1.5 rem in from its left end and come straight
+  down the lane beside the names' tags, into the picker where its risers
+  leave it. The block joins what comes in over its words to what goes
+  out at its corner; nothing runs along under it, where the tags' wires
+  are. With nothing pressed no line leaves the block. They need anchor
+  positioning, as the risers do.
 - **Narrow, the cards move and the block does not**, so the two lines are
   carried between them by the row's own scroll (a scroll timeline; no
   script reads a position). In the row each line runs on from its card to

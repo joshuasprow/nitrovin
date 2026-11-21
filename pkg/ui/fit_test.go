@@ -413,7 +413,7 @@ func TestPageFitFacts(t *testing.T) {
 		`<dl class="vfacts" aria-label="This vehicle, to match the options against">`,
 		`<div><dt>Body</dt><dd>Pickup</dd></div>`,
 		`<div><dt>Engine</dt><dd>3.5 L · 6 cyl · Gasoline</dd></div>`,
-		`<div class="vchars"><dt>VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>`,
+		`<div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>`,
 		`<span class="mk text">Match the options yourself</span>`,
 	} {
 		if !strings.Contains(s, want) {
@@ -426,6 +426,10 @@ func TestPageFitFacts(t *testing.T) {
 	facts, names, cands := strings.Index(s, `class="vfacts"`), strings.Index(s, `<ol class="nametags"`), strings.Index(s, `<ol class="cands"`)
 	if facts < 0 || names < facts || cands < names {
 		t.Errorf("want the vehicle's facts, then its names, then the candidates; they are at %d, %d and %d\n%s", facts, names, cands, s)
+	}
+	// A sure name has no "i": its note opens from the name itself.
+	if !strings.Contains(s, `<button type="button" class="how" popovertarget="aka-`) || strings.Contains(s, `class="stems"`) {
+		t.Errorf("a sure name lacks the key over its line, or the lines still run under the block\n%s", s)
 	}
 	// Nothing pressed: the block says the same.
 	if s := fitSection(t, h, pickup); !strings.Contains(s, `<div><dt>Engine</dt><dd>3.5 L · 6 cyl · Gasoline</dd></div>`) {

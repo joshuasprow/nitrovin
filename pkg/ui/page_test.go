@@ -310,6 +310,9 @@ func TestBrowserDecode(t *testing.T) {
 		`<span class="nw g-vds" title="From the vehicle, positions 4–8">Ram 1500</span>`,
 		`<span class="nw g-vds unsure" title="From the vehicle, positions 4–8. Not checked: element 15">Ram 1500 4x4</span>`,
 		`<h3 class="nvoc">alpha</h3>` + "\n" + `<p class="none">No name for this one yet.</p>`,
+		// A name with something unchecked has the "i" key; a sure one
+		// opens its note from the name itself.
+		`<button type="button" class="info" popovertarget="aka-3" aria-label="How Dodge Ram 1500 4x4 was reached">i</button>`,
 		`&#34;Make&#34;: &#34;DODGE&#34;`,
 		`&#34;now&#34;: &#34;2026-11-10T00:00:00Z&#34;`,
 		`id="translation-json" data-copy="the translation&#39;s JSON">{` + "\n" + `  &#34;from&#34;: {`,

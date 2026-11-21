@@ -355,9 +355,9 @@ table.sum .skip { color: var(--muted); }
    their case: a vocabulary's entry is case-exact. A dashed underline is a
    doubt, and a name's note, behind its "i", a key of label tape as a
    tag's controls are, says it in words. */
-.aka { --lane: 3rem; position: relative; z-index: 3; margin: 30px 0 0 var(--lane); }
+.aka { --lane: 3rem; position: relative; z-index: 3; margin: 0 0 0 var(--lane); }
 .aka:has(.nametags:focus-visible) { outline: 3px solid var(--link); outline-offset: 2px; }
-.nametags { list-style: none; display: flex; align-items: stretch; gap: 10px; margin: 0; padding: 6px 4px 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding-inline: 4px; }
+.nametags { list-style: none; display: flex; align-items: stretch; gap: 10px; margin: 0; padding: 36px 4px 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding-inline: 4px; }
 .name { flex: none; scroll-snap-align: start; box-sizing: border-box; min-width: 11rem; max-width: min(40rem, 72vw); margin: 0; padding-bottom: .6rem; }
 .nametags:focus-visible { outline: 0; }
 .nrows { display: grid; grid-template-rows: repeat(2, auto); grid-auto-flow: column; grid-auto-columns: max-content; justify-content: start; align-content: start; gap: 0 1.4rem; }
@@ -367,6 +367,10 @@ table.sum .skip { color: var(--muted); }
   .nametags { mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline); }
 }
 @keyframes nt-fade { 0% { --nt-l: 0px; --nt-r: 48px; } 6% { --nt-l: 48px; --nt-r: 48px; } 94% { --nt-l: 48px; --nt-r: 48px; } 100% { --nt-l: 48px; --nt-r: 0px; } }
+.name::after { content: ""; position: absolute; left: calc(50% - 1px); top: -36px; width: 2px; height: 50px; background: var(--steel); pointer-events: none; }
+.nrow { position: relative; }
+.name .how { position: absolute; inset: 0; width: 100%; padding: 0; background: none; border: 0; box-shadow: none; cursor: pointer; }
+.name .how:hover, .name .how:focus-visible { background: rgb(0 0 0 / .07); }
 .name .nvoc { margin: -.2rem -.6rem .45rem; padding: .25rem .6rem; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border: 0; border-block: 1px solid var(--tape-edge); }
 .name .count::before { content: "· "; }
 .nw { width: fit-content; max-width: 100%; margin: 0 0 .3rem; font: 700 .95rem/1.25 var(--cell-font); letter-spacing: .04em; border-bottom: 3px solid var(--cm); }
@@ -386,26 +390,26 @@ table.sum .skip { color: var(--muted); }
 .note[popover] { box-sizing: border-box; max-width: min(30rem, calc(100vw - 2rem)); padding: .75rem 1rem; border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .4); }
 .note[popover]::backdrop { background: rgb(10 18 26 / .35); }
 
-/* The parts that fit (page.html's fit). The vehicle's block is a strip
-   of label tape in two rows: the model and the year, each on the line
-   that runs down from its card (.seg, the last 30px, into the tape), then
-   its stamp and what the decode says of the vehicle (.vfacts, below). No
-   line runs to the page's blank strips. */
+/* The parts that fit (page.html's fit). The vehicle's block is one row
+   of label tape: its stamp, the model and the year, each on the line
+   that comes down from its card (.seg, the last 30px, into the tape),
+   then what the decode says of the vehicle (.vfacts, below). Narrow, the
+   stamp and the facts are rows of their own. No line runs to the page's
+   blank strips. */
 .fit { --rail-x: 3px; position: relative; isolation: isolate; display: flow-root; margin: 0 16px; }
-.fitstrip { --lead: 30px; --prev: 0px; display: grid; grid-template-columns: 300fr 465fr 255fr; align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape);
+.fitstrip { --lead: 30px; --prev: 0px; display: grid; grid-template-columns: 170fr 170fr 170fr 510fr; align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape);
   background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck); }
 .fitstrip .stamp { align-self: stretch; display: flex; align-items: center; min-width: 0; margin: 0; padding: 0 .5rem 0 .7rem; border-right: 1px solid rgb(255 255 255 / .18); font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss); }
-.fitstrip { grid-template-rows: minmax(2.9rem, auto) auto; }
-.fitstrip .g-vds { --cm: #7db4ff; grid-row: 1; grid-column: 2; }
-.fitstrip .g-year { --cm: #ffb067; grid-row: 1; grid-column: 3; }
-.fitstrip .stamp { grid-row: 2; grid-column: 1; padding-block: .5rem; border-right: 0; border-top: 1px solid rgb(255 255 255 / .18); }
+.fitstrip .g-vds { --cm: #7db4ff; }
+.fitstrip .g-year { --cm: #ffb067; }
+.fitstrip .stamp { padding-block: .5rem; }
 /* The block's second row (#366): "This vehicle", the catalog, and what
    the decode says of the vehicle that a catalog's option text names, for
    the reader to match a candidate's options against. Raised white on the
    same tape, a small label over each value. The VIN's characters 4 to 8
    stand over the Vehicle group's mark, as on the plate, each with its
    position under it. */
-.vfacts { grid-row: 2; grid-column: 2 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 22px; min-width: 0; margin: 0; padding: .45rem .7rem; border-top: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss); }
+.vfacts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 22px; min-width: 0; margin: 0; padding: .45rem .7rem; border-left: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss); }
 .vfacts dt { font-size: 11px; line-height: 1.2; letter-spacing: .04em; text-transform: uppercase; color: #aeb7c0; text-shadow: none; }
 .vfacts dd { margin: 0; font: 900 .95rem/1.25 var(--cell-font); letter-spacing: .06em; }
 .vchars dd { display: flex; gap: 3px; }
@@ -625,28 +629,16 @@ table.sum .skip { color: var(--muted); }
   .rows.at3 .notch { left: calc(100% - (100% - 2 * var(--gap)) / 6 - 9px); }
   .rows.more-wide::before, .rows.more-wide::after { content: ""; }
 }
-/* From the strip of parts to the picker: each line comes down out of
-   the strip under its word (.stems), turns in the 30px under the strip,
-   the vehicle's 9px into it and the year's 18px, runs along (.runs) and
-   drops into the picker (.drops) where its riser leaves it. The words
-   are at --xv and --xy of the strip. The picker's middle is never past
-   the year's word, so the two runs never cross. */
-.stems, .runs, .drops, .carry { display: none; }
-.fit { --xv: 52.206%; --xy: 87.5%; }
+/* From the vehicle's block to the picker (.drops): the two lines leave
+   the block's bottom edge and come straight down the lane beside the
+   names' tags, into the picker where its risers leave it. */
+.drops, .carry { display: none; }
 .fitstrip { anchor-name: --fit-strip; }
 @supports (anchor-name: --a) {
-  .stems, .runs, .drops { display: inline; }
-  .stems::before, .stems::after, .runs::before, .runs::after, .drops::before, .drops::after { content: ""; position: absolute; z-index: -1; box-sizing: border-box; pointer-events: none; border: 0 solid var(--c-vds); filter: var(--stripe-lift); }
-  .stems::after, .runs::after, .drops::after { border-color: var(--c-year); }
-  .stems::before, .stems::after { top: calc(anchor(--fit-strip bottom) - 2px); width: 5px; border-left-width: 5px; }
-  .stems::before { left: calc(var(--xv) - 2.5px); bottom: calc(anchor(--fit-strip bottom) - 14px); }
-  .stems::after { left: calc(var(--xy) - 2.5px); bottom: calc(anchor(--fit-strip bottom) - 23px); }
-  .runs::before, .runs::after { height: 5px; border-top-width: 5px; }
-  .runs::before { top: calc(anchor(--fit-strip bottom) + 9px); left: min(calc(var(--xv) - 2.5px), calc(anchor(--fit-part center) - 7px)); right: min(calc(100% - var(--xv) - 2.5px), calc(anchor(--fit-part center) + 2px)); }
-  .runs::after { top: calc(anchor(--fit-strip bottom) + 18px); left: min(calc(var(--xy) - 2.5px), calc(anchor(--fit-part center) + 2px)); right: min(calc(100% - var(--xy) - 2.5px), calc(anchor(--fit-part center) - 7px)); }
-  .drops::before, .drops::after { bottom: calc(anchor(--fit-part top) - 2px); width: 5px; border-left-width: 5px; }
-  .drops::before { top: calc(anchor(--fit-strip bottom) + 9px); left: calc(anchor(--fit-part center) - 7px); }
-  .drops::after { top: calc(anchor(--fit-strip bottom) + 18px); left: calc(anchor(--fit-part center) + 2px); }
+  .drops { display: inline; }
+  .drops::before, .drops::after { content: ""; position: absolute; z-index: -1; box-sizing: border-box; pointer-events: none; border: 0 solid var(--c-vds); filter: var(--stripe-lift); top: calc(anchor(--fit-strip bottom) - 2px); bottom: calc(anchor(--fit-part top) - 2px); width: 5px; border-left-width: 5px; }
+  .drops::before { left: calc(anchor(--fit-part center) - 7px); }
+  .drops::after { left: calc(anchor(--fit-part center) + 2px); border-color: var(--c-year); }
 }
 @supports not (anchor-name: --a) {
   .rails, .risers { display: none; }
@@ -850,12 +842,9 @@ button.linkish:active { transform: none; box-shadow: none; }
      and details are rows of their own. The lines from the cards, which
      move, are carried to it (.carry, below). */
   .fit { margin: 0; }
-  .fit { --xv: 25%; --xy: 75%; }
   .fitstrip { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 30px; }
-  .fitstrip .g-vds { grid-column: 1; }
-  .fitstrip .g-year { grid-column: 2; }
-  .fitstrip .stamp { grid-column: 1 / -1; padding-block: .35rem; }
-  .vfacts { grid-row: 3; grid-column: 1 / -1; }
+  .fitstrip .stamp { grid-column: 1 / -1; padding-block: .35rem; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18); }
+  .vfacts { grid-column: 1 / -1; border-left: 0; border-top: 1px solid rgb(255 255 255 / .18); }
   .aka { margin-right: calc(-1 * var(--gutter)); }
   .nametags { padding-right: var(--gutter); scroll-padding-right: var(--gutter); }
   .fitstrip .seg::after { display: none; }

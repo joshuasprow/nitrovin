@@ -100,33 +100,34 @@ ol.years{list-style: none; margin: .15rem 0 0; padding: 0; font-size: 11px; colo
 ol.years li{display: inline; white-space: nowrap}
 ol.years li:not(:last-child)::after{content: " ·"; font-weight: 400; color: var(--manila-muted)}
 ol.years li.current{color: var(--on-manila); font-weight: 700}
-.aka{--lane: 3rem; position: relative; z-index: 3; margin: 30px 0 0 var(--lane)}
+.aka{--lane: 3rem; position: relative; z-index: 3; margin: 0 0 0 var(--lane)}
 .aka:has(.nametags:is(:focus-visible,.is-fv)){outline: 3px solid var(--link); outline-offset: 2px}
-.nametags{list-style: none; display: flex; align-items: stretch; gap: 10px; margin: 0; padding: 6px 4px 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding-inline: 4px}
+.nametags{list-style: none; display: flex; align-items: stretch; gap: 10px; margin: 0; padding: 36px 4px 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding-inline: 4px}
 .name{flex: none; scroll-snap-align: start; box-sizing: border-box; min-width: 11rem; max-width: min(40rem, 72vw); margin: 0; padding-bottom: .6rem}
 .nametags:is(:focus-visible,.is-fv){outline: 0}
 .nrows{display: grid; grid-template-rows: repeat(2, auto); grid-auto-flow: column; grid-auto-columns: max-content; justify-content: start; align-content: start; gap: 0 1.4rem}}
 .vp{@supports (animation-timeline: scroll()){
 .nametags{mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline)}}}
 .vp{
+.name::after{content: ""; position: absolute; left: calc(50% - 1px); top: -36px; width: 2px; height: 50px; background: var(--steel); pointer-events: none}
+.nrow{position: relative}
+.name .how{position: absolute; inset: 0; width: 100%; padding: 0; background: none; border: 0; box-shadow: none; cursor: pointer}
+.name .how:is(:hover,.is-hover), .name .how:is(:focus-visible,.is-fv){background: rgb(0 0 0 / .07)}
 .name .nvoc{margin: -.2rem -.6rem .45rem; padding: .25rem .6rem; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border: 0; border-block: 1px solid var(--tape-edge)}
 .nw{width: fit-content; max-width: 100%; margin: 0 0 .3rem; font: 700 .95rem/1.25 var(--cell-font); letter-spacing: .04em; border-bottom: 3px solid var(--cm)}
 .nrow{display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; margin: 0 0 .3rem}
 .nrow .nw{margin: 0}
 .nrow .g-year{font-weight: 400; font-size: .85rem}
-.name .info{align-self: center; width: 1.3rem; height: 1.3rem; padding: 0; font: 700 11px/1 var(--cell-font); letter-spacing: 0; text-transform: none; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-radius: 2px; box-shadow: var(--lift-raised)}
-.name .info:is(:active,.is-active){transform: translateY(2px); background: var(--tape-in); box-shadow: var(--pressed)}
 .seg{position: relative; align-self: stretch; display: flex; align-items: center; justify-content: center; padding: .35rem .6rem; text-align: center; min-width: 0}
 .seg .w{font: 900 1.05rem/1.2 var(--cell-font); letter-spacing: .08em; text-shadow: var(--tape-emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere}
 .seg::after{content: ""; position: absolute; left: calc(50% - 2.5px); top: calc(-1px - var(--lead) - var(--prev)); height: calc(var(--lead) + var(--prev) + 1px); border-left: 5px solid var(--c); filter: var(--stripe-lift)}
 .fit{--rail-x: 3px; position: relative; isolation: isolate; display: flow-root; margin: 0 16px}
-.fitstrip{--lead: 30px; --prev: 0px; display: grid; grid-template-columns: 300fr 465fr 255fr; align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck)}
+.fitstrip{--lead: 30px; --prev: 0px; display: grid; grid-template-columns: 170fr 170fr 170fr 510fr; align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck)}
 .fitstrip .stamp{align-self: stretch; display: flex; align-items: center; min-width: 0; margin: 0; padding: 0 .5rem 0 .7rem; border-right: 1px solid rgb(255 255 255 / .18); font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss)}
-.fitstrip{grid-template-rows: minmax(2.9rem, auto) auto}
-.fitstrip .g-vds{--cm: #7db4ff; grid-row: 1; grid-column: 2}
-.fitstrip .g-year{--cm: #ffb067; grid-row: 1; grid-column: 3}
-.fitstrip .stamp{grid-row: 2; grid-column: 1; padding-block: .5rem; border-right: 0; border-top: 1px solid rgb(255 255 255 / .18)}
-.vfacts{grid-row: 2; grid-column: 2 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 22px; min-width: 0; margin: 0; padding: .45rem .7rem; border-top: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss)}
+.fitstrip .g-vds{--cm: #7db4ff}
+.fitstrip .g-year{--cm: #ffb067}
+.fitstrip .stamp{padding-block: .5rem}
+.vfacts{display: flex; flex-wrap: wrap; align-items: center; gap: 4px 22px; min-width: 0; margin: 0; padding: .45rem .7rem; border-left: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss)}
 .vfacts dt{font-size: 11px; line-height: 1.2; letter-spacing: .04em; text-transform: uppercase; color: #aeb7c0; text-shadow: none}
 .vfacts dd{margin: 0; font: 900 .95rem/1.25 var(--cell-font); letter-spacing: .06em}
 .vchars dd{display: flex; gap: 3px}
@@ -135,8 +136,7 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 .vc small{font: 400 10px/1.3 var(--cell-font); letter-spacing: 0; color: #aeb7c0; text-shadow: none}
 .ptgroups:has(> .ptgroup:only-child:not(:has(.pthead))){grid-template-columns: minmax(0, 1fr)}
 :is(.fit, .part, .choice) .blank{display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; box-sizing: border-box; min-height: 46px; margin: 30px 0 0; padding: .5rem .75rem; color: var(--muted); border: 3px dashed var(--faint); border-radius: 2px}
-.stems, .runs, .drops, .carry{display: none}
-.fit{--xv: 52.206%; --xy: 87.5%}
+.drops, .carry{display: none}
 .fitstrip{anchor-name: --fit-strip}}
 :is(.vp-tab,.vp-phone){
 .leaders, .joins{display: none}
@@ -145,12 +145,9 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 .cards{grid-template-columns: repeat(6, var(--col)); width: max-content; padding: 0}
 .seg .w{font-size: .9rem; letter-spacing: .04em}
 .fit{margin: 0}
-.fit{--xv: 25%; --xy: 75%}
 .fitstrip{grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 30px}
-.fitstrip .g-vds{grid-column: 1}
-.fitstrip .g-year{grid-column: 2}
-.fitstrip .stamp{grid-column: 1 / -1; padding-block: .35rem}
-.vfacts{grid-row: 3; grid-column: 1 / -1}
+.fitstrip .stamp{grid-column: 1 / -1; padding-block: .35rem; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18)}
+.vfacts{grid-column: 1 / -1; border-left: 0; border-top: 1px solid rgb(255 255 255 / .18)}
 .aka{margin-right: calc(-1 * var(--gutter))}
 .nametags{padding-right: var(--gutter); scroll-padding-right: var(--gutter)}
 .fitstrip .seg::after{display: none}}
@@ -217,7 +214,7 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 
 </style>
 </helmet>
-<div class="root sheet" data-scheme="dark" style="width: 1280px; height: 2430px; color: var(--fg); background: var(--bg)">
+<div class="root sheet" data-scheme="dark" style="width: 1280px; height: 2340px; color: var(--fg); background: var(--bg)">
 <div><h1 class="sh-h1">Cards, brackets and lines</h1><p class="sh-intro">Each card is a manila tag hung by its eyelet from its group's line. A row is a label over its value, both left-aligned. Under the cards, the vehicle's block of label tape takes the Vehicle and Model year lines and says what the vehicle is; its names hang under it as manila tags, a vocabulary each, in a row that scrolls sideways.</p></div>
 <section>
 <p class="sh-cap">Decoded <span>Brackets, leader lines, cards, join lines, the vehicle's block and its names.</span></p>
@@ -328,20 +325,20 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 </section>
 </div>
 <svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-<path class="g-vds" pathLength="1" d="M255 0V9H532.5V28" vector-effect="non-scaling-stroke"></path>
-<path class="g-year" pathLength="1" d="M595 0V18H892.5V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-vds" pathLength="1" d="M255 0V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-year" pathLength="1" d="M595 0V14H425V28" vector-effect="non-scaling-stroke"></path>
 </svg>
 </div>
 <section class="fit" id="fit" aria-labelledby="fit-h">
 <span class="carry" aria-hidden="true"><span></span><span></span><span></span></span>
 <div class="fitstrip">
+<p class="stamp">This vehicle · demo-catalog</p>
 <span class="seg g-vds"><span class="w">F150</span></span>
 <span class="seg g-year"><span class="w">2015</span></span>
-<p class="stamp">This vehicle · demo-catalog</p>
 <dl class="vfacts" aria-label="This vehicle, to match the options against">
 <div><dt>Body</dt><dd>Pickup</dd></div>
 <div><dt>Engine</dt><dd>3.5 L · 6 cyl · Gasoline</dd></div>
-<div class="vchars"><dt>VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>
+<div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>
 </dl>
 </div>
 <section class="aka done" id="aka" aria-labelledby="aka-h">
@@ -350,7 +347,7 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 <li class="card done name">
 <h3 class="nvoc">demo-vehicles</h3>
 <p class="nw g-wmi">Ford</p>
-<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="info" aria-label="How Ford F150 was reached" type="button">i</button></p>
+<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="how" aria-label="How Ford F150 was reached" type="button"></button></p>
 </div></li>
 </ol>
 </section>
@@ -568,20 +565,20 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 </section>
 </div>
 <svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-<path class="g-vds" pathLength="1" d="M255 0V9H532.5V28" vector-effect="non-scaling-stroke"></path>
-<path class="g-year" pathLength="1" d="M595 0V18H892.5V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-vds" pathLength="1" d="M255 0V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-year" pathLength="1" d="M595 0V14H425V28" vector-effect="non-scaling-stroke"></path>
 </svg>
 </div>
 <section class="fit" id="fit" aria-labelledby="fit-h">
 <span class="carry" aria-hidden="true"><span></span><span></span><span></span></span>
 <div class="fitstrip">
+<p class="stamp">This vehicle · demo-catalog</p>
 <span class="seg g-vds"><span class="w">F150</span></span>
 <span class="seg g-year"><span class="w">2015</span></span>
-<p class="stamp">This vehicle · demo-catalog</p>
 <dl class="vfacts" aria-label="This vehicle, to match the options against">
 <div><dt>Body</dt><dd>Pickup</dd></div>
 <div><dt>Engine</dt><dd>3.5 L · 6 cyl · Gasoline</dd></div>
-<div class="vchars"><dt>VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>
+<div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>
 </dl>
 </div>
 <section class="aka done" id="aka" aria-labelledby="aka-h">
@@ -590,7 +587,7 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 <li class="card done name">
 <h3 class="nvoc">demo-vehicles</h3>
 <p class="nw g-wmi">Ford</p>
-<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="info" aria-label="How Ford F150 was reached" type="button">i</button></p>
+<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="how" aria-label="How Ford F150 was reached" type="button"></button></p>
 </div></li>
 </ol>
 </section>
@@ -709,20 +706,20 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 </section>
 </div>
 <svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-<path class="g-vds" pathLength="1" d="M255 0V9H532.5V28" vector-effect="non-scaling-stroke"></path>
-<path class="g-year" pathLength="1" d="M595 0V18H892.5V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-vds" pathLength="1" d="M255 0V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-year" pathLength="1" d="M595 0V14H425V28" vector-effect="non-scaling-stroke"></path>
 </svg>
 </div>
 <section class="fit" id="fit" aria-labelledby="fit-h">
 <span class="carry" aria-hidden="true"><span></span><span></span><span></span></span>
 <div class="fitstrip">
+<p class="stamp">This vehicle · demo-catalog</p>
 <span class="seg g-vds"><span class="w">F150</span></span>
 <span class="seg g-year"><span class="w">2015</span></span>
-<p class="stamp">This vehicle · demo-catalog</p>
 <dl class="vfacts" aria-label="This vehicle, to match the options against">
 <div><dt>Body</dt><dd>Pickup</dd></div>
 <div><dt>Engine</dt><dd>3.5 L · 6 cyl · Gasoline</dd></div>
-<div class="vchars"><dt>VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>
+<div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>
 </dl>
 </div>
 <section class="aka done" id="aka" aria-labelledby="aka-h">
@@ -731,7 +728,7 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 <li class="card done name">
 <h3 class="nvoc">demo-vehicles</h3>
 <p class="nw g-wmi">Ford</p>
-<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="info" aria-label="How Ford F150 was reached" type="button">i</button></p>
+<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="how" aria-label="How Ford F150 was reached" type="button"></button></p>
 </div></li>
 </ol>
 </section>
@@ -744,7 +741,7 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2430}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2340}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};

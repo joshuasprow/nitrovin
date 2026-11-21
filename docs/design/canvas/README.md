@@ -46,7 +46,7 @@ way from a prototype running on a throwaway branch, which its row's title
 names by issue. When the proposal is built its frames are folded into the
 six and the page goes. The part type picker of #366 was the first, and this folder's
 history holds its frames. Each proposal has a page of its own, named for
-what it proposes: "Proposal: shelf list" holds `Proposal-Shelf-Receipt`. Under the six frames' dark row sit three swatch
+what it proposes: "Proposal: shelf list" holds `Proposal-Shelf-Receipt`. A page named "Swatches" holds three swatch
 sheets, `Swatches-*`, drawn by hand. A page with one empty artboard,
 `Artboard-vknl`, is on the canvas too.
 
@@ -55,7 +55,7 @@ The wireframes and texture frames that proposed the fitment slices (#320 to
 
 ## This snapshot
 
-Canvas version `1795229446-2dcd`, published on 2026-11-20.
+Canvas version `1795230279-8a94`, published on 2026-11-20.
 
 ## Rebuilding a canvas from a snapshot
 
