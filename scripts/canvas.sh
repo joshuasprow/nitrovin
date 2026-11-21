@@ -8,8 +8,21 @@
 #
 #   scripts/canvas.sh [<frame>...]     # Main Materials Diagram Fitment Controls States
 #   scripts/canvas.sh --check [<frame>...]
+#   scripts/canvas.sh --import <dir>   # <dir>: the canvas as read down
+#   scripts/canvas.sh --publish <dir>  # <dir>: the canvas as read down, just now
 #
-# --check writes no frame. It builds each one, compares it with the committed
+# The snapshot holds two of the canvas's pages and no other: the page as
+# built ("nitrovin UI") and the swatch sheets ("Swatches"). A proposal's
+# page and a page drawn by hand stay on the canvas. --import is the only
+# way a read-down reaches the snapshot: it copies those two pages' frames
+# in, removes any frame beside them, and cuts the index to them. --publish
+# is the only source of what goes back: it writes build/canvas-publish, the
+# built frames and the read's whole index with their heights set, so that a
+# publish changes no key but a built frame's. Neither builds a frame or
+# starts a server (scripts/canvas/snapshot.mjs).
+#
+# --check writes no frame. It first fails naming anything the snapshot holds
+# off those two pages. Then it builds each frame, compares it with the committed
 # file, and exits 1 naming those that differ, each left in build/canvas as
 # built. A frame's height, the data month and the release's hash are left out
 # of the comparison: fonts and go.mod's pin set them, not the page.
@@ -24,13 +37,20 @@
 #   build/canvas/<frame>[-Dark].{html,png}              a preview and a screenshot of each
 #
 # It does not publish. Publishing follows AGENTS.md's loop: read the canvas
-# down first, never force. The two uploaded images' addresses are fixed in
+# down first, --import, build, --publish, send build/canvas-publish, never
+# force. The two uploaded images' addresses are fixed in
 # scripts/canvas/engine.mjs and resolve only on the maintainer's canvas.
 #
 # NITROVIN_CANVAS_PORT (default 8791) is the demo server's port; the bare
 # server takes the next but one. Needs node (mise) and Chrome.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+case "${1:-}" in
+  --import | --publish)
+    [ $# -eq 2 ] || { echo "usage: scripts/canvas.sh $1 <dir>" >&2; exit 2; }
+    exec node scripts/canvas/snapshot.mjs "${1#--}" "$2" ;;
+  --check) node scripts/canvas/snapshot.mjs lint ;;
+esac
 port="${NITROVIN_CANVAS_PORT:-8791}"
 bare=$((port + 2))
 scripts/sw.sh

@@ -5,6 +5,10 @@
 # pull request's page, in the runner's headless Chrome, and fails naming
 # the ones that differ from the committed files.
 #
+# Before it builds, the script fails on anything the snapshot holds beside
+# the canvas's two allowlisted pages, the page as built and the swatch
+# sheets: a proposal's frame, or an index that names another page.
+#
 # A frame's height, the data month and the release's hash are left out of
 # the comparison: the runner's fonts and go.mod's pin set them. So the
 # refresh's bump of the month does not run this, and does not fail it.
