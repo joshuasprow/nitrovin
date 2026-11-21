@@ -1,5 +1,6 @@
-// Builds the canvas's swatch boards, the page "Swatches": the materials the
-// page is built from, then materials found for its look, none of those settled. One board per file of
+// Builds the canvas's swatch boards, the page "Swatches", in two rows: what
+// was made for the page, in use and tried, over materials found for its look,
+// none of those settled. One board per file of
 // scripts/canvas/swatches/, a card per material: a chip in its colours, where
 // it is seen, its texture, its colours and the sites it was found on.
 //
@@ -23,10 +24,11 @@ const c = await launch();
 // ---- the swatch boards: one per research file ----------------------------
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/\{\{/g, '{&#8203;{');
 const BOARDS = [
-  { file: 'Swatches-Page', src: 'page', title: 'Swatches: the page\'s own materials', settled: true, intro: 'What the page is built from today, as pkg/ui/static/ui.css defines it and DESIGN.md describes it. A chip is the stylesheet\'s own value. These are settled.' },
-  { file: 'Swatches-Thermal', src: 'thermal', title: 'Swatches: thermal paper', intro: 'Direct-thermal paper and its print, as a counter\'s receipts and a yard\'s part tags come off the printer.' },
-  { file: 'Swatches-Yard', src: 'yard', title: 'Swatches: the yard and the shelf', intro: 'What parts and vehicles are tagged, labelled and marked with in a yard, a warehouse and a shop.' },
-  { file: 'Swatches-Vehicle', src: 'vehicle', title: 'Swatches: the vehicle and the garage', intro: 'Surfaces of the vehicle itself, its labels and instruments, and of the garage around it.' },
+  { file: 'Swatches-Page', src: 'page', row: 0, title: 'Swatches: in use', intro: 'What the page is built from today, as pkg/ui/static/ui.css defines it and DESIGN.md describes it: its materials, then the marks and fittings made of them. A chip is the stylesheet\'s own value. These are settled.' },
+  { file: 'Swatches-Tried', src: 'tried', row: 0, title: 'Swatches: tried', intro: 'What was drawn for the page and is not on it: one material proposed and open, and those set aside when another was chosen. Each names where its drawing is kept. A chip is the drawing\'s own value.' },
+  { file: 'Swatches-Thermal', src: 'thermal', row: 1, found: true, title: 'Swatches: thermal paper', intro: 'Direct-thermal paper and its print, as a counter\'s receipts and a yard\'s part tags come off the printer.' },
+  { file: 'Swatches-Yard', src: 'yard', row: 1, found: true, title: 'Swatches: the yard and the shelf', intro: 'What parts and vehicles are tagged, labelled and marked with in a yard, a warehouse and a shop.' },
+  { file: 'Swatches-Vehicle', src: 'vehicle', row: 1, found: true, title: 'Swatches: the vehicle and the garage', intro: 'Surfaces of the vehicle itself, its labels and instruments, and of the garage around it.' },
 ];
 const FOUND = " Found by a web search on 2026-11-20. Dimensions and conventions are the sources'; every colour is an estimate, since no source publishes one, and no recipe here is settled.";
 // The addresses of the page's two textures on the maintainer's canvas, as scripts/canvas/engine.mjs has them.
@@ -44,7 +46,12 @@ for (const b of BOARDS) {
     if (!bg || /url\((?!\/_blob\/[0-9a-f]{32}\))|[<>{}";]/.test(bg)) bg = base;
     css += `.sw-${i} .chip{background:${bg};color:${ink}}\n`;
     const dot = (h, l) => h ? `<span class="hx"><i style="background: ${h}"></i>${l} ${h.toLowerCase()}</span>` : '';
-    const hosts = [...new Set((s.sources || []).map((u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (_) { return null; } }).filter(Boolean))];
+    // A source is a link to the page itself, named by its site; a second page of one site is numbered.
+    const seen = {};
+    const links = (s.sources || []).filter((u) => /^https?:\/\/[^\s"<>]+$/.test(u)).map((u) => {
+      const h = new URL(u).hostname.replace(/^www\./, '').toLowerCase(); seen[h] = (seen[h] || 0) + 1;
+      return `<a href="${esc(u)}">${esc(h)}${seen[h] > 1 ? ' (' + seen[h] + ')' : ''}</a>`;
+    });
     cards += `<article class="sw sw-${i}">
 <div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span>${accent ? `<i style="background: ${accent}"></i>` : ''}</div>
 <h3>${esc(s.name)}</h3>
@@ -52,7 +59,7 @@ for (const b of BOARDS) {
 <p>${esc(s.where_seen)}</p>
 <p class="tx">${esc(s.texture)}</p>
 <p class="hxs">${dot(base, 'base')}${dot(ink, 'ink')}${dot(accent, 'accent')}</p>
-<p class="src">${s.in ? 'ui.css: ' + esc(s.in) : hosts.map(esc).join(' · ')}</p>
+<p class="src">${s.in ? 'ui.css: ' + esc(s.in) : s.from ? esc(s.from) : links.join(' · ')}</p>
 </article>\n`;
   });
   const w = 1280;
@@ -75,9 +82,10 @@ for (const b of BOARDS) {
 .sw .hxs{display:flex;flex-wrap:wrap;gap:2px 10px;margin-top:2px;font:11px/1.5 ui-monospace,monospace}
 .sw .hx i{display:inline-block;width:9px;height:9px;margin-right:4px;border:1px solid #47515c;vertical-align:-1px}
 .sw .src{font-size:11px;overflow-wrap:anywhere}
+.sw .src a{color:#0b4fa8}.sw .src a:hover{color:#14181d}
 ${css}`;
   const body = (h) => `<div class="swb" style="height: ${h}">
-<div><h1>${esc(b.title)}</h1><p class="intro">${esc(b.intro)}${b.settled ? '' : FOUND}</p></div>
+<div><h1>${esc(b.title)}</h1><p class="intro">${esc(b.intro)}${b.found ? FOUND : ''}</p></div>
 <div class="grid">
 ${cards}</div>
 </div>`;
@@ -122,11 +130,18 @@ await c.close();
 const PAGE = { id: 'swatches', name: 'Swatches' };
 const path = `${OUT}/canvas.json`, idx = JSON.parse(readFileSync(path, 'utf8'));
 if (!idx.pages.some((p) => p.id === PAGE.id)) idx.pages.push(PAGE);
-swatches.forEach((s, i) => {
+// Two rows: what was made, in use and tried, over what was found.
+const rowOf = (r) => swatches.filter((s) => s.row === r);
+const foundY = Math.max(...rowOf(0).map((s) => s.h)) + 520;
+for (const r of [0, 1]) rowOf(r).forEach((s, i) => {
   const k = `${s.file}.dc.html`;
-  idx.boards[k] = { ...(idx.boards[k] || {}), h: s.h, page: PAGE.id, title: s.title, w: s.w, x: i * 1360, y: 0 };
+  idx.boards[k] = { ...(idx.boards[k] || {}), h: s.h, page: PAGE.id, title: s.title, w: s.w, x: i * 1360, y: r ? foundY : 0 };
   if (!idx.order.includes(k)) idx.order.push(k);
 });
-idx.notes.swatches = { ...(idx.notes.swatches || {}), kind: 'title1', maxW: swatches.length * 1360 - 80, page: PAGE.id, text: 'Swatches: the page\'s materials, and materials found', w: 240, x: 0, y: -300 };
-idx.noteOrder = idx.noteOrder || []; if (!idx.noteOrder.includes('swatches')) idx.noteOrder.push('swatches');
+const title = (id, text, n, y) => {
+  idx.notes[id] = { ...(idx.notes[id] || {}), kind: 'title1', maxW: n * 1360 - 80, page: PAGE.id, text, w: 240, x: 0, y };
+  idx.noteOrder = idx.noteOrder || []; if (!idx.noteOrder.includes(id)) idx.noteOrder.push(id);
+};
+title('swatches', 'Made: in use, and tried', rowOf(0).length, -300);
+title('swatches-found', 'Found: by a web search, none settled', rowOf(1).length, foundY - 300);
 writeFileSync(path, JSON.stringify(idx, null, 2) + '\n');

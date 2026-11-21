@@ -52,15 +52,18 @@ branch, and that branch, not this folder, is their record. When the
 proposal is built its frames are folded into the six and the page goes.
 The part type picker of #366 was the first.
 
-A page, "Swatches", holds four boards. `Swatches-Page` is the page's own
-materials, settled, each chip the stylesheet's own value. `Swatches-Thermal`,
-`Swatches-Yard` and `Swatches-Vehicle` are materials found for the page's
-look, none of them settled. `scripts/canvas/swatches.mjs` builds all four
-from the files of `scripts/canvas/swatches/`; the three are a web search's
-findings of 2026-11-20. A
-swatch's dimensions and conventions are its sources', which it names; its
-colours are estimates, since no source publishes one. `scripts/canvas.sh`
-does not build these boards and leaves them alone.
+A page, "Swatches", holds five boards in two rows. The first row is what
+was made for the page: `Swatches-Page`, the materials in use and the marks
+and fittings made of them, each chip the stylesheet's own value; and
+`Swatches-Tried`, what was drawn and is not on the page, proposed or set
+aside, each naming where its drawing is kept. The second row is what was
+found for the page's look, none of it settled: `Swatches-Thermal`,
+`Swatches-Yard` and `Swatches-Vehicle`, a web search's findings of
+2026-11-20. A found swatch's dimensions and conventions are its sources',
+each linked by its full address; its colours are estimates, since no source
+publishes one. `scripts/canvas/swatches.mjs` builds all five from the files
+of `scripts/canvas/swatches/`. `scripts/canvas.sh` does not build these
+boards and leaves them alone.
 
 The wireframes and texture frames that proposed the fitment slices (#320 to
 #325) are removed from the canvas. This folder's history holds them.

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Swatches: the page's own materials</title>
+<title>Swatches: in use</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -28,6 +28,7 @@ body{margin:0}
 .sw .hxs{display:flex;flex-wrap:wrap;gap:2px 10px;margin-top:2px;font:11px/1.5 ui-monospace,monospace}
 .sw .hx i{display:inline-block;width:9px;height:9px;margin-right:4px;border:1px solid #47515c;vertical-align:-1px}
 .sw .src{font-size:11px;overflow-wrap:anywhere}
+.sw .src a{color:#0b4fa8}.sw .src a:hover{color:#14181d}
 .sw-0 .chip{background:url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0 / 600px 120px, linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc);color:#232930}
 .sw-1 .chip{background:repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .12) 2px 3px), linear-gradient(#8e99a3, #aab4bd);color:#232930}
 .sw-2 .chip{background:repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .07) 2px 3px), url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0 / 600px 120px, linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc);color:#232930}
@@ -35,12 +36,17 @@ body{margin:0}
 .sw-4 .chip{background:repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .2) 2px 3px), linear-gradient(#0c0e10, #1d2125);color:#f6f8fa}
 .sw-5 .chip{background:url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f);color:#2b2418}
 .sw-6 .chip{background:linear-gradient(#c8102e 0 0) 0 10px / 100% 5px no-repeat, linear-gradient(#0b4fa8 0 0) 0 22px / 100% 5px no-repeat, linear-gradient(#5b2d8e 0 0) 0 78px / 100% 5px no-repeat, linear-gradient(#a34c09 0 0) 0 90px / 100% 5px no-repeat, linear-gradient(#0f6b46 0 0) 100% 0 / 5px 100% no-repeat, linear-gradient(#3d4650 0 0) calc(100% - 12px) 0 / 5px 100% no-repeat, #dcecf7;color:#14181d}
-.sw-7 .chip{background:#dcecf7;color:#14181d}
-.sw-8 .chip{background:#16222d;color:#eef2f5}
+.sw-7 .chip{background:linear-gradient(#2b2418 0 0) 24px 24px / 170px 2px no-repeat, linear-gradient(#2b2418 0 0) 24px calc(80px - 2px) / 170px 2px no-repeat, linear-gradient(#2b2418 0 0) 24px 24px / 2px 56px no-repeat, linear-gradient(#2b2418 0 0) calc(194px - 2px) 24px / 2px 56px no-repeat, url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f);color:#2b2418}
+.sw-8 .chip{background:repeating-linear-gradient(90deg, #2b2418 0 7px, transparent 7px 12px) 24px 24px / 170px 2px no-repeat, repeating-linear-gradient(90deg, #2b2418 0 7px, transparent 7px 12px) 24px calc(80px - 2px) / 170px 2px no-repeat, repeating-linear-gradient(0deg, #2b2418 0 7px, transparent 7px 12px) 24px 24px / 2px 56px no-repeat, repeating-linear-gradient(0deg, #2b2418 0 7px, transparent 7px 12px) calc(194px - 2px) 24px / 2px 56px no-repeat, url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f);color:#2b2418}
+.sw-9 .chip{background:repeating-linear-gradient(90deg, #a9bccb 0 7px, transparent 7px 12px) 24px 24px / 170px 3px no-repeat, repeating-linear-gradient(90deg, #a9bccb 0 7px, transparent 7px 12px) 24px calc(80px - 3px) / 170px 3px no-repeat, repeating-linear-gradient(0deg, #a9bccb 0 7px, transparent 7px 12px) 24px 24px / 3px 56px no-repeat, repeating-linear-gradient(0deg, #a9bccb 0 7px, transparent 7px 12px) calc(194px - 3px) 24px / 3px 56px no-repeat, #dcecf7;color:#47515c}
+.sw-10 .chip{background:linear-gradient(rgb(0 0 0 / .18), transparent 5px), color-mix(in srgb, #14181d 6%, #ffffff);color:#14181d}
+.sw-11 .chip{background:radial-gradient(circle at 16px 50%, #58626c 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0 / 600px 120px, linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc);color:#232930}
+.sw-12 .chip{background:#dcecf7;color:#14181d}
+.sw-13 .chip{background:#16222d;color:#eef2f5}
 </style>
 </helmet>
-<div class="swb" style="height: 1300px">
-<div><h1>Swatches: the page's own materials</h1><p class="intro">What the page is built from today, as pkg/ui/static/ui.css defines it and DESIGN.md describes it. A chip is the stylesheet's own value. These are settled.</p></div>
+<div class="swb" style="height: 1660px">
+<div><h1>Swatches: in use</h1><p class="intro">What the page is built from today, as pkg/ui/static/ui.css defines it and DESIGN.md describes it: its materials, then the marks and fittings made of them. A chip is the stylesheet's own value. These are settled.</p></div>
 <div class="grid">
 <article class="sw sw-0">
 <div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #6f7b86"></i></div>
@@ -106,6 +112,51 @@ body{margin:0}
 <p class="src">ui.css: --c-wmi, --c-vds, --c-check, --c-year, --c-plant, --c-serial, --stripe-lift</p>
 </article>
 <article class="sw sw-7">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #2b2418"></i></div>
+<h3>Ink stamp</h3>
+<p class="fam">mark on manila</p>
+<p>A candidate's mark for something checked: the decode met the catalog's condition, or the part is filed under another type or replaces a retired number.</p>
+<p class="tx">A solid 2px box in the tag's ink around upper-case label face, turned a degree and a half, as a rubber stamp lands.</p>
+<p class="hxs"><span class="hx"><i style="background: #e2c88f"></i>base #e2c88f</span><span class="hx"><i style="background: #2b2418"></i>ink #2b2418</span><span class="hx"><i style="background: #2b2418"></i>accent #2b2418</span></p>
+<p class="src">ui.css: .mk.checked, .mk.redirect, .mk.replaces</p>
+</article>
+<article class="sw sw-8">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #5c4c2e"></i></div>
+<h3>Dashed stamp</h3>
+<p class="fam">mark on manila</p>
+<p>A candidate's mark for a doubt: the decode has no value for what the catalog asks. Dashed is a doubt everywhere on the page.</p>
+<p class="tx">The stamp's box, dashed and unturned. Plain muted words, with no box, are nothing checked.</p>
+<p class="hxs"><span class="hx"><i style="background: #e2c88f"></i>base #e2c88f</span><span class="hx"><i style="background: #2b2418"></i>ink #2b2418</span><span class="hx"><i style="background: #5c4c2e"></i>accent #5c4c2e</span></p>
+<p class="src">ui.css: .mk.unchecked, .mk.text, --manila-muted</p>
+</article>
+<article class="sw sw-9">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #a9bccb"></i></div>
+<h3>Blank strip</h3>
+<p class="fam">empty place</p>
+<p>Where the page has no answer the place stays: one sentence in a dashed outline, and in it a key of metal or a link on.</p>
+<p class="tx">A 3px dashed outline in the faint colour on the bare ground, muted words inside. No material: the mark of an empty place.</p>
+<p class="hxs"><span class="hx"><i style="background: #dcecf7"></i>base #dcecf7</span><span class="hx"><i style="background: #47515c"></i>ink #47515c</span><span class="hx"><i style="background: #a9bccb"></i>accent #a9bccb</span></p>
+<p class="src">ui.css: .blank, --faint, --muted</p>
+</article>
+<article class="sw sw-10">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #9fb3c2"></i></div>
+<h3>Recess</h3>
+<p class="fam">field</p>
+<p>Text to copy, and the filter over the part types: a field sunk into its panel.</p>
+<p class="tx">The panel's ground a step darker under an inner shadow along its top edge, inside a 1px line.</p>
+<p class="hxs"><span class="hx"><i style="background: #f1f1f2"></i>base #f1f1f2</span><span class="hx"><i style="background: #14181d"></i>ink #14181d</span><span class="hx"><i style="background: #9fb3c2"></i>accent #9fb3c2</span></p>
+<p class="src">ui.css: pre, --line, --card-bg</p>
+</article>
+<article class="sw sw-11">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #58626c"></i></div>
+<h3>Rivet</h3>
+<p class="fam">fastener</p>
+<p>One at the near end of a header's button and each end of the brand: what holds a piece of metal on.</p>
+<p class="tx">A dark dome ringed in light metal, drawn at the plate's edge. A dialog's head takes a slotted screw at each end.</p>
+<p class="hxs"><span class="hx"><i style="background: #cdd5dc"></i>base #cdd5dc</span><span class="hx"><i style="background: #232930"></i>ink #232930</span><span class="hx"><i style="background: #58626c"></i>accent #58626c</span></p>
+<p class="src">ui.css: --steel-dark, --metal</p>
+</article>
+<article class="sw sw-12">
 <div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #9fb3c2"></i></div>
 <h3>The ground, light</h3>
 <p class="fam">ground</p>
@@ -114,7 +165,7 @@ body{margin:0}
 <p class="hxs"><span class="hx"><i style="background: #dcecf7"></i>base #dcecf7</span><span class="hx"><i style="background: #14181d"></i>ink #14181d</span><span class="hx"><i style="background: #9fb3c2"></i>accent #9fb3c2</span></p>
 <p class="src">ui.css: --bg, --fg, --line</p>
 </article>
-<article class="sw sw-8">
+<article class="sw sw-13">
 <div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #45566a"></i></div>
 <h3>The ground, dark</h3>
 <p class="fam">ground</p>
@@ -126,7 +177,7 @@ body{margin:0}
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1300}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1660}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Swatches: tried</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.swb{box-sizing:border-box;width:1280px;padding:40px;display:flex;flex-direction:column;gap:22px;font:14px/1.45 system-ui,sans-serif;color:#14181d;background:#e6ebef}
+.swb h1{margin:0;font:900 21px/1.2 "Arial Black","Helvetica Neue",system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase}
+.swb .intro{margin:6px 0 0;max-width:820px;color:#47515c}
+.swb .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.sw{display:flex;flex-direction:column;gap:5px;padding:0 0 12px;background:#fff;border:1px solid #9fb3c2;border-radius:4px;overflow:hidden}
+.sw .chip{position:relative;display:flex;flex-direction:column;justify-content:center;gap:2px;height:104px;padding:0 16px 0 34px;border-bottom:1px solid #9fb3c2}
+.sw .chip b{font:700 17px/1.2 ui-monospace,monospace;letter-spacing:.03em}
+.sw .chip span{font-size:12px}
+.sw .chip i{position:absolute;right:0;top:0;bottom:0;width:10px}
+.sw h3,.sw p{margin:0;padding:0 12px}
+.sw h3{margin-top:6px;font:700 14px/1.3 system-ui,sans-serif}
+.sw h3 em{display:inline-block;padding:0 6px;font:700 10px/1.7 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:#0b4fa8;border-radius:2px;vertical-align:1px}
+.sw p{font-size:12px;color:#14181d}
+.sw .fam{font:700 10px/1.4 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#47515c}
+.sw .tx,.sw .src{color:#47515c}
+.sw .hxs{display:flex;flex-wrap:wrap;gap:2px 10px;margin-top:2px;font:11px/1.5 ui-monospace,monospace}
+.sw .hx i{display:inline-block;width:9px;height:9px;margin-right:4px;border:1px solid #47515c;vertical-align:-1px}
+.sw .src{font-size:11px;overflow-wrap:anywhere}
+.sw .src a{color:#0b4fa8}.sw .src a:hover{color:#14181d}
+.sw-0 .chip{background:linear-gradient(rgb(8 7 15 / .32), rgb(8 7 15 / .07) 6px, transparent 15px), linear-gradient(90deg, rgb(8 7 15 / .05), transparent 5% 95%, rgb(8 7 15 / .05)), #f6f4ee;color:#232229}
+.sw-1 .chip{background:linear-gradient(#0b0b0c 0 0) 0 0 / 100% 20px no-repeat, linear-gradient(#ffd100 0 0) 0 20px / 24px 100% no-repeat, linear-gradient(115deg, rgb(255 255 255 / .9), transparent 30% 70%, rgb(8 7 15 / .05)), #fdfdfb;color:#0b0b0c}
+.sw-2 .chip{background:radial-gradient(circle at 16px 50%, #dcecf7 0 4px, #6d7379 4.5px 5px, #c3c8cd 5.5px 8px, #7d848b 8.5px 9.5px, transparent 10px), repeating-linear-gradient(63deg, transparent 0 5px, rgb(255 255 255 / .16) 5px 6px, transparent 6px 13px), repeating-linear-gradient(-28deg, transparent 0 7px, rgb(255 255 255 / .13) 7px 8px, transparent 8px 17px), #f4d21f;color:#141414}
+.sw-3 .chip{background:radial-gradient(ellipse 30% 22% at 88% 12%, rgb(138 75 34 / .55), transparent), radial-gradient(ellipse 22% 30% at 6% 92%, rgb(138 75 34 / .5), transparent), repeating-linear-gradient(92deg, transparent 0 3px, rgb(255 255 255 / .025) 3px 4px, transparent 4px 9px), linear-gradient(#55565a, #3f4043);color:#ffd21a}
+.sw-4 .chip{background:linear-gradient(#fbfaf6, #efece2);color:#14181d}
+.sw-5 .chip{background:repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .13) 2px 3px), linear-gradient(#66717c, #48515a);color:#f6f8fa}
+</style>
+</helmet>
+<div class="swb" style="height: 950px">
+<div><h1>Swatches: tried</h1><p class="intro">What was drawn for the page and is not on it: one material proposed and open, and those set aside when another was chosen. Each names where its drawing is kept. A chip is the drawing's own value.</p></div>
+<div class="grid">
+<article class="sw sw-0">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #62606b"></i></div>
+<h3>Thermal receipt</h3>
+<p class="fam">proposed</p>
+<p>A candidate's open stock rows, as #376 proposes them: one strip fed out from under the tag's stock strip.</p>
+<p class="tx">Off-white coated paper, shaded where it leaves the tag, with near-black print in one monospaced face. The same in both colour schemes.</p>
+<p class="hxs"><span class="hx"><i style="background: #f6f4ee"></i>base #f6f4ee</span><span class="hx"><i style="background: #232229"></i>ink #232229</span><span class="hx"><i style="background: #62606b"></i>accent #62606b</span></p>
+<p class="src">#376; branch prototype/shelf-list-receipt, pkg/ui/static/ui.css</p>
+</article>
+<article class="sw sw-1">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #ffd100"></i></div>
+<h3>Tire placard</h3>
+<p class="fam">set aside</p>
+<p>Drawn for the stock rows beside the receipt: a ruled table, the id on yellow, a field's name small over its value.</p>
+<p class="tx">A white label with a faint gloss, black bands and rules, and one yellow.</p>
+<p class="hxs"><span class="hx"><i style="background: #fdfdfb"></i>base #fdfdfb</span><span class="hx"><i style="background: #0b0b0c"></i>ink #0b0b0c</span><span class="hx"><i style="background: #ffd100"></i>accent #ffd100</span></p>
+<p class="src">drawn for #376, not chosen; branch prototype/shelf-list-receipt, commit 8002d55</p>
+</article>
+<article class="sw sw-2">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #f59a23"></i></div>
+<h3>Tyvek wire tags</h3>
+<p class="fam">set aside</p>
+<p>Drawn for the stock rows beside the receipt: no panel, each row its own tag, yellow for the shelf and orange for the yard.</p>
+<p class="tx">Spunbonded olefin with a crossed fibre sheen, a steel eyelet and a twist of wire at one end.</p>
+<p class="hxs"><span class="hx"><i style="background: #f4d21f"></i>base #f4d21f</span><span class="hx"><i style="background: #141414"></i>ink #141414</span><span class="hx"><i style="background: #f59a23"></i>accent #f59a23</span></p>
+<p class="src">drawn for #376, not chosen; branch prototype/shelf-list-receipt, commit 8002d55</p>
+</article>
+<article class="sw sw-3">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #f1efe6"></i></div>
+<h3>Paint marker on steel</h3>
+<p class="fam">set aside</p>
+<p>Drawn for the stock rows beside the receipt: the id large and first in yellow paint, the rest beside it in white crayon.</p>
+<p class="tx">A sheet of bare steel with rust at its corners, written on by hand. It needs a hand-lettering face the page does not ship.</p>
+<p class="hxs"><span class="hx"><i style="background: #4a4b4e"></i>base #4a4b4e</span><span class="hx"><i style="background: #ffd21a"></i>ink #ffd21a</span><span class="hx"><i style="background: #f1efe6"></i>accent #f1efe6</span></p>
+<p class="src">drawn for #376, not chosen; branch prototype/shelf-list-receipt, commit 8002d55</p>
+</article>
+<article class="sw sw-4">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #a59f8f"></i></div>
+<h3>Second tape, paper label</h3>
+<p class="fam">set aside</p>
+<p>One of three drawn for a name that can be pressed, before aluminum embossing tape was chosen.</p>
+<p class="tx">A cream paper label with no ridges and no raised letters, a 4px corner, on a tan edge. The frame kept its values and no name; this name is given here.</p>
+<p class="hxs"><span class="hx"><i style="background: #efece2"></i>base #efece2</span><span class="hx"><i style="background: #14181d"></i>ink #14181d</span><span class="hx"><i style="background: #a59f8f"></i>accent #a59f8f</span></p>
+<p class="src">the removed frame Texture-SecondTape, class v-b; commit 5cf0331</p>
+</article>
+<article class="sw sw-5">
+<div class="chip"><b>DEMO-S-01</b><span>demo-north · grade A</span><i style="background: #262c32"></i></div>
+<h3>Second tape, grey vinyl</h3>
+<p class="fam">set aside</p>
+<p>One of three drawn for a name that can be pressed, before aluminum embossing tape was chosen.</p>
+<p class="tx">The label tape's ridges and raised white letters on a mid grey between the black tape and the metal. The frame kept its values and no name; this name is given here.</p>
+<p class="hxs"><span class="hx"><i style="background: #48515a"></i>base #48515a</span><span class="hx"><i style="background: #f6f8fa"></i>ink #f6f8fa</span><span class="hx"><i style="background: #262c32"></i>accent #262c32</span></p>
+<p class="src">the removed frame Texture-SecondTape, class v-c; commit 5cf0331</p>
+</article>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":950}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
