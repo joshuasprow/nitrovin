@@ -12,42 +12,42 @@
       "y": 0
     },
     "Controls-Dark.dc.html": {
-      "h": 4610,
+      "h": 4910,
       "title": "Dialogs, forms and inputs, dark",
       "w": 1280,
       "x": 5440,
-      "y": 4730
+      "y": 5060
     },
     "Controls.dc.html": {
-      "h": 4610,
+      "h": 4910,
       "title": "Dialogs, forms and inputs, light",
       "w": 1280,
       "x": 5440,
       "y": 0
     },
     "Diagram-Dark.dc.html": {
-      "h": 1940,
+      "h": 2390,
       "title": "Cards, brackets and lines, dark",
       "w": 1280,
       "x": 2720,
-      "y": 4730
+      "y": 5060
     },
     "Diagram.dc.html": {
-      "h": 1940,
+      "h": 2390,
       "title": "Cards, brackets and lines, light",
       "w": 1280,
       "x": 2720,
       "y": 0
     },
     "Fitment-Dark.dc.html": {
-      "h": 4580,
+      "h": 4940,
       "title": "The fitment card, dark",
       "w": 1280,
       "x": 4080,
-      "y": 4730
+      "y": 5060
     },
     "Fitment.dc.html": {
-      "h": 4580,
+      "h": 4940,
       "title": "The fitment card, light",
       "w": 1280,
       "x": 4080,
@@ -58,7 +58,7 @@
       "title": "The VIN input, both modes, dark",
       "w": 1280,
       "x": 0,
-      "y": 4730
+      "y": 5060
     },
     "Main.dc.html": {
       "h": 2100,
@@ -68,28 +68,28 @@
       "y": 0
     },
     "Materials-Dark.dc.html": {
-      "h": 1830,
+      "h": 1930,
       "title": "Materials and elevation, dark",
       "w": 1280,
       "x": 1360,
-      "y": 4730
+      "y": 5060
     },
     "Materials.dc.html": {
-      "h": 1830,
+      "h": 1930,
       "title": "Materials and elevation, light",
       "w": 1280,
       "x": 1360,
       "y": 0
     },
     "States-Dark.dc.html": {
-      "h": 3450,
+      "h": 3910,
       "title": "States, dark",
       "w": 1280,
       "x": 6800,
-      "y": 4730
+      "y": 5060
     },
     "States.dc.html": {
-      "h": 3450,
+      "h": 3910,
       "title": "States, light",
       "w": 1280,
       "x": 6800,
@@ -164,21 +164,21 @@
       "title": "Swatches: thermal paper",
       "w": 1280,
       "x": 0,
-      "y": 9860
+      "y": 10420
     },
     "Swatches-Yard.dc.html": {
       "h": 2130,
       "title": "Swatches: the yard and the shelf",
       "w": 1280,
       "x": 1360,
-      "y": 9860
+      "y": 10420
     },
     "Swatches-Vehicle.dc.html": {
       "h": 2160,
       "title": "Swatches: the vehicle and the garage",
       "w": 1280,
       "x": 2720,
-      "y": 9860
+      "y": 10420
     }
   },
   "createdOnFiles": {
@@ -218,7 +218,7 @@
       "text": "Swatches: materials found, none settled",
       "w": 240,
       "x": 0,
-      "y": 9560
+      "y": 10120
     }
   },
   "order": [
