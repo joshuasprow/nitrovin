@@ -42,14 +42,14 @@
       const plates = [...stack.querySelectorAll('.tagplate')];
       const voc = stack.querySelector('.voc') || stack.querySelector('.stamp');
       const tag = el('li', 'card done pname');
-      const named = plates.filter((p) => !p.querySelector(':scope > .none'));
+      const named = plates.filter((p) => !p.querySelector(':scope > .none:not(.seg)'));
       tag.append(el('p', 'pvoc', (voc ? voc.textContent.trim() : 'Also known as') + (named.length > 1 ? ' · ' + named.length : '')));
       const word = (plate, g) => { const w = plate.querySelector('.seg.' + g + ' .w'); return w ? w.textContent.trim() : ''; };
       const makes = [...new Set(named.map((p) => word(p, 'g-wmi')))];
       const shared = makes.length === 1 && makes[0];
       if (shared) tag.append(el('p', 'pw g-wmi', shared));
       for (const plate of plates) {
-        const none = plate.querySelector(':scope > .none');
+        const none = plate.querySelector(':scope > .none:not(.seg)');
         if (none) { tag.append(el('p', 'pnone', none.textContent)); continue; }
         const row = el('p', 'prow2');
         if (!shared && word(plate, 'g-wmi')) row.append(el('span', 'pw g-wmi', word(plate, 'g-wmi')));
