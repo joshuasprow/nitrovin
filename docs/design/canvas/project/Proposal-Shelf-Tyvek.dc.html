@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Proposal: the shelf list, Tyvek wire tags</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+@keyframes caret{ 50% { box-shadow: none; } }
+@keyframes blink{ 50% { opacity: 0; } }
+@keyframes bracket{ from { transform: scaleX(0); } }
+@keyframes draw{ from { stroke-dashoffset: 1; } }
+@keyframes pop{ from { transform: translateY(-8px) scale(.92); opacity: 0; } }
+@keyframes stamp{ from { transform: scale(1.6); opacity: .2; } }
+@property --hang-p{ syntax: "<number>"; inherits: true; initial-value: 0; }
+@keyframes hang-p{ to { --hang-p: 1; } }
+.vp{
+&{color-scheme: light dark}
+&{--bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint: #a9bccb; --card-bg: #ffffff; --link: #0b4fa8; --bad: #b91c1c; --c-wmi: #c8102e; --c-vds: #0b4fa8; --c-check: #5b2d8e; --c-year: #a34c09; --c-plant: #0f6b46; --c-serial: #3d4650; --on: #ffffff; --label-font: "Arial Black", "Helvetica Neue", system-ui, sans-serif; --cell-font: ui-monospace, monospace; --steel: #6f7b86; --steel-dark: #58626c; --on-metal: #232930; --metal: url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0 / 600px 120px, linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc); --emboss: 0 1px 0 rgb(255 255 255 / .9), 0 -1px 1px rgb(0 0 0 / .45); --lift-stuck: 0 2px 3px rgb(8 7 15 / .32); --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 9px rgb(8 7 15 / .38); --raised: inset 0 1px 0 #fff, var(--lift-raised); --pressed: inset 0 3px 4px rgb(8 7 15 / .4); --alu-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .12) 2px 3px), linear-gradient(#8e99a3, #aab4bd); --alu: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .07) 2px 3px), var(--metal); --tape: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .13) 2px 3px), linear-gradient(#30363d, #171a1e); --tape-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .2) 2px 3px), linear-gradient(#0c0e10, #1d2125); --tape-edge: #050607; --tape-lit: #69727c; --on-tape: #f6f8fa; --tape-emboss: -1px -1px 0 rgb(8 7 15 / .67), 1px 1px 0 rgb(255 255 255 / .33), 0 2px 2px rgb(8 7 15 / .53); --stripe-lift: drop-shadow(-1px -1px 0 rgb(255 255 255 / .4)) drop-shadow(1.5px 2px 1px rgb(8 7 15 / .3)); --manila: url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f); --on-manila: #2b2418; --manila-muted: #5c4c2e; --manila-patch: #c39a5c; --manila-bad: #a01414; --gutter: 1rem; font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 1rem var(--gutter) 3rem; color: var(--fg); background: var(--bg)}
+a{color: var(--link)}
+header, main, #ui-error{max-width: 62rem; margin-inline: auto}
+h2{font-size: 1.1rem; margin: 1.5rem 0 .5rem}
+h3{font: 900 12px var(--label-font); letter-spacing: .08em; text-transform: uppercase; margin: 1.5rem 0 .5rem; padding-bottom: .2rem; border-bottom: 3px solid var(--c-vds)}
+a:is(:focus-visible,.is-fv), button:is(:focus-visible,.is-fv), summary:is(:focus-visible,.is-fv), input:is(:focus-visible,.is-fv), pre:is(:focus-visible,.is-fv), .hang:is(:focus-visible,.is-fv){outline: 3px solid var(--link); outline-offset: 2px}
+.hint{color: var(--muted); font-weight: 400}
+.visually-hidden, .plbl{position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap}
+table{border-collapse: collapse; width: 100%}
+th, td{text-align: left; vertical-align: top; padding: .3rem .75rem .3rem 0; border-bottom: 1px solid var(--line)}
+thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase; border-bottom: 3px solid var(--steel)}
+.wide, .scroll{overflow-x: auto}
+.g-serial{--c: var(--c-serial); --cm: #3d4650}
+.stage{max-width: 62rem; margin-inline: auto}
+.brk{height: 9px; margin: 7px 3px 0; border: 3px solid var(--faint); border-top: 0; border-radius: 0 0 2px 2px}
+.brk.done{border-width: 4px; border-top: 0; border-color: var(--c); filter: var(--stripe-lift)}
+.card::before, .cand-in::before{content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(circle at 50% 14px, transparent 4px, var(--manila-patch) 4.5px 10px, transparent 10.5px), var(--manila); clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%, 0 16px); mask-image: radial-gradient(circle at 50% 14px, transparent 3.5px, #000 4px)}
+.stack:has(.fan:not(:checked)):not(:has(.seg:is(:target,.is-target))){& .tagplate.below { position: absolute; inset: 0 0 auto; margin: 0; visibility: hidden; } &.d1 { --under: 12px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), var(--lift-stuck); } &.d2 { --under: 22px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), var(--lift-stuck); } &.d3 { --under: 32px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), 0 30px 0 -15px #1e2226, 0 31px 0 -14px var(--tape-edge), var(--lift-stuck); } &.d1 + .stack { --prev: 12px; } &.d2 + .stack { --prev: 22px; } &.d3 + .stack { --prev: 32px; }}
+.aka:has(.more:not(:checked)) .stack.rest{display: none}
+.more:checked ~ .more-voc .n, .more:not(:checked) ~ .more-voc .less{display: none}}
+.vp-wide{
+.stack:has(.fan:not(:checked)):not(:has(.seg:is(:target,.is-target))){&.d1 { --under: 7px; } &.d2 { --under: 12px; } &.d3 { --under: 17px; }}}
+.vp{
+.fit{--rail-x: 3px; position: relative; isolation: isolate; display: flow-root; margin: 0 16px}
+.ptgroups:has(> .ptgroup:only-child:not(:has(.pthead))){grid-template-columns: minmax(0, 1fr)}
+.cands{--gap: 12px; anchor-name: --fit-tags; list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: row dense; gap: 40px var(--gap); margin: 14px 0 0; padding: 40px 0 0 22px}
+.cand{position: relative; min-width: 0}
+.cand-in{position: relative; isolation: isolate; display: flex; flex-direction: column; box-sizing: border-box; height: 100%; padding: 28px .7rem .8rem; overflow-wrap: anywhere; color: var(--on-manila); filter: drop-shadow(0 4px 5px rgb(8 7 15 / .28))}
+.numtape{display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0 .5rem; margin: 0 -.7rem .6rem; padding: .3rem .7rem; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 3px solid var(--tape-edge)}
+.numtape .num{font: 900 18px var(--cell-font); letter-spacing: .06em}
+.numtape .yrs{font: 700 12px var(--cell-font); white-space: nowrap}
+.cand-in dl{display: grid; gap: .35rem; margin: 0}
+.cand-in dt{font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--manila-muted)}
+.cand-in dd{margin: 0; font-weight: 600; line-height: 1.25}
+.marks{display: flex; flex-wrap: wrap; gap: .4rem .5rem; margin: .6rem 0 .8rem}
+.mk{display: inline-flex; align-items: center; gap: 5px; padding: .2rem .45rem; border-radius: 3px; font: 900 10px/1.4 var(--label-font); letter-spacing: .06em; text-transform: uppercase; color: var(--on-manila)}
+.mk.text, .mk.none{padding-left: 0; color: var(--manila-muted)}
+.stk{display: flex; align-items: center; justify-content: space-between; gap: 8px; box-sizing: border-box; min-height: 40px; margin: auto -.7rem -.8rem; padding: 0 .7rem; font: 900 12px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-align: left; text-decoration: none; cursor: pointer; color: var(--on-metal); text-shadow: var(--emboss); background: var(--alu); border: 0; border-top: 1px solid #fff; border-bottom: 3px solid var(--steel-dark); border-radius: 0; box-shadow: inset 0 1px 0 rgb(255 255 255 / .6)}
+.stk svg{flex: none; width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5}
+.stk:not(.none):is(:active,.is-active), .stk[aria-expanded=true]{transform: none; padding-top: 2px; background: var(--alu-in); border-bottom-width: 1px; box-shadow: var(--pressed)}
+.rows{position: relative; grid-column: 1 / -1; min-width: 0; margin-top: -24px}
+.rows, .stock-panel, .prows, .vehicles{background: var(--card-bg); border: 2px solid var(--steel); border-radius: 4px; box-shadow: 0 3px 0 var(--steel-dark), 0 8px 16px rgb(0 0 0 / .25)}
+:is(.rows, .prows) .notch{position: absolute; top: -10px; left: calc(50% - 9px); width: 16px; height: 16px; background: var(--card-bg); border-left: 2px solid var(--steel); border-top: 2px solid var(--steel); transform: rotate(45deg)}
+.rows::before, .rows::after{position: absolute; top: -18px; box-sizing: border-box; width: 5px; pointer-events: none; border: 0 solid var(--c-vds); border-left-width: 5px; filter: var(--stripe-lift)}
+.rows::before{z-index: 0; left: calc(var(--rail-x) - 24px); bottom: -16px}
+.rows::after{z-index: 1; left: calc(var(--rail-x) + 9px - 24px); bottom: -27px; border-color: var(--c-year)}
+.stock-cols{display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))}
+.stock-cols:is(:focus-visible,.is-fv), .nonum:is(:focus-visible,.is-fv){outline: 3px solid var(--link); outline-offset: 2px}
+.stock-col{min-width: 0; padding: 12px 16px 14px}
+.stock-col + .stock-col{border-left: 1px solid var(--line)}
+.stock-col :is(h3, h4){display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 .75rem; margin: 0 0 6px; padding: 0; border: 0; font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase}
+.stock-col .asof{font: 400 12px system-ui, sans-serif; letter-spacing: 0; text-transform: none; color: var(--muted)}
+.stock-col table{font-size: 14px}
+.stock-col th, .stock-col td{padding: 7px 8px 7px 0; font-weight: 400; overflow-wrap: anywhere; border-bottom: 0; border-top: 1px solid var(--line)}
+.stock-col th.id{font: 700 13px var(--cell-font); white-space: nowrap}
+.stock-col th + td{white-space: nowrap}
+.stock-col .fk, .stock-none{color: var(--muted)}
+.stock-col .note{display: block; font-size: 12px; color: var(--muted)}
+.stock-col .note strong{color: var(--fg)}
+.cand::before, .cand::after, .hook::before, .hook::after, .rails::before, .rails::after, .risers::before, .risers::after{content: ""; position: absolute; box-sizing: border-box; pointer-events: none; border: 0 solid var(--c-vds); filter: var(--stripe-lift)}
+.cand::before, .hook::before, .rails::before, .risers::before{z-index: 1}
+.cand::after, .hook::after, .rails::after, .risers::after{z-index: 2; border-color: var(--c-year)}
+.cand::before, .cand::after{left: calc(-1 * var(--gap)); right: 0; border-top-width: 5px}
+.cand::before{top: -31px}
+.cand::after{top: -20px}
+.hook{position: absolute; inset: 0; pointer-events: none}
+.hook::before, .hook::after{top: -31px; height: 31px; border-left-width: 5px}
+.hook::before{left: calc(50% - 7px)}
+.hook::after{top: -20px; height: 20px; left: calc(50% + 2px)}
+.cand:nth-child(1 of .cand) .hook{anchor-name: --fit-first}
+.cand:nth-last-child(1 of .cand) .hook{anchor-name: --fit-last}
+.rails::before, .rails::after{height: 5px; border-top-width: 5px}
+.rails::before{top: calc(anchor(--fit-tags top) + 9px); left: calc(anchor(--fit-tags left) + var(--rail-x)); right: calc(anchor(--fit-part center) + 2px)}
+.rails::after{top: calc(anchor(--fit-tags top) + 20px); left: calc(anchor(--fit-tags left) + var(--rail-x) + 9px); right: calc(anchor(--fit-part center) - 7px)}}
+:is(.vp-wide,.vp-tab){
+.cand:is(:nth-child(3n of .cand), :nth-last-child(1 of .cand))::before{right: calc(50% + 2px)}
+.cand:is(:nth-child(3n of .cand), :nth-last-child(1 of .cand))::after{right: calc(50% - 7px)}
+.cand:nth-child(3n+1 of .cand)::before{left: calc(var(--rail-x) - 22px)}
+.cand:nth-child(3n+1 of .cand)::after{left: calc(var(--rail-x) + 9px - 22px)}
+.cands:not(:has(> .cand:nth-child(4 of .cand))) > .cand:nth-child(1 of .cand)::before{left: calc(50% - 7px)}
+.cands:not(:has(> .cand:nth-child(4 of .cand))) > .cand:nth-child(1 of .cand)::after{left: calc(50% + 2px)}
+.cands:not(:has(> .cand:nth-child(4 of .cand))) ~ .rails::before{left: calc(min(anchor(--fit-part center), anchor(--fit-first center)) - 7px); right: calc(min(anchor(--fit-part center), anchor(--fit-last center)) + 2px)}
+.cands:not(:has(> .cand:nth-child(4 of .cand))) ~ .rails::after{left: calc(min(anchor(--fit-part center), anchor(--fit-first center)) + 2px); right: calc(min(anchor(--fit-part center), anchor(--fit-last center)) - 7px)}
+.rows.at1 .notch{left: calc((100% - 2 * var(--gap)) / 6 - 9px)}}
+.vp{
+.fit{--xv: 52.206%; --xy: 87.5%}}
+.vp{@supports not (anchor-name: --a){
+.rails, .risers{display: none}
+.cands{position: relative}
+.cands::before, .cands::after{content: ""; position: absolute; top: 0; height: 14px; left: var(--rail-x); border-left: 5px solid var(--c-vds); filter: var(--stripe-lift)}
+.cands::after{left: calc(var(--rail-x) + 9px); height: 25px; border-left-color: var(--c-year)}}}
+:is(.vp-wide,.vp-tab){@supports not (anchor-name: --a){
+.cands:not(:has(> .cand:nth-child(4 of .cand)))::before, .cands:not(:has(> .cand:nth-child(4 of .cand)))::after{display: none}
+.cands:not(:has(> .cand:nth-child(4 of .cand))) > .cand:nth-child(1 of .cand) .hook::before, .cands:not(:has(> .cand:nth-child(4 of .cand))) > .cand:nth-child(1 of .cand) .hook::after{top: -40px; height: 40px}}}
+.vp{
+.plabels, .pplate, .punder{display: grid; grid-template-columns: 1fr 2fr}
+.part-form, .part-answer{--plate-pad: 16px}
+.punder{padding: 0 var(--plate-pad)}
+.punder .brk{grid-column: 2; margin-inline: 9px}
+.pleader{display: block; width: 100%; height: 36px; overflow: visible; padding: 0 var(--plate-pad); box-sizing: border-box}
+.pleader path{fill: none; stroke: var(--c); stroke-width: 5; stroke-linejoin: round; filter: var(--stripe-lift)}
+.pleader .narrow{display: none}
+.part{margin: 0 var(--plate-pad)}
+.pgrid{display: grid; grid-template-columns: 1fr 2fr; align-items: start}
+.pcol{margin: 0 12px; min-width: 0}
+.ptag{position: relative}
+.ptag::before{content: ""; position: absolute; z-index: 1; top: 0; left: calc(50% - 2.5px); width: 5px; height: 11px; pointer-events: none; background: var(--c-serial); filter: var(--stripe-lift)}
+.ptag .cand-in{min-height: 12rem}
+.ptag dl{margin-bottom: .8rem}
+.numtape .ptn{font: 700 12px var(--cell-font)}
+.prows{position: relative; margin-top: 18px}
+.prows .stock-cols{grid-template-columns: minmax(0, 1fr)}
+.prows .stock-col + .stock-col{border-left: 0; border-top: 1px solid var(--line)}
+.prows .stock-col table, .prows .stock-col tbody{display: block}
+.prows .stock-col tr{display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; padding: 7px 0; border-top: 1px solid var(--line)}
+.prows .stock-col :is(th, td){padding: 0; border: 0}
+.prows .stock-col td:last-child{grid-column: 1 / -1}
+.vehicles{min-width: 0; margin-left: 12px; padding: .25rem 1rem .75rem; overflow-x: auto}
+.vehicles table{font-size: 14px}
+.vehicles th, .vehicles td{padding: .55rem .9rem .55rem 0}
+.vehicles thead th{padding-top: .75rem; vertical-align: bottom}
+.vehicles thead .hint{display: block; font: 400 12px system-ui, sans-serif; letter-spacing: 0; text-transform: none}
+.vehicles tbody th{font-weight: 700}
+.vehicles .yrs{white-space: nowrap}
+.vn{display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; margin: 0 8px 4px 0}
+.vn .voc{font-size: 12px; color: var(--muted)}
+.vtape{padding: .1rem .45rem; font: 700 13px var(--cell-font); color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 2px solid var(--tape-edge); border-radius: 1px; box-shadow: var(--lift-stuck)}
+.pleader .mid{display: none}}
+:is(.vp-tab,.vp-phone){
+.fit{margin: 0}
+.fit{--xv: 25%; --xy: 75%}}
+:is(.vp-tab,.vp-phone){@supports (animation-timeline: --a) and (timeline-scope: --a){
+#answer{timeline-scope: --hang; --col: 12.5rem}}}
+.vp-phone{
+&{--gutter: .5rem}
+.hang, #answer{--col: 9.5rem}
+.aka:has(.more:not(:checked)) .stack.third{display: none}
+.cands{grid-template-columns: none; grid-template-rows: auto auto; grid-auto-flow: column; grid-auto-columns: var(--tag); gap: 0 var(--gap); margin-inline: calc(-1 * var(--gutter)); padding: 40px var(--gutter) 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter)}
+.fit{--tag: calc(100% - 2.5rem)}
+.cands::before, .cands::after{content: none}
+.cands:is(:focus-visible,.is-fv){outline: 3px solid var(--link); outline-offset: -3px}
+.cand{grid-row: 1; scroll-snap-align: start}
+.cand:has(+ .rows){scroll-initial-target: nearest}
+.cand:nth-child(1 of .cand)::before{left: calc(50% - 7px)}
+.cand:nth-child(1 of .cand)::after{left: calc(50% + 2px)}
+.cand:nth-last-child(1 of .cand)::before{right: calc(50% + 2px)}
+.cand:nth-last-child(1 of .cand)::after{right: calc(50% - 7px)}
+.rails::before{left: min(calc(anchor(--fit-part center) - 7px), calc(var(--tag) / 2 - 7px)); right: min(calc(anchor(--fit-part center) + 2px), calc(var(--tag) / 2 + 2px))}
+.rails::after{left: min(calc(anchor(--fit-part center) + 2px), calc(var(--tag) / 2 + 2px)); right: min(calc(anchor(--fit-part center) - 7px), calc(var(--tag) / 2 - 7px))}
+.rows{grid-row: 2; grid-column: auto; margin-top: 16px}
+.rows .stock-cols:not(.one){grid-template-columns: minmax(0, 1fr)}
+.rows .stock-col + .stock-col{border-left: 0; border-top: 1px solid var(--line)}
+.stock-cols:not(.one){grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: calc(100% - 2.5rem); overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory}
+.rows .stock-cols:not(.one){grid-auto-flow: row; grid-auto-columns: auto; overflow-x: visible}
+.stock-col{scroll-snap-align: start}
+.stock-col table, .stock-col tbody{display: block}
+.stock-col tr{display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; padding: 7px 0; border-top: 1px solid var(--line)}
+.stock-col th, .stock-col td{padding: 0; border: 0}
+.stock-col td:last-child{grid-column: 1 / -1}}
+.vp{
+.mat-tyvek{--tyv-ink: #141414; --tyv: #f4d21f; --tyv-fibre: repeating-linear-gradient(63deg, transparent 0 5px, rgb(255 255 255 / .16) 5px 6px, transparent 6px 13px), repeating-linear-gradient(-28deg, transparent 0 7px, rgb(255 255 255 / .13) 7px 8px, transparent 8px 17px), repeating-linear-gradient(118deg, transparent 0 9px, rgb(8 7 15 / .05) 9px 10px, transparent 10px 21px)}
+:is(.rows, .prows, .stock-panel).mat-tyvek{background: none; border: 0; border-radius: 0; box-shadow: none}
+.mat-tyvek .notch{display: none}
+.mat-tyvek .stock-cols{display: block}
+.mat-tyvek .stock-col{padding: 0}
+.mat-tyvek .stock-col + .stock-col{margin-top: 18px; --tyv: #f59a23; border: 0}
+.mat-tyvek .stock-col :is(h3, h4){justify-content: flex-start; gap: 0 .75rem; margin: 0 0 10px; color: var(--fg)}
+.mat-tyvek .stock-col table, .mat-tyvek .stock-col tbody{display: block}
+.mat-tyvek .stock-col tbody{display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); gap: 14px 16px; align-items: start}
+.mat-tyvek .stock-col tr{position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-content: start; gap: 4px 10px; padding: 9px 12px 11px 46px; color: var(--tyv-ink); border: 0; background: radial-gradient(circle at 22px 50%, var(--bg) 0 4px, #6d7379 4.5px 5px, #c3c8cd 5.5px 8px, #7d848b 8.5px 9.5px, transparent 10px), var(--tyv-fibre), var(--tyv); clip-path: polygon(14px 0, 100% 0, 100% 100%, 14px 100%, 0 calc(100% - 14px), 0 14px); filter: drop-shadow(0 2px 1px rgb(8 7 15 / .4))}
+.mat-tyvek .stock-col tbody tr{filter: none}
+.mat-tyvek .stock-col tbody{filter: drop-shadow(0 2px 1px rgb(8 7 15 / .4)) drop-shadow(0 6px 7px rgb(8 7 15 / .25))}
+.mat-tyvek .stock-col tr::before{content: ""; position: absolute; left: 0; top: calc(50% - 3px); width: 22px; height: 6px; background: repeating-linear-gradient(115deg, #e3e7ea 0 2px, #6d7379 2px 4px); border-radius: 3px}
+.mat-tyvek .stock-col :is(th, td){padding: 0; border: 0; color: inherit}
+.mat-tyvek .stock-col th.id{font: 700 17px/1.2 var(--cell-font); letter-spacing: .02em}
+.mat-tyvek .stock-col td.loc{align-self: center; padding: 1px 6px; font: 700 11px/1.5 var(--label-font); letter-spacing: .06em; text-transform: uppercase; border: 2px solid var(--tyv-ink); border-radius: 2px}
+.mat-tyvek .stock-col td.fds{grid-column: 1 / -1; display: grid; gap: 3px}
+.mat-tyvek .fsep{display: none}
+.mat-tyvek .fd{display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: end; gap: 0 6px}
+.mat-tyvek .stock-col .fk{font: 700 9.5px/1.9 var(--label-font); letter-spacing: .08em; text-transform: uppercase; color: inherit}
+.mat-tyvek .fv{padding: 0 3px 1px; font: 600 13px/1.3 var(--cell-font); border-bottom: 1px solid var(--tyv-ink); overflow-wrap: anywhere}
+.mat-tyvek .stock-col .note{margin-top: 3px; font-size: 11.5px; color: inherit}
+.mat-tyvek .stock-col .note strong{padding: 0 4px; color: var(--tyv); background: var(--tyv-ink)}}
+.sheet{--bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint: #a9bccb; --card-bg: #ffffff; --link: #0b4fa8; --bad: #b91c1c; --c-wmi: #c8102e; --c-vds: #0b4fa8; --c-check: #5b2d8e; --c-year: #a34c09; --c-plant: #0f6b46; --c-serial: #3d4650; --on: #ffffff; --label-font: "Arial Black", "Helvetica Neue", system-ui, sans-serif; --cell-font: ui-monospace, monospace; --steel: #6f7b86; --steel-dark: #58626c; --on-metal: #232930; --metal: url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0 / 600px 120px, linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc); --emboss: 0 1px 0 rgb(255 255 255 / .9), 0 -1px 1px rgb(0 0 0 / .45); --lift-stuck: 0 2px 3px rgb(8 7 15 / .32); --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 9px rgb(8 7 15 / .38); --raised: inset 0 1px 0 #fff, var(--lift-raised); --pressed: inset 0 3px 4px rgb(8 7 15 / .4); --alu-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .12) 2px 3px), linear-gradient(#8e99a3, #aab4bd); --alu: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .07) 2px 3px), var(--metal); --tape: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .13) 2px 3px), linear-gradient(#30363d, #171a1e); --tape-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .2) 2px 3px), linear-gradient(#0c0e10, #1d2125); --tape-edge: #050607; --tape-lit: #69727c; --on-tape: #f6f8fa; --tape-emboss: -1px -1px 0 rgb(8 7 15 / .67), 1px 1px 0 rgb(255 255 255 / .33), 0 2px 2px rgb(8 7 15 / .53); --stripe-lift: drop-shadow(-1px -1px 0 rgb(255 255 255 / .4)) drop-shadow(1.5px 2px 1px rgb(8 7 15 / .3)); --manila: url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f); --on-manila: #2b2418; --manila-muted: #5c4c2e; --manila-patch: #c39a5c; --manila-bad: #a01414; --gutter: 1rem; font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 1rem var(--gutter) 3rem; color: var(--fg); background: var(--bg);--gutter: .5rem;}
+.sheet{box-sizing:border-box;margin:0;padding:40px;display:flex;flex-direction:column;gap:26px}
+.sheet .sh-h1{margin:0;font:900 21px/1.2 var(--label-font);letter-spacing:.04em;text-transform:uppercase;border:0;padding:0}
+.sheet .sh-intro{margin:6px 0 0;color:var(--muted);max-width:820px}
+.sheet .sh-h2{margin:0;padding-bottom:4px;font:900 14px/1.2 var(--label-font);letter-spacing:.08em;text-transform:uppercase;border-bottom:3px solid var(--steel)}
+.sheet .sh-cap{margin:0 0 10px;font:900 11px/1.3 var(--label-font);letter-spacing:.08em;text-transform:uppercase;color:var(--fg)}
+.sheet .sh-cap span{font:400 13px/1.3 system-ui,sans-serif;letter-spacing:0;text-transform:none;color:var(--muted);margin-left:10px}
+.sheet .sh-row{display:flex;gap:40px;align-items:flex-start}
+.sheet .vp{box-sizing:border-box;position:relative;margin:0;padding:0;min-height:0;background:none;anchor-scope:all;--vh:900px;overflow:clip;overflow-clip-margin:24px}
+.sheet .vp.pad{padding:0 var(--gutter)}
+.sheet .vp header,.sheet .vp main{margin-bottom:0}
+.sheet .vp .popover.is-open{display:block !important;position:relative !important;inset:auto !important;margin:0 !important;max-height:none !important;overflow:visible !important}
+/* The part type picker's list hangs from the picker, over what follows it. */
+.sheet .vp #fit .ptdialog.is-open{position:absolute !important;z-index:5;width:min(24rem,calc(100% - 2 * var(--gutter))) !important;margin-top:6px !important}
+
+</style>
+</helmet>
+<div class="root sheet" data-scheme="light" style="width: 1280px; height: 2790px; color: var(--fg); background: var(--bg)">
+<div><h1 class="sh-h1">The shelf list: Tyvek wire tags</h1><p class="sh-intro">Wire-on tags of spunbonded olefin, yellow for the shelf and orange for the yard. There is no panel: each row is its own tag, a steel eyelet and a twist of wire at one end, its fields printed as blanks filled in.</p></div>
+<section>
+<p class="sh-cap">Under a candidate <span>The first candidate's stock strip is open.</span></p>
+<div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px">
+
+<main id="ui-main" class="is-fw">
+<div id="answer" class="stage" data-vin="1FTEW1EG7FFA12345" data-label="2015 FORD F-150" data-complete="" data-done="wmi vds check year plant serial " data-part="alternator" data-number="DEMO-1001">
+<section class="fit" id="fit" aria-labelledby="fit-h">
+<ol class="cands" aria-label="Candidates: Alternator" tabindex="0">
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1001</b> <span class="yrs">2015–2017</span></p>
+<dl>
+<div><dt>Options</dt><dd>3.5L V6 EcoBoost (VIN G, 8th digit)</dd></div>
+<div><dt>Note</dt><dd>demo: 200 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-1" href="#" aria-expanded="true" aria-controls="stock-rows"><span>Stock · 2 shelf · 2 yard<span class="visually-hidden">, DEMO-1001</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 10l5-5 5 5"></path></svg></a>
+</div></li>
+<li class="rows at1 more-narrow mat-tyvek" id="stock-rows"><span class="notch" aria-hidden="true"></span>
+<div class="stock-cols" id="stock-region" role="region" aria-label="Stock of DEMO-1001" tabindex="0">
+<div class="stock-col">
+<h3 id="stock-shelf-h"><span>On the shelf · 2</span> <span class="asof">as of 2026-11-12</span></h3>
+<table><tbody>
+<tr><th scope="row" class="id">DEMO-S-01</th><td class="loc">demo-north</td><td class="fds"><span class="fd"><span class="fk">stock_number</span> <span class="fv">DEMO-S-01</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">condition</span> <span class="fv">demo: used, grade A</span></span></td></tr>
+<tr><th scope="row" class="id">DEMO-S-02</th><td class="loc">demo-south</td><td class="fds"><span class="fd"><span class="fk">stock_number</span> <span class="fv">DEMO-S-02</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">condition</span> <span class="fv">demo: used, grade B; tagged with its old number</span></span><span class="note">Tagged with a retired number, DEMO-0901</span></td></tr>
+</tbody></table>
+</div>
+<div class="stock-col">
+<h3 id="stock-yard-h"><span>In the yard · 2</span> <span class="asof">as of 2026-11-12</span></h3>
+<table><tbody>
+<tr><th scope="row" class="id">DEMO-Y-01</th><td class="loc">demo-north</td><td class="fds"><span class="fd"><span class="fk">stock_number</span> <span class="fv">DEMO-Y-01</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">color</span> <span class="fv">demo: white</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">row</span> <span class="fv">D-1</span></span><span class="note"><strong>This VIN</strong>: the vehicle being looked up</span></td></tr>
+<tr><th scope="row" class="id">DEMO-Y-02</th><td class="loc">demo-south</td><td class="fds"><span class="fd"><span class="fk">stock_number</span> <span class="fv">DEMO-Y-02</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">color</span> <span class="fv">demo: blue</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">row</span> <span class="fv">D-1</span></span></td></tr>
+</tbody></table>
+</div>
+</div>
+</li>
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1002</b> <span class="yrs">2015–2020</span></p>
+<dl>
+<div><dt>Options</dt><dd>5.0L V8 (VIN F, 8th digit)</dd></div>
+<div><dt>Note</dt><dd>demo: 200 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-2" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1002</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
+</div></li>
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1003</b> <span class="yrs">2015–2020</span></p>
+<dl>
+<div><dt>Options</dt><dd>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</dd></div>
+<div><dt>Note</dt><dd>demo: 240 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-3" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1003</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
+</div></li>
+</ol>
+<span class="rails" aria-hidden="true"></span>
+</section>
+</div>
+</main>
+
+</div>
+</section>
+<div class="sh-row">
+<section>
+<p class="sh-cap">Narrow <span></span></p>
+<div class="vp vp-tab pad" style="width: 768px; --vw: 768px">
+
+<main id="ui-main" class="is-fw">
+<div id="answer" class="stage" data-vin="1FTEW1EG7FFA12345" data-label="2015 FORD F-150" data-complete="" data-done="wmi vds check year plant serial " data-part="alternator" data-number="DEMO-1001">
+<section class="fit" id="fit" aria-labelledby="fit-h">
+<ol class="cands" aria-label="Candidates: Alternator" tabindex="0">
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1001</b> <span class="yrs">2015–2017</span></p>
+<dl>
+<div><dt>Options</dt><dd>3.5L V6 EcoBoost (VIN G, 8th digit)</dd></div>
+<div><dt>Note</dt><dd>demo: 200 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-1" href="#" aria-expanded="true" aria-controls="stock-rows"><span>Stock · 2 shelf · 2 yard<span class="visually-hidden">, DEMO-1001</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 10l5-5 5 5"></path></svg></a>
+</div></li>
+<li class="rows at1 more-narrow mat-tyvek" id="stock-rows"><span class="notch" aria-hidden="true"></span>
+<div class="stock-cols" id="stock-region" role="region" aria-label="Stock of DEMO-1001" tabindex="0">
+<div class="stock-col">
+<h3 id="stock-shelf-h"><span>On the shelf · 2</span> <span class="asof">as of 2026-11-12</span></h3>
+<table><tbody>
+<tr><th scope="row" class="id">DEMO-S-01</th><td class="loc">demo-north</td><td class="fds"><span class="fd"><span class="fk">stock_number</span> <span class="fv">DEMO-S-01</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">condition</span> <span class="fv">demo: used, grade A</span></span></td></tr>
+<tr><th scope="row" class="id">DEMO-S-02</th><td class="loc">demo-south</td><td class="fds"><span class="fd"><span class="fk">stock_number</span> <span class="fv">DEMO-S-02</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">condition</span> <span class="fv">demo: used, grade B; tagged with its old number</span></span><span class="note">Tagged with a retired number, DEMO-0901</span></td></tr>
+</tbody></table>
+</div>
+<div class="stock-col">
+<h3 id="stock-yard-h"><span>In the yard · 2</span> <span class="asof">as of 2026-11-12</span></h3>
+<table><tbody>
+<tr><th scope="row" class="id">DEMO-Y-01</th><td class="loc">demo-north</td><td class="fds"><span class="fd"><span class="fk">stock_number</span> <span class="fv">DEMO-Y-01</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">color</span> <span class="fv">demo: white</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">row</span> <span class="fv">D-1</span></span><span class="note"><strong>This VIN</strong>: the vehicle being looked up</span></td></tr>
+<tr><th scope="row" class="id">DEMO-Y-02</th><td class="loc">demo-south</td><td class="fds"><span class="fd"><span class="fk">stock_number</span> <span class="fv">DEMO-Y-02</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">color</span> <span class="fv">demo: blue</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">row</span> <span class="fv">D-1</span></span></td></tr>
+</tbody></table>
+</div>
+</div>
+</li>
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1002</b> <span class="yrs">2015–2020</span></p>
+<dl>
+<div><dt>Options</dt><dd>5.0L V8 (VIN F, 8th digit)</dd></div>
+<div><dt>Note</dt><dd>demo: 200 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-2" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1002</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
+</div></li>
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1003</b> <span class="yrs">2015–2020</span></p>
+<dl>
+<div><dt>Options</dt><dd>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</dd></div>
+<div><dt>Note</dt><dd>demo: 240 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-3" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1003</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
+</div></li>
+</ol>
+<span class="rails" aria-hidden="true"></span>
+</section>
+</div>
+</main>
+
+</div>
+</section>
+<section>
+<p class="sh-cap">Phone <span>Under its tag.</span></p>
+<div class="vp vp-phone pad" style="width: 390px; --vw: 390px">
+
+<main id="ui-main" class="is-fw">
+<div id="answer" class="stage" data-vin="1FTEW1EG7FFA12345" data-label="2015 FORD F-150" data-complete="" data-done="wmi vds check year plant serial " data-part="alternator" data-number="DEMO-1001">
+<section class="fit" id="fit" aria-labelledby="fit-h">
+<ol class="cands" aria-label="Candidates: Alternator" tabindex="0">
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1001</b> <span class="yrs">2015–2017</span></p>
+<dl>
+<div><dt>Options</dt><dd>3.5L V6 EcoBoost (VIN G, 8th digit)</dd></div>
+<div><dt>Note</dt><dd>demo: 200 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-1" href="#" aria-expanded="true" aria-controls="stock-rows"><span>Stock · 2 shelf · 2 yard<span class="visually-hidden">, DEMO-1001</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 10l5-5 5 5"></path></svg></a>
+</div></li>
+<li class="rows at1 more-narrow mat-tyvek" id="stock-rows"><span class="notch" aria-hidden="true"></span>
+<div class="stock-cols" id="stock-region" role="region" aria-label="Stock of DEMO-1001" tabindex="0">
+<div class="stock-col">
+<h3 id="stock-shelf-h"><span>On the shelf · 2</span> <span class="asof">as of 2026-11-12</span></h3>
+<table><tbody>
+<tr><th scope="row" class="id">DEMO-S-01</th><td class="loc">demo-north</td><td class="fds"><span class="fd"><span class="fk">stock_number</span> <span class="fv">DEMO-S-01</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">condition</span> <span class="fv">demo: used, grade A</span></span></td></tr>
+<tr><th scope="row" class="id">DEMO-S-02</th><td class="loc">demo-south</td><td class="fds"><span class="fd"><span class="fk">stock_number</span> <span class="fv">DEMO-S-02</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">condition</span> <span class="fv">demo: used, grade B; tagged with its old number</span></span><span class="note">Tagged with a retired number, DEMO-0901</span></td></tr>
+</tbody></table>
+</div>
+<div class="stock-col">
+<h3 id="stock-yard-h"><span>In the yard · 2</span> <span class="asof">as of 2026-11-12</span></h3>
+<table><tbody>
+<tr><th scope="row" class="id">DEMO-Y-01</th><td class="loc">demo-north</td><td class="fds"><span class="fd"><span class="fk">stock_number</span> <span class="fv">DEMO-Y-01</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">color</span> <span class="fv">demo: white</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">row</span> <span class="fv">D-1</span></span><span class="note"><strong>This VIN</strong>: the vehicle being looked up</span></td></tr>
+<tr><th scope="row" class="id">DEMO-Y-02</th><td class="loc">demo-south</td><td class="fds"><span class="fd"><span class="fk">stock_number</span> <span class="fv">DEMO-Y-02</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">color</span> <span class="fv">demo: blue</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">row</span> <span class="fv">D-1</span></span></td></tr>
+</tbody></table>
+</div>
+</div>
+</li>
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1002</b> <span class="yrs">2015–2020</span></p>
+<dl>
+<div><dt>Options</dt><dd>5.0L V8 (VIN F, 8th digit)</dd></div>
+<div><dt>Note</dt><dd>demo: 200 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-2" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1002</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
+</div></li>
+<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1003</b> <span class="yrs">2015–2020</span></p>
+<dl>
+<div><dt>Options</dt><dd>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</dd></div>
+<div><dt>Note</dt><dd>demo: 240 A</dd></div>
+</dl>
+<p class="marks"><span class="mk text">Catalog text only</span>
+</p>
+<a class="stk swap" id="stk-3" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1003</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
+</div></li>
+</ol>
+<span class="rails" aria-hidden="true"></span>
+</section>
+</div>
+</main>
+
+</div>
+</section>
+</div>
+<section>
+<p class="sh-cap">Part-number mode <span>Under the part's tag, a column.</span></p>
+<div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px">
+
+<main id="ui-main" class="is-fw">
+<div id="answer" class="stage part-answer" data-mode="part" data-q="from.fitment.type=alternator&amp;from.fitment.number=DEMO-1001&amp;fitment.number=DEMO-1001&amp;variant=tyvek" data-part="alternator">
+<div class="punder" aria-hidden="true"><span class="brk g-serial done"></span></div>
+<svg class="pleader" viewBox="0 0 1020 36" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+<path class="g-serial wide" d="M680 0V18H170V36" vector-effect="non-scaling-stroke"></path>
+<path class="g-serial mid" d="M680 0V18H255V36" vector-effect="non-scaling-stroke"></path>
+<path class="g-serial narrow" d="M510 0V36" vector-effect="non-scaling-stroke"></path>
+</svg>
+<section class="part" id="part" aria-labelledby="part-h">
+<h2 id="part-h" class="visually-hidden">Alternator DEMO-1001</h2>
+<div class="pgrid">
+<div class="pcol">
+<div class="ptag"><div class="cand-in">
+<p class="numtape"><b class="num">DEMO-1001</b> <span class="ptn">Alternator</span></p>
+<dl>
+<div><dt>Fits</dt><dd>1 vehicle in demo-catalog</dd></div>
+<div><dt>Note</dt><dd>demo: 200 A</dd></div>
+</dl>
+<a class="stk swap" id="stk-part" href="#" aria-expanded="true" aria-controls="stock-rows"><span>Stock · 2 shelf · 2 yard<span class="visually-hidden">, DEMO-1001</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 10l5-5 5 5"></path></svg></a>
+</div></div>
+<div class="prows mat-tyvek" id="stock-rows"><span class="notch" aria-hidden="true"></span>
+<div class="stock-cols" id="stock-region" role="region" aria-label="Stock of DEMO-1001" tabindex="0">
+<div class="stock-col">
+<h3 id="stock-shelf-h"><span>On the shelf · 2</span> <span class="asof">as of 2026-11-12</span></h3>
+<table><tbody>
+<tr><th scope="row" class="id">DEMO-S-01</th><td class="loc">demo-north</td><td class="fds"><span class="fd"><span class="fk">stock_number</span> <span class="fv">DEMO-S-01</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">condition</span> <span class="fv">demo: used, grade A</span></span></td></tr>
+<tr><th scope="row" class="id">DEMO-S-02</th><td class="loc">demo-south</td><td class="fds"><span class="fd"><span class="fk">stock_number</span> <span class="fv">DEMO-S-02</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">condition</span> <span class="fv">demo: used, grade B; tagged with its old number</span></span><span class="note">Tagged with a retired number, DEMO-0901</span></td></tr>
+</tbody></table>
+</div>
+<div class="stock-col">
+<h3 id="stock-yard-h"><span>In the yard · 2</span> <span class="asof">as of 2026-11-12</span></h3>
+<table><tbody>
+<tr><th scope="row" class="id">DEMO-Y-01</th><td class="loc">demo-north</td><td class="fds"><span class="fd"><span class="fk">stock_number</span> <span class="fv">DEMO-Y-01</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">color</span> <span class="fv">demo: white</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">row</span> <span class="fv">D-1</span></span></td></tr>
+<tr><th scope="row" class="id">DEMO-Y-02</th><td class="loc">demo-south</td><td class="fds"><span class="fd"><span class="fk">stock_number</span> <span class="fv">DEMO-Y-02</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">color</span> <span class="fv">demo: blue</span></span><span class="fsep"> · </span><span class="fd"><span class="fk">row</span> <span class="fv">D-1</span></span></td></tr>
+</tbody></table>
+</div>
+</div>
+</div>
+</div>
+<div class="vehicles">
+<table>
+<caption class="visually-hidden">The vehicles DEMO-1001 fits, as demo-catalog names them</caption>
+<thead><tr><th scope="col">Vehicle <span class="hint">as demo-catalog names it</span></th><th scope="col">Years</th><th scope="col">Options</th><th scope="col">Also known as</th></tr></thead>
+<tbody>
+<tr><th scope="row">Ford F150</th><td class="yrs">2015–2017</td><td class="opts">3.5L V6 EcoBoost (VIN G, 8th digit)</td><td class="names"><span class="vn"><span class="voc">demo-vehicles</span> <span class="vtape">Ford F150</span></span></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</div>
+</main>
+
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2790}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
