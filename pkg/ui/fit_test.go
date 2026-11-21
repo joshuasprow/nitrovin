@@ -147,7 +147,7 @@ func TestPageFit(t *testing.T) {
 		t.Errorf("the pickup's part types %q; want %q", got, want)
 	}
 	for _, want := range []string{
-		`<h2 id="fit-h" class="stamp">Parts that fit · demo-catalog</h2>`,
+		`<p class="stamp">This vehicle · demo-catalog</p>`,
 		`<span class="seg g-vds"><span class="w">F150</span></span>`,
 		`<span class="seg g-year"><span class="w">2015</span></span>`,
 		`<a class="ptype swap" href="/?from.vin=1FTEW1EG7FFA12345&amp;part.id=alternator">`,
@@ -396,14 +396,15 @@ func TestCatalogEntries(t *testing.T) {
 	}
 }
 
-// TestPageFitFacts: what the page shows of the vehicle beside candidates
-// whose option text it cannot check (#366). Over the candidates it draws
-// what the decode says of the vehicle that a catalog's options name, the
-// Vehicle card's rows but the model, and the VIN's characters 4 to 8,
-// each with its position, so "VIN G, 8th digit" is matched at a glance.
-// The mark on such a candidate says in plain words that the options are
-// the reader's to match. Nothing is drawn with no part type pressed, or
-// over candidates with no option text.
+// TestPageFitFacts: what the vehicle's block says of the vehicle (#366),
+// for matching a candidate's option text, which the page cannot check.
+// On the block's tape, with the model and the year, it draws what the
+// decode says of the vehicle that a catalog's options name, the Vehicle
+// card's rows but the model, and the VIN's characters 4 to 8, each with
+// its position, so "VIN G, 8th digit" is matched at a glance. The mark on
+// such a candidate says in plain words that the options are the reader's
+// to match. The block says it whatever is pressed, and before the names
+// and the candidates.
 func TestPageFitFacts(t *testing.T) {
 	h := demoPages(t, true)
 	const pickup = "/?from.vin=1FTEW1EG7FFA12345"
@@ -422,13 +423,12 @@ func TestPageFitFacts(t *testing.T) {
 	if strings.Contains(s, "Catalog text only") || strings.Contains(s, `<dt>Model</dt>`) {
 		t.Errorf("the alternators keep the old mark, or repeat the model the strip names\n%s", s)
 	}
-	if i, j := strings.Index(s, `class="vfacts"`), strings.Index(s, `<ol class="cands"`); i < 0 || j < i {
-		t.Errorf("the vehicle's facts are not over the candidates\n%s", s)
+	facts, names, cands := strings.Index(s, `class="vfacts"`), strings.Index(s, `<ol class="nametags"`), strings.Index(s, `<ol class="cands"`)
+	if facts < 0 || names < facts || cands < names {
+		t.Errorf("want the vehicle's facts, then its names, then the candidates; they are at %d, %d and %d\n%s", facts, names, cands, s)
 	}
-	// Nothing pressed, and candidates with no option text: no facts.
-	for _, target := range []string{pickup, "/?from.vin=1GCVKREC6EZ123456&part.id=brake-rotor-rear"} {
-		if s := fitSection(t, h, target); strings.Contains(s, "vfacts") {
-			t.Errorf("%s: draws the vehicle's facts with no option text to match\n%s", target, s)
-		}
+	// Nothing pressed: the block says the same.
+	if s := fitSection(t, h, pickup); !strings.Contains(s, `<div><dt>Engine</dt><dd>3.5 L · 6 cyl · Gasoline</dd></div>`) {
+		t.Errorf("nothing pressed, the block does not say what the vehicle is\n%s", s)
 	}
 }

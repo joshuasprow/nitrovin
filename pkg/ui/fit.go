@@ -86,9 +86,8 @@ type fitCard struct {
 	// the page's own URL with it pressed.
 	Pressed, Page string
 	// Facts are what the decode says of the vehicle that a catalog's
-	// option text names, drawn beside the picker for the reader to match
-	// the options against (#366); nil where no candidate on the page has
-	// option text.
+	// option text names, on the vehicle's block, for the reader to match a
+	// candidate's options against (#366); nil where the decode has none.
 	Facts *vehicleFacts
 	// Tags are its candidates, a page of them, of Total in every page;
 	// Next is the next page's URL, "" on the last.
@@ -341,6 +340,7 @@ func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecod
 	}
 	c.Spine = fit.Catalog.Spine
 	c.Types = byName
+	c.Facts = newVehicleFacts(d)
 	if !pressed {
 		c.PickCount, c.PickNoun = len(byName), plural(len(byName), "part type", "part types")
 	}
@@ -376,9 +376,6 @@ func (h *Handler) fitVIN(ctx context.Context, d *diagram, dec *contract.VINDecod
 	}
 	for _, cand := range fit.Candidates {
 		c.Tags = append(c.Tags, newCandidateTag(cand, elements, names))
-	}
-	if slices.ContainsFunc(c.Tags, func(t candidateTag) bool { return len(t.Options) > 0 }) {
-		c.Facts = newVehicleFacts(d)
 	}
 	c.Total = fit.Total
 	if err := h.fitStock(ctx, c, d.VIN, ask, req, fit, dec, vehicle, res); err != nil {

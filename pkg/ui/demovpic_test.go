@@ -93,7 +93,7 @@ func TestPageDemoVPIC(t *testing.T) {
 		t.Errorf("the pickup's part types %q; want %q", got, want)
 	}
 	for _, want := range []string{
-		`<h2 id="fit-h" class="stamp">Parts that fit · demo-vpic-catalog</h2>`,
+		`<p class="stamp">This vehicle · demo-vpic-catalog</p>`,
 		`<span class="seg g-vds"><span class="w">F-150 / Ford</span></span>`,
 		"Choose a part type to see what fits this vehicle.",
 	} {

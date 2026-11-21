@@ -56,7 +56,7 @@ body { --bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint:
      tooth over it, the ink printed on it, and the patch around its eyelet. */
   --manila: url(paper.svg) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f);
   --on-manila: #2b2418; --manila-muted: #5c4c2e; --manila-patch: #c39a5c; --manila-bad: #a01414;
-  /* The page's side margin, which the region of the cards and the names
+  /* The page's side margin, which the region of the cards and the names' row
      reaches across on a narrow page. */
   --gutter: 1rem;
   font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 1rem var(--gutter) 3rem; color: var(--fg); background: var(--bg); }
@@ -96,7 +96,7 @@ h2 { font-size: 1.1rem; margin: 1.5rem 0 .5rem; }
 h3 { font: 900 12px var(--label-font); letter-spacing: .08em; text-transform: uppercase; margin: 1.5rem 0 .5rem; padding-bottom: .2rem; border-bottom: 3px solid var(--c-vds); }
 #ui-error:empty { display: none; }
 #ui-error { color: var(--bad); border-left: 4px solid var(--bad); padding-left: .6rem; margin-bottom: 1rem; }
-a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible, pre:focus-visible, .hang:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
+a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible, pre:focus-visible, .hang:focus-visible, .nametags:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
 code, pre, .mono { font-family: var(--cell-font); }
 .hint { color: var(--muted); font-weight: 400; }
 .visually-hidden, .plbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -247,7 +247,6 @@ form.filter .field { display: grid; gap: .25rem; }
 #answer[data-done~="year"] path.g-year, #answer[data-done~="plant"] path.g-plant, #answer[data-done~="serial"] path.g-serial { stroke: var(--c); stroke-width: 5; stroke-linejoin: round; filter: var(--stripe-lift); }
 /* No line runs to a blank plate: with no name under them the lines to
    "Also known as" are not drawn. */
-.joins:has(+ .aka .stack:first-child .tagplate.blank) path { display: none; }
 
 /* The input: below the plate until plate.js lays it over the cells. */
 .plate input { display: block; width: 100%; margin-top: 10px; font: 700 1.2rem var(--cell-font); letter-spacing: .1em; text-transform: uppercase; }
@@ -295,7 +294,7 @@ form.filter .field { display: grid; gap: .25rem; }
    text. The six share a grid row, as tall as its tallest card, so no card
    cuts its text off or keeps it behind a control.
 
-   The cards and the names under them are one region (.hang). On a wide
+   The cards are one region (.hang). On a wide
    page (64rem and up) it is no more than their box. On a narrow one it
    scrolls sideways (below). */
 .cards { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); padding: 0 16px; }
@@ -345,170 +344,65 @@ table.sum .skip { color: var(--muted); }
 .problems { margin: .75rem 20px 0; color: var(--bad); }
 .problems p { margin: .2rem 0; }
 
-/* "Also known as" has no box: the maker's, the vehicle's and the year's
-   lines run on down through its stacks, one for each vocabulary. A name
-   is a strip of label-maker tape (--tape: the one thing here that is not
-   metal, as a parts bin's label is not), its four columns fixed fractions
-   of the width (130, 170, 465 and 255 of 1020, which the lines above are
-   drawn to): the vocabulary's stamp, then the make, the model and the
-   years, each a word raised over its group's mark, under its group's
-   bracket. The words keep their case: a vocabulary's entry is case-exact.
-   The line into a strip is drawn by the strip (::after), in the gap above
-   it: the first strip's on a wide page, where the strips after it lie
-   against it (below), and every strip's on a narrow one. A dashed line,
-   bracket or mark is a doubt.
-
-   A vocabulary with several names is a stack: the first plate on top and
-   the edges of up to three more under it (shadows). Its name on the top plate is the switch (a
-   checkbox's label). On, the stack is one plate: the names are rows of
-   it with no gap, under the top row's brackets and beside the one stamp.
-
-   The strip itself is the plate's ::before, laid under its columns, so
-   that on a narrow page (below) it can lie under four of six columns
-   while the plate's label stays clear of it. */
-.aka { position: relative; isolation: isolate; display: flow-root; margin: 0 16px; }
-/* The heading's tape is stuck on; "N more vocabularies" is a switch, so
-   it stands raised, and is flush while it is on. */
-.aka h2, .more-voc { padding: .2rem .5rem; font: 900 9px/1.2 var(--cell-font); letter-spacing: .14em; text-transform: uppercase;
-  color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 2px solid var(--tape-edge); border-radius: 1px; box-shadow: var(--lift-stuck); }
-.more-voc { border-bottom-width: 1px; box-shadow: var(--lift-raised); }
-.more-voc:active, .more:checked ~ .more-voc { transform: translateY(2px); background: var(--tape-in); box-shadow: var(--pressed); }
-.aka h2 { position: absolute; top: 6px; left: 0; margin: 0; }
-ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
-/* A stack's own measures: the room under a closed one for its edges
-   (--under), the gap its lines cross from the strip above (--lead), what
-   a closed stack above adds to that (--prev), and its strip's shadow. */
-.stack { position: relative; --under: 0px; --lead: 30px; --prev: 0px; --strip-shadow: var(--lift-stuck); padding-bottom: var(--under); }
-/* A closed stack: the plates under the top one are away, but for their
-   edges, each a little narrower and lower, and room for them; the lines
-   into the stack after it start under its top plate. A stack is open
-   when its switch is on, and when "Check years" has just led to years
-   inside it (:target), which a closed stack would hide. The plates that
-   are away keep a box, unseen under the top one: a browser scrolls to a
-   link's target only if it has one. */
-.stack:has(.fan:not(:checked)):not(:has(.seg:target)) {
-  & .tagplate.below { position: absolute; inset: 0 0 auto; margin: 0; visibility: hidden; }
-  &.d1 { --under: 12px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), var(--lift-stuck); }
-  &.d2 { --under: 22px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), var(--lift-stuck); }
-  &.d3 { --under: 32px; --strip-shadow: 0 10px 0 -5px #2a2f35, 0 11px 0 -4px var(--tape-edge), 0 20px 0 -10px #24282d, 0 21px 0 -9px var(--tape-edge), 0 30px 0 -15px #1e2226, 0 31px 0 -14px var(--tape-edge), var(--lift-stuck); }
-  &.d1 + .stack { --prev: 12px; }
-  &.d2 + .stack { --prev: 22px; }
-  &.d3 + .stack { --prev: 32px; }
-}
-.tagplate { position: relative; display: grid; grid-template-columns: 130fr 170fr 465fr 255fr; align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape); }
-.tagplate::before { content: ""; grid-area: 1 / 1 / 2 / -1; align-self: stretch; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--strip-shadow); }
-.tagplate > .lbl, .tagplate > .seg { grid-row: 1; }
-.tagplate > .lbl { grid-column: 1; }
-.tagplate > .g-wmi { grid-column: 2; }
-.tagplate > .g-vds { grid-column: 3; }
-.tagplate > .g-year { grid-column: 4; }
-/* On the tape a group's mark is its light colour, in either scheme. */
-.tagplate .g-wmi { --cm: #ff6b81; }
-.tagplate .g-vds { --cm: #7db4ff; }
-.tagplate .g-year { --cm: #ffb067; }
-/* The plate's label: the vocabulary's stamp, and under it "Check years"
-   when the stack has years that are unsure. */
-.lbl { align-self: stretch; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 4px; padding: .3rem .5rem .3rem .7rem; border-right: 1px solid rgb(255 255 255 / .18); min-width: 0; }
-.tagplate .stamp { display: flex; align-items: center; gap: .35rem; min-width: 0; max-width: 100%; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss); }
-.tagplate > .stamp { align-self: stretch; padding: 0 .5rem 0 .7rem; border-right: 1px solid rgb(255 255 255 / .18); }
-.stamp .voc { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-/* The switch: the vocabulary's name on a line of its own, and under it
-   how many names its stack holds and which way it goes. */
-.stamp.switch { cursor: pointer; flex-wrap: wrap; align-content: center; row-gap: 2px; }
-.stamp.switch .voc { flex-basis: 100%; }
-.stamp .count { flex: none; padding: 0 .35rem; border: 1px solid rgb(255 255 255 / .5); border-radius: 999px; }
-.stamp.switch::after { content: "▾"; flex: none; font-size: 9px; }
-.fan:focus-visible ~ ol .stamp.switch { outline: 3px solid var(--link); outline-offset: 2px; }
-/* "Check years" is a strip of label tape in the year's colour, as a
-   control on a tag is in the tag's (.how): the warning that a name's
-   years are unsure, and the way to them. */
-.lbl .check { --cm: #a34c09; flex: none; padding: .15rem .4rem; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-decoration: none; white-space: nowrap; color: var(--on-tape);
-  text-shadow: -1px -1px 0 rgb(8 7 15 / .5), 1px 1px 0 rgb(255 255 255 / .4);
-  background: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .16) 2px 3px), var(--cm);
-  border: 1px solid color-mix(in srgb, var(--cm) 60%, #000); border-top-color: color-mix(in srgb, var(--cm) 68%, #fff); border-radius: 2px; box-shadow: var(--lift-raised); }
-.lbl .check::after { content: " ›"; }
-.lbl .check:active { transform: translateY(2px); box-shadow: var(--pressed);
-  background: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .16) 2px 3px), color-mix(in srgb, var(--cm) 76%, #000); }
+/* "Also known as" (#366): the vehicle's names are manila tags, one a
+   vocabulary, in one row that scrolls sideways under the vehicle's block.
+   A tag is a card's stock. Across it, the vocabulary's name on a strip of
+   label tape, with how many names it holds where it has several. Under
+   that its words with no labels, each over its group's colour, which
+   says what it is: the make over the Maker's, once where every name
+   shares it; then a line a name, the model over the Vehicle's and the
+   years it holds for, lighter, over the Model year's. The words keep
+   their case: a vocabulary's entry is case-exact. A dashed underline is a
+   doubt, and a name's note, behind its "i", a key of label tape as a
+   tag's controls are, says it in words. */
+.aka { position: relative; z-index: 3; margin: 14px 0 0; }
+.nametags { list-style: none; display: flex; align-items: stretch; gap: 10px; margin: 0; padding: 6px 4px 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; }
+.name { flex: none; scroll-snap-align: start; box-sizing: border-box; min-width: 11rem; max-width: min(22rem, 80vw); margin: 0; padding-bottom: .6rem; }
+.name .nvoc { margin: -.2rem -.6rem .45rem; padding: .25rem .6rem; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border: 0; border-block: 1px solid var(--tape-edge); }
+.name .count::before { content: "· "; }
+.nw { width: fit-content; max-width: 100%; margin: 0 0 .3rem; font: 700 .95rem/1.25 var(--cell-font); letter-spacing: .04em; border-bottom: 3px solid var(--cm); }
+.nw.unsure, .nrow.rule .nw:is(.g-wmi, .g-vds), .name.rule > .nw { border-bottom-style: dashed; }
+.nrow { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; margin: 0 0 .3rem; }
+.nrow .nw { margin: 0; }
+.nrow .g-year { font-weight: 400; font-size: .85rem; }
+.name .none { margin: 0; font-size: 13px; color: var(--manila-muted); }
+.name .info { align-self: center; width: 1.3rem; height: 1.3rem; padding: 0; font: 700 11px/1 var(--cell-font); letter-spacing: 0; text-transform: none; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-radius: 2px; box-shadow: var(--lift-raised); }
+.name .info:active { transform: translateY(2px); background: var(--tape-in); box-shadow: var(--pressed); }
+/* A word on the vehicle's block: raised white over its group's mark, on
+   the line that runs straight down into the tape from its card. No line
+   ends in a bracket but the plate's own. */
 .seg { position: relative; align-self: stretch; display: flex; align-items: center; justify-content: center; padding: .35rem .6rem; text-align: center; min-width: 0; }
 .seg .w { font: 900 1.05rem/1.2 var(--cell-font); letter-spacing: .08em; text-shadow: var(--tape-emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere; }
-/* A name's line runs straight down into its tape. No line ends in a
-   bracket but the plate's own (#366). */
 .seg::after { content: ""; position: absolute; left: calc(50% - 2.5px); top: calc(-1px - var(--lead) - var(--prev)); height: calc(var(--lead) + var(--prev) + 1px); border-left: 5px solid var(--c); filter: var(--stripe-lift); }
-.seg.unsure .w { border-style: dashed; }
-.tagplate.rule .g-wmi::after, .tagplate.rule .g-vds::after { border-left-style: dashed; }
-.tagplate.rule .g-wmi .w, .tagplate.rule .g-vds .w { border-bottom-style: dashed; }
-.seg.none .w { border: 0; }
-/* The years "Check years" led to: ringed in their mark, and brought into
-   view with the cards above them and the label beside them still in it. */
-.seg:target { scroll-margin: 16rem 2rem 4rem; }
-.seg:target .w { outline: 2px solid var(--cm); outline-offset: 4px; }
-/* A fanned stack: one plate. The rows under the top one have no gap, no
-   brackets and no stamp, only a hairline between their names. */
-.tagplate.below { margin-top: 0; }
-.tagplate.below::before { border-top: 0; border-radius: 0; box-shadow: none; }
-.tagplate.below .seg::after { display: none; }
-.tagplate.below .seg, .tagplate.below .lbl { border-top: 1px solid rgb(255 255 255 / .14); }
-.stack:has(.fan):is(:has(.fan:checked), :has(.seg:target)) {
-  & .stamp.switch::after { content: "▴"; }
-  & .tagplate::before { box-shadow: none; border-bottom: 0; }
-  & .tagplate:first-child::before { border-radius: 2px 2px 0 0; }
-  & .tagplate:last-child::before { border-bottom: 3px solid var(--tape-edge); border-radius: 0 0 2px 2px; box-shadow: var(--lift-stuck); }
-}
-.tagplate.blank { grid-template-columns: 130fr 890fr; color: var(--muted); border: 3px dashed var(--faint); }
-.tagplate.blank::before { display: none; }
-.tagplate.blank .stamp { border-right-color: var(--faint); text-shadow: none; }
-.tagplate.blank .none { grid-column: 2; padding: .5rem .75rem; }
-.tagplate.blank .none:first-child { grid-column: 1 / -1; }
-.tagplate .info { position: absolute; right: .45rem; top: 50%; transform: translateY(-50%); width: 1.35rem; height: 1.35rem; padding: 0; border-radius: 50%; font: italic 700 12px Georgia, serif; text-transform: none; letter-spacing: 0; }
-.tagplate .info:active { transform: translateY(calc(-50% + 2px)); }
-/* The block's cap: three vocabularies, and the rest behind the switch
-   after them, a checkbox's label as a stack's is: a piece of the heading's
-   tape that says how many more there are. A phone shows two (below). */
-.aka:has(.more:not(:checked)) .stack.rest { display: none; }
-.more-voc { display: block; width: fit-content; margin: 14px 0 0; cursor: pointer; }
-.more-voc.phone, .more-voc .at2 { display: none; }
-.more-voc::after { content: " ▾"; }
-.more:checked ~ .more-voc::after { content: " ▴"; }
-.more:checked ~ .more-voc .n, .more:not(:checked) ~ .more-voc .less { display: none; }
-.more:focus-visible ~ .more-voc { outline: 3px solid var(--link); outline-offset: 2px; }
-/* On a wide page the stacks are one block: each strip lies against the
-   one above, or against a closed stack's edges, and only the first
-   carries the brackets and the lines into them. The vehicle's and the year's lines run on under the block (the
-   block's ::before and ::after, behind its strips) to the parts that fit,
-   past a blank strip and the "more" switch, when a name is there to carry
-   them and a strip of parts to take them. The "more" switch hangs from
-   the block's bottom edge, at its leading end. */
-@media (width >= 64rem) {
-  .stack + .stack .tagplate { margin-top: 0; }
-  .stack:has(.fan:not(:checked)):not(:has(.seg:target)) {
-    &.d1 { --under: 7px; }
-    &.d2 { --under: 12px; }
-    &.d3 { --under: 17px; }
-  }
-  .stack + .stack .tagplate.blank { margin-top: 8px; }
-  .more-voc { margin-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; }
-  .stack + .stack .seg::after { display: none; }
-  #answer:has(.fitstrip) .aka.done:not(:has(.stack:first-child .tagplate.blank))::before,
-  #answer:has(.fitstrip) .aka.done:not(:has(.stack:first-child .tagplate.blank))::after { content: ""; position: absolute; z-index: -1; top: 40px; bottom: 0; left: calc(52.206% - 2.5px); border-left: 5px solid var(--c-vds); filter: var(--stripe-lift); pointer-events: none; }
-  #answer:has(.fitstrip) .aka.done:not(:has(.stack:first-child .tagplate.blank))::after { left: calc(87.5% - 2.5px); border-left-color: var(--c-year); }
-}
 .note[popover] { box-sizing: border-box; max-width: min(30rem, calc(100vw - 2rem)); padding: .75rem 1rem; border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .4); }
 .note[popover]::backdrop { background: rgb(10 18 26 / .35); }
 
-/* The parts that fit (page.html's fit), under the names in their columns.
-   A strip of label tape says what was asked: the catalog on its stamp,
-   over the names' stamp and make, then the model and the year under the
-   names' own, each on the line that runs on down from its card through
-   the names (.seg, as a name's: the last 30px, from the names' block,
-   which carries the lines that far). No line runs to it when no
-   vocabulary has a name. */
+/* The parts that fit (page.html's fit). The vehicle's block is a strip
+   of label tape in two rows: the model and the year, each on the line
+   that runs down from its card (.seg, the last 30px, into the tape), then
+   its stamp and what the decode says of the vehicle (.vfacts, below). No
+   line runs to the page's blank strips. */
 .fit { --rail-x: 3px; position: relative; isolation: isolate; display: flow-root; margin: 0 16px; }
 .fitstrip { --lead: 30px; --prev: 0px; display: grid; grid-template-columns: 300fr 465fr 255fr; align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape);
   background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck); }
 .fitstrip .stamp { align-self: stretch; display: flex; align-items: center; min-width: 0; margin: 0; padding: 0 .5rem 0 .7rem; border-right: 1px solid rgb(255 255 255 / .18); font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss); }
-.fitstrip .g-vds { --cm: #7db4ff; }
-.fitstrip .g-year { --cm: #ffb067; }
-#answer:has(.stacks > .stack:first-child .tagplate.blank) .fitstrip .seg::after { display: none; }
+.fitstrip { grid-template-rows: minmax(2.9rem, auto) auto; }
+.fitstrip .g-vds { --cm: #7db4ff; grid-row: 1; grid-column: 2; }
+.fitstrip .g-year { --cm: #ffb067; grid-row: 1; grid-column: 3; }
+.fitstrip .stamp { grid-row: 2; grid-column: 1; padding-block: .5rem; border-right: 0; border-top: 1px solid rgb(255 255 255 / .18); }
+/* The block's second row (#366): "This vehicle", the catalog, and what
+   the decode says of the vehicle that a catalog's option text names, for
+   the reader to match a candidate's options against. Raised white on the
+   same tape, a small label over each value. The VIN's characters 4 to 8
+   stand over the Vehicle group's mark, as on the plate, each with its
+   position under it. */
+.vfacts { grid-row: 2; grid-column: 2 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 22px; min-width: 0; margin: 0; padding: .45rem .7rem; border-top: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss); }
+.vfacts dt { font-size: 11px; line-height: 1.2; letter-spacing: .04em; text-transform: uppercase; color: #aeb7c0; text-shadow: none; }
+.vfacts dd { margin: 0; font: 900 .95rem/1.25 var(--cell-font); letter-spacing: .06em; }
+.vchars dd { display: flex; gap: 3px; }
+.vc { display: grid; justify-items: center; min-width: 1.15rem; }
+.vc b { width: 100%; text-align: center; border-bottom: 3px solid #7db4ff; }
+.vc small { font: 400 10px/1.3 var(--cell-font); letter-spacing: 0; color: #aeb7c0; text-shadow: none; }
 /* The part types: the second tape, a name that is pressed. Embossing tape
    in the plate's metal (--alu, the metal under the tape's ridges), its
    letters struck as the plate's are, in the monospace face and the name's
@@ -548,21 +442,6 @@ ol.stacks, ol.tags { list-style: none; margin: 0; padding: 0; }
 .ptrecents .ptype { min-height: 38px; padding-inline: 10px; font-size: 13px; }
 .ptrecents::before { content: "Recent"; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss); }
 .ptfind { width: 100%; min-height: 44px; }
-/* This vehicle, under the picker's tape (#366): what the decode says of
-   it that a catalog's option text names, for the reader to match a
-   candidate's options against, since the page cannot read them. Ink on
-   the ground, a small label over each value as on a card. The VIN's
-   characters 4 to 8 stand over the Vehicle group's underline, as they do
-   on the plate, each with its position under it. It lies over the risers
-   that pass behind it. */
-.vfacts { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 20px; width: fit-content; max-width: 100%; margin: 10px 0 0; padding-right: 8px; background: var(--bg); }
-.vfacts::before { content: "This vehicle"; align-self: center; font: 900 10px var(--label-font); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-.vfacts dt { font-size: 11px; line-height: 1.2; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
-.vfacts dd { margin: 0; font-weight: 600; line-height: 1.3; }
-.vchars dd { display: flex; gap: 3px; }
-.vc { display: grid; justify-items: center; min-width: 1.15rem; }
-.vc b { width: 100%; text-align: center; font: 700 16px/1.2 var(--cell-font); border-bottom: 3px solid var(--c-vds); }
-.vc small { font: 400 10px/1.3 var(--cell-font); color: var(--muted); }
 @media (width <= 46rem) {
   .ptrecents { display: none; }
 }
@@ -944,78 +823,42 @@ button.linkish:active { transform: none; box-shadow: none; }
 @keyframes pop { from { transform: translateY(-8px) scale(.92); opacity: 0; } }
 @keyframes stamp { from { transform: scale(1.6); opacity: .2; } }
 
-/* A narrow page (under 64rem): the cards and the names are one row that
-   scrolls sideways (.hang), six columns of one width (--col). The cards
-   keep the VIN's order. A name's strip lies under the first four columns,
-   its make under Maker, its model under Vehicle and its years under Model
-   year; nothing of a name is under Check digit, Plant or Serial. So a
-   swipe moves the names with the cards.
-
-   The lines from the three cards to the names are straight here, each
-   part's own (.seg::after) as on a wide page, only longer (--lead): from
-   the card, or the strip above, across the plate's label. The stepped
-   lines (.joins), and the leader lines to cards that now move, are not
-   drawn.
-
-   A plate's label is a line of its own above the strip, a piece of tape,
-   and stays at the region's leading edge while the row scrolls (sticky).
-   The first one carries the heading's words. */
+/* A narrow page (under 64rem): the cards are one row that scrolls
+   sideways (.hang), six columns of one width (--col), in the VIN's order.
+   The stepped lines (.joins), and the leader lines to cards that now
+   move, are not drawn. The names' row of tags scrolls by itself, from one
+   edge of the window to the other. */
 @media (width < 64rem) {
   .leaders, .joins { display: none; }
   .hang { --col: 12.5rem; --lbl-h: 1.5rem; --gap: 12px; overflow-x: auto; overscroll-behavior-x: contain; margin: .75rem calc(-1 * var(--gutter)) 0; padding: 4px var(--gutter) 14px; }
   .hang:focus-visible { outline-offset: -3px; }
   .cards { grid-template-columns: repeat(6, var(--col)); width: max-content; padding: 0; }
-  .aka { width: calc(6 * var(--col)); margin: 0; }
-  .aka h2, .more-voc, .tagplate.blank { position: sticky; left: calc(var(--gutter) + 4px); }
-  .aka h2 { top: auto; width: fit-content; margin: 14px 0 -6px 4px; }
-  .aka.done h2 { position: absolute; left: auto; width: 1px; height: 1px; margin: 0; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .aka.done .stack:first-child .tagplate:first-child .stamp::before { content: "Also known as ·"; content: "Also known as ·" / ""; flex: none; }
-  .more-voc { margin-left: 4px; }
-  .stack { --lead: calc(var(--gap) + var(--lbl-h) + 16px); }
-  .tagplate { grid-template-columns: repeat(6, var(--col)); margin-top: var(--gap); min-height: 0; }
-  .tagplate::before { grid-area: 2 / 1 / 3 / 5; margin: 0 4px; min-height: 2.9rem; }
-  .tagplate > .seg { grid-row: 2; margin: 0 4px; }
-  .tagplate > .g-wmi { grid-column: 1; }
-  .tagplate > .g-vds { grid-column: 2; }
-  .tagplate > .g-year { grid-column: 4; padding-inline: 1.9rem; }
-  .tagplate > .lbl { grid-area: 1 / 1 / 2 / -1; justify-self: start; position: sticky; left: calc(var(--gutter) + 4px); z-index: 1; flex-direction: row; align-items: center; gap: .4rem; box-sizing: border-box; height: var(--lbl-h); max-width: calc(100vw - 2 * var(--gutter) - 8px); margin: 0 0 16px 4px; padding: 0; border: 0; }
-  .tagplate.below > .lbl { display: none; }
-  .tagplate.below::before { border-top: 1px solid rgb(255 255 255 / .14); }
-  .tagplate.below .seg { border-top: 0; }
-  .lbl .stamp { flex-wrap: nowrap; padding: .2rem .5rem; background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 2px solid var(--tape-edge); border-radius: 1px; box-shadow: var(--lift-stuck); }
-  .lbl .stamp.switch .voc { flex-basis: auto; }
-  /* Here a stack's switch is a piece of tape of its own, so it stands
-     raised, and is flush while its stack is open. */
-  .lbl .stamp.switch { border-bottom-width: 1px; box-shadow: var(--lift-raised); }
-  .lbl .stamp.switch:active, .stack:has(.fan):is(:has(.fan:checked), :has(.seg:target)) .lbl .stamp.switch { transform: translateY(2px); background: var(--tape-in); box-shadow: var(--pressed); }
   .seg .w { font-size: .9rem; letter-spacing: .04em; }
-  .tagplate.blank { grid-template-columns: minmax(0, 1fr); box-sizing: border-box; width: min(100% - 8px, 100vw - 2 * var(--gutter) - 8px); margin-left: 4px; }
-  .tagplate.blank > .stamp { padding-block: .3rem; border-right: 0; border-bottom: 1px solid var(--faint); }
-  .tagplate.blank .none { grid-column: 1; }
-  /* A name's note is at the end of its years. */
-  .tagplate .info { right: auto; left: calc(4 * var(--col) - 4px - 1.7rem); top: auto; bottom: calc(1.45rem - .675rem); transform: none; }
-  .tagplate .info:active { transform: translateY(2px); }
   .problems { margin-inline: 4px; }
-  /* The parts that fit are outside the row that scrolls: their strip's
-     stamp is a line of its own above the model and the year, each at
-     the middle of its half. The lines from the names, which move, are
-     carried to it (.carry, below). */
+  /* The parts that fit are outside the row that scrolls. The block's
+     model and year are each at the middle of its half, and its stamp
+     and details are rows of their own. The lines from the cards, which
+     move, are carried to it (.carry, below). */
   .fit { margin: 0; }
   .fit { --xv: 25%; --xy: 75%; }
   .fitstrip { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 30px; }
-  .fitstrip .seg { grid-row: 1; }
-  .fitstrip .stamp { grid-row: 2; grid-column: 1 / -1; padding-block: .35rem; border-right: 0; border-top: 1px solid rgb(255 255 255 / .18); }
+  .fitstrip .g-vds { grid-column: 1; }
+  .fitstrip .g-year { grid-column: 2; }
+  .fitstrip .stamp { grid-column: 1 / -1; padding-block: .35rem; }
+  .vfacts { grid-row: 3; grid-column: 1 / -1; }
+  .aka { margin-inline: calc(-1 * var(--gutter)); }
+  .nametags { padding-inline: var(--gutter); scroll-padding-inline: var(--gutter); }
   .fitstrip .seg::after { display: none; }
   .fit > .blank { margin-top: 1rem; }
 }
-/* A narrow page's names move and its strip of parts does not, so the
+/* A narrow page's cards move and the vehicle's block does not, so the
    vehicle's and the year's lines are carried between them by the row's
    own scroll (a scroll timeline, --hang-p from 0 at its start to 1 at its
    end; no script reads a position). In the row, each line runs on from
-   the last strip shown to the row's bottom edge. Under it, in the 30px above the
-   strip (.carry, which clips what leaves the window), each comes down
+   its card to the row's bottom edge. Under it, in the 30px above the
+   block (.carry, which clips what leaves the window), each comes down
    where the row left it, turns, the vehicle's 9px down and the year's
-   18px, and runs along to drop into the strip over its word. Its first
+   18px, and runs along to drop into the block over its word. Its first
    piece and the run's end move with the row; the drop stays. That first
    piece starts 3px up, in the row's last 3px, and the row's own line
    stops 2px short of its edge, so the two meet clear of the edge the
@@ -1027,18 +870,12 @@ button.linkish:active { transform: none; box-shadow: none; }
   @supports (animation-timeline: --a) and (timeline-scope: --a) {
     #answer { timeline-scope: --hang; --col: 12.5rem; }
     .hang { scroll-timeline: --hang x; }
-    /* Under the last strip shown, each line runs on to the row's bottom
-       edge (--tail: the row's 14px, and the "more" switch's line where
-       there is one), and past a blank strip on the way. */
-    .aka .more-voc { box-sizing: border-box; height: 20px; }
-    .aka.done .stacks { position: relative; --tail: 14px; }
-    .aka.done .stacks:has(~ .more-voc:not(.phone)) { --tail: 48px; }
-    #answer:has(.fitstrip) .aka.done:not(:has(.stack:first-child .tagplate.blank)) :is(.stacks, .stack:has(.tagplate.blank))::before,
-    #answer:has(.fitstrip) .aka.done:not(:has(.stack:first-child .tagplate.blank)) :is(.stacks, .stack:has(.tagplate.blank))::after { content: ""; position: absolute; top: 100%; height: calc(var(--tail) - 2px); left: calc(1.5 * var(--col) - 2.5px); border-left: 5px solid var(--c-vds); filter: var(--stripe-lift); pointer-events: none; }
-    #answer:has(.fitstrip) .aka.done:not(:has(.stack:first-child .tagplate.blank)) :is(.stacks, .stack:has(.tagplate.blank))::after { left: calc(3.5 * var(--col) - 2.5px); border-left-color: var(--c-year); }
-    #answer:has(.fitstrip) .aka.done .stack:has(.tagplate.blank)::before, #answer:has(.fitstrip) .aka.done .stack:has(.tagplate.blank)::after { top: calc(-1 * var(--gap)); height: calc(100% + var(--gap)); z-index: -1; }
-    @media (max-width: 34rem) { .aka.done .stacks:has(~ .more-voc) { --tail: 48px; } }
-    #answer:not(:has(.stacks > .stack:first-child .tagplate.blank)) .carry { display: block; position: absolute; z-index: -1; top: -3px; left: calc(-1 * var(--gutter)); right: calc(-1 * var(--gutter)); height: 35px; overflow: clip; pointer-events: none;
+    /* Under the Vehicle's and the Model year's cards, each line runs on
+       to the row's bottom edge, 2px short of it. */
+    .cards { position: relative; }
+    #answer:has(.fitstrip) .cards::before, #answer:has(.fitstrip) .cards::after { content: ""; position: absolute; top: 100%; height: 12px; left: calc(1.5 * var(--col) - 2.5px); border-left: 5px solid var(--c-vds); filter: var(--stripe-lift); pointer-events: none; }
+    #answer:has(.fitstrip) .cards::after { left: calc(3.5 * var(--col) - 2.5px); border-left-color: var(--c-year); }
+    .carry { display: block; position: absolute; z-index: -1; top: -3px; left: calc(-1 * var(--gutter)); right: calc(-1 * var(--gutter)); height: 35px; overflow: clip; pointer-events: none;
       animation: hang-p linear both; animation-timeline: --hang;
       --w: calc(100% - 2 * var(--gutter)); --r: calc(6 * var(--col) - var(--w));
       --mv: calc(var(--gutter) + 1.5 * var(--col) - round(var(--hang-p) * var(--r), .02px)); --my: calc(var(--gutter) + 3.5 * var(--col) - round(var(--hang-p) * var(--r), .02px));
@@ -1079,14 +916,9 @@ button.linkish:active { transform: none; box-shadow: none; }
    with the cells, nine characters to a line. */
 @media (max-width: 34rem) {
   .plate { --cell-h: 15cqw; }
-  /* The row's columns are narrower, and the names block shows two
-     vocabularies before its switch. */
+  /* The row's columns are narrower. */
   .hang, #answer { --col: 9.5rem; }
   .seg .w { font-size: .8rem; letter-spacing: .03em; }
-  .aka:has(.more:not(:checked)) .stack.third { display: none; }
-  .more-voc.phone { display: block; }
-  .more-voc .at3 { display: none; }
-  .more-voc .at2 { display: inline; }
   /* Candidates are one row that scrolls sideways, the next tag showing
      at the edge, and reaches both edges of the window. The rails are one
      row's, as on a wide page: each tag's bars run to its neighbour's, the

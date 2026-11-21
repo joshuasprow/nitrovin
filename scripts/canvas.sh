@@ -45,5 +45,11 @@ trap 'kill "$demo_pid" "$bare_pid" 2>/dev/null || true' EXIT
 for p in "$port" "$bare"; do
   for _ in $(seq 50); do curl -fsS -o /dev/null 2>/dev/null "http://127.0.0.1:$p/" && break; sleep 0.2; done
 done
+# A port already taken answers too, with some other server's page: the
+# frames are this checkout's only if both of its servers are still up.
+if ! kill -0 "$demo_pid" 2>/dev/null || ! kill -0 "$bare_pid" 2>/dev/null; then
+  echo "canvas: a server did not start: is port $port or $bare in use? Set NITROVIN_CANVAS_PORT" >&2
+  exit 1
+fi
 NITROVIN_CANVAS_DEMO="http://127.0.0.1:$port" NITROVIN_CANVAS_BARE="http://127.0.0.1:$bare" \
   node scripts/canvas/build.mjs "$@"

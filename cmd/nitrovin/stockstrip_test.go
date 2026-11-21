@@ -133,7 +133,7 @@ func TestStockStrip(t *testing.T) {
 					hang.scrollTo({left: to, behavior: "instant"});
 					await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 					const carry = document.querySelector(".carry"), piece = getComputedStyle(carry.firstElementChild, "::before");
-					const stacks = document.querySelector("#aka .stacks"), aka = stacks.getBoundingClientRect(), line = getComputedStyle(stacks, "::before");
+					const cards = document.querySelector(".cards"), aka = cards.getBoundingClientRect(), line = getComputedStyle(cards, "::before");
 					out.push(carry.getBoundingClientRect().left + parseFloat(piece.left), aka.left + parseFloat(line.left));
 				}
 				return out;

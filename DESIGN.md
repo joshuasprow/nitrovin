@@ -263,38 +263,20 @@ its group's colour.
 - **Lettering:** `--on-tape` (`#f6f8fa`) in the monospace face with
   `--tape-emboss`, a dark edge up and left and a light edge down and right, so
   the letter reads as raised.
-- **Case is kept.** A vocabulary's entry is case-exact, so the tape never
-  upper-cases a name. The vocabulary's own stamp and the "Also known as"
-  heading are upper case.
-- **Four columns at fixed fractions** (130, 170, 465 and 255 of 1020): the
-  vocabulary's stamp, then make, model and years. Each word sits over a 3 px
-  underline in its group's mark, on the line that runs straight down into the
-  tape from its card. No line ends in a bracket but the plate's own. On a narrow page the strip lies under the
-  first four of the cards' six columns, and the stamp is a label above it.
-- **A dashed line or underline is a doubt.** The strip's note, behind
-  its round "i" button, says the doubt in words.
-- **Several names stack.** The first strip is on top, with the edges of up to
-  three more under it. The stamp is the switch and carries the count. Opened,
-  the stack is one strip with a row to a name.
-- **On a wide page the vocabularies' strips are one block.** Each lies
-  against the strip above, or against a closed stack's edges, with no gap.
-  Only the first strip carries the lines into it; the strips after it carry
-  their underlines alone. A blank strip stands 8 px
-  off the block. "N more vocabularies" hangs from the block's bottom edge,
-  at its leading end, with no gap.
-- **A switch of tape stands raised.** "N more vocabularies", and on a narrow
-  page a stack's stamp on its line of its own, keep a 1 px bottom edge on the
-  controls' ledge and shadow. On, each is flush, and its fill is `--tape-in`,
-  the tape's body darkened to `#0c0e10`–`#1d2125`. On a wide page a stack's
-  stamp is a column of its strip, and lies level with it.
-- **An empty place stays.** A vocabulary with no name, or none loaded, keeps a
-  blank strip: a 3 px dashed `--faint` outline with a sentence in it (empty
-  places, below).
+- **Case is kept.** A vocabulary's entry is case-exact, so its name is never
+  upper-cased. A vocabulary's own name, on the strip across its tag, and a
+  stamp are upper case.
+- **A word on the vehicle's block** sits over a 3 px underline in its
+  group's mark, on the line that runs straight down into the tape from its
+  card. No line ends in a bracket but the plate's own.
+- **An empty place stays.** With no vocabulary loaded, or before the model
+  is known, the names' place is a blank strip: a 3 px dashed `--faint`
+  outline with a sentence in it (empty places, below).
 - **On a tag the tape takes the tag's colour.** A control on a manila tag is
   the same ridged tape with the group's mark as its body, edges mixed lighter
   and darker from that colour, and a faint white halo on its letters, as
-  vinyl whitens where it is struck. "Check years" is the same tape in the
-  year's colour. Each stands raised, its own bottom edge 1 px, and pressed it
+  vinyl whitens where it is struck. A name's "i", on a name tag, is plain
+  black tape. Each stands raised, its own bottom edge 1 px, and pressed it
   is flush, its colour mixed darker with black.
 
 ### The second tape
@@ -377,41 +359,56 @@ that it is narrow.
 - A newly finished group pops its card in (0.3 s).
 - **Wide**, the six cards span the plate's width, each under its leader line.
 - **Narrow**, the six cards are one row that scrolls sideways, in the VIN's
-  order, six columns of one width (12.5 rem, and 9.5 rem under 34 rem). The
-  names of "Also known as" are in the same region and the same columns, so a
-  swipe moves them with the cards. The region reaches both edges of the
+  order, six columns of one width (12.5 rem, and 9.5 rem under 34 rem). The region reaches both edges of the
   window, is named, and takes focus, so a keyboard scrolls it.
 
 ## Good enough: the parts that fit
 
-Under "Also known as", in the page's single column, a picker of the part
-types the loaded catalog has for the vehicle, and the candidates of the one
-pressed.
+Under the cards, in the page's single column: the vehicle's block, its names
+in the vocabularies loaded, a picker of the part types the loaded catalog has
+for the vehicle, and the candidates of the one pressed.
 
-- **The strip** is label tape, stuck on: its stamp reads "Parts that fit ·"
-  and the catalog's name, over the names' stamp and make columns (300 of
-  1020); the catalog's model the decode reached and the year it asked with
-  ("any year" without one) sit under the names' model and years, each over
-  its group's underline, on the lines from Vehicle and Model year that run on
-  through the names and straight down into the tape. The two lines pass
-  behind the names' block from its first strip, so they show behind a blank
-  strip and beside the "more" switch. No line runs to the strip when no
-  vocabulary has a name. Narrow, the two words lead, each at the middle of its half, and the stamp
-  is a line of its own under them.
+- **The vehicle's block** is label tape, stuck on, in two rows. On the
+  first, the catalog's model the decode reached and the year it asked with
+  ("any year" without one), each over its group's underline, at 52 % and
+  88 % of the width on a wide page and at the middle of each half on a
+  narrow one, where the lines from the Vehicle and Model year cards come
+  straight down into the tape. On the second, its stamp, "This vehicle ·"
+  and the catalog's name, then what the decode says of the vehicle that a
+  catalog's option text names, so a candidate's options are matched at a
+  glance: the Vehicle card's rows but the model, a small label over each
+  value, raised white on the tape, then "VIN 4–8", the Vehicle group's
+  five characters, each over the group's mark, as on the plate, with its
+  position under it. The page puts the two side by side and judges
+  nothing: it marks no candidate as the match. Narrow, the stamp and the
+  details are rows of their own.
+- **The names** ("Also known as") are manila tags, a tag a vocabulary, in
+  one row under the block that scrolls sideways at every width, the next
+  tag showing at the edge; narrow, it reaches both edges of the window. A
+  tag is a card's stock. Across it, the vocabulary's name on a strip of
+  label tape, with how many names it holds where it has several. Under
+  that its words, with no labels: each stands over its group's colour,
+  which says what it is. The make is over the Maker's, once where every
+  name of the tag shares it; then a line a name, the model over the
+  Vehicle's and the years its mapping holds for, lighter, over the Model
+  year's. A dashed underline is a doubt, and the name's "i", a key of
+  label tape, opens a note that says it in words. A vocabulary with no
+  name keeps a tag that says so, after those with names. Every vocabulary
+  is on the page: nothing is stacked or kept behind a switch.
 - **From the strip to the picker**, at every width, each line comes down
   out of the strip under its word, turns in the 30 px under the strip
   (Vehicle's 9 px into it, Model year's 18 px), and runs along to drop
-  into the picker where its riser leaves it. So the lines from the two cards reach the
-  eyelets in one piece. With nothing pressed they end on the strip. They
+  into the picker where its riser leaves it, behind the names' tags on the
+  way. So the lines from the two cards reach the eyelets in one piece. With nothing pressed they end on the strip. They
   need anchor positioning, as the risers do.
-- **Narrow, the names move and the strip does not**, so the two lines are
+- **Narrow, the cards move and the block does not**, so the two lines are
   carried between them by the row's own scroll (a scroll timeline; no
-  script reads a position). In the row each line runs on from the last strip
-  shown to the row's bottom edge, past a blank strip and the "more" switch. In the 30 px above the strip it comes down where
+  script reads a position). In the row each line runs on from its card to
+  the row's bottom edge. In the 30 px above the block it comes down where
   the row left it, turns (Vehicle's 9 px down, Model year's 18 px), and
-  runs along to drop into the strip over its word. A line whose column is
+  runs along to drop into the block over its word. A line whose column is
   off the window runs to the window's edge. A browser without scroll
-  timelines draws no line between the names and the strip.
+  timelines draws no line between the cards and the block.
 - **The picker** is one key of the second tape on its own piece of label
   tape, under the strip, the key at most 24 rem wide and the page's width
   on a phone. Over its name it is labelled "Part type". With nothing pressed
@@ -498,16 +495,6 @@ pressed.
   come first: Not checked, Match the options yourself, No conditions, then
   Checked,
   then By redirect.
-- **This vehicle**, under the picker's tape, where a candidate on the page has
-  option text: what the decode says of the vehicle that a catalog's
-  options name, so the match is a glance and the reader never counts along
-  the plate. After the words "This vehicle" in the label face, the Vehicle
-  card's rows but the model, a small label over each value as on a card,
-  then "VIN 4–8": the Vehicle group's five characters in the cell face,
-  each over an underline in the group's colour, as on the plate, with its
-  position under it. It is ink on the ground, not a control. The page
-  puts the two side by side and judges nothing: it marks no candidate as
-  the match.
 - **More candidates** than a page holds (30) are a "Next page" link away.
 - **The stock strip** is the bottom edge of every tag, and the only part of
   it that presses: the second tape, "Stock · 2 shelf · 2 yard", naming only
@@ -560,8 +547,9 @@ Where the page has no answer, the place stays, as a blank strip: a 3 px dashed
 `--faint` outline with one sentence in `--muted`. A control in it is a key of
 metal; a way on is a link.
 
-- **Under the names:** a vocabulary with no name, none loaded, or a model
-  not known yet.
+- **The names' place:** no vocabulary loaded, with a key that opens the
+  Vocabularies dialog, or a model not known yet. A vocabulary with no name
+  for the vehicle is not a blank strip: its tag says so.
 - **The parts that fit:** no catalog loaded, with a key that opens the
   Vocabularies dialog; the model not known yet; the catalog lacks the
   vehicle, naming both, with a link to the catalog's lines; the catalog has
@@ -584,35 +572,19 @@ metal; a way on is a link.
 - A label sits over its cells with a bracket opening downward. A second
   bracket under the plate opens upward. Both are borders, not images.
 - **Wide**, a leader line runs from each lower bracket to its card, with
-  square turns and one elbow. A second set of lines joins the maker's, the
-  vehicle's and the year's cards to the label tape's columns.
+  square turns and one elbow. A second set of lines joins the vehicle's and
+  the year's cards to the block's two words, where a block is drawn.
 - Those lines are SVG paths in a 1020-unit box (60 a cell, 170 a card),
   stretched to the stage with `vector-effect="non-scaling-stroke"`. Positions
   come from arithmetic on the grid, and nothing is measured at run time.
-- **Narrow**, a name's make is under Maker, its model under Vehicle and its
-  years under Model year; nothing of a name is under Check digit, Plant or
-  Serial. A straight line runs down from each of those three cards to the
-  part under it, and on from name to name, behind each vocabulary's label.
-  The stepped lines are not drawn. Neither are the leader lines: the cards
-  they would end on move.
-- A vocabulary's label is the plate's first column on a wide page. On a narrow
-  one it is a line of its own above the strip, a piece of label tape, and it
-  stays at the region's leading edge while the row scrolls. The first label
-  carries the heading's words, "Also known as".
-- **"Check years"** is on a vocabulary's label exactly when one of its names'
-  years is unsure. It is a strip of tape in the year's colour and an in-page
-  link to the first of those years. Following it scrolls them into view, rings
-  them, and fans their stack out if they are under its top strip. The scroll
-  is smooth only where motion is welcome.
-- **The names block shows three vocabularies**, two under 34 rem, in loaded
-  order. A piece of tape after them reads "N more vocabularies" and shows the
-  rest in place. It is a switch without a script, as a stack's is.
+- **Narrow**, the stepped lines are not drawn, and neither are the leader
+  lines: the cards they would end on move.
 - A newly finished group draws its bracket and line in.
 - **The lines never stop short.** Vehicle's and Model year's run from the
-  card through the names and the strip of parts to the picker
-  and its candidates' eyelets, at every width. Maker's ends on a name's
-  make.
-- No line ends on a blank strip: with no name at all, none is drawn.
+  card into the vehicle's block, and from it to the picker and its
+  candidates' eyelets, at every width. Maker's ends at its card: a name's
+  make carries the Maker's colour instead of a line.
+- No line ends on a blank strip: with no block, none is drawn from the cards.
 
 ## Good enough: dialogs
 
