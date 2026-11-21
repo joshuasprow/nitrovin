@@ -96,89 +96,41 @@
       "y": 0
     },
     "Proposal-Shelf-Receipt.dc.html": {
-      "h": 3250,
-      "page": "proposals",
-      "title": "Proposal: the shelf list, thermal receipt, light",
+      "h": 5070,
+      "page": "proposal-shelf-list",
+      "title": "Proposal: the shelf list on thermal paper, light",
       "w": 1280,
       "x": 0,
       "y": 0
     },
     "Proposal-Shelf-Receipt-Dark.dc.html": {
-      "h": 3250,
-      "page": "proposals",
-      "title": "Proposal: the shelf list, thermal receipt, dark",
+      "h": 5070,
+      "page": "proposal-shelf-list",
+      "title": "Proposal: the shelf list on thermal paper, dark",
       "w": 1280,
       "x": 0,
-      "y": 3370
-    },
-    "Proposal-Shelf-Placard.dc.html": {
-      "h": 2950,
-      "page": "proposals",
-      "title": "Proposal: the shelf list, tire placard, light",
-      "w": 1280,
-      "x": 1360,
-      "y": 0
-    },
-    "Proposal-Shelf-Placard-Dark.dc.html": {
-      "h": 2950,
-      "page": "proposals",
-      "title": "Proposal: the shelf list, tire placard, dark",
-      "w": 1280,
-      "x": 1360,
-      "y": 3370
-    },
-    "Proposal-Shelf-Tyvek.dc.html": {
-      "h": 2790,
-      "page": "proposals",
-      "title": "Proposal: the shelf list, Tyvek wire tags, light",
-      "w": 1280,
-      "x": 2720,
-      "y": 0
-    },
-    "Proposal-Shelf-Tyvek-Dark.dc.html": {
-      "h": 2790,
-      "page": "proposals",
-      "title": "Proposal: the shelf list, Tyvek wire tags, dark",
-      "w": 1280,
-      "x": 2720,
-      "y": 3370
-    },
-    "Proposal-Shelf-Marker.dc.html": {
-      "h": 2940,
-      "page": "proposals",
-      "title": "Proposal: the shelf list, paint marker on steel, light",
-      "w": 1280,
-      "x": 4080,
-      "y": 0
-    },
-    "Proposal-Shelf-Marker-Dark.dc.html": {
-      "h": 2940,
-      "page": "proposals",
-      "title": "Proposal: the shelf list, paint marker on steel, dark",
-      "w": 1280,
-      "x": 4080,
-      "y": 3370
+      "y": 5190
     },
     "Swatches-Thermal.dc.html": {
       "h": 1390,
       "title": "Swatches: thermal paper",
       "w": 1280,
       "x": 0,
-      "y": 10420
+      "y": 10520
     },
     "Swatches-Yard.dc.html": {
-      "h": 2130,
+      "h": 2110,
       "title": "Swatches: the yard and the shelf",
       "w": 1280,
       "x": 1360,
-      "y": 10420
+      "y": 10520
     },
     "Swatches-Vehicle.dc.html": {
       "h": 2160,
       "title": "Swatches: the vehicle and the garage",
       "w": 1280,
       "x": 2720,
-      "y": 10420
+      "y": 10520
     }
   },
   "createdOnFiles": {
@@ -191,8 +143,8 @@
   },
   "noteOrder": [
     "heading",
-    "proposal-shelf-materials",
-    "swatches"
+    "swatches",
+    "proposal-shelf-list"
   ],
   "notes": {
     "heading": {
@@ -203,22 +155,22 @@
       "x": 0,
       "y": -300
     },
-    "proposal-shelf-materials": {
-      "kind": "title1",
-      "maxW": 5360,
-      "page": "proposals",
-      "text": "Proposal: the shelf list in new materials",
-      "w": 240,
-      "x": 0,
-      "y": -300
-    },
     "swatches": {
       "kind": "title1",
       "maxW": 4000,
       "text": "Swatches: materials found, none settled",
       "w": 240,
       "x": 0,
-      "y": 10120
+      "y": 10220
+    },
+    "proposal-shelf-list": {
+      "kind": "title1",
+      "maxW": 1280,
+      "page": "proposal-shelf-list",
+      "text": "Proposal: the shelf list on thermal paper",
+      "w": 240,
+      "x": 0,
+      "y": -300
     }
   },
   "order": [
@@ -237,12 +189,6 @@
     "Artboard-vknl.dc.html",
     "Proposal-Shelf-Receipt.dc.html",
     "Proposal-Shelf-Receipt-Dark.dc.html",
-    "Proposal-Shelf-Placard.dc.html",
-    "Proposal-Shelf-Placard-Dark.dc.html",
-    "Proposal-Shelf-Tyvek.dc.html",
-    "Proposal-Shelf-Tyvek-Dark.dc.html",
-    "Proposal-Shelf-Marker.dc.html",
-    "Proposal-Shelf-Marker-Dark.dc.html",
     "Swatches-Thermal.dc.html",
     "Swatches-Yard.dc.html",
     "Swatches-Vehicle.dc.html"
@@ -257,8 +203,8 @@
       "name": "Page 2"
     },
     {
-      "id": "proposals",
-      "name": "Proposals"
+      "id": "proposal-shelf-list",
+      "name": "Proposal: shelf list"
     }
   ],
   "title": "nitrovin UI Design"
