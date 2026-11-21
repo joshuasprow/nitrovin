@@ -47,6 +47,14 @@ names by issue. When the proposal is built its frames are folded into the
 six and the page goes. None is open now: the part type picker of #366 was
 the first, and this folder's history holds its frames.
 
+A page, "Swatches", holds three boards of materials found for the page's
+look, none of them settled: `Swatches-Thermal`, `Swatches-Yard` and
+`Swatches-Vehicle`. `scripts/canvas/swatches.mjs` builds them from the files
+of `scripts/canvas/swatches/`, a web search's findings of 2026-11-20. A
+swatch's dimensions and conventions are its sources', which it names; its
+colours are estimates, since no source publishes one. `scripts/canvas.sh`
+does not build these boards and leaves them alone.
+
 The wireframes and texture frames that proposed the fitment slices (#320 to
 #325) are removed from the canvas. This folder's history holds them.
 
