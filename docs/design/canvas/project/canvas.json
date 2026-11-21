@@ -116,21 +116,24 @@
       "title": "Swatches: thermal paper",
       "w": 1280,
       "x": 0,
-      "y": 10520
+      "y": 0,
+      "page": "swatches"
     },
     "Swatches-Yard.dc.html": {
       "h": 2110,
       "title": "Swatches: the yard and the shelf",
       "w": 1280,
       "x": 1360,
-      "y": 10520
+      "y": 0,
+      "page": "swatches"
     },
     "Swatches-Vehicle.dc.html": {
       "h": 2160,
       "title": "Swatches: the vehicle and the garage",
       "w": 1280,
       "x": 2720,
-      "y": 10520
+      "y": 0,
+      "page": "swatches"
     }
   },
   "createdOnFiles": {
@@ -161,7 +164,8 @@
       "text": "Swatches: materials found, none settled",
       "w": 240,
       "x": 0,
-      "y": 10220
+      "y": -300,
+      "page": "swatches"
     },
     "proposal-shelf-list": {
       "kind": "title1",
@@ -205,6 +209,10 @@
     {
       "id": "proposal-shelf-list",
       "name": "Proposal: shelf list"
+    },
+    {
+      "id": "swatches",
+      "name": "Swatches"
     }
   ],
   "title": "nitrovin UI Design"
