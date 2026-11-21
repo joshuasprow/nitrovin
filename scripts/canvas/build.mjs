@@ -4,6 +4,7 @@
 import { writeFileSync, readFileSync, mkdirSync, copyFileSync } from 'node:fs';
 import { open, buildFrame, dcFile, previewFile, REPO } from './engine.mjs';
 import { frames } from './frames.mjs';
+import { place } from './snapshot.mjs';
 
 // --check writes nothing: it builds each frame and compares it with the
 // committed one, and exits 1 naming the frames that differ. What a checkout
@@ -53,12 +54,8 @@ if (check) {
 }
 
 // The index: each built frame's height, and the dark row under the tallest
-// light frame. Positions across the row, the Proposals page's frames and
-// everything else are the canvas's own and stay as read.
+// light frame. Positions across the row and everything else are the
+// canvas's own and stay as read.
 const path = `${OUT}/canvas.json`, idx = JSON.parse(readFileSync(path, 'utf8'));
-for (const f of frames) if (f.h) for (const k of [`${f.file}.dc.html`, `${f.file}-Dark.dc.html`]) if (idx.boards[k]) idx.boards[k].h = f.h;
-const mine = new Set(frames.flatMap((f) => [`${f.file}.dc.html`, `${f.file}-Dark.dc.html`]));
-const own = Object.entries(idx.boards).filter(([k]) => mine.has(k));
-const darkY = Math.max(...own.filter(([k]) => !k.includes('-Dark')).map(([, b]) => b.y + b.h)) + 120;
-for (const [k, b] of own) if (k.includes('-Dark')) b.y = darkY;
-writeFileSync(path, JSON.stringify(idx, null, 2) + '\n');
+const heights = Object.fromEntries(frames.filter((f) => f.h).flatMap((f) => [[`${f.file}.dc.html`, f.h], [`${f.file}-Dark.dc.html`, f.h]]));
+writeFileSync(path, JSON.stringify(place(idx, heights), null, 2) + '\n');

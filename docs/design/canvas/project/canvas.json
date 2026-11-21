@@ -2,15 +2,6 @@
   "v": 3,
   "attachments": {},
   "boards": {
-    "Artboard-vknl.dc.html": {
-      "h": 600,
-      "handmade": true,
-      "page": "page-pchz95",
-      "title": "Artboard 1",
-      "w": 800,
-      "x": 0,
-      "y": 0
-    },
     "Controls-Dark.dc.html": {
       "h": 4950,
       "title": "Dialogs, forms and inputs, dark",
@@ -95,22 +86,6 @@
       "x": 6800,
       "y": 0
     },
-    "Proposal-Shelf-Receipt.dc.html": {
-      "h": 5070,
-      "page": "proposal-shelf-list",
-      "title": "Proposal: the shelf list on thermal paper, light",
-      "w": 1280,
-      "x": 0,
-      "y": 0
-    },
-    "Proposal-Shelf-Receipt-Dark.dc.html": {
-      "h": 5070,
-      "page": "proposal-shelf-list",
-      "title": "Proposal: the shelf list on thermal paper, dark",
-      "w": 1280,
-      "x": 0,
-      "y": 5190
-    },
     "Swatches-Thermal.dc.html": {
       "h": 1390,
       "title": "Swatches: thermal paper",
@@ -146,8 +121,7 @@
   },
   "noteOrder": [
     "heading",
-    "swatches",
-    "proposal-shelf-list"
+    "swatches"
   ],
   "notes": {
     "heading": {
@@ -166,15 +140,6 @@
       "x": 0,
       "y": -300,
       "page": "swatches"
-    },
-    "proposal-shelf-list": {
-      "kind": "title1",
-      "maxW": 1280,
-      "page": "proposal-shelf-list",
-      "text": "Proposal: the shelf list on thermal paper",
-      "w": 240,
-      "x": 0,
-      "y": -300
     }
   },
   "order": [
@@ -190,9 +155,6 @@
     "Fitment-Dark.dc.html",
     "Controls-Dark.dc.html",
     "States-Dark.dc.html",
-    "Artboard-vknl.dc.html",
-    "Proposal-Shelf-Receipt.dc.html",
-    "Proposal-Shelf-Receipt-Dark.dc.html",
     "Swatches-Thermal.dc.html",
     "Swatches-Yard.dc.html",
     "Swatches-Vehicle.dc.html"
@@ -201,14 +163,6 @@
     {
       "id": "page-1",
       "name": "nitrovin UI"
-    },
-    {
-      "id": "page-pchz95",
-      "name": "Page 2"
-    },
-    {
-      "id": "proposal-shelf-list",
-      "name": "Proposal: shelf list"
     },
     {
       "id": "swatches",

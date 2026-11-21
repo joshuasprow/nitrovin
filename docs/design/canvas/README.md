@@ -8,11 +8,13 @@ kept together.
 ## What is here
 
 `project/` holds the canvas's own files, as read down, for the pages
-"nitrovin UI" and "Swatches" only. A proposal's frames and a hand-made
-artboard stay on the canvas and out of this folder; `canvas.json` is the
-whole index all the same, so it names frames this folder does not hold:
+"nitrovin UI" and "Swatches" only. A proposal's page and a page drawn by
+hand stay on the canvas. `scripts/canvas.sh --import` is how a read-down
+gets here, and `scripts/canvas.sh --check` fails on anything else:
 
-- `canvas.json`: the index. Each frame's place and size, the pages, the notes.
+- `canvas.json`: the index, cut to those two pages. Each frame's place and
+  size, the pages, the notes. It is not what is published:
+  `scripts/canvas.sh --publish` writes that, from the canvas's whole index.
 - One `.dc.html` per frame.
 
 `_blob/` is not the canvas's: it links each uploaded image's address to its
