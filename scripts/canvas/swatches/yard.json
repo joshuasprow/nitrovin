@@ -49,7 +49,7 @@
     "base": "#F4D21F",
     "ink": "#111111",
     "accent": "#9AA0A6",
-    "texture": "Matte spunbonded olefin with a visible swirled random-fibre mottle, slightly translucent at the edges; a 3/16 in metal eyelet and twisted double wire.",
+    "texture": "Matte spunbonded olefin with a visible swirled random-fibre mottle, slightly translucent at the edges; a metal eyelet, 1/4 in on most sizes and 3/16 in on the largest, and a wire tie.",
     "css": "background: radial-gradient(circle at 14px 50%, #3a3a3a 0 3px, #b8bcc0 3px 6px, transparent 6.5px), repeating-linear-gradient(37deg, rgba(255,255,255,.14) 0 2px, transparent 2px 7px), repeating-linear-gradient(-58deg, rgba(160,120,0,.08) 0 1px, transparent 1px 5px), #F4D21F;",
     "sources": [
       "https://www.mcmaster.com/tyvek-tags",
@@ -79,10 +79,9 @@
     "unsupported": [
       "Used on parts stored outdoors or oily, where paper would rot or tear: sources give chemical, mildew, acid and tear resistance, not this use",
       "Swirled random-fibre mottle; translucent edges (McMaster says only 'cloth-like texture')",
-      "'Twisted double wire': the pages read give a 12 in wire or a 6 in steel wire holder, not double or twisted",
-      "3/16 in eyelet: only in a search summary; the fetched McMaster page gives 1/4 in on most sizes and 3/16 in only on the largest",
       "'Spunbonded olefin': only in a search summary"
-    ]
+    ],
+    "corrected": true
   },
   {
     "name": "Inspection tag: rejected (red)",
@@ -128,7 +127,7 @@
   {
     "name": "Inspection tag: hold (yellow)",
     "family": "status tag",
-    "where_seen": "Hung on parts waiting for a decision, rework or a customer in shop holding areas.",
+    "where_seen": "Hung on parts waiting for a decision, rework or a customer in shop holding areas. A supplier's convention, not a standard: in aviation a yellow tag marks a serviceable part.",
     "base": "#FFD400",
     "ink": "#111111",
     "accent": "#111111",
@@ -165,12 +164,13 @@
       "No gloss / matte",
       "Parts waiting for rework or a customer: sources give only the legend 'Hold'",
       "Shop holding areas as a place of use"
-    ]
+    ],
+    "corrected": true
   },
   {
     "name": "Inspection tag: accepted (green)",
     "family": "status tag",
-    "where_seen": "Hung on parts cleared for use or sale after inspection.",
+    "where_seen": "Hung on parts cleared for use or sale after inspection. A supplier's convention, not a standard: in US aviation a green tag marks a repairable part, not an airworthy one.",
     "base": "#2E9E4F",
     "ink": "#111111",
     "accent": "#FFFFFF",
@@ -204,9 +204,9 @@
     "unsupported": [
       "Bold capital headline and ruled fields",
       "Matte finish",
-      "Cleared for 'sale': sources say Accepted / OK to Use only",
-      "US aviation use of green contradicts it (green = repairable, not airworthy)"
-    ]
+      "Cleared for 'sale': sources say Accepted / OK to Use only"
+    ],
+    "corrected": true
   },
   {
     "name": "Yellow paint marker on steel",
@@ -215,7 +215,7 @@
     "base": "#4A4A48",
     "ink": "#FFD21A",
     "accent": "#8A4B22",
-    "texture": "Opaque glossy enamel line with rounded ends and uneven width, sitting on dull grey cast metal or rust; ball-tip markers leave a slightly raised bead.",
+    "texture": "Opaque glossy enamel line with rounded ends and uneven width, sitting on dull grey cast metal brushed clean, since the markers take poorly to rust, oil and grease; ball-tip markers leave a slightly raised bead.",
     "css": "background: radial-gradient(ellipse at 20% 30%, rgba(138,75,34,.35), transparent 55%), radial-gradient(ellipse at 80% 75%, rgba(0,0,0,.25), transparent 60%), repeating-linear-gradient(115deg, rgba(255,255,255,.03) 0 2px, transparent 2px 5px), #4A4A48; color: #FFD21A;",
     "sources": [
       "https://www.ebay.com/p/15017679565",
@@ -253,9 +253,9 @@
       "Stock numbers and vehicle details as what is written: the one readable source says only 'identify their auto parts'",
       "Engine blocks and glass as the surfaces marked",
       "Glossy enamel line, rounded ends, uneven width",
-      "Ball-tip markers leaving a raised bead: no readable source states the tip type",
-      "Marking on rust or oily metal: the readable forum says wire-brush rust first and that the markers 'despise oil/ grease'"
-    ]
+      "Ball-tip markers leaving a raised bead: no readable source states the tip type"
+    ],
+    "corrected": true
   },
   {
     "name": "Tire crayon on rubber",
@@ -349,7 +349,7 @@
   {
     "name": "Chartreuse windshield numbers",
     "family": "vinyl sticker",
-    "where_seen": "Large stick-on year and price digits across the windshield of vehicles on a sales lot.",
+    "where_seen": "Stick-on year and price digits, 5 1/2 or 7 1/2 in tall, on the windshield of vehicles on a sales lot.",
     "base": "#D7F205",
     "ink": "#111111",
     "accent": "#1E3A8A",
@@ -384,9 +384,9 @@
       "Vinyl as the material: nothing read names it",
       "'Fluorescent lime-yellow': sources read say only 'chartreuse'",
       "Die-cut heavy block digits, flat with no gradient",
-      "'Large' digits spanning the windshield and reading against dark glass: sizes read are 5 1/2 and 7 1/2 in tall",
       "7 1/2 in listing was read as a title only"
-    ]
+    ],
+    "corrected": true
   },
   {
     "name": "Stock-number window sticker",
@@ -468,10 +468,7 @@
       "split ring (sources say only chrome plated rings)",
       "punched hole",
       "hung on a key board",
-      "field labels printed in black",
-      "notes: 7/8 in ring size not seen",
-      "notes: Stk#, Series and VIN fields not seen (fields seen: New, Used, Year, Make, Model, Body, Color)",
-      "notes: 1.3 x 2.8 in not seen (summary gives 1 3/8 x 3 in)"
+      "field labels printed in black"
     ]
   },
   {
@@ -481,7 +478,7 @@
     "base": "#C8102E",
     "ink": "#FFFFFF",
     "accent": "#0A0A0A",
-    "texture": "Glossy 3/8 in vinyl strip; letters are raised and turn chalky white where the plastic is stretched, with soft halos and a specular highlight along the top edge.",
+    "texture": "Matte 3/8 in vinyl strip; letters are raised and turn chalky white where the plastic is stretched, with soft halos and a specular highlight along the top edge.",
     "css": "background: linear-gradient(180deg, rgba(255,255,255,.38) 0 12%, rgba(255,255,255,0) 30%, rgba(0,0,0,.18) 100%), #C8102E; color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.45), 0 0 2px rgba(255,255,255,.8); letter-spacing: .18em;",
     "sources": [
       "https://www.mcmaster.com/products/label-printer-tape/manufacturer-series~lt-embossing",
@@ -509,12 +506,11 @@
       }
     ],
     "unsupported": [
-      "glossy: the one page read in full (McMaster) says matte",
       "letters turn chalky white where the plastic is stretched",
       "soft halos and specular highlight",
-      "use on bin fronts, drawer edges and tool cabinets in parts rooms",
-      "notes: 12 ft length conflicts with McMaster's 9 ft"
-    ]
+      "use on bin fronts, drawer edges and tool cabinets in parts rooms"
+    ],
+    "corrected": true
   },
   {
     "name": "Write-on aluminium tag",
@@ -553,9 +549,7 @@
     "unsupported": [
       "used on parts that get hot, washed or left outside",
       "dull satin sheen",
-      "stylus (sources say pen or pencil)",
-      "notes: 3/16 in hole size not seen",
-      "notes: 0.75 x 3 in size seen only on a sibling Panduit page"
+      "stylus (sources say pen or pencil)"
     ]
   },
   {
@@ -602,18 +596,17 @@
     "unsupported": [
       "satin black finish",
       "monospaced characters",
-      "riveted to a component housing",
-      "notes: rosette rivets from about the mid-1960s (no source read gives that date; one names 1968-74, one FMVSS 1969)"
+      "riveted to a component housing"
     ]
   },
   {
     "name": "Stack-and-hang bin (blue)",
     "family": "container",
-    "where_seen": "Rows of open-front plastic bins hung on louvred panels or stacked on parts-room shelving, each with a card in a front label slot.",
+    "where_seen": "Rows of open-front plastic bins hung on louvred panels or stacked on parts-room shelving, each with a label holder on its front.",
     "base": "#1F5FBF",
     "ink": "#111111",
     "accent": "#F2F0E8",
-    "texture": "Moulded polypropylene with a low waxy sheen, vertical stiffening ribs and a recessed white card slot on the front lip.",
+    "texture": "Moulded polypropylene with a low waxy sheen, vertical stiffening ribs and a built-in label holder on the front.",
     "css": "background: linear-gradient(180deg, rgba(255,255,255,.22) 0 8%, transparent 8% 100%), repeating-linear-gradient(90deg, rgba(0,0,0,.14) 0 2px, transparent 2px 28px), linear-gradient(180deg, #2a6ed1, #184c9c);",
     "sources": [
       "https://www.mcmaster.com/products/hangable-bin-boxes",
@@ -642,10 +635,9 @@
     ],
     "unsupported": [
       "low waxy sheen",
-      "vertical stiffening ribs",
-      "recessed white card slot taking a card (source says only a built-in label holder)",
-      "notes: 'high-density' polypropylene and exact size range seen only on pages other than the listed URLs"
-    ]
+      "vertical stiffening ribs"
+    ],
+    "corrected": true
   },
   {
     "name": "Masking tape and marker",
@@ -775,8 +767,7 @@
       "two ruled write-in lines",
       "write-in fields for date and mileage (only a 'next service due' heading is seen)",
       "placed in the top corner of the windshield",
-      "glossy",
-      "notes: oil grade write-in"
+      "glossy"
     ]
   }
 ]

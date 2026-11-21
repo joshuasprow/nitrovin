@@ -14,8 +14,9 @@
 // The three found files are a web search's findings. Each source was opened
 // and checked against its entry: `checks` holds a verdict for each link kept
 // (supports, partial or blocked) and how the page was read, `dropped` the dead
-// and unrelated links taken out, and `unsupported` what the entry says that no
-// source read does. Every colour is an estimate, since no source publishes one.
+// and unrelated links taken out, `unsupported` what the entry says that no
+// source read does, and `corrected` marks an entry whose wording was changed
+// to what a source read says. Every colour is an estimate, since no source publishes one.
 import { writeFileSync, readFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { launch } from './cdp.mjs';
@@ -33,7 +34,7 @@ const BOARDS = [
   { file: 'Swatches-Yard', src: 'yard', row: 1, found: true, title: 'Swatches: the yard and the shelf', intro: 'What parts and vehicles are tagged, labelled and marked with in a yard, a warehouse and a shop.' },
   { file: 'Swatches-Vehicle', src: 'vehicle', row: 1, found: true, title: 'Swatches: the vehicle and the garage', intro: 'Surfaces of the vehicle itself, its labels and instruments, and of the garage around it.' },
 ];
-const FOUND = " Found by a web search on 2026-11-20; every source was opened and checked against its card on 2026-11-21. A link with nothing after it is a page read that states a fact of the card. \"In part\": the page is about the material and states none of the card's facts. \"Summary\": the page refused, and a search result's summary was read instead. \"Unread\": neither could be read. Dead and unrelated pages are gone from the cards. Every colour is an estimate, since no source publishes one, and no recipe here is settled.";
+const FOUND = " Found by a web search on 2026-11-20; every source was opened and checked against its card on 2026-11-21. A link with nothing after it is a page read that states a fact of the card. \"In part\": the page is about the material and states none of the card's facts. \"Summary\": the page refused, and a search result's summary was read instead. \"Unread\": neither could be read. Dead and unrelated pages are gone from the cards. Where a page read says otherwise than a card did, the card now says what the page says. Every colour is an estimate, since no source publishes one, and no recipe here is settled.";
 // The addresses of the page's two textures on the maintainer's canvas, as scripts/canvas/engine.mjs has them.
 const BLOB = { 'brushed.svg': '/_blob/9d26d515fa68a38e6638bb4a880cacf5', 'paper.svg': '/_blob/8df67eb7edb3679ce1a61d297a1fcd76' };
 const hex = (h) => /^#[0-9a-fA-F]{3,8}$/.test(h || '') ? h : null;

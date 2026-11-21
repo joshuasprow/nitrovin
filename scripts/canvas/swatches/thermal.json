@@ -48,7 +48,7 @@
     "base": "#EDE3C4",
     "ink": "#7A6F63",
     "accent": "#D9C9A0",
-    "texture": "Coating turned yellow to brown, darker toward the edges, while the image loses contrast toward grey-brown; the sheet curls along its length (hexes are estimates).",
+    "texture": "Coating turned yellow to brown, while the image loses contrast toward grey-brown; the sheet tends to curl (hexes are estimates).",
     "css": "background: radial-gradient(ellipse at 50% 40%, rgba(255,255,255,.35), rgba(255,255,255,0) 60%), linear-gradient(90deg, rgba(150,110,40,.18), rgba(150,110,40,0) 12%, rgba(150,110,40,0) 88%, rgba(150,110,40,.18)), #EDE3C4;",
     "sources": [
       "https://psap.library.illinois.edu/advanced-help/paper-unbound-officecopy-thermal",
@@ -76,11 +76,10 @@
       }
     ],
     "unsupported": [
-      "darker toward the edges (the PSAP edge-darkening passage appears to describe other paper, not thermal coatings)",
       "image turns grey-brown specifically",
-      "curls along its length (source says only that coated thermal papers tend to curl)",
       "glovebox, wallet or file drawer as the setting"
-    ]
+    ],
+    "corrected": true
   },
   {
     "name": "Heat-darkened thermal paper",
@@ -114,7 +113,7 @@
     "base": "#F7F6F1",
     "ink": "#1F1D1E",
     "accent": "#E0526E",
-    "texture": "A translucent red or pink ink band, applied by an ink wheel along one or both edges or down the middle, on the last 3-6 feet of the roll; the print shows through it (hex is an estimate).",
+    "texture": "A translucent red or pink ink band, applied by an ink wheel along the edges or down the middle, on the last 3-6 feet of the roll; the print shows through it (hex is an estimate).",
     "css": "background: linear-gradient(90deg, rgba(224,82,110,.55) 0 9%, rgba(224,82,110,0) 9% 91%, rgba(224,82,110,.55) 91% 100%), #F7F6F1;",
     "sources": [
       "https://www.possupply.com/blog/end-of-roll-warning-stripe-replace-paper",
@@ -135,9 +134,9 @@
       }
     ],
     "unsupported": [
-      "the band is translucent and the print shows through it",
-      "one edge versus both edges (source says only 'the edges')"
-    ]
+      "the band is translucent and the print shows through it"
+    ],
+    "corrected": true
   },
   {
     "name": "Thermal print with dead-dot streaks",

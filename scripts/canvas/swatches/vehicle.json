@@ -42,7 +42,7 @@
   {
     "name": "Tire and loading placard",
     "family": "label",
-    "where_seen": "The tire pressure placard on the driver's door jamb, headed 'Tire and Loading Information'.",
+    "where_seen": "The tire pressure placard on the driver's side B-pillar, or else the door's edge, headed 'Tire and Loading Information'.",
     "base": "#FFFFFF",
     "ink": "#000000",
     "accent": "#FFD100",
@@ -77,9 +77,9 @@
       "glossy white stock",
       "black header band",
       "yellow emphasis",
-      "ruled table cells",
-      "'door jamb' (standard says driver's side B-pillar, else door edge)"
-    ]
+      "ruled table cells"
+    ],
+    "corrected": true
   },
   {
     "name": "Safety-yellow warning label",
@@ -190,7 +190,7 @@
     "base": "#1F4E9E",
     "ink": "#FFFFFF",
     "accent": "#B3202A",
-    "texture": "Translucent dye in a sealed oxide layer over machined metal, so the colour reads as tinted metal with a soft satin band of highlight; shade varies with film thickness, dye concentration and alloy.",
+    "texture": "Translucent dye in a sealed oxide layer over machined metal, so the colour reads as tinted metal with a soft satin band of highlight; shade varies with film thickness, dye concentration and metal type.",
     "css": "background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0) 30%, rgba(0,0,0,.18) 70%, rgba(255,255,255,.10)), repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px 3px), #1F4E9E;",
     "sources": [
       "https://www.protocase.com/products/finishes/anodizing/",
@@ -219,9 +219,9 @@
     ],
     "unsupported": [
       "use on hose fittings, fuel rail fittings, strut-top hardware and aftermarket caps",
-      "soft satin band of highlight",
-      "'alloy' as a shade factor (source says 'metal type'; only a welding note elsewhere)"
-    ]
+      "soft satin band of highlight"
+    ],
+    "corrected": true
   },
   {
     "name": "Aluminium diamond tread plate",
@@ -311,7 +311,7 @@
     "base": "#1C1D1F",
     "ink": "#E8E8E6",
     "accent": null,
-    "texture": "Black-finished sheet with round holes in 60-degree staggered rows; a 3/32 in hole on 5/32 in centres gives about 33 percent open area (calculated).",
+    "texture": "Black-finished sheet with round holes in 60-degree staggered rows; one product gives a 5/32 in (4 mm) hole.",
     "css": "background: radial-gradient(circle, #050505 0 1.2px, transparent 1.4px) 0 0 / 4px 6.93px, radial-gradient(circle, #050505 0 1.2px, transparent 1.4px) 2px 3.465px / 4px 6.93px, #2A2B2E;",
     "sources": [
       "https://www.accurateperforating.com/applications/audio",
@@ -341,10 +341,10 @@
     ],
     "unsupported": [
       "60-degree stagger",
-      "3/32 in hole on 5/32 in centres (the one product page gives a 5/32 in hole and no centres)",
       "about 33 percent open area (arithmetic only, and on an unsourced pattern)",
       "door-card and dashboard placement"
-    ]
+    ],
+    "corrected": true
   },
   {
     "name": "Carbon fibre 2x2 twill",
@@ -391,11 +391,11 @@
   {
     "name": "Glass frit band and dot fade",
     "family": "glass",
-    "where_seen": "The black border around a windshield or rear window, fading into the clear glass through rows of shrinking dots, with the maker's monogram in a lower corner.",
+    "where_seen": "The black border around a windshield or rear window, fading into the clear glass through rows of shrinking dots, with the glass's own marking near an edge: one source puts 'AS1' near the top.",
     "base": "#0B0B0C",
     "ink": "#D9DDDA",
     "accent": null,
-    "texture": "Matte black ceramic enamel fused to the glass; a halftone of dots that shrink toward the clear area; the corner monogram (maker code, 'AS1', approval marks) reads as pale grey frosted lettering.",
+    "texture": "Matte black ceramic enamel fused to the glass; a halftone of dots that shrink toward the clear area; the marking (maker code, 'AS1', approval marks) is etched, printed or a label.",
     "css": "background: linear-gradient(180deg, #0B0B0C 0 60%, transparent 60%), radial-gradient(circle, #0B0B0C 0 2px, transparent 2.2px) 0 0 / 6px 6px, linear-gradient(180deg, #DDE6E4, #C9D4D2);",
     "sources": [
       "https://jalopnik.com/heres-what-those-little-dots-are-on-the-edges-of-your-c-1791075995",
@@ -431,11 +431,10 @@
       }
     ],
     "unsupported": [
-      "the monogram sits in a lower corner (the one readable source places AS1 near the top; only the VIN is said to be at a lower corner)",
-      "the monogram reads as pale grey frosted lettering (source says only etched, printed or a label)",
       "the enamel is matte",
       "the frit is a border around the rear window as well as the windshield (sources speak of windshields/car glass generally)"
-    ]
+    ],
+    "corrected": true
   },
   {
     "name": "Analogue gauge face",
@@ -443,8 +442,8 @@
     "where_seen": "Speedometer and tachometer dials in the instrument cluster.",
     "base": "#0D0D0D",
     "ink": "#F4F4F0",
-    "accent": "#FF7900",
-    "texture": "Flat matte black dial with white numerals and tick marks that are backlit at night, and a single orange or red pointer.",
+    "accent": null,
+    "texture": "Flat matte black dial with white numerals and tick marks that are backlit at night, and a single red or black pointer.",
     "css": "background: repeating-linear-gradient(90deg, #F4F4F0 0 1px, transparent 1px 12px) 0 100% / 100% 6px no-repeat, radial-gradient(ellipse at 50% 0%, #1E1E1E, #0D0D0D 70%);",
     "sources": [
       "https://issautomotive.com/blogs/news/anatomy-of-an-instrument-cluster",
@@ -472,10 +471,10 @@
       }
     ],
     "unsupported": [
-      "the pointer is orange (the only pointer colours a source gives are fire red or black; safety orange is not tied to gauges by any source)",
       "tick marks are white and backlit (sources speak of lettering and numbers only)",
       "matte finish of the dial (the summary says 'flat black', which may mean the same; not read on the page)"
-    ]
+    ],
+    "corrected": true
   },
   {
     "name": "Vacuum-fluorescent display",
@@ -671,12 +670,11 @@
       "embossed up to 1.7 mm (the only source that could carry it, the 3M bulletin, was not readable and its summary lacks the figure)",
       "characters are inked on their raised faces (roll coating is only alluded to in the 3M summary)",
       "a fine sparkle in the sheeting",
-      "the plate is at the rear of the vehicle",
-      "note: the entry's 'unverified' says the national standard's character height was not retrieved, but the AAMVA page does state it (at least 2.5 inches)"
+      "the plate is at the rear of the vehicle"
     ]
   },
   {
-    "name": "Black wrinkle powder coat",
+    "name": "Black wrinkle finish",
     "family": "paint",
     "where_seen": "Valve covers, intake plenums and older dashboard tops.",
     "base": "#161616",
@@ -712,11 +710,11 @@
     ],
     "unsupported": [
       "use on intake plenums and older dashboard tops",
-      "that the finish is a powder coat (Ford says only 'crinkle finish'; the forum thread is about wrinkle paint)",
       "low gloss",
       "a fine, tight crinkle of small ridges ('very small' was not found in anything read)",
       "scatters highlights and hides casting flaws"
-    ]
+    ],
+    "corrected": true
   },
   {
     "name": "Exploded-view parts page",

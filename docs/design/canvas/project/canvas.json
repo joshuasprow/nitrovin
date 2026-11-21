@@ -87,7 +87,7 @@
       "y": 0
     },
     "Swatches-Thermal.dc.html": {
-      "h": 1690,
+      "h": 1650,
       "title": "Swatches: thermal paper",
       "w": 1280,
       "x": 0,
@@ -95,7 +95,7 @@
       "page": "swatches"
     },
     "Swatches-Yard.dc.html": {
-      "h": 2820,
+      "h": 2720,
       "title": "Swatches: the yard and the shelf",
       "w": 1280,
       "x": 1360,
@@ -103,7 +103,7 @@
       "page": "swatches"
     },
     "Swatches-Vehicle.dc.html": {
-      "h": 2790,
+      "h": 2670,
       "title": "Swatches: the vehicle and the garage",
       "w": 1280,
       "x": 2720,
