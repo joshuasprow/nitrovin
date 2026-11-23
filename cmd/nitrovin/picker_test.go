@@ -24,9 +24,9 @@ var stripFixture = abs("../../testdata/vocab/strip")
 // it. Pressing the pressed one in the list changes nothing; the key
 // clears it. Without JavaScript there is no filter and nothing is recent.
 // With it, the filter narrows the list and a filter matching nothing says
-// so; a part type opened before leads the list, and at 1280 sits beside
-// the picker on its tape, never the pressed one, and pressing it there
-// presses it; the focus stays on the picker.
+// so; a part type opened before leads the list, and sits on the picker's
+// tape, beside the keys at 1280 and under them at 390, never the pressed
+// one, and pressing it there presses it; the focus stays on the picker.
 // axe audits each state. CI (CI set) needs the browser; a machine without
 // one skips.
 func TestPartTypePicker(t *testing.T) {
@@ -160,15 +160,22 @@ func TestPartTypePicker(t *testing.T) {
 					if got := eval[[]string](tb, `[...document.querySelectorAll(".ptrecents:not([hidden]) li")].map((li) => li.dataset.part)`); !slices.Equal(got, []string{"water-pump"}) {
 						t.Errorf("Fog Lamp pressed, beside the picker: %q; want Water Pump alone", got)
 					}
-					// On the tape where the page is wide enough to show it;
-					// on a phone, at the head of the list.
-					onTape := eval[bool](tb, `document.querySelector(".ptrecents").getClientRects().length > 0`)
-					if onTape != (size.width > 736) {
-						t.Errorf("at %d wide the recent part types are on the tape: %v", size.width, onTape)
+					// On the tape at every width: beside the keys on a wide
+					// page, on a line of its own under them on a narrow
+					// one, inside the tape and the window. It is pressed
+					// there at 1280, and from the head of the list at 390.
+					onTape := eval[[]float64](tb, `(() => {
+						const row = document.querySelector(".ptrecents li a.ptype"), keys = document.querySelector(".ptkeys").getBoundingClientRect(), tape = document.querySelector(".ptsel").getBoundingClientRect();
+						if (!row || !row.getClientRects().length) return [];
+						const r = row.getBoundingClientRect();
+						return [r.top - keys.bottom, r.left - tape.left, tape.right - r.right, tape.bottom - r.bottom, innerWidth - document.documentElement.scrollWidth];
+					})()`)
+					if len(onTape) != 5 || (onTape[0] >= 0) != (size.width < 1024) || onTape[1] < 0 || onTape[2] < 0 || onTape[3] < 0 || onTape[4] < 0 {
+						t.Errorf("at %d wide the recent part type is %v [under the keys, in from the tape's left, right and bottom, the window past the page]; want it on the tape, under the keys only on a narrow page", size.width, onTape)
 					}
 					tb.audit(name + ", a recent part type")
 					settle()
-					if onTape {
+					if size.width >= 1024 {
 						tb.do(chromedp.Click(chromedp.CSS(`.ptrecents li[data-part="water-pump"] a.ptype`)))
 					} else {
 						tb.do(chromedp.Click(chromedp.CSS(`#pick-type`)))

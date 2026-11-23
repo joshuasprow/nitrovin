@@ -443,10 +443,10 @@ table.sum .skip { color: var(--muted); }
    beside it, of the plate's metal, clears the pressed part type: pressing
    that one in the list changes nothing. The lines from the block come
    down into it (--fit-part) and end there. With a script, up to
-   two part types opened recently sit beside it on the same tape, after
-   a hairline and the word Recent, each a smaller strip of the second
-   tape. Under 46rem the tape is the picker alone: the list leads with
-   those opened recently at every width. */
+   two part types opened recently sit on the same tape, after the word
+   Recent, each a smaller strip of the second tape: beside the keys on a
+   wide page, on a second line under them on a narrow one. The list
+   leads with those opened recently at every width. */
 .ptwrap { position: relative; z-index: 3; margin: 30px 0 0; }
 .ptsel { display: flex; flex-direction: column; align-items: stretch; gap: 6px; box-sizing: border-box; width: fit-content; min-width: min(24rem + 12px, 100%); max-width: 100%; padding: 5px 6px;
   background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck); }
@@ -465,9 +465,6 @@ table.sum .skip { color: var(--muted); }
 .ptrecents .ptype { min-height: 38px; padding-inline: 10px; font-size: 13px; }
 .ptrecents::before { content: "Recent"; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss); }
 .ptfind { width: 100%; min-height: 44px; }
-@media (width <= 46rem) {
-  .ptrecents { display: none; }
-}
 /* The part types dialog: the filter, what it lists, the recent part
    types, then every part type under its vocabulary's headings, two
    columns of them, in the dialogs' section style with the entry in its

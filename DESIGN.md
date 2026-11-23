@@ -83,7 +83,7 @@ is shown. One that breaks a rule says which, and why, where it is proposed.
    *Sent back: recent part types as a strip of their own under the picker;
    then as a second row on a wide tape, most of it bare. A wide tape is
    one line; a narrow one has a second line for them, and the key is as
-   wide as it.*
+   wide as it. A phone's tape with no recents on it was sent back too.*
 5. **One shape at every width.** A component is the same thing at 390,
    768 and 1280 px. It wraps or scrolls; it does not turn into another
    kind of control. A control has a largest width and keeps it: it does
@@ -599,11 +599,12 @@ for the vehicle, and the candidates of the one pressed.
 - **Recent part types**, with JavaScript, are kept in the browser as
   recent VINs are, the last eight, newest first, and nothing is kept when
   storage fails. The picker's list leads with every one the vehicle has,
-  under "Opened recently" with its "Clear recent", at every width. Above
-  46 rem, up to two, never the pressed one, also sit on the picker's own
-  tape, beside it after a hairline and the word "Recent", each a smaller
-  strip of the second tape with its count: pressing one presses it. A
-  phone's tape is the picker alone. The VINs menu's "Clear recent" forgets
+  under "Opened recently" with its "Clear recent", at every width. Up to
+  two, never the pressed one, also sit on the picker's own tape at every
+  width, after the word "Recent", each a smaller strip of the second tape
+  with its count: pressing one presses it. On a wide page they are beside
+  the keys, after a hairline; on a narrow one they are the tape's second
+  line. One that does not fit its line is not shown. The VINs menu's "Clear recent" forgets
   them and the VINs.
 - **A choice keeps the focus on the picker**, from the list or from under
   it, and so does clearing.
