@@ -83,8 +83,9 @@ answer that is the same on every surface.
 - **Name:** nitrovin, one name for every surface (ADR 0002).
 - **Voice:** declarative, present tense, third person. It states counts and
   roles, never superlatives.
-- **Visual identity:** [DESIGN.md](DESIGN.md) is the authority. Its signature
-  parts are the VIN input and the four materials.
+- **Visual identity:** [docs/design/page.md](docs/design/page.md) is the
+  authority, and [DESIGN.md](DESIGN.md) is its map. Its signature parts are
+  the VIN input and the four materials.
 - **Credit:** NHTSA's vPIC is the source. ultravin is a reference, credited
   in `NOTICE`, and never copied.
 
@@ -117,7 +118,8 @@ answer that is the same on every surface.
 
 ## Accessibility & Inclusion
 
-WCAG 2.2 AA. The page also keeps what [DESIGN.md](DESIGN.md) already
+WCAG 2.2 AA. The page also keeps what
+[docs/design/page.md](docs/design/page.md#ground-rules) already
 requires: it works without JavaScript, it shows no motion under
 `prefers-reduced-motion`, and the VIN input stays one native field, so paste,
 selection and the phone's keyboard keep working.
