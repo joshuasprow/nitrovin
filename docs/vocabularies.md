@@ -1057,9 +1057,14 @@ browser, says where it lives. Answers carry the `decoder_version` and `data_mont
 of the decode they used. When the server moves to a new release, the
 worker steps aside: every page comes from the server, your files are
 paused, and Vocabularies says so. Once the new release's worker is ready,
-**Update now** hands the page to it and reloads, and your files
-stay; without the click, the new worker takes over once every
-tab of the site is closed. Every page's header names the release that
+**Update now** lights up in the header, beside the brand; it hands the
+page to that worker and reloads, and your files stay. Without the click,
+the new worker takes over once every tab of the site is closed. A tab
+left open hears of a new release without a worker too, from the server's
+next answer or when the tab is shown again, and its Update now reloads
+it. A deploy's old container may answer once after the new one: the
+files pause, the worker asks the server again within seconds, and they
+come back by themselves. Every page's header names the release that
 drew it. A page loaded with
 a hard reload is not the worker's, and says your files are paused for
 that load. Release builds also offer [EPA's vocabulary](#epas-vocabulary)

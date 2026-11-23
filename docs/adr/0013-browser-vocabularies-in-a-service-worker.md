@@ -186,3 +186,39 @@ same template, so their pages agree.
 page starts) and stock files into the browser, and adds a fit page the worker
 answers when the browser holds the catalog. A browser refuses a catalog when its
 server has one. The rest of this ADR holds.
+
+## Amendment (2026-11-23): outdated is not final, and the update is offered in the header
+
+This amends the amendment of 2026-11-11. After a deploy of v0.6.2 a
+visitor pressed Update now, and the page then said "Own files paused:
+v0.6.2 here, v0.6.1 on the server", for good. A rollout's old container
+goes on answering for about a minute beside the new one. One of its
+answers reached the new worker, which was outdated "until a newer worker
+replaces it", and none ever would.
+
+**Outdated ends when the server names the worker's release again.** While
+outdated the worker asks `HEAD /sw.js` again, ten seconds apart at most,
+whenever a request or a page's question reaches it. An answer naming its
+release ends outdated, and its pages hear `{op: "current"}`. The page
+asks the worker every fifteen seconds while it says the files are
+paused, and shows them again in place, with no reload.
+
+**A waiting worker is judged before it is offered.** During the same
+minute the browser may install the old release's worker again, beside
+the new one. The page asks a waiting worker its release and `/sw.js` the
+server's. It offers the worker only when it is of the server's release
+and of another than the worker in control; otherwise it has the browser
+look again.
+
+**Update now is in the header.** It was inside the Vocabularies dialog,
+which a visitor has to open to learn of a release. It is the header's
+key now, lit, shown at every width only while there is an update
+(DESIGN.md). A page learns the server's release from every answer htmx
+gets and from `HEAD /sw.js` when its tab is shown again, five minutes
+apart at most, so a tab with no worker hears of a deploy too; there the
+key reloads the page. A press while the new worker still installs waits
+for it, up to fifteen seconds, so one press is the whole update, and
+reloads after five more if no worker takes over.
+
+Considered and left: a toast. It floats over the page, on no material,
+and the header is always in view when the page loads.

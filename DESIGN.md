@@ -752,6 +752,15 @@ script. There are three sizes.
   one the Menu button, a key of metal with three bars, opens it as a panel
   hung from the button: the buttons in a column, then the release under a
   rule. The VINs menu and the dialogs open from inside it.
+- **Update now is the header's one lit key.** When a new release is
+  there, a key shows beside the brand, at every width and never inside the
+  header menu: a key like the others, its rivet an amber lamp (`--lamp`)
+  and a ring of the lamp's light around it, which breathes where motion is
+  allowed. It is a control, so it is metal (rule 2), and it sits in the
+  masthead and not over the page (rule 1): no toast. The lamp says "new";
+  the key's words say only what a press does (rule 3). No group's colour
+  is amber. It is hidden the rest of the time, and the Vocabularies dialog
+  holds no update button.
 - **Sections** inside a dialog are `h3`: the label face at 12 px over a 3 px
   rule in the vehicle group's blue.
 - **A dialog inside a card** (the check digit's sum) takes the panel's colours,

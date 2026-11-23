@@ -53,7 +53,7 @@ func TestPage(t *testing.T) {
 		`<button type="submit" class="decode">Decode</button>`,
 		// The header's nav is a popover behind the Menu button, the release
 		// its last line, under the buttons.
-		`<a class="brand" href="/">nitrovin</a>` + "\n" + `<button type="button" class="open-nav" popovertarget="nav-menu" aria-label="Menu"></button>` + "\n" + `<nav class="top" id="nav-menu" popover aria-label="Page">`,
+		`<a class="brand" href="/">nitrovin</a>` + "\n" + `<button type="button" id="update-now">Update now</button>` + "\n" + `<button type="button" class="open-nav" popovertarget="nav-menu" aria-label="Menu"></button>` + "\n" + `<nav class="top" id="nav-menu" popover aria-label="Page">`,
 		`<button type="button" class="open-developers" popovertarget="developers">Developers</button>` + "\n" + `<small class="version">`,
 		`<button type="button" class="open-vins" popovertarget="vins">VINs</button>`,
 		`<div id="vins" class="menu" popover`,

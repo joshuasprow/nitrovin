@@ -120,6 +120,29 @@ func TestWorkerUpdate(t *testing.T) {
 
 	tb := newTab(t, path, srv.URL, &requestLog{}, true)
 	tb.do(chromedp.Navigate(srv.URL + "/"))
+
+	// A tab with no worker hears of a deploy from the server's next
+	// answer: Update now shows in the header, outside the dialog, and
+	// reloads the page, which is then the next release's.
+	tb.wait("#browser")
+	if got := eval[string](tb, `getComputedStyle(document.getElementById("update-now")).display`); got != "none" {
+		t.Errorf("no update: Update now is displayed %q; want none", got)
+	}
+	dep.current.Store(next)
+	eval[bool](tb, `htmx.ajax("GET", "/?from.vin=1D7RV1GT5AS123456", {target: "#ui-main", swap: "innerHTML"}).then(() => true, () => true)`)
+	tb.until("Update now with no worker", `document.documentElement.dataset.update === "server" && getComputedStyle(document.getElementById("update-now")).display !== "none"`)
+	if eval[bool](tb, `document.getElementById("vocabularies").contains(document.getElementById("update-now"))`) {
+		t.Error("Update now is inside the Vocabularies dialog; want the header")
+	}
+	tb.audit("the header, Update now showing")
+	tb.do(chromedp.Click(chromedp.CSS("#update-now")))
+	tb.wait(`#browser[data-release="` + ui.Release(nextInfo) + `"]`)
+	if got := eval[string](tb, `document.documentElement.dataset.update || ""`); got != "" {
+		t.Errorf("after Update now with no worker: data-update %q; want none", got)
+	}
+	dep.current.Store(old)
+	tb.do(chromedp.Navigate(srv.URL + "/"))
+	tb.wait(`#browser[data-release="` + ui.Release(oldInfo) + `"]`)
 	tb.vocabularies()
 	tb.do(chromedp.SetUploadFiles(chromedp.CSS("#vocab-files"), []string{filepath.Join(fixture, "fleet.jsonl")}))
 	tb.waitPrefix("#load-status", "Loaded ")
@@ -166,7 +189,7 @@ func TestWorkerUpdate(t *testing.T) {
 	// The page says so, and once the next release's worker waits, offers
 	// Update now; the dialog passes axe so.
 	tb.waitState("outdated")
-	tb.until("the update waiting", `document.getElementById("browser").dataset.update === "waiting" && !document.getElementById("update-now").hidden`)
+	tb.until("the update waiting", `document.documentElement.dataset.update === "waiting" && getComputedStyle(document.getElementById("update-now")).display !== "none"`)
 	if s := tb.html("#browser-status"); !strings.Contains(s, "v0.3.2") || !strings.Contains(s, "v0.3.3") {
 		t.Errorf("outdated: the page names not both releases: %s", s)
 	}
@@ -221,6 +244,29 @@ func TestWorkerUpdate(t *testing.T) {
 	}
 	if got, want := eval[string](tb, `document.querySelector("header").outerHTML`), header(tb, next); got != want {
 		t.Errorf("after Update now: the worker's header differs from the server's\nworker: %s\nserver: %s", got, want)
+	}
+
+	// A rollout's old container answers once more, after the new one. The
+	// worker hears v0.3.2 and steps aside, as it must; it asks again, and
+	// once the server names v0.3.3 the files are back, with no reload and
+	// no update offered.
+	eval[bool](tb, `(window.beforeFlap = true, document.getElementById("browser").dataset.retry = "500", true)`)
+	dep.current.Store(old)
+	eval[bool](tb, `htmx.ajax("GET", "/", {target: "#ui-main", swap: "innerHTML"}).then(() => true, () => true)`)
+	tb.waitState("outdated")
+	dep.current.Store(next)
+	tb.waitState("ready")
+	if !eval[bool](tb, `window.beforeFlap === true`) {
+		t.Error("after the old release's stray answer: the page reloaded; want it to resume in place")
+	}
+	if got := eval[string](tb, `document.documentElement.dataset.update || ""`); got != "" {
+		t.Errorf("after the old release's stray answer: data-update %q; want none", got)
+	}
+	since = len(wire.all())
+	tb.do(chromedp.Navigate(srv.URL + entry))
+	tb.wait("#aka li.name")
+	if served(since, entry) {
+		t.Errorf("%s after the old release's stray answer: the server answered it; want the worker again", entry)
 	}
 
 	tb.mu.Lock()
