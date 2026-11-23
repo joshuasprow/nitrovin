@@ -821,10 +821,14 @@ button.linkish:active { transform: none; box-shadow: none; }
    sideways (.hang), six columns of one width (--col), in the VIN's order.
    The stepped lines (.joins), and the leader lines to cards that now
    move, are not drawn. The names' row of tags scrolls by itself, from one
-   edge of the window to the other. */
+   edge of the window to the other. The row shows no scrollbar: a browser
+   that draws one in the row, as with a mouse attached, puts its track
+   between the tags and the lines that leave them, and cuts each line in
+   two. The next card at the window's edge says there is more, and the
+   row is a region a keyboard reaches. */
 @media (width < 64rem) {
   .leaders, .joins { display: none; }
-  .hang { --col: 12.5rem; --lbl-h: 1.5rem; --gap: 12px; overflow-x: auto; overscroll-behavior-x: contain; margin: .75rem calc(-1 * var(--gutter)) 0; padding: 4px var(--gutter) 14px; }
+  .hang { --col: 12.5rem; --lbl-h: 1.5rem; --gap: 12px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; margin: .75rem calc(-1 * var(--gutter)) 0; padding: 4px var(--gutter) 14px; }
   .hang:focus-visible { outline-offset: -3px; }
   .cards { grid-template-columns: repeat(6, var(--col)); width: max-content; padding: 0; }
   .seg .w { font-size: .9rem; letter-spacing: .04em; }
