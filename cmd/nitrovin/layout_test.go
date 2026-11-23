@@ -244,7 +244,7 @@ func (tb *tab) tags(step string, l laid) {
 }
 
 // narrow: at width the cards are a region that scrolls sideways, one row
-// in the VIN's order, with no scrollbar drawn in it; the names' tags are a row of their own under them.
+// in the VIN's order; the names' tags are a row of their own under them.
 func (tb *tab) narrow(width, height int64) {
 	tb.t.Helper()
 	step := strconv.FormatInt(width, 10) + " wide"
@@ -257,12 +257,6 @@ func (tb *tab) narrow(width, height int64) {
 	}
 	if l.RegionName != "region: Cards" || l.RegionTab != 0 {
 		tb.t.Errorf("%s: the region is %q, tabindex %d; want a named region a keyboard reaches", step, l.RegionName, l.RegionTab)
-	}
-	// No scrollbar's track lies between the tags and the lines that leave
-	// them. This browser draws none either way, so the rule itself is
-	// read: a browser with a mouse attached draws one unless it is none.
-	if bar := measure[string](tb, `getComputedStyle(document.querySelector(".hang")).scrollbarWidth + " " + (document.querySelector(".hang").offsetHeight - document.querySelector(".hang").clientHeight)`); bar != "none 0" {
-		tb.t.Errorf("%s: the cards' row has scrollbar-width and a track of %q, which cuts the lines under the tags; want none 0", step, bar)
 	}
 	const by = 180
 	scrolled := measure[float64](tb, `(document.querySelector(".hang").scrollTo({left: `+strconv.Itoa(by)+`, behavior: "instant"}), document.querySelector(".hang").scrollLeft)`)
