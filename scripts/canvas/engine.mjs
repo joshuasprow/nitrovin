@@ -45,7 +45,7 @@ window.__snap = (o) => {
     else if (e.type !== 'file') e.setAttribute('value', e.value);
   }
   const body = document.body.cloneNode(true);
-  for (const e of body.querySelectorAll('script, link, style, template, noscript, .popover:not(.is-open):not(nav.top)')) e.remove();
+  for (const e of body.querySelectorAll('script, link, style, template, noscript, .popover:not(.is-open)')) e.remove();
   for (const s of (o.drop || [])) for (const e of body.querySelectorAll(s)) e.remove();
   if (o.keep && o.keep.length) {
     const live = new Set();

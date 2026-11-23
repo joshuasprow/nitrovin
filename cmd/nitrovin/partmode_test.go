@@ -19,7 +19,7 @@ import (
 // vehicles; its stock strip opens its rows; the URL carries the mode and
 // the part, so a reload draws the same page and Back the ones before. One
 // line runs from the number's bracket to the tag's eyelet, ending at both.
-// At 390 wide the switch is the plate's width, the fields stack, the
+// At 390 wide the switch and the VINs key are the plate's width, the fields stack, the
 // vehicles are one to a row, and the page does not scroll sideways. axe
 // audits each state. CI (CI set) needs the browser; a machine without one
 // skips.
@@ -203,7 +203,7 @@ func TestPartMode(t *testing.T) {
 			tb.audit(name + ", a retired number")
 			log.take()
 
-			// 390 wide: the switch is the plate's width, the fields stack,
+			// 390 wide: the switch's row, with the VINs key, is the plate's width, the fields stack,
 			// the vehicles are one to a row under the tag, the line runs
 			// straight down to its eyelet, and the page does not scroll
 			// sideways.
@@ -216,13 +216,13 @@ func TestPartMode(t *testing.T) {
 				const r = sel => document.querySelector(sel).getBoundingClientRect();
 				const rows = [...document.querySelectorAll(".vehicles tbody tr")].map(tr => tr.getBoundingClientRect());
 				const line = r(".pleader path.narrow"), tag = r(".ptag"), table = r(".vehicles tbody");
-				return [r(".modes").width - r(".pplate").width, r("#part-type-field").bottom - r(".pnum").top,
+				return [r(".moderow").width - r(".pplate").width, r("#part-type-field").bottom - r(".pnum").top,
 					Math.max(...rows.map(b => Math.abs(b.left - table.left) + Math.abs(b.width - table.width))), rows[1].top - rows[0].bottom,
 					line.left - (tag.left + tag.right) / 2, line.bottom - tag.top, r(".vehicles").top - tag.bottom,
 					document.documentElement.scrollWidth - innerWidth];
 			})()`)
 			if math.Abs(m[0]) > 1 || m[1] > 0 || m[2] > 1 || m[3] < -1 || math.Abs(m[4]) > 1.5 || math.Abs(m[5]) > 1.5 || m[6] < 0 || m[7] > 0 {
-				t.Errorf("390 wide: the switch %v wider than the plate, the type %v over the number, rows %v off the table's width, %v between rows, the line %v from the eyelet and %v from the tag's top, the vehicles %v under the tag, the page %v wider than the window",
+				t.Errorf("390 wide: the switch's row %v wider than the plate, the type %v over the number, rows %v off the table's width, %v between rows, the line %v from the eyelet and %v from the tag's top, the vehicles %v under the tag, the page %v wider than the window",
 					m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7])
 			}
 			tb.audit(name + ", 390 wide")

@@ -1070,7 +1070,7 @@ left open hears of a new release without a worker too, from the server's
 next answer or when the tab is shown again, and its Update now reloads
 it. A deploy's old container may answer once after the new one: the
 files pause, the worker asks the server again within seconds, and they
-come back by themselves. Every page's header names the release that
+come back by themselves. Every page's foot names the release that
 drew it. A page loaded with
 a hard reload is not the worker's, and says your files are paused for
 that load. Release builds also offer [EPA's vocabulary](#epas-vocabulary)
@@ -1237,7 +1237,7 @@ value in it is made up, and says so.
 | `demo-classics` | `extension-set` | a Studebaker Champion and a Volkswagen Type 2, which vPIC lacks |
 | `demo-catalog` | `catalog` | 46 fitments, release `DEMO-2`: qualified applications, sides, a redirect and a retired number |
 | `demo-shelf` | `stock` (shelf) | numbered parts, one under a retired number and one with none, of release `DEMO-1` |
-| `demo-yard-stock` | `stock` (yard) | whole vehicles, nine by VIN and two by the catalog's vehicle |
+| `demo-yard-stock` | `stock` (yard) | whole vehicles, twenty by VIN and two by the catalog's vehicle; five Camrys and four 2017 RAV4s, so the page's "In stock" has an order |
 | `vpic/demo-vpic-catalog` | `catalog` (`"vehicles": "vpic"`) | the same vehicles and part types as vPIC's own, with no vehicle vocabulary: 46 fitments, release `DEMO-V1`, numbers `DEMO-V…`; applications to vPIC models (the F-150 is model 1801), to a make (every Toyota) and to `demo-classics`' extensions; qualified applications, sides, a redirect and a retired number. A server's alone, in place of `demo-catalog` (below) |
 
 **In a browser**, the Vocabularies dialog of any `serve` with the browser

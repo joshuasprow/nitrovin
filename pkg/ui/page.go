@@ -61,6 +61,8 @@ type homePage struct {
 	// draws no Diagram.
 	Part     *partPage
 	Examples []example
+	// Stocked are the vehicles the yards hold most of (stocked.go).
+	Stocked []stockedVIN
 	// Result is the decode's own request and JSON, or the part's, nil
 	// before either.
 	Result                    *result
@@ -208,10 +210,15 @@ func (h *Handler) home(r *http.Request) (view, error) {
 	if raw.Has("vin") {
 		return h.moved(r)
 	}
+	stocked := h.stocked()
 	if raw.Has("surprise") {
+		// With a yard loaded, a surprise is a vehicle it holds.
+		if len(stocked) > 0 {
+			return view{location: stocked[rand.IntN(len(stocked))].Href, status: http.StatusSeeOther}, nil
+		}
 		return view{location: vinHref(surpriseVINs[rand.IntN(len(surpriseVINs))]), status: http.StatusSeeOther}, nil
 	}
-	page := &homePage{DataMonth: info.DataMonth, DecoderVersion: info.DecoderVersion, Links: h.links(info), PartMode: partModeHref}
+	page := &homePage{Stocked: stocked, DataMonth: info.DataMonth, DecoderVersion: info.DecoderVersion, Links: h.links(info), PartMode: partModeHref}
 	for _, e := range exampleVINs {
 		page.Examples = append(page.Examples, example{Label: e.vin, Hint: e.hint, Href: vinHref(e.vin)})
 	}

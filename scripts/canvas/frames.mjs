@@ -40,7 +40,7 @@ export const frames = [
     intro: 'Four materials, the same in both colour schemes: brushed aluminum, vinyl tape, manila and thermal paper. Three heights: static tape is stuck on; a control stands raised on a steel ledge; pressed, it sits flush, 2px down and darker.',
     items: [
       { h2: 'Aluminum' },
-      { vp: 'wide', url: vin(F150), keep: ['header', '#lookup'], pre: blur, mark: { '.open-developers': 'is-active' }, cap: 'Plates and keys', note: 'The brand is a static plate. A button is a key of the same metal, raised; Developers is shown pressed, as is the VIN key of the switch.' },
+      { vp: 'wide', url: vin(F150), keep: ['header', '#lookup', 'footer'], pre: blur, mark: { '.open-vocabularies': 'is-active' }, cap: 'Plates and keys', note: 'The brand is a static plate. A button is a key of the same metal, raised; Vocabularies is shown pressed, as is the VIN key of the switch. VINs ends the row over the plate, and Developers and the release are the foot.' },
       { h2: 'Vinyl tape' },
       { vp: 'wide', url: vin(F150, '&part.id=alternator'), keep: ['#fit .carry', '#fit .fitstrip', '#fit .aka', '#fit .ptwrap', '#fit .drops'], cap: 'Label tape, the second tape, pinstripe', note: 'Black label tape carries the vehicle\'s block and a vocabulary\'s name across its tag, letters raised white. The second tape is the plate\'s metal with the tape\'s ridges: the part type picker is a key of it on its own piece of label tape, and a part type opened recently is a strip of it, raised. Lines are pinstripe tape in a group\'s colour, lit on one edge, and run straight into the tape.' },
       { h2: 'Manila' },
@@ -88,7 +88,7 @@ export const frames = [
       { vp: 'wide', url: '/?from.fitment.number=', visit: [vin(CAMRY, '&part.id=starter'), vin(CAMRY, '&part.id=fog-lamp')], open: ['#part-types'], keep: ['#part-types'], cap: 'Part types dialog', note: 'Part-number mode\'s: every part type of the catalog under the part vocabulary\'s headings, with a filter and those opened recently. On a VIN\'s page the same list hangs from the picker.' },
       { row: [
         { vp: 'wide', box: 760, url: vin(F150), open: ['.note'], keep: ['#fit .fitstrip', '#fit .aka'], style: 'padding-bottom: 90px', cap: 'Note', note: 'How a name on a tag was reached, behind its "i".' },
-        { vp: 'tab', box: 400, url: vin(F150), visit: [vin(CAMRY), vin(SILV)], open: ['#vins'], keep: ['#vins'], cap: 'Menu', note: 'Recent VINs, then the examples.' },
+        { vp: 'tab', box: 400, url: vin(F150), visit: [vin(CAMRY), vin(SILV)], open: ['#vins'], keep: ['#vins'], cap: 'Menu', note: 'Recent vehicles, each with the part type that was open on it; then the vehicles the yard holds most of.' },
       ] },
       { vp: 'wide', url: vin(F150), open: ['.card dialog'], keep: ['.card dialog'], cap: 'The check digit', note: 'The sum, a table of label-face headers.' },
       { vp: 'wide', url: vin(F150), pre: showVocab, open: ['#vocabularies'], keep: ['#vocabularies'], cap: 'Vocabularies', note: 'A dashed box around a native file input, beside what the server holds; then a table of label-face headers over a steel rule, each row with a disclosure.' },

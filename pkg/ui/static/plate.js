@@ -569,28 +569,43 @@
       return [];
     }
   };
+  // A recent is the VIN with the part type that was open on it, so it
+  // opens back at its stock. The recents are the VINs menu's first list.
+  const recentURL = (r) => '/?' + new URLSearchParams(r.part ? { 'from.vin': r.vin, 'part.id': r.part } : { 'from.vin': r.vin });
   const chips = () => {
     const list = document.getElementById('recent');
     if (!list) return;
     const kept = recent();
-    list.replaceChildren(...kept.map((r) => {
+    const items = () => kept.map((r) => {
       const li = document.createElement('li');
       const a = document.createElement('a');
       a.className = 'example recent';
-      a.href = urlFor(r.vin);
+      a.href = recentURL(r);
       a.title = r.vin;
-      a.textContent = r.label;
+      const b = document.createElement('b');
+      b.textContent = r.label;
+      a.append(b);
+      if (r.partName) {
+        const small = document.createElement('small');
+        small.textContent = r.partName;
+        a.append(small);
+      }
       li.append(a);
       return li;
-    }));
+    });
+    list.replaceChildren(...items());
     list.hidden = kept.length === 0;
     document.getElementById('examples').hidden = kept.length > 0;
     document.getElementById('clear-recent').hidden = kept.length === 0 && recentParts().length === 0;
   };
   function remember(answer) {
     if (!answer || !('complete' in answer.dataset) || !answer.dataset.label || answer.querySelector('.card.bad')) return;
-    const vin = answer.dataset.vin;
-    const kept = [{ vin, label: answer.dataset.label }, ...recent().filter((r) => r.vin !== vin)].slice(0, KEPT);
+    const vin = answer.dataset.vin, part = answer.querySelector('.drops') ? answer.dataset.part || '' : '';
+    const name = part && answer.querySelector('#pick-type .nm');
+    const was = recent().find((r) => r.vin === vin);
+    // A VIN looked at again with no part type keeps the one it had.
+    const entry = part ? { vin, label: answer.dataset.label, part, partName: name ? name.textContent : part } : { ...(was || {}), vin, label: answer.dataset.label };
+    const kept = [entry, ...recent().filter((r) => r.vin !== vin)].slice(0, KEPT);
     try {
       localStorage.setItem(STORE, JSON.stringify(kept));
     } catch {

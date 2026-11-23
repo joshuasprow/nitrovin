@@ -571,11 +571,11 @@ to its target instead (`HX-Retarget`). A fragment fills the layout's
 main (`hx-history-elt`), and htmx keeps no snapshot of it
 (`hx-history="false"`): back and forward ask the server for each page
 again, so a page put back never carries what a script or an extension
-left on it, which CSP would refuse. The header shows the running
-release's version beside the brand, linked to its GitHub release when it
-is a tagged one, and the data month, and holds no navigation: the page
-is the VIN decoder, and everything else is behind the header's three
-buttons, each opening a popover: VINs, the menu of what to try
+left on it, which CSP would refuse. The foot shows the running
+release's version, linked to its GitHub release when it
+is a tagged one, and the data month. The page holds no navigation: it
+is the VIN decoder, and everything else is behind three
+buttons, each opening a popover: VINs, beside the plate's mode switch, the menu of what to try
 (`page.html`'s `chips`), Vocabularies and Developers. Vocabularies is the
 layout's (`ui.html`), one template on the server and in the worker: its
 dialog sits beside the main, and every page draws the buttons and the

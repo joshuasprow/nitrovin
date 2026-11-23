@@ -29,7 +29,8 @@ var vpicDemo = []string{
 // demoVINs are the demo set's VINs, its yard's, and the vPIC model, year
 // and drive type each must decode to on the embedded data month: the
 // stories of #278 rest on them (a four-wheel and a two-wheel drive F-150,
-// a CR-V whose VIN gives no drive type, a Ram of make Ram).
+// a CR-V whose VIN gives no drive type, a Ram of make Ram), and the rest
+// give the yard models it holds several of (#386).
 var demoVINs = map[string]struct {
 	model int
 	year  string
@@ -44,6 +45,17 @@ var demoVINs = map[string]struct {
 	"4T1B11HK7JU512345": {2469, "2018", "4x2"},
 	"2T3W1RFV8KW012345": {2217, "2019", "4x2"},
 	"2T3BFREV7HW512345": {2217, "2017", "4WD/4-Wheel Drive/4x4"},
+	"4T1B11HK1JU623456": {2469, "2018", "4x2"},
+	"4T1B11HK6JU734567": {2469, "2018", "4x2"},
+	"4T1B11HK0JU845678": {2469, "2018", "4x2"},
+	"4T1B11HK5JU956789": {2469, "2018", "4x2"},
+	"2T3BFREV1HW623456": {2217, "2017", "4WD/4-Wheel Drive/4x4"},
+	"2T3BFREV6HW734567": {2217, "2017", "4WD/4-Wheel Drive/4x4"},
+	"2T3BFREV0HW845678": {2217, "2017", "4WD/4-Wheel Drive/4x4"},
+	"1C6RR7LT0FS623456": {13620, "2015", "4WD/4-Wheel Drive/4x4"},
+	"1C6RR7LT5FS734567": {13620, "2015", "4WD/4-Wheel Drive/4x4"},
+	"2T3W1RFV2KW123456": {2217, "2019", "4x2"},
+	"2T3W1RFV7KW234567": {2217, "2019", "4x2"},
 }
 
 // TestDemoCheck holds the demo set to the data month go.mod pins, as CI

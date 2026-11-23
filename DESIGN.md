@@ -303,14 +303,13 @@ Around the body:
   and a dark edge above, so the letter reads as struck in.
 - **Pressed:** a key moves down 2 px, loses its ledge and its shadow, and
   takes `--alu-in`, `linear-gradient(#8e99a3, #aab4bd)` under faint ridges,
-  with `--pressed` inside its top. A rivet or the Menu button's bars stay
-  on it.
+  with `--pressed` inside its top. A rivet stays on it.
 
 The fastener says what the piece is.
 
 | Fastener | On | Drawn as |
 | --- | --- | --- |
-| Rivet | Small tags: header buttons, menu rows; one at each end of the brand | A 2.5 px `--steel-dark` dot in a light ring |
+| Rivet | Small tags: the page's keys (Vocabularies, VINs, Developers), menu rows; one at each end of the brand | A 2.5 px `--steel-dark` dot in a light ring |
 | Slotted screw | The VIN plate and every dialog's head, one at each end | A 5 px light disc, a `--steel` ring, a 9 × 2 px slot |
 | Eyelet | A manila tag | A hole punched by a radial mask through a darker patch that reinforces it |
 
@@ -724,14 +723,13 @@ metal; a way on is a link.
 ## Good enough: dialogs
 
 Everything behind a button is a `popover`, opened by `popovertarget` with no
-script. There are three sizes.
+script. There are three kinds.
 
 | Kind | Used for | Width | Backdrop |
 | --- | --- | --- | --- |
 | Dialog (`dialog[popover]`) | Vocabularies, Developers, JSON, the check digit's sum, the part types | `min(56rem, 100vw - 2rem)` | `rgb(10 18 26 / .55)` |
 | Note (`.note[popover]`) | How a name on the tape was reached | up to `30rem` | `rgb(10 18 26 / .35)` |
 | Menu (`.menu[popover]`) | The VINs to try | `19rem` | none |
-| Header menu (`nav.top[popover]`) | The header's buttons and the release, at 46 rem and under | `16rem` | none |
 
 - **Panel:** panel ground and `--fg`, a 2 px `--steel` edge, on 3 px of
   `--steel-dark` and a deep soft shadow. Corners are 6 px on a dialog and 4 px
@@ -743,18 +741,28 @@ script. There are three sizes.
 - **Height:** a dialog keeps inside the window (`100dvh - 2rem` where the
   browser knows it) and scrolls inside itself.
 - **The menu hangs from its button** by CSS anchor positioning, and from the
-  header's end where the browser has none. Its rows are small metal tags,
+  page's end where the browser has none. Its rows are small metal tags,
   raised as keys are. While it is open, its button is pressed.
-- **The header collapses where its buttons would wrap** (46 rem, its own
-  width: the cards change at 64 rem). The
-  header's nav is itself a popover. In a wide window it has no box: the
-  release sits beside the brand and the buttons at the far end. In a narrow
-  one the Menu button, a key of metal with three bars, opens it as a panel
-  hung from the button: the buttons in a column, then the release under a
-  rule. The VINs menu and the dialogs open from inside it.
+- **Each key is where it belongs, the same at every width** (rules 5, 6
+  and 7). No menu holds the page's keys and no row of them scrolls.
+  Vocabularies is the header's, at its far end, as it is about the whole
+  page. VINs is the plate's: it ends the row over the plate, whose start is
+  the mode switch, and on a phone the switch gives it room. Developers and
+  the release are the page's foot, under a rule: they are about nitrovin,
+  not about the vehicle. *Sent back: a Menu key that held all three and
+  the release on a phone; one row of keys that scrolled sideways.*
+- **The VINs menu is two lists and a key**, each list under a small label,
+  each row a small metal tag of two lines: a vehicle, and under it what it
+  has. "Recent" is this browser's last eight vehicles, each with the part
+  type that was open on it, so a row is back at its stock; "In stock" is
+  the vehicles the yards hold most of, a model once, with the yard's count
+  (ADR 0028), and is there whether or not anything is recent. The examples
+  show only until there is a recent vehicle. Surprise me opens a vehicle
+  of the yard's when a yard is loaded. *Sent back: the recents as a row of
+  their own over the plate.*
 - **Update now is the header's one lit key.** When a new release is
-  there, a key shows beside the brand, at every width and never inside the
-  header menu: a key like the others, its rivet an amber lamp (`--lamp`)
+  there, a key shows beside the brand, at every width: a key like the
+  others, its rivet an amber lamp (`--lamp`)
   and a ring of the lamp's light around it, which breathes where motion is
   allowed. It is a control, so it is metal (rule 2), and it sits in the
   masthead and not over the page (rule 1): no toast. The lamp says "new";

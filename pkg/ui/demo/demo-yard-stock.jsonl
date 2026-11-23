@@ -10,3 +10,14 @@
 {"id":"DEMO-Y-09","location":"demo-north","vin":"2T3BFREV7HW512345","fields":{"stock_number":"DEMO-Y-09","color":"demo: red","row":"D-5"}}
 {"id":"DEMO-Y-10","location":"demo-south","vehicle":{"make":"Volkswagen","model":"Type 2"},"year":1974,"fields":{"stock_number":"DEMO-Y-10","color":"demo: orange","row":"D-5"}}
 {"id":"DEMO-Y-11","location":"demo-north","vehicle":{"make":"Studebaker","model":"Champion"},"year":1950,"fields":{"stock_number":"DEMO-Y-11","color":"demo: cream","row":"D-6"}}
+{"id":"DEMO-Y-12","location":"demo-north","vin":"4T1B11HK1JU623456","fields":{"stock_number":"DEMO-Y-12","color":"demo: silver","row":"D-7"}}
+{"id":"DEMO-Y-13","location":"demo-south","vin":"4T1B11HK6JU734567","fields":{"stock_number":"DEMO-Y-13","color":"demo: red","row":"D-7"}}
+{"id":"DEMO-Y-14","location":"demo-north","vin":"4T1B11HK0JU845678","fields":{"stock_number":"DEMO-Y-14","color":"demo: white","row":"D-8"}}
+{"id":"DEMO-Y-15","location":"demo-south","vin":"4T1B11HK5JU956789","fields":{"stock_number":"DEMO-Y-15","color":"demo: black","row":"D-8"}}
+{"id":"DEMO-Y-16","location":"demo-north","vin":"2T3BFREV1HW623456","fields":{"stock_number":"DEMO-Y-16","color":"demo: black","row":"D-9"}}
+{"id":"DEMO-Y-17","location":"demo-south","vin":"2T3BFREV6HW734567","fields":{"stock_number":"DEMO-Y-17","color":"demo: blue","row":"D-9"}}
+{"id":"DEMO-Y-18","location":"demo-north","vin":"2T3BFREV0HW845678","fields":{"stock_number":"DEMO-Y-18","color":"demo: grey","row":"D-10"}}
+{"id":"DEMO-Y-19","location":"demo-south","vin":"1C6RR7LT0FS623456","fields":{"stock_number":"DEMO-Y-19","color":"demo: white","row":"D-10"}}
+{"id":"DEMO-Y-20","location":"demo-north","vin":"1C6RR7LT5FS734567","fields":{"stock_number":"DEMO-Y-20","color":"demo: red","row":"D-11"}}
+{"id":"DEMO-Y-21","location":"demo-south","vin":"2T3W1RFV2KW123456","fields":{"stock_number":"DEMO-Y-21","color":"demo: silver","row":"D-11"}}
+{"id":"DEMO-Y-22","location":"demo-north","vin":"2T3W1RFV7KW234567","fields":{"stock_number":"DEMO-Y-22","color":"demo: blue","row":"D-12"}}

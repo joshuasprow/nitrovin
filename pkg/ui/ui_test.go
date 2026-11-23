@@ -67,6 +67,10 @@ func (backend) Fit(context.Context, contract.FitRequest) (contract.Fit, error) {
 	return contract.Fit{Status: contract.FitNoCatalog}, nil
 }
 
+func (backend) Stocked(context.Context, contract.StockedRequest) (contract.Stocked, error) {
+	return contract.Stocked{}, nil
+}
+
 func (b backend) SpineBundle() ([]byte, error) {
 	if b.spines != nil {
 		b.spines.Add(1)
@@ -274,13 +278,13 @@ func TestPanic(t *testing.T) {
 	}
 	checkHTMLOf(t, "panic", hdr, "")
 	if !strings.Contains(body, "<h1>Internal Server Error</h1>\n<p>nitrovin failed: injected fault</p>") || strings.Contains(body, "/ui/r/") ||
-		!strings.Contains(body, `<a class="brand" href="/">nitrovin</a>`+"\n"+`<small class="version"></small>`) {
+		!strings.Contains(body, `<a class="brand" href="/">nitrovin</a>`+"\n"+`</header>`) || !strings.Contains(body, `<footer>`+"\n"+`<small class="version"></small>`) {
 		t.Errorf("page:\n%s", body)
 	}
 }
 
-// TestVersion: every whole page's header shows the running release's
-// version beside the brand, linked to its release on GitHub when it is a
+// TestVersion: every whole page's foot shows the running release's
+// version, linked to its release on GitHub when it is a
 // tagged release, and every response names the release (ReleaseHeader),
 // assets and /sw.js included.
 func TestVersion(t *testing.T) {
@@ -295,11 +299,10 @@ func TestVersion(t *testing.T) {
 		h := New(backend{info: info}, log.New(io.Discard, "", 0)).WithWorker(Worker{Module: []byte("\x00asm"), Exec: []byte("// go")})
 		for _, target := range []string{"/", "/ui/nothing"} {
 			_, hdr, body := response(t, h, "GET", target, nil)
-			// The release is the header's: beside the brand, or the last
-			// line of the nav where the page has one.
-			header, _, _ := strings.Cut(body, "</header>")
-			if !strings.Contains(header, `<a class="brand" href="/">nitrovin</a>`+"\n") || !strings.Contains(header, "\n"+want) {
-				t.Errorf("%s %s: the header lacks %s\n%s", version, target, want, body)
+			// The release is the foot's, on every page.
+			_, foot, _ := strings.Cut(body, "<footer>")
+			if !strings.Contains(body, `<a class="brand" href="/">nitrovin</a>`+"\n") || !strings.Contains(foot, "\n"+want) {
+				t.Errorf("%s %s: the foot lacks %s\n%s", version, target, want, body)
 			}
 			if got := hdr.Get(ReleaseHeader); got != Release(info) {
 				t.Errorf("%s %s: %s %q; want %q", version, target, ReleaseHeader, got, Release(info))
