@@ -559,12 +559,12 @@ for the vehicle, and the candidates of the one pressed.
   off the window runs to the window's edge. A browser without scroll
   timelines draws no line between the cards and the block.
 - **The picker** is one key of the second tape on its own piece of label
-  tape, under the names' tags. On a wide page the tape is one line, from
-  under the model's column to the block's right end: the key, 20 rem wide,
-  the key that clears it, then recent part types, and one that does not
-  fit is not shown. On a narrow page the tape is two lines: the keys, then
-  the recent part types; the tape is as wide as the longer line and no
-  narrower than 24 rem, and the key fills its line. Over its name it is labelled "Part type". With nothing pressed
+  tape, under the names' tags, as wide as the vehicle's block at every
+  width. On a wide page the tape is one line: the key, 20 rem wide and a
+  column in from the tape's left end, the key that clears it, then recent
+  part types, and one that does not fit is not shown. On a narrow page
+  the tape is two lines: the keys, then the recent part types; the keys'
+  line is as wide as the recents' and no narrower than 24 rem. Over its name it is labelled "Part type". With nothing pressed
   (no `part.id` in the URL) it reads "Choose a part type" with the count
   of the vehicle's part types in the part types' pill, and a blank strip
   under it asks for a choice. With one pressed it reads the part type's
@@ -608,10 +608,12 @@ for the vehicle, and the candidates of the one pressed.
   them and the VINs.
 - **A choice keeps the focus on the picker**, from the list or from under
   it, and so does clearing.
-- **The candidates** are manila tags, three to a row, in the answer's
-  order. Under 34 rem they are one row that scrolls sideways, the next tag
-  showing at the edge; the row reaches both edges of the window, takes
-  focus, and starts at the open candidate where the browser can. A tag's number is a strip of label tape
+- **The candidates** are manila tags in the answer's order, one row that
+  scrolls sideways at every width, each hung from the bottom edge of the
+  picker's tape by a wire from its eyelet, as a name's tag hangs from the
+  block. Three fill a wide window; a narrower one shows the next tag at
+  its edge, and an end with tags past it fades. The row takes focus, and
+  starts at the open candidate where the browser can. A tag's number is a strip of label tape
   across it under the eyelet, where a card prints its band, with the years at
   its trailing end; a candidate has no group and takes no colour. Its side,
   option text (verbatim) and note are rows in the tag's ink under muted
@@ -655,9 +657,8 @@ for the vehicle, and the candidates of the one pressed.
   sided fitment and `fitment.type` for one whose type is not the pressed
   part type's); the open one's links to the page with none, so one is
   open at a time. The rows are a receipt (thermal paper, above), fed out
-  from under the tag's stock strip: on a wide page in the
-  row under the tag's row, under the tag that is pressed, the tags after
-  it filling theirs first; under 34 rem right under the tag, in its column,
+  from under the tag's stock strip, in the second row of the candidates'
+  scrolling row: under its tag, in its column,
   moving with it. Shelf is over yard on the one receipt at every width, one
   kind when one is loaded, each under its count on a reversed bar and its
   sources' as-of dates, or why one did not answer. A row is its id, led by

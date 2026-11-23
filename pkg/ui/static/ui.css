@@ -367,7 +367,7 @@ table.sum .skip { color: var(--muted); }
 @property --nt-l { syntax: "<length>"; inherits: false; initial-value: 0px; }
 @property --nt-r { syntax: "<length>"; inherits: false; initial-value: 0px; }
 @supports (animation-timeline: scroll()) {
-  .nametags { mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline); }
+  .nametags, .cands { mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline); }
 }
 @keyframes nt-fade { 0% { --nt-l: 0px; --nt-r: 48px; } 6% { --nt-l: 48px; --nt-r: 48px; } 94% { --nt-l: 48px; --nt-r: 48px; } 100% { --nt-l: 48px; --nt-r: 0px; } }
 .fitstrip ~ .aka .name::after { content: ""; position: absolute; left: calc(50% - 1px); top: -36px; width: 2px; height: 50px; background: var(--steel); pointer-events: none; }
@@ -448,9 +448,9 @@ table.sum .skip { color: var(--muted); }
    wide page, on a second line under them on a narrow one. The list
    leads with those opened recently at every width. */
 .ptwrap { position: relative; z-index: 3; margin: 30px 0 0; }
-.ptsel { display: flex; flex-direction: column; align-items: stretch; gap: 6px; box-sizing: border-box; width: fit-content; min-width: min(24rem + 12px, 100%); max-width: 100%; padding: 5px 6px;
+.ptsel { display: grid; grid-template-columns: fit-content(100%) minmax(0, 1fr); gap: 6px; box-sizing: border-box; padding: 5px 6px;
   background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck); }
-.ptkeys { flex: none; display: flex; align-items: stretch; gap: 6px; anchor-name: --fit-part, --pick-type; }
+.ptkeys { grid-column: 1; display: flex; align-items: stretch; gap: 6px; min-width: min(24rem, 100%); anchor-name: --fit-part, --pick-type; }
 .ptfield { --key: var(--alu); flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: .5rem; align-items: center; min-height: 44px; padding: .25rem .6rem; text-align: left; text-transform: none; letter-spacing: 0; }
 .ptfield .plab { grid-column: 1 / -1; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; }
 .ptfield .nm { min-width: 0; font: 900 16px/1.2 var(--cell-font); letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -460,7 +460,7 @@ table.sum .skip { color: var(--muted); }
 .ptclear { flex: none; display: flex; align-items: center; justify-content: center; min-width: 44px; font: 900 18px/1 var(--cell-font); text-decoration: none; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8);
   background: var(--metal); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised); }
 .ptclear:active { transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed); }
-.ptrecents { flex: 0 1 auto; min-width: 0; max-height: 44px; overflow: hidden; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0 2px; }
+.ptrecents { grid-column: 1; min-width: 0; max-height: 44px; overflow: hidden; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0 2px; }
 .ptrecents[hidden] { display: none; }
 .ptrecents .ptype { min-height: 38px; padding-inline: 10px; font-size: 13px; }
 .ptrecents::before { content: "Recent"; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss); }
@@ -509,12 +509,24 @@ table.sum .skip { color: var(--muted); }
 }
 .fit .ptwrap ~ .blank { margin-top: 14px; }
 /* The candidates: manila tags as the cards are (.cand-in, its stock its
-   ::before), three to a row. No line runs to them: the lines from the
-   cards end at the picker, which says what they are candidates for.
+   ::before), one row that scrolls sideways at every width, three to a
+   window on a wide page, each hung from the picker's tape.
+   No line runs to them: the lines from the cards end at the picker,
+   which says what they are candidates for.
    The open candidate's rows are an item of the list after its tag
    (.rows), so a tag's place in its row counts tags alone (of .cand). */
-.cands { --gap: 12px; anchor-name: --fit-tags; list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: row dense; gap: 40px var(--gap); margin: 30px 0 0; padding: 0; }
-.cand { position: relative; min-width: 0; }
+.cands { --gap: 12px; anchor-name: --fit-tags; list-style: none; display: grid; grid-template-rows: auto auto; grid-auto-flow: column; grid-auto-columns: var(--tag); gap: 0 var(--gap); margin: 0; padding: 36px 4px 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding-inline: 4px; }
+.fit { --tag: calc((100% - 2 * 12px - 8px) / 3); }
+.cands:focus-visible { outline: 3px solid var(--link); outline-offset: -3px; }
+@media (width < 64rem) {
+  .fit { --tag: min(19.5rem, calc(100% - 2.5rem)); }
+  .cands { margin-right: calc(-1 * var(--gutter)); padding-right: var(--gutter); }
+}
+.cand { position: relative; min-width: 0; grid-row: 1; scroll-snap-align: start; }
+.cand:has(+ .rows) { scroll-initial-target: nearest; }
+/* A candidate hangs from the picker's tape by a wire from its eyelet, as
+   a name's tag hangs from the block. */
+.cand::after { content: ""; position: absolute; left: calc(50% - 1px); top: -36px; width: 2px; height: 50px; background: var(--steel); pointer-events: none; }
 .cand-in { position: relative; isolation: isolate; display: flex; flex-direction: column; box-sizing: border-box; height: 100%; padding: 28px .7rem .8rem; overflow-wrap: anywhere; color: var(--on-manila); filter: drop-shadow(0 4px 5px rgb(8 7 15 / .28)); }
 .numtape { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0 .5rem; margin: 0 -.7rem .6rem; padding: .3rem .7rem; color: var(--on-tape); text-shadow: var(--tape-emboss);
   background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 3px solid var(--tape-edge); }
@@ -550,7 +562,7 @@ table.sum .skip { color: var(--muted); }
    width, fed out from under the tag's stock strip (#376). On a wide page it is in
    the row under the tag's, which the tags after it fill first (dense),
    under whichever tag is pressed. */
-.rows { position: relative; grid-column: 1 / -1; min-width: 0; margin-top: -40px; }
+.rows { position: relative; grid-row: 2; min-width: 0; }
 .vehicles { background: var(--card-bg); border: 2px solid var(--steel); border-radius: 4px; box-shadow: 0 3px 0 var(--steel-dark), 0 8px 16px rgb(0 0 0 / .25); }
 /* The receipt: 35 to 42 columns of the printer's one face, shaded where it
    leaves the tag, torn at its foot, its shadow on the ground. Only what a
@@ -606,8 +618,7 @@ table.sum .skip { color: var(--muted); }
 .nonum { margin: 30px 0 0; }
 .nonum-tape { display: flex; align-items: center; box-sizing: border-box; min-height: 2.6rem; margin: 0; padding: .3rem .7rem; color: var(--on-tape); font: 700 12px var(--cell-font); letter-spacing: .04em; text-transform: none; text-shadow: var(--tape-emboss);
   background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck); }
-@media (width > 34rem) {
-  /* The receipt is its tag's width and under it, and no narrower than a
+/* The receipt is its tag's width and under it, and no narrower than a
      row of it reads at. */
   .rows .receipt { width: calc((100% - 2 * var(--gap)) / 3); min-width: min(100%, 19rem); }
   .rows.at2 .receipt { margin-inline: auto; }
@@ -633,18 +644,17 @@ table.sum .skip { color: var(--muted); }
 
 /* A wide page: the block's words are under their cards, the Maker's and
    the Vehicle's lines straight down to them and the Model year's stepped
-   left. The picker's tape starts under the model's column and runs to the
-   block's right end, one line: the key, which spans the model's and the
-   year's lines, the key that clears it, then the recent part types. */
+   left. The picker's tape is one line: the key, a column in from the
+   tape's left end, where it spans the model's and the year's lines, the key that clears it, then the recent part types. */
 @media (width >= 64rem) {
   .fitstrip, .fitstrip:has(.g-wmi) { grid-template-columns: 170fr 170fr 170fr 510fr; }
   .fitstrip .g-wmi { grid-column: 1; }
   .fitstrip .g-vds { grid-column: 2; }
   .fitstrip .g-year { grid-column: 3; }
   .fit, .fit:has(.fitstrip .g-wmi) { --xm: 8.333%; --xv: 25%; --xy: 41.667%; }
-  .ptsel { flex-direction: row; gap: 12px; width: auto; min-width: 0; margin-left: 16.667%; }
-  .ptkeys { width: 20rem; }
-  .ptrecents { padding-left: 12px; border-left: 1px solid rgb(255 255 255 / .18); }
+  .ptsel { display: flex; gap: 12px; }
+  .ptkeys { flex: none; width: 20rem; min-width: 0; margin-left: calc(16.667% + 2px); }
+  .ptrecents { flex: 0 1 auto; padding-left: 12px; border-left: 1px solid rgb(255 255 255 / .18); }
 }
 
 /* ---- Part-number mode (#325) ------------------------------------------
@@ -918,18 +928,9 @@ button.linkish:active { transform: none; box-shadow: none; }
   .hang, #answer { --col: 9.5rem; }
   .seg .w { font-size: .8rem; letter-spacing: .03em; }
   /* Candidates are one row that scrolls sideways, the next tag showing
-     at the edge, and reaches both edges of the window. The row
-     starts at the open candidate, where the browser can
-     (scroll-initial-target). */
-  .cands { grid-template-columns: none; grid-template-rows: auto auto; grid-auto-flow: column; grid-auto-columns: var(--tag); gap: 0 var(--gap);
-    margin-inline: calc(-1 * var(--gutter)); padding: 6px var(--gutter) 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter); }
+     at the edge, and reaches both edges of the window. */
+  .cands { margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter); }
   .fit { --tag: calc(100% - 2.5rem); }
-  .cands:focus-visible { outline: 3px solid var(--link); outline-offset: -3px; }
-  .cand { grid-row: 1; scroll-snap-align: start; }
-  .cand:has(+ .rows) { scroll-initial-target: nearest; }
-  /* The open candidate's receipt is under its tag, in its column, and
-     moves with it. */
-  .rows { grid-row: 2; grid-column: auto; margin-top: 0; }
   .ptype { font-size: 13px; padding-inline: 10px; }
   .ptgroups { grid-template-columns: minmax(0, 1fr); }
   .labels, .cells, .under { grid-template-columns: repeat(9, minmax(0, 1fr)); }

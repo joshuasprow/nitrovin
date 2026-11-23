@@ -78,6 +78,7 @@ label{font-weight: 600}
 .live .cell.sel{background: #16202b; color: #fff; text-shadow: none; border-radius: 4px; box-shadow: inset 0 0 0 3px var(--c)}
 .name{flex: none; scroll-snap-align: start; box-sizing: border-box; min-width: 11rem; max-width: min(40rem, 72vw); margin: 0; padding-bottom: .6rem}
 .ptgroups:has(> .ptgroup:only-child:not(:has(.pthead))){grid-template-columns: minmax(0, 1fr)}
+} .drops, .carry{display: none}
 .modes{display: inline-flex; margin: 0 0 14px}
 .mode{--key: var(--metal); display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 34px; padding: 0 1rem 0 1.6rem; font: 900 11px var(--label-font); letter-spacing: .1em; text-transform: uppercase; text-decoration: none; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); border: 1px solid var(--steel); box-shadow: var(--raised); background: radial-gradient(circle at .8rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--key)}
 .mode:first-child{border-radius: 3px 0 0 3px}
@@ -149,7 +150,7 @@ label{font-weight: 600}
 
 </style>
 </helmet>
-<div class="root sheet" data-scheme="light" style="width: 1280px; height: 2100px; color: var(--fg); background: var(--bg)">
+<div class="root sheet" data-scheme="light" style="width: 1280px; height: 2090px; color: var(--fg); background: var(--bg)">
 <div><h1 class="sh-h1">The VIN input, both modes</h1><p class="sh-intro">The form is the plate: 17 struck cells under six group labels, drawn over one real text field. A switch above it turns the plate to its second mode, a part type and a part number, on the same metal.</p></div>
 <section>
 <p class="sh-cap">Empty <span>The placeholder is stamped across the plate in the label face. The switch is two keys; the pressed one is the mode shown.</span></p>
@@ -541,7 +542,7 @@ label{font-weight: 600}
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2100}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2090}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};

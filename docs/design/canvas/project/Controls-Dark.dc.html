@@ -104,7 +104,7 @@ table.sum .skip{color: var(--muted)}
 .nametags:is(:focus-visible,.is-fv){outline: 0}
 .nrows{display: grid; grid-template-rows: repeat(2, auto); grid-auto-flow: column; grid-auto-columns: max-content; justify-content: start; align-content: start; gap: 0 1.4rem}}
 .vp{@supports (animation-timeline: scroll()){
-.nametags{mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline)}}}
+.nametags, .cands{mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline)}}}
 .vp{
 .fitstrip ~ .aka .name::after{content: ""; position: absolute; left: calc(50% - 1px); top: -36px; width: 2px; height: 50px; background: var(--steel); pointer-events: none}
 .nrow{position: relative}
@@ -142,15 +142,15 @@ table.sum .skip{color: var(--muted)}
 .ptype:is(:active,.is-active), .ptype[aria-current]{transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed)}
 .ptype .n{flex: none}
 .ptwrap{position: relative; z-index: 3; margin: 30px 0 0}
-.ptsel{display: flex; flex-direction: column; align-items: stretch; gap: 6px; box-sizing: border-box; width: fit-content; min-width: min(24rem + 12px, 100%); max-width: 100%; padding: 5px 6px; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck)}
-.ptkeys{flex: none; display: flex; align-items: stretch; gap: 6px; anchor-name: --fit-part, --pick-type}
+.ptsel{display: grid; grid-template-columns: fit-content(100%) minmax(0, 1fr); gap: 6px; box-sizing: border-box; padding: 5px 6px; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck)}
+.ptkeys{grid-column: 1; display: flex; align-items: stretch; gap: 6px; min-width: min(24rem, 100%); anchor-name: --fit-part, --pick-type}
 .ptfield{--key: var(--alu); flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: .5rem; align-items: center; min-height: 44px; padding: .25rem .6rem; text-align: left; text-transform: none; letter-spacing: 0}
 .ptfield .plab{grid-column: 1 / -1; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase}
 .ptfield .nm{min-width: 0; font: 900 16px/1.2 var(--cell-font); letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
 .ptfield .n{padding: 1px 7px; border: 1px solid rgb(35 41 48 / .55); border-radius: 9px; font: 900 11px var(--cell-font); text-shadow: none}
 .ptfield svg{width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round}
 .fit:has(#part-types.is-open) .ptfield{--key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed)}
-.ptrecents{flex: 0 1 auto; min-width: 0; max-height: 44px; overflow: hidden; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0 2px}
+.ptrecents{grid-column: 1; min-width: 0; max-height: 44px; overflow: hidden; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0 2px}
 .ptrecents[hidden]{display: none}
 .ptrecents .ptype{min-height: 38px; padding-inline: 10px; font-size: 13px}
 .ptrecents::before{content: "Recent"; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss)}
@@ -173,6 +173,8 @@ table.sum .skip{color: var(--muted)}
 .fit .ptlist{flex-direction: column; flex-wrap: nowrap; gap: 6px; padding: 0}
 .fit .ptlist .ptype{display: flex; justify-content: space-between}}}
 .vp{
+.fit{--tag: calc((100% - 2 * 12px - 8px) / 3)}
+} .drops, .carry{display: none}
 .fit{--xm: 3.3rem; --xv: 3.3rem; --xy: 9.9rem}
 .fit:has(.fitstrip .g-wmi){--xv: 9.9rem; --xy: 16.5rem}
 .fitstrip{anchor-name: --fit-strip}}
@@ -182,9 +184,9 @@ table.sum .skip{color: var(--muted)}
 .fitstrip .g-vds{grid-column: 2}
 .fitstrip .g-year{grid-column: 3}
 .fit, .fit:has(.fitstrip .g-wmi){--xm: 8.333%; --xv: 25%; --xy: 41.667%}
-.ptsel{flex-direction: row; gap: 12px; width: auto; min-width: 0; margin-left: 16.667%}
-.ptkeys{width: 20rem}
-.ptrecents{padding-left: 12px; border-left: 1px solid rgb(255 255 255 / .18)}}
+.ptsel{display: flex; gap: 12px}
+.ptkeys{flex: none; width: 20rem; min-width: 0; margin-left: calc(16.667% + 2px)}
+.ptrecents{flex: 0 1 auto; padding-left: 12px; border-left: 1px solid rgb(255 255 255 / .18)}}
 .vp{
 .part-form, .part-answer{--plate-pad: 16px}
 .part{margin: 0 var(--plate-pad)}
@@ -219,7 +221,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}
 .sheet .vp .name .note.is-open{position:absolute !important;top:calc(100% + 10px) !important;left:0 !important;width:26rem;z-index:2}
 </style>
 </helmet>
-<div class="root sheet" data-scheme="dark" style="width: 1280px; height: 4960px; color: var(--fg); background: var(--bg)">
+<div class="root sheet" data-scheme="dark" style="width: 1280px; height: 4970px; color: var(--fg); background: var(--bg)">
 <div><h1 class="sh-h1">Dialogs, forms and inputs</h1><p class="sh-intro">Everything behind a button is a popover. A dialog is a panel under a head of metal; a menu hangs from its button; a note has no head.</p></div>
 <h2 class="sh-h2">Dialogs</h2>
 <section>
@@ -676,7 +678,7 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 </section>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":4960}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":4970}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};

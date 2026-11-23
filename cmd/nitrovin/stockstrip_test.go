@@ -177,6 +177,23 @@ func TestStockStrip(t *testing.T) {
 			if len(drops) != 8 || eval[int](tb, `document.querySelectorAll("#fit .rails, #fit .risers, #fit .hook").length`) != 0 {
 				t.Errorf("1280 wide: %d measures of the lines to the picker, or a line from the picker to the candidates; want two lines that end at the picker", len(drops))
 			}
+			// The picker's tape is as wide as the vehicle's block, and the
+			// candidates are one row hung from it: each tag's wire runs
+			// from the tape's bottom edge to the tag's eyelet.
+			hung := measure[[]float64](tb, `(() => {
+				const tape = document.querySelector(".ptsel").getBoundingClientRect(), block = document.querySelector(".fitstrip").getBoundingClientRect();
+				const tags = [...document.querySelectorAll(".cands > .cand")], tops = new Set(tags.map(t => Math.round(t.getBoundingClientRect().top)));
+				const wires = tags.map(t => { const w = getComputedStyle(t, "::after"), top = t.getBoundingClientRect().top + parseFloat(w.top); return [top - tape.bottom, top + parseFloat(w.height) - t.getBoundingClientRect().top]; });
+				return [tape.width - block.width, tags.length, tops.size, ...wires.flat()];
+			})()`)
+			if len(hung) < 5 || math.Abs(hung[0]) > 1 || hung[2] != 1 {
+				t.Fatalf("1280 wide: the picker's tape is %v px wider than the block, with %v candidates on %v rows; want the block's width and one row", hung[0], hung[1], hung[2])
+			}
+			for i := 3; i+1 < len(hung); i += 2 {
+				if math.Abs(hung[i]) > 3 || hung[i+1] < 8 || hung[i+1] > 20 {
+					t.Errorf("1280 wide: a candidate's wire starts %v px from the tape's bottom edge and ends %v px into its tag; want it from the tape to the eyelet", hung[i], hung[i+1])
+				}
+			}
 			if len(lines) != 6 {
 				t.Fatalf("1280 wide: %d measures of the block's lines; want 6, two of each of three", len(lines))
 			}
