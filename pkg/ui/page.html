@@ -162,12 +162,9 @@ is open and the panel shown whole, which plate.js tells a history entry by. */}}
 {{range .Groups}}{{template "card" .}}
 {{end}}</div>
 {{if and (not .Ways) .Fit.Types}}<svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-{{if .Fit.Make}}<path class="g-wmi" pathLength="1" d="M85 0V14H56.1V28" vector-effect="non-scaling-stroke"/>
-<path class="g-vds" pathLength="1" d="M255 0V14H168.3V28" vector-effect="non-scaling-stroke"/>
-<path class="g-year" pathLength="1" d="M595 0V14H280.5V28" vector-effect="non-scaling-stroke"/>
-{{else}}<path class="g-vds" pathLength="1" d="M255 0V14H56.1V28" vector-effect="non-scaling-stroke"/>
-<path class="g-year" pathLength="1" d="M595 0V14H168.3V28" vector-effect="non-scaling-stroke"/>
-{{end}}
+{{if .Fit.Make}}<path class="g-wmi" pathLength="1" d="M85 0V28" vector-effect="non-scaling-stroke"/>
+{{end}}<path class="g-vds" pathLength="1" d="M255 0V28" vector-effect="non-scaling-stroke"/>
+<path class="g-year" pathLength="1" d="M595 0V14H425V28" vector-effect="non-scaling-stroke"/>
 </svg>
 {{end}}</div>
 {{with .Ways}}<div class="choice"><p class="blank"><span>{{$.Error}}</span>{{range .}}<a href="{{.Href}}">{{.Text}}</a>{{end}}</p></div>
@@ -280,7 +277,8 @@ own, which plate.js swaps in place (swap). */}}
 {{end}}{{with .Chars}}<div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd>{{range .}}<span class="vc"><b>{{.Char}}</b><small>{{.Pos}}</small></span>{{end}}</dd></div>
 {{end}}</dl>
 {{end}}</div>
-{{end}}{{if .Types}}<div class="ptwrap" data-spine="{{.Spine}}">
+{{end}}{{template "aka" .Names}}
+{{if .Types}}<div class="ptwrap" data-spine="{{.Spine}}">
 <div class="ptsel">
 <div class="ptkeys">
 <button type="button" id="pick-type" class="ptfield" popovertarget="part-types"><span class="plab">Part type</span><span class="nm">{{if .Pressed}}{{.Pressed}}{{else}}Choose a part type{{end}}</span><span class="n">{{.PickCount}}<span class="visually-hidden"> {{.PickNoun}}</span></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg></button>
@@ -291,8 +289,7 @@ own, which plate.js swaps in place (swap). */}}
 </div>
 {{if .Pressed}}<span class="drops" aria-hidden="true"></span>
 {{end}}{{template "part-types-dialog" .Dialog}}
-{{end}}{{template "aka" .Names}}
-{{if .Types}}{{if .Invite}}<p class="blank"><span>Choose a part type to see what fits this vehicle.</span></p>
+{{if .Invite}}<p class="blank"><span>Choose a part type to see what fits this vehicle.</span></p>
 {{end}}{{with .NoneFit}}<p class="blank"><span>{{.}}</span></p>
 {{end}}{{if .Tags}}<ol class="cands" aria-label="Candidates: {{.Pressed}}" tabindex="0">
 {{range .Tags}}<li class="cand"><div class="cand-in">

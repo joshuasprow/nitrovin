@@ -144,8 +144,8 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 .vc b{width: 100%; text-align: center; border-bottom: 3px solid #7db4ff}
 .vc small{font: 400 10px/1.3 var(--cell-font); letter-spacing: 0; color: #aeb7c0; text-shadow: none}
 .ptwrap{position: relative; z-index: 3; margin: 30px 0 0}
-.ptsel{display: flex; align-items: stretch; gap: 12px; box-sizing: border-box; padding: 5px 6px; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck)}
-.ptkeys{flex: none; display: flex; align-items: stretch; gap: 6px; width: 24rem; max-width: 100%; anchor-name: --fit-part, --pick-type}
+.ptsel{display: flex; flex-direction: column; align-items: stretch; gap: 6px; box-sizing: border-box; width: fit-content; min-width: min(24rem + 12px, 100%); max-width: 100%; padding: 5px 6px; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck)}
+.ptkeys{flex: none; display: flex; align-items: stretch; gap: 6px; anchor-name: --fit-part, --pick-type}
 .ptfield{--key: var(--alu); flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: .5rem; align-items: center; min-height: 44px; padding: .25rem .6rem; text-align: left; text-transform: none; letter-spacing: 0}
 .ptfield .plab{grid-column: 1 / -1; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase}
 .ptfield .nm{min-width: 0; font: 900 16px/1.2 var(--cell-font); letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
@@ -153,7 +153,7 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 .ptfield svg{width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round}
 .ptclear{flex: none; display: flex; align-items: center; justify-content: center; min-width: 44px; font: 900 18px/1 var(--cell-font); text-decoration: none; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); background: var(--metal); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised)}
 .ptclear:is(:active,.is-active){transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed)}
-.ptrecents{flex: 0 1 auto; min-width: 0; max-height: 44px; overflow: hidden; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0 2px 0 12px; border-left: 1px solid rgb(255 255 255 / .18)}
+.ptrecents{flex: 0 1 auto; min-width: 0; max-height: 44px; overflow: hidden; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0 2px}
 .ptrecents[hidden]{display: none}
 .ptrecents::before{content: "Recent"; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss)}
 .ptgroups:has(> .ptgroup:only-child:not(:has(.pthead))){grid-template-columns: minmax(0, 1fr)}
@@ -214,6 +214,14 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 .drops::before{left: calc(var(--xv) - 2.5px)}
 .drops::after{left: calc(var(--xy) - 2.5px); border-color: var(--c-year)}}}
 .vp{
+.fitstrip, .fitstrip:has(.g-wmi){grid-template-columns: 170fr 170fr 170fr 510fr}
+.fitstrip .g-wmi{grid-column: 1}
+.fitstrip .g-vds{grid-column: 2}
+.fitstrip .g-year{grid-column: 3}
+.fit, .fit:has(.fitstrip .g-wmi){--xm: 8.333%; --xv: 25%; --xy: 41.667%}
+.ptsel{flex-direction: row; gap: 12px; width: auto; min-width: 0; margin-left: 16.667%}
+.ptkeys{width: 20rem}
+.ptrecents{padding-left: 12px; border-left: 1px solid rgb(255 255 255 / .18)}
 .modes{display: inline-flex; margin: 0 0 14px}
 .mode{--key: var(--metal); display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 34px; padding: 0 1rem 0 1.6rem; font: 900 11px var(--label-font); letter-spacing: .1em; text-transform: uppercase; text-decoration: none; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); border: 1px solid var(--steel); box-shadow: var(--raised); background: radial-gradient(circle at .8rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--key)}
 .mode:first-child{border-radius: 3px 0 0 3px}
@@ -319,16 +327,6 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 <div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>
 </dl>
 </div>
-<div class="ptwrap live" data-spine="demo-part-types">
-<div class="ptsel">
-<div class="ptkeys">
-<button id="pick-type" class="ptfield" type="button"><span class="plab">Part type</span><span class="nm">Alternator</span><span class="n">3<span class="visually-hidden"> candidates</span></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"></path></svg></button>
-<a class="ptclear swap" id="clear-type" data-focus="pick-type" href="#" aria-label="Clear Alternator">×</a>
-</div>
-<ul class="ptrecents" aria-label="Opened recently" hidden=""></ul>
-</div>
-</div>
-<span class="drops" aria-hidden="true"></span>
 <section class="aka done" id="aka" aria-labelledby="aka-h">
 <h2 id="aka-h" class="visually-hidden">Also known as</h2>
 <ol class="nametags" aria-label="Also known as" tabindex="0">
@@ -339,6 +337,16 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 </div></li>
 </ol>
 </section>
+<div class="ptwrap live" data-spine="demo-part-types">
+<div class="ptsel">
+<div class="ptkeys">
+<button id="pick-type" class="ptfield" type="button"><span class="plab">Part type</span><span class="nm">Alternator</span><span class="n">3<span class="visually-hidden"> candidates</span></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"></path></svg></button>
+<a class="ptclear swap" id="clear-type" data-focus="pick-type" href="#" aria-label="Clear Alternator">×</a>
+</div>
+<ul class="ptrecents" aria-label="Opened recently" hidden=""></ul>
+</div>
+</div>
+<span class="drops" aria-hidden="true"></span>
 </section>
 </div>
 </main>

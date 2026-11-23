@@ -448,9 +448,9 @@ table.sum .skip { color: var(--muted); }
    tape. Under 46rem the tape is the picker alone: the list leads with
    those opened recently at every width. */
 .ptwrap { position: relative; z-index: 3; margin: 30px 0 0; }
-.ptsel { display: flex; align-items: stretch; gap: 12px; box-sizing: border-box; padding: 5px 6px;
+.ptsel { display: flex; flex-direction: column; align-items: stretch; gap: 6px; box-sizing: border-box; width: fit-content; min-width: min(24rem + 12px, 100%); max-width: 100%; padding: 5px 6px;
   background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck); }
-.ptkeys { flex: none; display: flex; align-items: stretch; gap: 6px; width: 24rem; max-width: 100%; anchor-name: --fit-part, --pick-type; }
+.ptkeys { flex: none; display: flex; align-items: stretch; gap: 6px; anchor-name: --fit-part, --pick-type; }
 .ptfield { --key: var(--alu); flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: .5rem; align-items: center; min-height: 44px; padding: .25rem .6rem; text-align: left; text-transform: none; letter-spacing: 0; }
 .ptfield .plab { grid-column: 1 / -1; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; }
 .ptfield .nm { min-width: 0; font: 900 16px/1.2 var(--cell-font); letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -460,7 +460,7 @@ table.sum .skip { color: var(--muted); }
 .ptclear { flex: none; display: flex; align-items: center; justify-content: center; min-width: 44px; font: 900 18px/1 var(--cell-font); text-decoration: none; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8);
   background: var(--metal); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised); }
 .ptclear:active { transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed); }
-.ptrecents { flex: 0 1 auto; min-width: 0; max-height: 44px; overflow: hidden; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0 2px 0 12px; border-left: 1px solid rgb(255 255 255 / .18); }
+.ptrecents { flex: 0 1 auto; min-width: 0; max-height: 44px; overflow: hidden; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0 2px; }
 .ptrecents[hidden] { display: none; }
 .ptrecents .ptype { min-height: 38px; padding-inline: 10px; font-size: 13px; }
 .ptrecents::before { content: "Recent"; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss); }
@@ -620,8 +620,9 @@ table.sum .skip { color: var(--muted); }
 /* From the vehicle's block to the picker (.drops): the Vehicle's and the
    Model year's lines leave the block's bottom edge under their words, at
    --xv and --xy of the block, and come straight down into the picker,
-   where they end: the picker's key is under the words at every width,
-   and the drop is the 30px between block and picker. */
+   where they end: the picker's key is under the two words at every
+   width. The names' tags, hung from the block, are between the two and
+   lie over the lines. */
 .drops, .carry { display: none; }
 .fit { --xm: 3.3rem; --xv: 3.3rem; --xy: 9.9rem; }
 .fit:has(.fitstrip .g-wmi) { --xv: 9.9rem; --xy: 16.5rem; }
@@ -631,6 +632,22 @@ table.sum .skip { color: var(--muted); }
   .drops::before, .drops::after { content: ""; position: absolute; z-index: -1; box-sizing: border-box; pointer-events: none; border: 0 solid var(--c-vds); filter: var(--stripe-lift); top: calc(anchor(--fit-strip bottom) - 2px); bottom: calc(anchor(--fit-part top) - 2px); width: 5px; border-left-width: 5px; }
   .drops::before { left: calc(var(--xv) - 2.5px); }
   .drops::after { left: calc(var(--xy) - 2.5px); border-color: var(--c-year); }
+}
+
+/* A wide page: the block's words are under their cards, the Maker's and
+   the Vehicle's lines straight down to them and the Model year's stepped
+   left. The picker's tape starts under the model's column and runs to the
+   block's right end, one line: the key, which spans the model's and the
+   year's lines, the key that clears it, then the recent part types. */
+@media (width >= 64rem) {
+  .fitstrip, .fitstrip:has(.g-wmi) { grid-template-columns: 170fr 170fr 170fr 510fr; }
+  .fitstrip .g-wmi { grid-column: 1; }
+  .fitstrip .g-vds { grid-column: 2; }
+  .fitstrip .g-year { grid-column: 3; }
+  .fit, .fit:has(.fitstrip .g-wmi) { --xm: 8.333%; --xv: 25%; --xy: 41.667%; }
+  .ptsel { flex-direction: row; gap: 12px; width: auto; min-width: 0; margin-left: 16.667%; }
+  .ptkeys { width: 20rem; }
+  .ptrecents { padding-left: 12px; border-left: 1px solid rgb(255 255 255 / .18); }
 }
 
 /* ---- Part-number mode (#325) ------------------------------------------

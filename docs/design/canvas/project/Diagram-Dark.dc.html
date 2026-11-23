@@ -145,6 +145,12 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 .fit{--xm: 3.3rem; --xv: 3.3rem; --xy: 9.9rem}
 .fit:has(.fitstrip .g-wmi){--xv: 9.9rem; --xy: 16.5rem}
 .fitstrip{anchor-name: --fit-strip}}
+.vp-wide{
+.fitstrip, .fitstrip:has(.g-wmi){grid-template-columns: 170fr 170fr 170fr 510fr}
+.fitstrip .g-wmi{grid-column: 1}
+.fitstrip .g-vds{grid-column: 2}
+.fitstrip .g-year{grid-column: 3}
+.fit, .fit:has(.fitstrip .g-wmi){--xm: 8.333%; --xv: 25%; --xy: 41.667%}}
 :is(.vp-tab,.vp-phone){
 .leaders, .joins{display: none}
 .hang{--col: 12.5rem; --lbl-h: 1.5rem; --gap: 12px; overflow-x: auto; overscroll-behavior-x: contain; margin: .75rem calc(-1 * var(--gutter)) 0; padding: 4px var(--gutter) 14px}
@@ -338,9 +344,9 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 </section>
 </div>
 <svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-<path class="g-wmi" pathLength="1" d="M85 0V14H56.1V28" vector-effect="non-scaling-stroke"></path>
-<path class="g-vds" pathLength="1" d="M255 0V14H168.3V28" vector-effect="non-scaling-stroke"></path>
-<path class="g-year" pathLength="1" d="M595 0V14H280.5V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-wmi" pathLength="1" d="M85 0V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-vds" pathLength="1" d="M255 0V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-year" pathLength="1" d="M595 0V14H425V28" vector-effect="non-scaling-stroke"></path>
 </svg>
 </div>
 <section class="fit" id="fit" aria-labelledby="fit-h">
@@ -580,9 +586,9 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 </section>
 </div>
 <svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-<path class="g-wmi" pathLength="1" d="M85 0V14H56.1V28" vector-effect="non-scaling-stroke"></path>
-<path class="g-vds" pathLength="1" d="M255 0V14H168.3V28" vector-effect="non-scaling-stroke"></path>
-<path class="g-year" pathLength="1" d="M595 0V14H280.5V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-wmi" pathLength="1" d="M85 0V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-vds" pathLength="1" d="M255 0V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-year" pathLength="1" d="M595 0V14H425V28" vector-effect="non-scaling-stroke"></path>
 </svg>
 </div>
 <section class="fit" id="fit" aria-labelledby="fit-h">
@@ -723,9 +729,9 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 </section>
 </div>
 <svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-<path class="g-wmi" pathLength="1" d="M85 0V14H56.1V28" vector-effect="non-scaling-stroke"></path>
-<path class="g-vds" pathLength="1" d="M255 0V14H168.3V28" vector-effect="non-scaling-stroke"></path>
-<path class="g-year" pathLength="1" d="M595 0V14H280.5V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-wmi" pathLength="1" d="M85 0V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-vds" pathLength="1" d="M255 0V28" vector-effect="non-scaling-stroke"></path>
+<path class="g-year" pathLength="1" d="M595 0V14H425V28" vector-effect="non-scaling-stroke"></path>
 </svg>
 </div>
 <section class="fit" id="fit" aria-labelledby="fit-h">
