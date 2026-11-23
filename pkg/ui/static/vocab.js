@@ -21,9 +21,21 @@
 // page, #browser's data-release, or the server, or does not answer the
 // page at all: it answers nothing, so every page is the server's and the
 // visitor's files wait for the update), unsupported (no Service Workers),
-// and failed. An update waiting for the old worker's pages to close is
-// said beside the state (data-update="waiting"), with Update now, which
-// hands the page to it at once and reloads.
+// and failed.
+//
+// A new release is offered in the header, outside the dialog: Update now
+// (#update-now, ui.html) shows while the document's data-update is set.
+// "waiting" is a new release's worker waiting for the old one's pages to
+// close, said beside the state too; Update now hands the page to it at
+// once and reloads. "server" is a server that runs another release than
+// the one that drew this page, with no worker waiting: Update now
+// reloads. The page learns the server's release from every answer htmx
+// gets, and asks /sw.js for it when the tab is shown again, five minutes
+// apart at most, so a tab left open hears of a deploy without a worker.
+// An outdated state is not final: a rollout's old container may answer
+// once after the new one. The page asks the worker again every fifteen
+// seconds, the worker asks the server, and the files come back without a
+// reload once the releases agree.
 'use strict';
 
 (() => {
@@ -59,14 +71,14 @@
   // ask asks the worker in control msg on a MessageChannel, resolving with
   // its answer, or with null after ms without one: a worker of another
   // release may not know msg's op.
-  const ask = (msg, ms) => new Promise((resolve) => {
+  const ask = (msg, ms, to = sw.controller) => new Promise((resolve) => {
     const ch = new MessageChannel();
     const timer = setTimeout(() => resolve(null), ms);
     ch.port1.onmessage = (e) => {
       clearTimeout(timer);
       resolve(e.data);
     };
-    sw.controller.postMessage(msg, [ch.port2]);
+    to.postMessage(msg, [ch.port2]);
   });
 
   const showFiles = () => htmx.ajax('GET', '/ui/files', { target: '#browser-files', swap: 'innerHTML' });
@@ -74,59 +86,154 @@
   // loaded, which just changed.
   const redraw = () => htmx.ajax('GET', location.pathname + location.search, { target: '#ui-main', swap: 'innerHTML' });
 
+  // offer shows Update now in the header, or takes it back: waiting is a
+  // new release's worker installed beside the one in control, heard the
+  // release the server last named.
+  const root = document.documentElement;
+  const updateNow = document.getElementById('update-now');
+  let waiting = false, heard = release;
+  const offer = () => {
+    const why = waiting ? 'waiting' : heard !== release ? 'server' : '';
+    if (why) root.dataset.update = why;
+    else delete root.dataset.update;
+  };
+  const hear = (r) => {
+    if (!r || r === heard) return;
+    heard = r;
+    offer();
+  };
+  document.addEventListener('htmx:afterRequest', (e) => {
+    if (e.detail.xhr) hear(e.detail.xhr.getResponseHeader('Nitrovin-Release'));
+  });
+  // A tab shown again asks the server its release: no worker needed.
+  let checked = Date.now();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible' || Date.now() - checked < (Number(section.dataset.recheck) || 300000)) return;
+    checked = Date.now();
+    fetch(section.dataset.worker, { method: 'HEAD', cache: 'no-store' }).then((r) => hear(r.headers.get('Nitrovin-Release')), () => {});
+  });
+
   // Update now hands the page to the waiting worker at once (it skips
   // waiting) and reloads, once the new worker controls the page; another
   // page's Update now reloads this one too, once it was the old worker's.
-  const updateNow = document.createElement('button');
-  updateNow.type = 'button';
-  updateNow.id = 'update-now';
-  updateNow.textContent = 'Update now';
-  updateNow.hidden = true;
-  status.after(updateNow);
+  // A worker still installing is waited for, up to fifteen seconds, so
+  // one click is the whole update. With none, or none that takes over in
+  // five seconds, the page reloads: the server's page is the new release.
   let controlled = Boolean(sw.controller), updating = false;
   sw.addEventListener('controllerchange', () => {
     if (controlled || updating) location.reload();
     controlled = true;
   });
-  updateNow.addEventListener('click', () => {
-    const waiting = registration && registration.waiting;
+  const installed = (w, ms) => new Promise((resolve) => {
+    if (w.state !== 'installing') return resolve();
+    setTimeout(resolve, ms);
+    w.addEventListener('statechange', () => { if (w.state !== 'installing') resolve(); });
+  });
+  if (updateNow) updateNow.addEventListener('click', async () => {
     updating = true;
     updateNow.disabled = true;
-    status.textContent = 'Updating the translator in this browser…';
-    // None waits any more: another page took the update already.
-    if (!waiting) location.reload();
-    else waiting.postMessage({ op: 'skipWaiting' });
+    updateNow.textContent = 'Updating…';
+    const reg = registration || await sw.getRegistration('/').catch(() => null);
+    if (reg && reg.installing) await installed(reg.installing, 15000);
+    // None waits: another page took the update already, or the page alone
+    // is old.
+    if (!reg || !reg.waiting) return location.reload();
+    reg.waiting.postMessage({ op: 'skipWaiting' });
+    setTimeout(() => location.reload(), 5000);
   });
 
-  const watchUpdates = (reg) => {
-    const waiting = () => {
-      update = ' · New release ready';
-      section.dataset.update = 'waiting';
+  // judge decides whether the worker waiting is an update worth
+  // offering: it is of the release the server runs now, asked of /sw.js,
+  // and of another than the worker in control. A worker installed from a
+  // rollout's old container is neither: the browser is asked to look
+  // again, and what it finds is judged in turn. A worker that does not
+  // say its release speaks an older protocol, and is replaced.
+  let judging = 0;
+  const judge = async () => {
+    const n = ++judging, reg = registration, w = reg && reg.waiting;
+    const set = (on) => {
+      waiting = on;
+      update = on ? ' · New release ready' : '';
       status.textContent = status.textContent.replace(/ · New release.*$/, '') + update;
-      updateNow.hidden = false;
+      offer();
     };
+    if (!w || !sw.controller) return set(false);
+    const [theirs, ours, server] = await Promise.all([
+      ask({ op: 'release' }, 3000, w),
+      mine(),
+      fetch(section.dataset.worker, { method: 'HEAD', cache: 'no-store' }).then((r) => r.headers.get('Nitrovin-Release'), () => null),
+    ]);
+    if (n !== judging) return;
+    hear(server);
+    if (theirs && theirs.release !== heard) {
+      set(false);
+      reg.update().catch(() => {});
+      return;
+    }
+    set(!(theirs && ours && theirs.release === ours.release));
+  };
+  const watchUpdates = (reg) => {
     // track waits for w, a worker installing, to be installed.
     const track = (w) => {
-      if (w) w.addEventListener('statechange', () => { if (w.state === 'installed' && sw.controller) waiting(); });
+      if (w) w.addEventListener('statechange', () => { if (w.state === 'installed') judge(); });
     };
-    if (reg.waiting && sw.controller) waiting();
+    judge();
     track(reg.installing);
     reg.addEventListener('updatefound', () => track(reg.installing));
   };
 
   // outdated says the worker in control answers nothing, mine its answer
   // to {op: "release"} ({release, server}), null when it gave none, and
-  // has the browser look for the new release's worker.
+  // has the browser look for the new release's worker. Until one takes
+  // over it asks the worker again (retry), which asks the server: the
+  // releases may agree after all.
+  let retrying = 0;
   const outdated = (mine) => {
     const server = mine && mine.server && mine.server.includes('/') ? mine.server : release;
     const what = mine && version(mine.release) !== version(server) ? version(mine.release) + ' here, ' + version(server) + ' on the server' : 'another release here';
     say('outdated', 'Own files paused: ' + what);
+    if (mine && mine.server) hear(mine.server.includes('/') ? mine.server : '');
     if (registration && !registration.waiting && !registration.installing) registration.update().catch(() => {});
+    if (!retrying) retrying = setInterval(retry, Number(section.dataset.retry) || 15000);
+  };
+  const retry = async () => {
+    if (section.dataset.state !== 'outdated' || updating) return;
+    asked = null;
+    const m = sw.controller && await mine();
+    if (matched(m)) resume();
+    else if (registration && !registration.waiting && !registration.installing) registration.update().catch(() => {});
+  };
+  // resume is the way back from outdated: the worker in control and the
+  // server run the page's release after all. The files show again, and
+  // the page's main is drawn over them.
+  const resume = async () => {
+    if (section.dataset.state !== 'outdated') return;
+    clearInterval(retrying);
+    retrying = 0;
+    heard = release;
+    judge();
+    section.dataset.state = 'starting';
+    try {
+      await showFiles();
+      say('ready', 'Files stay in this browser');
+      redraw();
+    } catch (err) {
+      say('failed', 'The translator in this browser could not start: ' + err + '.');
+    }
   };
   // The worker in control tells the page once it learns the server runs
-  // another release.
+  // another release, and once it runs the worker's again.
   sw.addEventListener('message', (e) => {
-    if (e.data && e.data.op === 'outdated' && section.dataset.state !== 'outdated') outdated(e.data);
+    const op = e.data && e.data.op;
+    if (op === 'outdated' && section.dataset.state !== 'outdated') {
+      // Before the worker was asked for, only the header says so.
+      if (section.dataset.state && section.dataset.state !== 'none') outdated(e.data);
+      else hear(e.data.server && e.data.server.includes('/') ? e.data.server : '');
+    }
+    if (op === 'current' && e.data.release === release) {
+      asked = null;
+      resume();
+    }
   });
   sw.startMessages();
 

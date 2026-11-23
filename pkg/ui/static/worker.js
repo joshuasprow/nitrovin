@@ -31,8 +31,14 @@
 //   request goes to the server unchanged, it fetches none of its
 //   release's assets, it refuses a load in words, and the pages it
 //   controls hear {op: "outdated"}, so they say so and offer Update now,
-//   until a newer worker replaces it. A server it cannot reach leaves it
-//   answering, as offline.
+//   until a newer worker replaces it, or the server names the worker's
+//   release again: a rollout's old container goes on answering for a
+//   minute beside the new one, so one answer of another release is not
+//   the last word. While outdated the worker asks /sw.js again, ten
+//   seconds apart at most, whenever a request or a page's question
+//   reaches it, and once the answer names its release it answers again
+//   and its pages hear {op: "current"}. A server it cannot reach leaves
+//   it answering, as offline.
 'use strict';
 
 const config = self.nitrovinConfig;
@@ -45,8 +51,13 @@ const RELEASE = 'Nitrovin-Release';
 
 // outdated is the release the server runs once it runs another than this
 // worker's (a 404 for one of this release's assets that names none:
-// "another"), "" until then. From then on the worker answers nothing.
+// "another"), "" until then. While it is set the worker answers nothing.
 let outdated = '';
+
+// tell posts msg to every page this worker controls.
+const tell = (msg) => self.clients.matchAll({ type: 'window' })
+  .then((pages) => { for (const p of pages) p.postMessage(msg); })
+  .catch(() => {});
 
 // heard reads what res, the server's answer for path, says of the
 // server's release, telling the pages this worker controls once it is
@@ -56,9 +67,8 @@ function heard(res, path) {
   const release = res.headers.get(RELEASE);
   if (release ? release !== config.release : res.status === 404 && path.startsWith(config.assets + '/')) {
     outdated = release || 'another';
-    self.clients.matchAll({ type: 'window' })
-      .then((pages) => { for (const p of pages) p.postMessage({ op: 'outdated', release: config.release, server: outdated }); })
-      .catch(() => {});
+    askedAgain = Date.now();
+    tell({ op: 'outdated', release: config.release, server: outdated });
   }
   return res;
 }
@@ -72,7 +82,7 @@ const network = (req) => fetch(req).then((res) => heard(res, new URL(req.url).pa
 // worker answering, as offline.
 let asking = null;
 function current() {
-  if (outdated) return Promise.resolve(false);
+  if (outdated) return again();
   if (!asking) {
     asking = fetch('/sw.js', { method: 'HEAD', cache: 'no-store', signal: AbortSignal.timeout(3000) })
       .then((res) => { heard(res, '/sw.js'); }, () => {})
@@ -82,6 +92,33 @@ function current() {
       });
   }
   return asking;
+}
+
+// again asks /sw.js once more while the worker is outdated, AGAIN
+// milliseconds after the last answer at the soonest, and resolves whether
+// the server runs this worker's release now. An answer that names it ends
+// outdated, and the pages hear so; one that names another, or none, leaves
+// it.
+const AGAIN = 10000;
+let askedAgain = 0, askingAgain = null;
+function again() {
+  if (!outdated) return Promise.resolve(true);
+  if (askingAgain) return askingAgain;
+  if (Date.now() - askedAgain < AGAIN) return Promise.resolve(false);
+  askingAgain = fetch('/sw.js', { method: 'HEAD', cache: 'no-store', signal: AbortSignal.timeout(3000) })
+    .then((res) => {
+      const release = res.headers.get(RELEASE);
+      if (release === config.release) {
+        outdated = '';
+        tell({ op: 'current', release: config.release });
+      } else if (release) outdated = release;
+    }, () => {})
+    .then(() => {
+      askedAgain = Date.now();
+      askingAgain = null;
+      return !outdated;
+    });
+  return askingAgain;
 }
 
 // own answers req with make(), the worker's own answer, while the server
@@ -226,7 +263,13 @@ async function download() {
 // draws itself (own) only while the server runs its release.
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
-  if (url.origin !== location.origin || outdated) return;
+  if (url.origin !== location.origin) return;
+  if (outdated) {
+    // The server answers this one; whether it still runs another release
+    // is asked beside it.
+    e.waitUntil(again());
+    return;
+  }
   if (url.pathname.startsWith(config.assets + '/')) {
     e.respondWith(caches.match(e.request, { cacheName: CACHE }).then((r) => r || network(e.request)));
     return;
@@ -285,7 +328,7 @@ async function serve(req) {
 // message}; it gives up after a minute without either. An outdated worker
 // refuses it in words. A question on a MessageChannel: {op: "release"},
 // answered with {release, server}, this worker's release and, once it is
-// outdated, the server's.
+// outdated, the server's, asked again first.
 // {op: "skipWaiting"} is Update now: a waiting worker takes over at once.
 // A catalog compiles in a dedicated worker the page starts (compile.js),
 // not here: a browser may stop a Service Worker that spends minutes on one
@@ -327,7 +370,7 @@ self.addEventListener('message', (e) => {
   }
   const port = e.ports[0];
   if (port && op === 'release') {
-    port.postMessage({ release: config.release, server: outdated });
+    e.waitUntil(again().then(() => port.postMessage({ release: config.release, server: outdated })));
     return;
   }
   if (!port || op !== 'load') return;

@@ -3,14 +3,14 @@
   "attachments": {},
   "boards": {
     "Controls-Dark.dc.html": {
-      "h": 4970,
+      "h": 4960,
       "title": "Dialogs, forms and inputs, dark",
       "w": 1280,
       "x": 5440,
       "y": 5950
     },
     "Controls.dc.html": {
-      "h": 4970,
+      "h": 4960,
       "title": "Dialogs, forms and inputs, light",
       "w": 1280,
       "x": 5440,
@@ -45,14 +45,14 @@
       "y": 0
     },
     "Main-Dark.dc.html": {
-      "h": 2090,
+      "h": 2100,
       "title": "The VIN input, both modes, dark",
       "w": 1280,
       "x": 0,
       "y": 5950
     },
     "Main.dc.html": {
-      "h": 2090,
+      "h": 2100,
       "title": "The VIN input, both modes, light",
       "w": 1280,
       "x": 0,
@@ -73,14 +73,14 @@
       "y": 0
     },
     "States-Dark.dc.html": {
-      "h": 3960,
+      "h": 3900,
       "title": "States, dark",
       "w": 1280,
       "x": 6800,
       "y": 5950
     },
     "States.dc.html": {
-      "h": 3960,
+      "h": 3900,
       "title": "States, light",
       "w": 1280,
       "x": 6800,

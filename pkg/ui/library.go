@@ -1043,7 +1043,7 @@ func (d serverDecode) vinDecode() contract.VINDecode {
 // is not the release's.
 func (l *Library) monthChanged(month string) error {
 	return &pageError{Status: http.StatusConflict, Message: fmt.Sprintf(
-		"This server now decodes with data month %s, but the translator in this browser is of data month %s (release %s): update it with Update now in Vocabularies, or by closing every nitrovin tab and opening it again.",
+		"This server now decodes with data month %s, but the translator in this browser is of data month %s (release %s): update it with Update now in the header, or by closing every nitrovin tab and opening it again.",
 		month, l.month.Name(), Release(l.info))}
 }
 

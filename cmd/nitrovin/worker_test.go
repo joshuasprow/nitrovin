@@ -396,26 +396,20 @@ func TestWorker(t *testing.T) {
 	}
 	same1("cold, 150,000 entries", probe)
 
-	// A new worker (here, /sw.js with other bytes) installs beside the one
-	// in control and waits for this page to close, and the old one keeps
-	// answering.
+	// A new worker of the same release (here, /sw.js with other bytes)
+	// installs beside the one in control and waits for this page to
+	// close, and the old one keeps answering. It is no new release, so the
+	// header offers no update.
 	tb.do(chromedp.Navigate(srv.URL + "/"))
 	tb.waitState("ready")
 	wire.mu.Lock()
-	wire.swTail = "// another release\n"
+	wire.swTail = "// the same release, other bytes\n"
 	wire.mu.Unlock()
 	eval[bool](tb, `navigator.serviceWorker.getRegistration().then(r => r.update()).then(() => true)`)
-	if got := eval[string](tb, `new Promise(resolve => {
-		const start = Date.now();
-		(function poll() {
-			const s = document.getElementById("browser").dataset.update || "";
-			if (s === "waiting" || Date.now() - start > 30000) resolve(s); else setTimeout(poll, 50);
-		})();
-	})`); got != "waiting" {
-		t.Errorf("an update: data-update %q; want waiting", got)
-	}
-	if eval[bool](tb, `navigator.serviceWorker.getRegistration().then(r => r.waiting === null || r.active === null)`) {
-		t.Error("an update: no worker waiting beside the active one")
+	tb.until("a worker waiting beside the active one", `window.waited || (navigator.serviceWorker.getRegistration().then(r => { window.waited = Boolean(r.waiting && r.active); }), false)`)
+	eval[bool](tb, `new Promise(resolve => setTimeout(() => resolve(true), 1500))`)
+	if got := eval[string](tb, `document.documentElement.dataset.update || ""`); got != "" {
+		t.Errorf("a worker of the same release waiting: data-update %q; want no update offered", got)
 	}
 	same1("with an update waiting", "/?"+queries[0])
 

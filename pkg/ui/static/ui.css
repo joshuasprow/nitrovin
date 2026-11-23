@@ -59,6 +59,9 @@ body { --bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint:
   /* The thermal paper, the same in both colour schemes: a receipt roll's
      coated stock and the printer's one near-black. */
   --thermal: #f6f4ee; --on-thermal: #232229; --thermal-muted: #62606b;
+  /* A lamp, the same in both colour schemes: amber, lit, on the one key
+     that asks for the visitor: Update now. No group's colour is amber. */
+  --lamp: #ffb300;
   /* The page's side margin, which the region of the cards and the names' row
      reaches across on a narrow page. */
   --gutter: 1rem;
@@ -84,6 +87,15 @@ nav.top button { padding: .35rem .8rem .35rem 1.4rem;
   background: radial-gradient(circle at .7rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--key); }
 nav.top .open-vins { anchor-name: --vins; }
 nav.top .open-vins::after { content: " ▾"; }
+/* Update now, beside the brand at every width and never in the menu: a
+   key like the header's others, its rivet a lit lamp and a ring of the
+   lamp's light around it. It shows only while vocab.js says a new release
+   is there (the document's data-update). */
+#update-now { display: none; order: 1; padding: .35rem .8rem .35rem 1.5rem; white-space: nowrap;
+  background: radial-gradient(circle at .75rem 50%, #fff3c4 0 1.5px, var(--lamp) 2px 3.5px, #7a5200 4px 4.5px, transparent 5px), var(--key);
+  box-shadow: var(--raised), 0 0 0 2px var(--lamp), 0 0 12px 2px rgb(255 179 0 / .55); }
+:root[data-update] #update-now { display: inline-block; }
+#update-now:active, #update-now:disabled { --key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed), 0 0 0 2px var(--lamp); }
 /* A button shows only where what it opens is: the VINs menu and the
    Developers dialog are the decoder's, not a vocabulary's list's. */
 body:not(:has(#vins)) nav.top .open-vins, body:not(:has(#developers)) nav.top .open-developers { display: none; }
@@ -619,12 +631,11 @@ table.sum .skip { color: var(--muted); }
 .nonum-tape { display: flex; align-items: center; box-sizing: border-box; min-height: 2.6rem; margin: 0; padding: .3rem .7rem; color: var(--on-tape); font: 700 12px var(--cell-font); letter-spacing: .04em; text-transform: none; text-shadow: var(--tape-emboss);
   background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck); }
 /* The receipt is its tag's width and under it, and no narrower than a
-     row of it reads at. */
-  .rows .receipt { width: calc((100% - 2 * var(--gap)) / 3); min-width: min(100%, 19rem); }
-  .rows.at2 .receipt { margin-inline: auto; }
-  .rows.at3 .receipt { margin-left: auto; }
-  .rows.more-wide::before, .rows.more-wide::after { content: ""; }
-}
+   row of it reads at. */
+.rows .receipt { width: calc((100% - 2 * var(--gap)) / 3); min-width: min(100%, 19rem); }
+.rows.at2 .receipt { margin-inline: auto; }
+.rows.at3 .receipt { margin-left: auto; }
+.rows.more-wide::before, .rows.more-wide::after { content: ""; }
 /* From the vehicle's block to the picker (.drops): the Vehicle's and the
    Model year's lines leave the block's bottom edge under their words, at
    --xv and --xy of the block, and come straight down into the picker,
@@ -813,11 +824,13 @@ button.linkish:active { transform: none; box-shadow: none; }
 /* Motion: a group just completed draws its bracket and line in and pops
    its card; a character stamps into its cell. None of it for a visitor
    who asked for less. */
+@keyframes lamp { from { box-shadow: var(--raised), 0 0 0 2px var(--lamp), 0 0 4px 0 rgb(255 179 0 / .3); } to { box-shadow: var(--raised), 0 0 0 2px var(--lamp), 0 0 14px 3px rgb(255 179 0 / .7); } }
 @media (prefers-reduced-motion: no-preference) {
   .brk.fresh { animation: bracket .25s ease-out; transform-origin: center top; }
   path.fresh { animation: draw .35s ease-out .1s backwards; }
   .card.fresh { animation: pop .3s cubic-bezier(.3, 1.6, .5, 1) .25s backwards; }
   .ch.stamp { animation: stamp .18s ease-out; }
+  #update-now:not(:disabled) { animation: lamp 1.6s ease-in-out infinite alternate; }
 }
 @keyframes bracket { from { transform: scaleX(0); } }
 @keyframes draw { from { stroke-dashoffset: 1; } }
