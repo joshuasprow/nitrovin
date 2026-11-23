@@ -3374,6 +3374,441 @@
         "idempotentHint": true,
         "openWorldHint": false
       }
+    },
+    {
+      "name": "stocked",
+      "title": "Vehicles in stock",
+      "description": "List the vehicles this server's yards hold most of, offline or from its yard database: each vehicle model once, in the model year the yard has most of it in, the most yard vehicles first.\n\nUse it to find a vehicle that has stock before the user names one. Each vehicle comes with a VIN of the yard's: pass it to decode_vin, translate or fit for the rest, such as fit with a part and stock to see the yard vehicles and shelf parts behind it.\n\n- location: keep the yard vehicles at these locations (a stock row's location). Omit for every location.\n- limit: how many vehicles, 1-100 (default 10).\n\nvehicles is empty when no yard is loaded or none can name its vehicles; that is not an error. sources lists every yard with its status: an unavailable one says why in reason, and its vehicles are missing from the list. yard counts one source's vehicles of that exact model and year, so a fit's yard list, which spans the years a part fits, can hold more.",
+      "inputSchema": {
+        "type": "object",
+        "$ref": "#/$defs/StockedRequest",
+        "$defs": {
+          "StockedRequest": {
+            "description": "One stocked request, the same object on every surface (ADR 0028); on stdio, a line with op stocked.",
+            "$ref": "#/$defs/StockedRequestFields",
+            "unevaluatedProperties": false
+          },
+          "StockedRequestFields": {
+            "type": "object",
+            "description": "A stocked request's fields (ADR 0028): the vehicles the loaded yards hold most of. Contract prose: docs/api/README.md#stocked.",
+            "properties": {
+              "location": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "Keep the yard rows at one of these locations; absent keeps every location."
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 10,
+                "description": "How many vehicles."
+              }
+            }
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "$ref": "#/$defs/Stocked",
+        "$defs": {
+          "Stocked": {
+            "type": "object",
+            "description": "The answer to a StockedRequest: the vehicles the loaded yard sources hold most of, each vPIC model once, the most yard rows first, then by model id. No yard loaded, or none that can name a vehicle, is never a refusal: vehicles is empty.",
+            "required": [
+              "vehicles",
+              "sources",
+              "data_month",
+              "decoder_version"
+            ],
+            "properties": {
+              "vehicles": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/StockedVehicle"
+                }
+              },
+              "sources": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/StockSource"
+                },
+                "description": "Every loaded yard source, in load order, whether or not it gave a vehicle. One that cannot name its vehicles (a relation with no vin column, ADR 0028) is available and gives none; an unavailable one says why."
+              },
+              "data_month": {
+                "type": "string",
+                "pattern": "^[0-9]{4}_(0[1-9]|1[0-2])$"
+              },
+              "decoder_version": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          "StockedVehicle": {
+            "type": "object",
+            "description": "One vehicle a yard holds: a model in the model year the yard has most of it in, the later of two alike.",
+            "required": [
+              "vin",
+              "spine",
+              "model_year",
+              "yard",
+              "source"
+            ],
+            "properties": {
+              "vin": {
+                "type": "string",
+                "minLength": 1,
+                "description": "A VIN of the yard's of this model and year, the least bytewise: decode, translate or fit from it."
+              },
+              "spine": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/$defs/SpineEntry"
+                },
+                "description": "The vehicle's vPIC make, then its model, as the data month names them. A model the data month lacks comes alone, with drift."
+              },
+              "model_year": {
+                "type": "integer"
+              },
+              "yard": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "How many of the source's yard rows are of this model and year, at the request's locations."
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The yard source the count and the VIN are from: of two yards holding a model, the one with more of it."
+              }
+            },
+            "additionalProperties": false
+          },
+          "StockSource": {
+            "type": "object",
+            "description": "A stock list's source: its name, where its rows come from, how old they are, and whether it answered; what it holds is the list's. An unavailable source's rows are absent, and the rest of the answer stands.",
+            "required": [
+              "name",
+              "kind",
+              "status"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "enum": [
+                  "file",
+                  "live"
+                ],
+                "description": "file: a stock file loaded with --vocab. live: a request-time source."
+              },
+              "connector": {
+                "const": "postgres",
+                "description": "How a live source is read (ADR 0020); absent for a file."
+              },
+              "relation": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The relation a live source's rows are read from; absent for a file. Never a DSN, host or user."
+              },
+              "as_of": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The time the list's rows from it are as of: a file's own, or for a live source the oldest as_of of the list's own rows from it, when its relation has that column. Absent when it has none, when the list has none of its rows, and when unavailable."
+              },
+              "catalog": {
+                "type": "string",
+                "minLength": 1,
+                "description": "A shelf's catalog."
+              },
+              "release": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The catalog release a shelf's numbers are under, as read with the rows; absent when it names none, and when unavailable."
+              },
+              "catalog_mismatch": {
+                "const": true,
+                "description": "Present when the shelf's release is not the loaded catalog's."
+              },
+              "status": {
+                "enum": [
+                  "available",
+                  "unavailable"
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Why an unavailable source is: the source's own words, which name no connection detail, or \"the source failed\"."
+              }
+            },
+            "additionalProperties": false
+          },
+          "SpineEntry": {
+            "description": "One spine entry in an answer, named from the data month or its file.",
+            "$ref": "#/$defs/SpineRefFields",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Absent for a declared-spine entry its file leaves unnamed, and with drift."
+              },
+              "drift": {
+                "const": true,
+                "description": "A vPIC id the data month lacks, named by a mapping and served anyway (ADR 0011)."
+              },
+              "under": {
+                "$ref": "#/$defs/SpineRef",
+                "description": "The make a vPIC or extension model sits under."
+              },
+              "years": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/$defs/YearRange"
+                },
+                "description": "In a list of vpic, a model's model years: the year bands of every VIN schema with a Model pattern naming it, merged into ranges, ascending, gaps kept (ADR 0022). Absent when unknown: no VIN schema with a Model pattern naming it has a year band."
+              },
+              "via": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/$defs/Via"
+                },
+                "description": "In a translation from a vocabulary entry: the entry's mappings that reached this spine entry. A make reached because a model sits under it has the model's mapping."
+              },
+              "unconfirmed": {
+                "$ref": "#/$defs/Unconfirmed"
+              }
+            },
+            "unevaluatedProperties": false
+          },
+          "SpineRefFields": {
+            "type": "object",
+            "description": "One spine entry as a mapping target names it: exactly one of a vPIC make id, a vPIC model id, an extension, or a declared spine's name with one of its ids.",
+            "properties": {
+              "make": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 2147483647,
+                "description": "A vPIC make id."
+              },
+              "model": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 2147483647,
+                "description": "A vPIC model id."
+              },
+              "ext": {
+                "type": "string",
+                "pattern": "^ext:[a-z0-9][a-z0-9._-]*/[^/\t\n\u000b\f\r \u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]+$",
+                "description": "An extension, ext:<set>/<id>."
+              },
+              "spine": {
+                "type": "string",
+                "minLength": 1,
+                "description": "A declared spine's name, beside id."
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "An entry id of the declared spine."
+              }
+            },
+            "oneOf": [
+              {
+                "required": [
+                  "make"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "model"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "ext"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "spine"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "id"
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "required": [
+                  "model"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "make"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "ext"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "spine"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "id"
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "required": [
+                  "ext"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "make"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "model"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "spine"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "id"
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "required": [
+                  "spine",
+                  "id"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "make"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "model"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "ext"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "SpineRef": {
+            "$ref": "#/$defs/SpineRefFields",
+            "unevaluatedProperties": false
+          },
+          "YearRange": {
+            "description": "A run of model years, inclusive. No last: still running.",
+            "type": "object",
+            "required": [
+              "first"
+            ],
+            "properties": {
+              "first": {
+                "type": "integer"
+              },
+              "last": {
+                "type": "integer"
+              }
+            },
+            "additionalProperties": false
+          },
+          "Via": {
+            "description": "One mapping that held on a route: the spine entry it names, its years, origin and note as its file has them, and what could not be checked on the route through it.",
+            "$ref": "#/$defs/SpineRefFields",
+            "properties": {
+              "first": {
+                "type": "integer"
+              },
+              "last": {
+                "type": "integer"
+              },
+              "origin": {
+                "enum": [
+                  "derived",
+                  "curated",
+                  "seed"
+                ]
+              },
+              "note": {
+                "type": "string"
+              },
+              "unconfirmed": {
+                "$ref": "#/$defs/Unconfirmed"
+              }
+            },
+            "unevaluatedProperties": false
+          },
+          "Unconfirmed": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "const": "model_year"
+                }
+              ]
+            },
+            "description": "What applied but could not be checked: qualifier element ids, ascending, with no decode or that the decode left empty, then \"model_year\" when a year range applied and no year was known. Absent when everything was checked."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
     }
   ]
 }

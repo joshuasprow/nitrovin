@@ -241,9 +241,9 @@
       "properties": {
         "id": { "description": "Any JSON value; echoed on the reply." },
         "op": {
-          "enum": ["decode", "translate", "list", "fit"],
+          "enum": ["decode", "translate", "list", "fit", "stocked"],
           "default": "decode",
-          "description": "The request beside it: a DecodeRequest, a TranslateRequest, a ListRequest or a FitRequest. The reply is keyed decode, translation, list or fit."
+          "description": "The request beside it: a DecodeRequest, a TranslateRequest, a ListRequest, a FitRequest or a StockedRequest. The reply is keyed decode, translation, list, fit or stocked."
         }
       },
       "if": { "required": ["op"], "properties": { "op": { "const": "translate" } } },
@@ -254,7 +254,11 @@
         "else": {
           "if": { "required": ["op"], "properties": { "op": { "const": "fit" } } },
           "then": { "$ref": "#/$defs/FitRequestFields" },
-          "else": { "$ref": "#/$defs/DecodeRequestFields" }
+          "else": {
+            "if": { "required": ["op"], "properties": { "op": { "const": "stocked" } } },
+            "then": { "$ref": "#/$defs/StockedRequestFields" },
+            "else": { "$ref": "#/$defs/DecodeRequestFields" }
+          }
         }
       },
       "unevaluatedProperties": false
@@ -295,6 +299,15 @@
           "properties": {
             "id": {},
             "fit": { "$ref": "#/$defs/Fit" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["stocked"],
+          "properties": {
+            "id": {},
+            "stocked": { "$ref": "#/$defs/Stocked" }
           },
           "additionalProperties": false
         },
@@ -1250,6 +1263,58 @@
           "additionalProperties": false
         },
         "fields": { "type": "object", "description": "The row's own fields, verbatim, never interpreted; with stock_fields, only those it names." }
+      },
+      "additionalProperties": false
+    },
+    "StockedRequestFields": {
+      "type": "object",
+      "description": "A stocked request's fields (ADR 0028): the vehicles the loaded yards hold most of. Contract prose: docs/api/README.md#stocked.",
+      "properties": {
+        "location": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Keep the yard rows at one of these locations; absent keeps every location."
+        },
+        "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 10, "description": "How many vehicles." }
+      }
+    },
+    "StockedRequest": {
+      "description": "One stocked request, the same object on every surface (ADR 0028); on stdio, a line with op stocked.",
+      "$ref": "#/$defs/StockedRequestFields",
+      "unevaluatedProperties": false
+    },
+    "Stocked": {
+      "type": "object",
+      "description": "The answer to a StockedRequest: the vehicles the loaded yard sources hold most of, each vPIC model once, the most yard rows first, then by model id. No yard loaded, or none that can name a vehicle, is never a refusal: vehicles is empty.",
+      "required": ["vehicles", "sources", "data_month", "decoder_version"],
+      "properties": {
+        "vehicles": { "type": "array", "items": { "$ref": "#/$defs/StockedVehicle" } },
+        "sources": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/StockSource" },
+          "description": "Every loaded yard source, in load order, whether or not it gave a vehicle. One that cannot name its vehicles (a relation with no vin column, ADR 0028) is available and gives none; an unavailable one says why."
+        },
+        "data_month": { "type": "string", "pattern": "^[0-9]{4}_(0[1-9]|1[0-2])$" },
+        "decoder_version": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "StockedVehicle": {
+      "type": "object",
+      "description": "One vehicle a yard holds: a model in the model year the yard has most of it in, the later of two alike.",
+      "required": ["vin", "spine", "model_year", "yard", "source"],
+      "properties": {
+        "vin": { "type": "string", "minLength": 1, "description": "A VIN of the yard's of this model and year, the least bytewise: decode, translate or fit from it." },
+        "spine": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/SpineEntry" },
+          "description": "The vehicle's vPIC make, then its model, as the data month names them. A model the data month lacks comes alone, with drift."
+        },
+        "model_year": { "type": "integer" },
+        "yard": { "type": "integer", "minimum": 1, "description": "How many of the source's yard rows are of this model and year, at the request's locations." },
+        "source": { "type": "string", "minLength": 1, "description": "The yard source the count and the VIN are from: of two yards holding a model, the one with more of it." }
       },
       "additionalProperties": false
     },

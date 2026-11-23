@@ -160,6 +160,38 @@ type YardQuery struct {
 	Vehicles []VehicleYears
 }
 
+// StockedQuery asks a yard for its best-stocked vehicles: at Location (any
+// one of them; none for every location), at most Limit of them.
+type StockedQuery struct {
+	Location []string
+	Limit    int
+}
+
+// StockedVehicle is a vehicle a yard holds: a vPIC model in the model
+// year the yard has most of it in (the later of two alike), how many of
+// the yard's rows are of that model and year, and the VIN of one of them,
+// the least bytewise.
+type StockedVehicle struct {
+	Model int32
+	Year  int
+	Rows  int
+	VIN   string
+}
+
+// Stocker is a Source that names its best-stocked vehicles, so that a
+// vehicle with stock can be offered before anyone asks for one. It is
+// beside Source, not in it: a Source need not be one. Stocked reads the
+// yard rows matched by their vPIC model (a precomputed decode, else a
+// decoded VIN) that give a year, and answers each model once, in the
+// year with the most rows among those with a VIN: a model and year none
+// of whose rows has a VIN is passed over, as there is no VIN to offer it
+// by. One model in every year would fill the answer with one vehicle's
+// neighbouring years. They come with the most rows first, then by model.
+// A source holding a shelf answers none.
+type Stocker interface {
+	Stocked(ctx context.Context, q StockedQuery) ([]StockedVehicle, Meta, error)
+}
+
 // Unavailable is the error a Source returns when it cannot answer. Reason
 // is served to every caller in the source's block, so it names no
 // connection detail: no DSN, host, user or database. Any other error is

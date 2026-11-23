@@ -2,7 +2,7 @@
 
 `libnitrovin` is the decoder as a C shared library, for any language with a
 C FFI. It speaks the stdio surface's JSON: `nitrovin_decode` takes one
-request line, a decode, a translation, a list or a fit, and returns the reply line
+request line, a decode, a translation, a list, a fit or a stocked request, and returns the reply line
 `nitrovin stdio` would write, built by the same Go function, so the two
 cannot drift apart. The ABI is fixed by
 [the C ABI contract](api/README.md#c-abi-libnitrovin-nitrovinh); this page
@@ -123,9 +123,11 @@ only: a connector needs the nitrovin binary`.
 - **Requests and replies** are one JSON object each, UTF-8 and
   NUL-terminated: a request is a stdio line, a decode (`{"id": …, "vin": …,
   "model_year": …, "shape": …, "full": …, "now": …}`) or, with `"op":
-  "translate"`, `"op": "list"` or `"op": "fit"`, a translation, a list or a
-  fit; a reply is `{"id": …, "decode": {…}}`, `{"id": …, "translation":
-  {…}}`, `{"id": …, "list": {…}}`, `{"id": …, "fit": {…}}` or `{"id": …,
+  "translate"`, `"op": "list"`, `"op": "fit"` or `"op": "stocked"`, a
+  translation, a list, a fit or the yards' best-stocked vehicles; a reply is
+  `{"id": …, "decode": {…}}`, `{"id": …, "translation":
+  {…}}`, `{"id": …, "list": {…}}`, `{"id": …, "fit": {…}}`, `{"id": …,
+  "stocked": {…}}` or `{"id": …,
   "error": {…}}`. A refused request
   is an `error` reply, never a NULL.
 - **`nitrovin_info(h)`** returns the `/v1/info` object: decoder version,

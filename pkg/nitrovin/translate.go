@@ -55,6 +55,16 @@ func (t *Translator) Fit(ctx context.Context, req contract.FitRequest) (contract
 	return t.core.Fit(ctx, req)
 }
 
+// Stocked answers one stocked request (ADR 0028): the vehicles the loaded
+// yard sources hold most of, each vPIC model once, the most yard rows
+// first, each with a VIN of the yard's. No yard, or none that can name a
+// vehicle, is never an error: the answer is empty and says what each
+// source answered. The error is a *contract.Problem, an InvalidRequest
+// for a malformed request. ctx bounds its lookups, as a fit's.
+func (t *Translator) Stocked(ctx context.Context, req contract.StockedRequest) (contract.Stocked, error) {
+	return t.core.Stocked(ctx, req)
+}
+
 // FitBatch fits requests in order, reading the wall clock once for every
 // request whose Now is zero, as the contract fixes for one HTTP request.
 // It stops at the first error, a *contract.Problem whose pointer names the

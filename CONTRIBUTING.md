@@ -539,7 +539,7 @@ else `NITROVIN_VOCAB` (`env.load`).
 
 `go test ./cmd/nitrovin` runs the built binary: usage, refusal and
 unloadable-data cases, and `info`, `--version` and a decode on the embedded
-data; `TestStdioOps` a stdio session mixing decode, translate, list and fit
+data; `TestStdioOps` a stdio session mixing decode, translate, list, fit and stocked
 lines with `testdata/vocab`; `TestForm` drives the page's VIN form (`/`)
 on the embedded data, over HTTP and then in a browser (below),
 and `TestServeCORS` `serve --cors` on it. With

@@ -248,6 +248,7 @@ type decodeService interface {
 	Fit(context.Context, contract.FitRequest) (contract.Fit, error)
 	FitBatch(context.Context, []contract.FitRequest) ([]contract.Fit, error)
 	FitBatchRows(context.Context, []contract.FitRequest) (contract.FitBatchRows, error)
+	Stocked(context.Context, contract.StockedRequest) (contract.Stocked, error)
 	SpineBundle() ([]byte, error)
 	File(name string) ([]byte, error)
 }
@@ -368,6 +369,8 @@ func (a *api) route(path string) (string, http.HandlerFunc) {
 		return "GET, POST", a.translate
 	case "/v1/fit":
 		return "GET, POST", a.fit
+	case "/v1/stocked":
+		return http.MethodGet, a.stocked
 	case "/v1/vocabularies":
 		return http.MethodGet, func(w http.ResponseWriter, r *http.Request) { a.list(w, r, "") }
 	case "/v1/info":
@@ -540,6 +543,26 @@ func (a *api) fitAnswer(ctx context.Context, r *http.Request) (any, error) {
 		return nil, err
 	}
 	return a.d.Fit(ctx, req)
+}
+
+// stocked is GET /v1/stocked: the vehicles the loaded yards hold most of,
+// its lookups bounded by the request.
+func (a *api) stocked(w http.ResponseWriter, r *http.Request) {
+	query, ok := a.query(w, r)
+	if !ok {
+		return
+	}
+	req, err := contract.ParseStockedQuery(query)
+	if err != nil {
+		a.problem(w, contract.AsProblem(err))
+		return
+	}
+	s, err := a.d.Stocked(r.Context(), req)
+	if err != nil {
+		a.problem(w, contract.AsProblem(err))
+		return
+	}
+	a.ok(w, s)
 }
 
 // ms is d in milliseconds, as Server-Timing's dur.

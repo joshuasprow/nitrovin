@@ -1,6 +1,7 @@
 package stock
 
 import (
+	"cmp"
 	"context"
 	"slices"
 
@@ -27,7 +28,10 @@ type FileSource struct {
 	years map[int]*int
 }
 
-var _ Source = (*FileSource)(nil)
+var (
+	_ Source  = (*FileSource)(nil)
+	_ Stocker = (*FileSource)(nil)
+)
 
 // NewFile is f, a linked stock file, as a Source. decode decodes its yard
 // rows' VINs (nil: none can be). A yard row takes the first of its routes
@@ -126,6 +130,47 @@ func (s *FileSource) Yard(_ context.Context, lists []YardQuery, p Page) ([]Resul
 			}
 		}
 	}), s.meta(), nil
+}
+
+// Stocked answers the yard's best-stocked vehicles (Stocker).
+func (s *FileSource) Stocked(_ context.Context, q StockedQuery) ([]StockedVehicle, Meta, error) {
+	type key struct {
+		model int32
+		year  int
+	}
+	found := map[key]*StockedVehicle{}
+	for model, rows := range s.byModel {
+		for _, i := range rows {
+			r, y := &s.f.Stock[i], s.years[i]
+			if y == nil || len(q.Location) > 0 && !slices.Contains(q.Location, r.Location) {
+				continue
+			}
+			k := key{model, *y}
+			v := found[k]
+			if v == nil {
+				v = &StockedVehicle{Model: model, Year: *y}
+				found[k] = v
+			}
+			v.Rows++
+			if r.VIN != "" && (v.VIN == "" || r.VIN < v.VIN) {
+				v.VIN = r.VIN
+			}
+		}
+	}
+	best := map[int32]*StockedVehicle{}
+	for k, v := range found {
+		if b := best[k.model]; v.VIN != "" && (b == nil || v.Rows > b.Rows || v.Rows == b.Rows && v.Year > b.Year) {
+			best[k.model] = v
+		}
+	}
+	out := []StockedVehicle{}
+	for _, v := range best {
+		out = append(out, *v)
+	}
+	slices.SortFunc(out, func(a, b StockedVehicle) int {
+		return cmp.Or(cmp.Compare(b.Rows, a.Rows), cmp.Compare(a.Model, b.Model))
+	})
+	return out[:min(max(q.Limit, 0), len(out))], s.meta(), nil
 }
 
 func within(y int, first, last *int) bool {

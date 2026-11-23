@@ -203,6 +203,8 @@ contract, not in `openapi.yaml`, and may change.
   `stock`, `location` and `stock_fields` repeated (`stock_fields=` alone
   is the empty list); `limit`; `after`; `now`. `stock_rows` is refused
   there: a single fit has no batch.
+- `GET /v1/stocked` is one stocked request ([Stocked](#stocked-stocked)):
+  `location` repeated, `limit` at most once, any other parameter refused.
 - `GET /v1/vocabularies` is the catalog (`list` with no `of`), and takes no
   parameter. `GET /v1/vocabularies/{name}/entries` is `list` with `of` the
   name (`vpic` included, and the loaded catalog's, which pages its
@@ -269,16 +271,18 @@ The full URI is
 JSON lines over stdin and stdout, UTF-8, `\n`-terminated.
 
 - Each input line is a `StdioRequest`: an optional `op`, `decode` (the
-  default), `translate`, `list` (ADR 0012) or `fit` (ADR 0018), and an
+  default), `translate`, `list` (ADR 0012), `fit` (ADR 0018) or `stocked`
+  (ADR 0028), and an
   optional `id` (any JSON value), beside that op's request object: a decode
-  request, a `TranslateRequest`, a `ListRequest` or a `FitRequest`. A field the op's request lacks is
+  request, a `TranslateRequest`, a `ListRequest`, a `FitRequest` or a
+  `StockedRequest`. A field the op's request lacks is
   refused, as everywhere; another `op` is `#invalid-request` at `/op`. A
   line without `op` is a decode request, so a session of decode lines gets
   the bytes it always has.
 - Each input line gets exactly one output line, in input order, flushed per
   line, keyed by its op: `{"id": …, "decode": {…}}`,
-  `{"id": …, "translation": {…}}`, `{"id": …, "list": {…}}` or
-  `{"id": …, "fit": {…}}`, or
+  `{"id": …, "translation": {…}}`, `{"id": …, "list": {…}}`,
+  `{"id": …, "fit": {…}}` or `{"id": …, "stocked": {…}}`, or
   `{"id": …, "error": <problem>}`. `id` is present when the request had one,
   or could be read from a refused line.
 - Translations, lists and fits answer from the files `--vocab` or
@@ -293,10 +297,12 @@ The problem objects are HTTP's, with the same `type` URIs and `status`.
 
 ## MCP (`nitrovin mcp`, `POST /mcp`)
 
-An MCP server with four tools over stdio (`nitrovin mcp`) and over
+An MCP server with five tools over stdio (`nitrovin mcp`) and over
 Streamable HTTP (`nitrovin serve`'s `/mcp`): `decode_vin` decodes,
 `translate` translates ([Translation](#translation-translate)), `list`
-lists ([Listing](#listing-list)) and `fit` fits ([Fit](#fit-fit)). Their definitions (name, title, the
+lists ([Listing](#listing-list)), `fit` fits ([Fit](#fit-fit)) and
+`stocked` names the vehicles the yards hold most of
+([Stocked](#stocked-stocked)). Their definitions (name, title, the
 description an assistant reads, schemas and annotations) are
 [`mcp-tools.json`](mcp-tools.json), whose `tools` array is exactly what
 `tools/list` returns on both, whatever `--vocab` loads. The why is
@@ -422,6 +428,17 @@ listing lacks, `--limit` or `--after` beside the catalog, an `after` that is
 not a cursor of the listing) is a problem on stderr, nothing on stdout,
 exit 2. A malformed flag (`--where` without `=`, a field given twice, a
 `--limit` outside 1 to 1,000) or a second argument is a usage error, exit 2.
+
+### `nitrovin stocked`
+
+| Flag | Request field |
+| --- | --- |
+| `--location <location>` | `location`, repeatable |
+| `--limit N` | `limit`, 1 to 100 |
+
+`nitrovin stocked` prints one `Stocked`, pretty-printed on a terminal and
+one compact line elsewhere, exactly as the Go module marshals it. It takes
+no argument: one is a usage error, exit 2, as is a malformed flag.
 
 ### `nitrovin fit`
 
@@ -1186,6 +1203,44 @@ The synthetic stock's examples, tested on every surface, with
 - From `BR-1999` a page at a time: `A-1` and `Y-1`, then `S-2` and `Y-2`,
   then `S-3` and `Y-3`, and no `next`.
 - The Silverado's related Ram 1500, 2009–2012, has 2 yard vehicles.
+
+## Stocked (`stocked`)
+
+`stocked` names the vehicles the loaded yard sources hold most of
+([ADR 0028](../adr/0028-a-yard-names-the-vehicles-it-holds-most-of.md)),
+for a caller that wants a vehicle with stock before it has one to ask
+about. It reads [stock](#stock)'s yard sources and no shelf.
+
+| Field | Type | Default | Rule |
+| --- | --- | --- | --- |
+| `location` | string[] | every location | Keep the yard rows at one of these; non-empty strings |
+| `limit` | int | 10 | 1 to 100 vehicles |
+
+The answer is a `Stocked`:
+
+- `vehicles`: each vPIC model once, in the model year the yard has most of
+  it in (the later of two alike), the most yard rows first, then the lower
+  model id. Each has `vin`, a VIN of the yard's of that model and year, the
+  least bytewise, to decode, translate or fit from; `spine`, its vPIC make
+  then its model as the data month names them (a model the month lacks
+  comes alone, with `drift`); `model_year`; `yard`, how many of the source's
+  rows are of that model and year at the request's locations; and `source`.
+  A model two yards hold is kept from the yard with more of it.
+- `sources`: every loaded yard's block, in load order, as a stock list's.
+  A yard that cannot name vehicles is `available` and gives none: a
+  connector whose relation has no `vin` column
+  ([Connectors](../vocabularies.md#connectors)). An `unavailable` one says
+  why, and the others' vehicles stand.
+
+Only a row matched by its vPIC decode, with a year, counts: a row reached
+by the catalog's vehicle has no vPIC model to group by. `yard` counts one
+model year, so a fit's yard list, which spans the years a part fits, can
+hold more. Nothing to name is never a refusal: with no yard loaded,
+`vehicles` and `sources` are empty. It is read at request time, as every
+stock answer is; a caller that shows it on every page keeps it itself.
+
+With `testdata/vocab/stock` loaded, `nitrovin stocked` names one vehicle:
+`1D7RV1GT5AS123456`, a 2010 Dodge Ram, `yard` 2, from `yard-stock`.
 
 ## C ABI (`libnitrovin`, `nitrovin.h`)
 

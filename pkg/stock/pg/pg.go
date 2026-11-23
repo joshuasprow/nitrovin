@@ -77,7 +77,10 @@ type Source struct {
 	closed   bool
 }
 
-var _ stock.Live = (*Source)(nil)
+var (
+	_ stock.Live    = (*Source)(nil)
+	_ stock.Stocker = (*Source)(nil)
+)
 
 // New is the source connector file d.File declares, connecting with dsn
 // when first asked: d.Catalog is the catalog its vehicles are of (nil:
@@ -271,7 +274,8 @@ func (s *Source) check(ctx context.Context, pool *pgxpool.Pool) (*queries, *stoc
 			return nil, down
 		}
 	}
-	return s.queries(asOf, padded), nil
+	_, vin := got["vin"]
+	return s.queries(asOf, padded, vin && s.info.Holds == stock.Yard), nil
 }
 
 // columnsQuery is relation $1's columns, as relationColumns reads them:
@@ -381,7 +385,13 @@ func (c columns) want(holds stock.Holds) []column {
 		}
 		out = append(out, column{name, cl, false})
 	}
-	return append(out, column{"year", classInteger, false}, column{"fields", classJSON, false}, column{"as_of", classTime, true})
+	out = append(out, column{"year", classInteger, false}, column{"fields", classJSON, false}, column{"as_of", classTime, true})
+	if holds == stock.Yard {
+		// A yard's vin is optional: with it a row says its VIN, and the
+		// yard can name its best-stocked vehicles (Stocked).
+		out = append(out, column{"vin", classText, true})
+	}
+	return out
 }
 
 // checkColumns checks relation's columns got against want: the first

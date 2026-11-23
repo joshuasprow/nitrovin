@@ -69,3 +69,61 @@ func TestYardRoutes(t *testing.T) {
 		t.Errorf("a yard's shelf lookup: %+v", rs)
 	}
 }
+
+// TestStocked: a yard file names its best-stocked vehicles, each model
+// once in its best year, the most rows first, each with the least VIN of
+// its rows. A row with no year, a row
+// reached by its catalog vehicle and a vehicle with no VIN among its rows
+// are left out; a location keeps its own rows.
+func TestStocked(t *testing.T) {
+	dir := t.TempDir()
+	data := `{"format":1,"kind":"stock","name":"y","version":"1","source":"yard","as_of":"2026-11-01"}
+{"id":"1","location":"a","vin":"B1850Y2012"}
+{"id":"2","location":"b","vin":"A1850Y2012"}
+{"id":"3","location":"a","decoded":{"make":467,"model":1850,"year":2012}}
+{"id":"4","location":"a","vin":"C1850Y2013"}
+{"id":"5","location":"a","vin":"D1851Y2013"}
+{"id":"6","location":"b","vin":"E1851Y2013"}
+{"id":"7","location":"a","vin":"NOYEAR"}
+{"id":"8","location":"a","decoded":{"make":467,"model":1852,"year":2014}}
+{"id":"9","location":"a","vehicle":{"make":"Chevrolet","model":"Silverado 1500"},"year":2010}
+`
+	if err := os.WriteFile(filepath.Join(dir, "y.jsonl"), []byte(data), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	files, err := vocab.Open("../../testdata/vocab/fitment", dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var f *vocab.File
+	for _, g := range files {
+		if g.Name == "y" {
+			f = g
+		}
+	}
+	decoded := map[string][2]int{"B1850Y2012": {1850, 2012}, "A1850Y2012": {1850, 2012}, "C1850Y2013": {1850, 2013}, "D1851Y2013": {1851, 2013}, "E1851Y2013": {1851, 2013}, "NOYEAR": {1850, 0}}
+	var src Stocker = NewFile(f, func(vin string) (int32, *int, bool) {
+		d, ok := decoded[vin]
+		if !ok {
+			return 0, nil, false
+		}
+		if d[1] == 0 {
+			return int32(d[0]), nil, true
+		}
+		return int32(d[0]), &d[1], true
+	})
+	for _, c := range []struct {
+		q    StockedQuery
+		want []StockedVehicle
+	}{
+		{StockedQuery{Limit: 10}, []StockedVehicle{{1850, 2012, 3, "A1850Y2012"}, {1851, 2013, 2, "D1851Y2013"}}},
+		{StockedQuery{Limit: 1}, []StockedVehicle{{1850, 2012, 3, "A1850Y2012"}}},
+		{StockedQuery{Limit: 10, Location: []string{"b"}}, []StockedVehicle{{1850, 2012, 1, "A1850Y2012"}, {1851, 2013, 1, "E1851Y2013"}}},
+		{StockedQuery{}, []StockedVehicle{}},
+	} {
+		got, meta, err := src.Stocked(context.Background(), c.q)
+		if err != nil || meta.AsOf != "2026-11-01" || !slices.Equal(got, c.want) {
+			t.Errorf("Stocked(%+v): %+v, %+v, %v; want %+v", c.q, got, meta, err, c.want)
+		}
+	}
+}

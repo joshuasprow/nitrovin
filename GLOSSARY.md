@@ -434,6 +434,13 @@ holding one of two things: `shelf` (parts, numbered under one catalog) or `yard`
 Go, `stock.Source`; its `Kind` is `file` or `live`, as an answer's block says.
 _Avoid_: feed, connector (that is how a live source is read)
 
+**Stocked vehicle**:
+A vehicle a yard source holds, as `stocked` names it (ADR 0028): a vPIC model
+in the model year the yard has most of it in, with how many of the yard's rows
+are of it and the VIN of one. A source that can name them is, in Go, a
+`stock.Stocker`.
+_Avoid_: popular vehicle, top vehicle (nothing says it sells), inventory
+
 **Connector**:
 How a stock source is read from a database at request time: a stock file with a
 header and no lines (`connector.postgres`), naming a relation and the environment

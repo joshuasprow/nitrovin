@@ -426,6 +426,7 @@ const (
 	opTranslateBatch = "POST /v1/translate"
 	opFitOne         = "GET /v1/fit"
 	opFitBatch       = "POST /v1/fit"
+	opStocked        = "GET /v1/stocked"
 	opCatalog        = "GET /v1/vocabularies"
 	opEntries        = "GET /v1/vocabularies/{name}/entries"
 	opInfo           = "GET /v1/info"
@@ -602,6 +603,11 @@ func refusalCases() []apiCase {
 		fitPOST(fitOverlong, 413, contract.TooLarge, ""),
 		notAllowed(opFitOne, "PUT", "/v1/fit"),
 		notAllowed(opFitBatch, "DELETE", "/v1/fit"),
+		{op: opStocked, method: "GET", target: "/v1/stocked?limit=0", status: 400, problem: contract.InvalidRequest, pointer: "/limit"},
+		{op: opStocked, method: "GET", target: "/v1/stocked?limit=2&limit=3", status: 400, problem: contract.InvalidRequest, pointer: "/limit"},
+		{op: opStocked, method: "GET", target: "/v1/stocked?location=", status: 400, problem: contract.InvalidRequest, pointer: "/location/0"},
+		{op: opStocked, method: "GET", target: "/v1/stocked?stock=yard", status: 400, problem: contract.InvalidRequest, pointer: "/stock"},
+		notAllowed(opStocked, "POST", "/v1/stocked"),
 		list(opCatalog, "/v1/vocabularies?of=fleet", "/of"),
 		list(opCatalog, "/v1/vocabularies?limit=5&limit=6", "/limit"),
 		list(opEntries, "/v1/vocabularies/fleet/entries?limit=0", "/limit"),
@@ -804,7 +810,17 @@ func vocabCases(t *testing.T, svc decodeService) []apiCase {
 	makes := contract.ListRequest{Of: "vpic", Where: map[string]string{"make": "476"}, Limit: 2}
 	parts := contract.ListRequest{Of: "parts", Limit: 2}
 	series := contract.ListRequest{Of: "vpic", Where: map[string]string{"model": "1850", "element": "34"}, Limit: 2}
+	stocked := func(target string, req contract.StockedRequest) apiCase {
+		t.Helper()
+		s, err := svc.Stocked(context.Background(), req)
+		if err == nil && len(s.Vehicles) == 0 {
+			t.Fatalf("stocked %+v names no vehicle: the fixture's yard has VINs", req)
+		}
+		return apiCase{op: opStocked, method: "GET", target: target, status: 200, want: wantBody(t, s, err)}
+	}
 	return append(cases,
+		stocked("/v1/stocked", contract.StockedRequest{}),
+		stocked("/v1/stocked?limit=1&location=north&location=south", contract.StockedRequest{Limit: 1, Location: []string{"north", "south"}}),
 		list(opCatalog, "/v1/vocabularies", contract.ListRequest{}),
 		list(opCatalog, "/v1/vocabularies?limit=5", contract.ListRequest{Limit: 5}),
 		list(opCatalog, "/v1/vocabularies?where.make=Dodge", contract.ListRequest{Where: map[string]string{"make": "Dodge"}}),
@@ -955,6 +971,9 @@ func (faulty) FitBatch(context.Context, []contract.FitRequest) ([]contract.Fit, 
 func (faulty) FitBatchRows(context.Context, []contract.FitRequest) (contract.FitBatchRows, error) {
 	return contract.FitBatchRows{}, errors.New("injected fault")
 }
+func (faulty) Stocked(context.Context, contract.StockedRequest) (contract.Stocked, error) {
+	return contract.Stocked{}, errors.New("injected fault")
+}
 func (faulty) SpineBundle() ([]byte, error) { return nil, errors.New("injected fault") }
 func (faulty) File(string) ([]byte, error)  { return nil, errors.New("injected fault") }
 
@@ -968,6 +987,7 @@ func faultCases() []apiCase {
 		{op: opTranslateBatch, method: "POST", target: "/v1/translate", body: `[{"from":{"make":476}}]`, status: 500, problem: contract.Internal},
 		{op: opFitOne, method: "GET", target: "/v1/fit?from.model=1938", status: 500, problem: contract.Internal},
 		{op: opFitBatch, method: "POST", target: "/v1/fit", body: `[{"from":{"model":1938}}]`, status: 500, problem: contract.Internal},
+		{op: opStocked, method: "GET", target: "/v1/stocked", status: 500, problem: contract.Internal},
 		{op: opCatalog, method: "GET", target: "/v1/vocabularies", status: 500, problem: contract.Internal},
 		{op: opEntries, method: "GET", target: "/v1/vocabularies/fleet/entries", status: 500, problem: contract.Internal},
 	}

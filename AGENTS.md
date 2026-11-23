@@ -28,7 +28,7 @@ flowchart LR
 ```
 
 - **Decode:** `nitrovin.Embedded()`, `Open(path)` or `Load(bytes, src)` returns a `*nitrovin.Decoder`. `Decode(req)` sets `Now`, which is the only place the clock is read. It validates the request and calls `decoder.Engine.Project`, and `contract.NewDecode` builds the wire type.
-- **Requests beside decode** (ADR 0012, 0018): translate, list and fit go through `contract.Translator` and `contract.Fitter`. These take a `Decode func` field and are decoder-free, so the Service Worker can plug in a decode that calls `/v1/decode` (ADR 0013).
+- **Requests beside decode** (ADR 0012, 0018, 0028): translate, list, fit and stocked go through `contract.Translator` and `contract.Fitter`. These take a `Decode func` field and are decoder-free, so the Service Worker can plug in a decode that calls `/v1/decode` (ADR 0013).
 - **Package dependency direction** (leaf first): `vocab` → `fitment`, `stock` → `contract` → `decoder` → `nitrovin` → `stdio`. `ui` imports only `contract`, `vocab` and `stock`.
   - The wasm-built packages (`vocab`, `fitment`, `contract`, `ui`) never import `decoder`, `nitrovin` or the embedded data (`nitrovin-data/pkg/embedded`). `contract` may import `nitrovin-data/pkg/artifact`.
   - Only `cmd/nitrovin` imports `pkg/stock/pg` (pgx). The C library and the wasm build carry no database driver.

@@ -221,6 +221,10 @@ func TestStdioOps(t *testing.T) {
 		{in: `{"id":13,"op":"list","of":"parts-catalog","where":{"type":"mirror"}}`, id: "13", kind: "list"},
 		{in: `{"id":14,"op":"fit","from":{"model":1938},"part":{"spine":"parts","id":"brake-rotor"},"now":"` + now + `"}`, id: "14", kind: string(contract.InvalidRequest), pointer: "/part/spine"},
 		{in: `{"id":15,"op":"fit","from":{"fitment":{"type":"mirror","number":"MR-1001"}},"related":true}`, id: "15", kind: string(contract.InvalidRequest), pointer: "/related"},
+		{in: `{"id":17,"op":"stocked","limit":2}`, id: "17", kind: "stocked"},
+		{in: `{"op":"stocked","location":["north"]}`, kind: "stocked"},
+		{in: `{"id":18,"op":"stocked","limit":101}`, id: "18", kind: string(contract.InvalidRequest), pointer: "/limit"},
+		{in: `{"id":19,"op":"stocked","stock":["yard"]}`, id: "19", kind: string(contract.InvalidRequest), pointer: "/stock"},
 	}
 
 	for _, c := range fitConditions {
@@ -247,6 +251,9 @@ func TestStdioOps(t *testing.T) {
 			case contract.OpFit:
 				body, err = tr.Fit(context.Background(), req.Fit)
 				key = "fit"
+			case contract.OpStocked:
+				body, err = tr.Stocked(context.Background(), req.Stocked)
+				key = "stocked"
 			default:
 				body, err = d.Decode(req.Decode)
 				key = "decode"

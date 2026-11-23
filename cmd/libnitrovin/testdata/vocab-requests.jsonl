@@ -34,3 +34,4 @@
 {"id":"confirmed","op":"fit","from":"1D7RV1GT5AS123456","part":{"spine":"part-types","id":"mirror"},"side":"left","now":"2026-11-01"}
 {"id":"unconfirmed","op":"fit","from":{"vocabulary":"catalog-models","entry":{"make":"Dodge","model":"Ram 1500"}},"part":{"spine":"part-types","id":"mirror"},"side":"left","now":"2026-11-01"}
 {"id":"both","op":"fit","from":{"model":1938},"model_year":2010,"part":{"spine":"part-types","id":"mirror"},"side":"left","now":"2026-11-01"}
+{"id":"stocked","op":"stocked","limit":3}
