@@ -657,6 +657,54 @@
         }
       }
     },
+    "/v1/stocked": {
+      "get": {
+        "operationId": "stocked",
+        "summary": "The vehicles the loaded yards hold most of.",
+        "description": "One stocked request as query parameters (ADR 0028): the vehicles the\nloaded yard sources hold most of, each vPIC model once, in the model\nyear the yard has most of it in, the most yard rows first. Each comes\nwith a VIN of the yard's, to decode, translate or fit from. A yard\nthat cannot name its vehicles gives none, and no yard at all answers\nan empty list: neither is an error. `sources` says what each yard\nanswered. `location` is repeated, once per location; `limit` is given\nat most once, and an unknown parameter is refused.\n",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "description": "A location to keep yard rows at; repeated for several.",
+            "schema": {
+              "$ref": "#/components/schemas/StockedRequestFields/properties/location"
+            },
+            "style": "form",
+            "explode": true
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "How many vehicles.",
+            "schema": {
+              "$ref": "#/components/schemas/StockedRequestFields/properties/limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The stocked vehicles.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Stocked"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "405": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/Internal"
+          }
+        }
+      }
+    },
     "/v1/vocabularies": {
       "get": {
         "operationId": "listCatalog",
@@ -1448,10 +1496,11 @@
               "decode",
               "translate",
               "list",
-              "fit"
+              "fit",
+              "stocked"
             ],
             "default": "decode",
-            "description": "The request beside it: a DecodeRequest, a TranslateRequest, a ListRequest or a FitRequest. The reply is keyed decode, translation, list or fit."
+            "description": "The request beside it: a DecodeRequest, a TranslateRequest, a ListRequest, a FitRequest or a StockedRequest. The reply is keyed decode, translation, list, fit or stocked."
           }
         },
         "if": {
@@ -1496,7 +1545,22 @@
               "$ref": "#/components/schemas/FitRequestFields"
             },
             "else": {
-              "$ref": "#/components/schemas/DecodeRequestFields"
+              "if": {
+                "required": [
+                  "op"
+                ],
+                "properties": {
+                  "op": {
+                    "const": "stocked"
+                  }
+                }
+              },
+              "then": {
+                "$ref": "#/components/schemas/StockedRequestFields"
+              },
+              "else": {
+                "$ref": "#/components/schemas/DecodeRequestFields"
+              }
             }
           }
         },
@@ -1553,6 +1617,19 @@
               "id": {},
               "fit": {
                 "$ref": "#/components/schemas/Fit"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "stocked"
+            ],
+            "properties": {
+              "id": {},
+              "stocked": {
+                "$ref": "#/components/schemas/Stocked"
               }
             },
             "additionalProperties": false
@@ -4095,6 +4172,107 @@
           "fields": {
             "type": "object",
             "description": "The row's own fields, verbatim, never interpreted; with stock_fields, only those it names."
+          }
+        },
+        "additionalProperties": false
+      },
+      "StockedRequestFields": {
+        "type": "object",
+        "description": "A stocked request's fields (ADR 0028): the vehicles the loaded yards hold most of. Contract prose: docs/api/README.md#stocked.",
+        "properties": {
+          "location": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Keep the yard rows at one of these locations; absent keeps every location."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 10,
+            "description": "How many vehicles."
+          }
+        }
+      },
+      "StockedRequest": {
+        "description": "One stocked request, the same object on every surface (ADR 0028); on stdio, a line with op stocked.",
+        "$ref": "#/components/schemas/StockedRequestFields",
+        "unevaluatedProperties": false
+      },
+      "Stocked": {
+        "type": "object",
+        "description": "The answer to a StockedRequest: the vehicles the loaded yard sources hold most of, each vPIC model once, the most yard rows first, then by model id. No yard loaded, or none that can name a vehicle, is never a refusal: vehicles is empty.",
+        "required": [
+          "vehicles",
+          "sources",
+          "data_month",
+          "decoder_version"
+        ],
+        "properties": {
+          "vehicles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StockedVehicle"
+            }
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StockSource"
+            },
+            "description": "Every loaded yard source, in load order, whether or not it gave a vehicle. One that cannot name its vehicles (a relation with no vin column, ADR 0028) is available and gives none; an unavailable one says why."
+          },
+          "data_month": {
+            "type": "string",
+            "pattern": "^[0-9]{4}_(0[1-9]|1[0-2])$"
+          },
+          "decoder_version": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "StockedVehicle": {
+        "type": "object",
+        "description": "One vehicle a yard holds: a model in the model year the yard has most of it in, the later of two alike.",
+        "required": [
+          "vin",
+          "spine",
+          "model_year",
+          "yard",
+          "source"
+        ],
+        "properties": {
+          "vin": {
+            "type": "string",
+            "minLength": 1,
+            "description": "A VIN of the yard's of this model and year, the least bytewise: decode, translate or fit from it."
+          },
+          "spine": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/SpineEntry"
+            },
+            "description": "The vehicle's vPIC make, then its model, as the data month names them. A model the data month lacks comes alone, with drift."
+          },
+          "model_year": {
+            "type": "integer"
+          },
+          "yard": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "How many of the source's yard rows are of this model and year, at the request's locations."
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The yard source the count and the VIN are from: of two yards holding a model, the one with more of it."
           }
         },
         "additionalProperties": false

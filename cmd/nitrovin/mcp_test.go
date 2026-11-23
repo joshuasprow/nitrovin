@@ -153,7 +153,7 @@ type mcpCall struct {
 
 // knownTool reports whether name is one of mcp-tools.json's tools.
 func knownTool(name string) bool {
-	return name == "decode_vin" || name == "translate" || name == "list" || name == "fit"
+	return name == "decode_vin" || name == "translate" || name == "list" || name == "fit" || name == "stocked"
 }
 
 // mcpCalls is the scripted session's calls after tools/list: a decode in
@@ -458,6 +458,9 @@ func TestMCPVocabSession(t *testing.T) {
 		{tool: "fit", args: `{"from":"` + ram2010 + `","part":{"vocabulary":"part-codes","entry":{"code":"ROT"}},"stock":["shelf","yard"],"now":"` + now + `"}`},
 		{tool: "fit", args: `{"from":{"fitment":{"type":"brake-rotor-front","number":"BR-1999"}},"stock":["shelf","yard"],"location":["north","east"],"limit":1,"now":"` + now + `"}`},
 		{tool: "list", args: `{"of":"parts-catalog","where":{"type":"mirror"}}`},
+		{tool: "stocked", args: `{}`},
+		{tool: "stocked", args: `{"location":["north"],"limit":1}`},
+		{tool: "stocked", args: `{"limit":0}`, pointer: "/limit"},
 		{tool: "fit", args: `{"from":{"model":1938},"part":{"vocabulary":"listing","entry":{"category":"Brake Pads"}}}`, pointer: "/part/vocabulary"},
 	}
 	for _, c := range fitConditions {
@@ -614,6 +617,8 @@ func checkCall(t *testing.T, d loaded, c mcpCall, resp message, outputs map[stri
 			want, err = listJSON(d, []byte(cmp.Or(c.args, "{}")))
 		case "fit":
 			want, err = fitJSON(context.Background(), d, []byte(cmp.Or(c.args, "{}")))
+		case "stocked":
+			want, err = stockedJSON(context.Background(), d, []byte(cmp.Or(c.args, "{}")))
 		}
 		if err != nil {
 			t.Fatalf("%s %s: %v", name, c.args, err)

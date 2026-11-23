@@ -1341,3 +1341,112 @@ INSERT INTO nvtest.yard VALUES ('Y-1', 'north', 476, 1938, 2010, NULL, '{}'), ('
 		t.Errorf("Yard with no catalog: %+v, %v; want Y-1 by its decode", rs, err)
 	}
 }
+
+// yardSource is a yard connector with no catalog reading relation with
+// dsn, closed when the test ends.
+func yardSource(t *testing.T, relation, dsn string) *Source {
+	t.Helper()
+	dir := t.TempDir()
+	header := `{"format":1,"kind":"stock","name":"yard-live","version":"1","source":"yard","connector":{"postgres":{"relation":"` + relation + `","dsn_env":"DSN"}}}`
+	if err := os.WriteFile(filepath.Join(dir, "yard-live.jsonl"), []byte(header+"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	files, err := vocab.Open(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := New(stock.Declared{File: files[0]}, dsn)
+	t.Cleanup(s.Close)
+	return s
+}
+
+// TestStockedPostgres: a yard whose relation has the optional vin column
+// names its best-stocked vehicles (stock.Stocker) as a file does: the
+// models its rows' decodes name, each once in its best year, the most rows
+// first, each with the least of its rows' VINs, bytewise, an empty one being none; a vehicle
+// with no VIN among its rows, a row with no decode and a row with no id
+// are left out, and a location keeps its own rows. Its rows say their
+// VINs. A relation without the column answers its lookups as before, its
+// rows with no VIN, and names no vehicle. The relation is a
+// security_barrier view. On 200,000 rows the ranking is one read of the
+// table, and the test logs how long it took, cold and warm.
+func TestStockedPostgres(t *testing.T) {
+	conn, u := testDB(t)
+	exec(t, conn, `DROP SCHEMA IF EXISTS nvtest CASCADE; CREATE SCHEMA nvtest;
+CREATE TABLE nvtest.vehicles (id text, location text, decoded_make integer, decoded_model integer, decoded_year integer, year integer, fields jsonb, as_of date, vin text);
+CREATE INDEX yard_by_model ON nvtest.vehicles (decoded_model, decoded_year);
+CREATE VIEW nvtest.yard WITH (security_barrier) AS SELECT * FROM nvtest.vehicles;
+CREATE VIEW nvtest.yard_no_vin WITH (security_barrier) AS SELECT id, location, decoded_make, decoded_model, decoded_year, year, fields FROM nvtest.vehicles;
+INSERT INTO nvtest.vehicles VALUES
+ ('Y-1', 'north', 476, 1938, 2010, NULL, '{}', '2026-11-03', 'VINB'),
+ ('Y-2', 'south', 476, 1938, 2010, NULL, '{}', '2026-11-02', 'VINA'),
+ ('Y-3', 'north', 476, 1938, 2010, NULL, '{}', '2026-11-04', NULL),
+ ('Y-4', 'north', 476, 1938, 2011, NULL, '{}', '2026-11-05', 'VINC'),
+ ('Y-5', 'north', 467, 1850, 2012, NULL, '{}', '2026-11-06', 'VIND'),
+ ('Y-6', 'south', 467, 1850, 2012, NULL, '{}', '2026-11-01', ''),
+ ('Y-7', 'north', 467, 1851, 2013, NULL, '{}', '2026-11-07', NULL),
+ ('Y-8', 'north', NULL, NULL, NULL, 2010, '{}', '2026-11-07', 'VINE'),
+ (NULL, 'north', 467, 1850, 2012, NULL, '{}', '2026-11-07', 'VIN0')`)
+	t.Cleanup(func() { exec(t, conn, `DROP SCHEMA IF EXISTS nvtest CASCADE`) })
+	ctx := context.Background()
+	s := yardSource(t, "nvtest.yard", u.String())
+	for _, c := range []struct {
+		q    stock.StockedQuery
+		want []stock.StockedVehicle
+		asOf string
+	}{
+		{stock.StockedQuery{Limit: 10}, []stock.StockedVehicle{{Model: 1938, Year: 2010, Rows: 3, VIN: "VINA"}, {Model: 1850, Year: 2012, Rows: 2, VIN: "VIND"}}, "2026-11-01"},
+		{stock.StockedQuery{Limit: 1}, []stock.StockedVehicle{{Model: 1938, Year: 2010, Rows: 3, VIN: "VINA"}}, "2026-11-02"},
+		{stock.StockedQuery{Limit: 10, Location: []string{"south"}}, []stock.StockedVehicle{{Model: 1938, Year: 2010, Rows: 1, VIN: "VINA"}}, "2026-11-02"},
+		{stock.StockedQuery{}, []stock.StockedVehicle{}, ""},
+	} {
+		got, meta, err := s.Stocked(ctx, c.q)
+		if err != nil || !slices.Equal(got, c.want) || meta.AsOf != c.asOf {
+			t.Errorf("Stocked(%+v): %+v, %+v, %v; want %+v as of %q", c.q, got, meta, err, c.want, c.asOf)
+		}
+	}
+	q := []stock.YardQuery{{Models: []stock.ModelYears{{Model: 1938, First: new(2010), Last: new(2010)}}}}
+	vins := func(s *Source) string {
+		t.Helper()
+		rs, _, err := s.Yard(ctx, q, stock.Page{Limit: 10})
+		if err != nil {
+			t.Fatal(err)
+		}
+		var out []string
+		for _, r := range rs[0].Rows {
+			out = append(out, r.ID+"="+r.VIN)
+		}
+		return strings.Join(out, " ")
+	}
+	if got, want := vins(s), "Y-1=VINB Y-2=VINA Y-3="; got != want {
+		t.Errorf("a yard's rows with a vin column: %s; want %s", got, want)
+	}
+	bare := yardSource(t, "nvtest.yard_no_vin", u.String())
+	if got, want := vins(bare), "Y-1= Y-2= Y-3="; got != want {
+		t.Errorf("a yard's rows with no vin column: %s; want %s", got, want)
+	}
+	if got, _, err := bare.Stocked(ctx, stock.StockedQuery{Limit: 10}); err != nil || len(got) != 0 {
+		t.Errorf("Stocked with no vin column: %+v, %v; want none", got, err)
+	}
+
+	// A populated yard: 200,000 vehicles of 4,000 models and years.
+	exec(t, conn, `TRUNCATE nvtest.vehicles;
+INSERT INTO nvtest.vehicles SELECT 'Y-' || n, 'loc-' || n % 5, 400 + n % 40, (1000 + (n::bigint * 7919) % 400)::integer, (2005 + (n::bigint * 104729) % 10)::integer, NULL, '{"row":"D-1"}', '2026-11-01', 'VIN' || lpad(n::text, 14, '0') FROM generate_series(1, 200000) n;
+ANALYZE nvtest.vehicles`)
+	sq, _, err := s.ready(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	plan := explain(t, conn, sq.stocked, int64(5), []string{})
+	if n := strings.Count(plan, " on vehicles "); n != 1 {
+		t.Errorf("the ranking reads the table %d times; want once:\n%s", n, plan)
+	}
+	for _, run := range []string{"cold", "warm"} {
+		start := time.Now()
+		got, _, err := s.Stocked(ctx, stock.StockedQuery{Limit: 5})
+		if err != nil || len(got) != 5 || got[0].Rows < got[4].Rows {
+			t.Fatalf("Stocked on 200,000 rows: %+v, %v", got, err)
+		}
+		t.Logf("Stocked on 200,000 rows, %s: %v", run, time.Since(start).Round(time.Millisecond))
+	}
+}

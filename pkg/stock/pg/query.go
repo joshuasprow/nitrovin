@@ -33,6 +33,9 @@ import (
 // release.
 type queries struct {
 	byFitment, byVehicle, yard string
+	// stocked is a yard's best-stocked vehicles (Stocked), "" for a
+	// shelf and for a yard whose relation has no vin column.
+	stocked string
 	// nv is how many vehicle columns there are: fields' (a vocabulary's
 	// fields), or vpic's three.
 	nv     int
@@ -44,9 +47,10 @@ type queries struct {
 func col(name string) string { return "r." + pgx.Identifier{name}.Sanitize() }
 
 // queries are the lookups of the source's relation, whose as_of column
-// has data type asOf ("" when it has none) and whose columns padded are
-// character under a deterministic collation.
-func (s *Source) queries(asOf string, padded map[string]bool) *queries {
+// has data type asOf ("" when it has none), whose columns padded are
+// character under a deterministic collation, and which, vin, has a yard's
+// vin column.
+func (s *Source) queries(asOf string, padded map[string]bool, vin bool) *queries {
 	q := &queries{fields: s.cols.fields, vpic: s.cols.vpic}
 	vehicle := s.cols.vehicle()
 	q.nv = len(vehicle)
@@ -103,6 +107,11 @@ func (s *Source) queries(asOf string, padded map[string]bool) *queries {
 		}
 		// jsonb's text: a json column keeps its input's, spaces and all.
 		b = append(b, col("fields")+"::jsonb::text AS c_fields", asOfExpr+" AS c_as_of")
+		if vin && decoded {
+			b = append(b, col("vin")+"::text AS c_vin")
+		} else {
+			b = append(b, "NULL::text AS c_vin")
+		}
 		return strings.Join(b, ", ")
 	}
 	where := col("id") + " IS NOT NULL AND " + col("location") + " IS NOT NULL AND (cardinality($2::text[]) = 0 OR " + col("location") + " = ANY($2::text[]))"
@@ -170,7 +179,7 @@ func (s *Source) queries(asOf string, padded map[string]bool) *queries {
 		cols = append(cols, [2]string{"c_v" + strconv.Itoa(i), "text"})
 	}
 	cols = append(cols, [2]string{"c_year", "int4"}, [2]string{"c_decoded_make", "int4"}, [2]string{"c_decoded_model", "int4"}, [2]string{"c_decoded_year", "int4"},
-		[2]string{"c_by_model", "bool"}, [2]string{"c_fields", "text"}, [2]string{"c_as_of", "text"})
+		[2]string{"c_by_model", "bool"}, [2]string{"c_fields", "text"}, [2]string{"c_as_of", "text"}, [2]string{"c_vin", "text"})
 	rowCols, nullCols := make([]string, len(cols)), make([]string, len(cols))
 	for i, c := range cols {
 		rowCols[i], nullCols[i] = "f."+c[0], "NULL::"+c[1]+" AS "+c[0]
@@ -255,7 +264,71 @@ func (s *Source) queries(asOf string, padded map[string]bool) *queries {
 	with += ",\n" + keys("lk", next, []string{"list", "key", "first", "last"}, []string{"int4[]", "int4[]", "int4[]", "int4[]"})
 	q.yard = page(with, read, "SELECT lk.list, f.n, f.c_id FROM f JOIN lk ON lk.key = f.key AND "+
 		within("lk", "CASE WHEN f.c_by_model THEN f.c_decoded_year ELSE f.c_year END"))
+	if vin {
+		// The yard's vehicles by their decode, each model once in the year
+		// it has the most rows in (the later of two alike), the most rows
+		// first: $1 how many, $2 the locations to keep. One read of the
+		// relation, as an aggregate of all of it must be. The least VIN of
+		// a vehicle's rows is bytewise, as a file's; an empty one is none.
+		least := `min(NULLIF(` + col("vin") + `::text, '') COLLATE "C")`
+		q.stocked = "SELECT m.* FROM (SELECT DISTINCT ON (g.model) g.* FROM (\n" +
+			"SELECT " + col("decoded_model") + "::int4 AS model, " + col("decoded_year") + "::int4 AS year, count(*)::int8 AS n, " + least + " AS vin, min(" + asOfExpr + ") AS as_of\n" +
+			"FROM " + rel + " r WHERE " + decoded + " AND " + where + "\n" +
+			"GROUP BY 1, 2 HAVING " + least + " IS NOT NULL) g ORDER BY g.model, g.n DESC, g.year DESC) m\n" +
+			"ORDER BY m.n DESC, m.model LIMIT $1::int8"
+	}
 	return q
+}
+
+// Stocked answers the yard's best-stocked vehicles (stock.Stocker): the
+// vehicles its rows' decodes name, each with how many rows and the least
+// of their VINs. A relation with no vin column has no VIN to offer one
+// by, and answers none; so does a shelf.
+func (s *Source) Stocked(ctx context.Context, sq stock.StockedQuery) ([]stock.StockedVehicle, stock.Meta, error) {
+	out := []stock.StockedVehicle{}
+	if s.info.Holds != stock.Yard || sq.Limit <= 0 {
+		return out, stock.Meta{}, nil
+	}
+	q, pool, err := s.ready(ctx)
+	if err != nil {
+		return nil, stock.Meta{}, err
+	}
+	if q.stocked == "" {
+		return out, stock.Meta{}, nil
+	}
+	bctx, cancel := context.WithTimeout(ctx, s.c.ConnectTimeout+s.c.StatementTimeout)
+	defer cancel()
+	conn, err := pool.Acquire(bctx)
+	if err != nil {
+		return nil, stock.Meta{}, s.acquireFailed(ctx, pool, err)
+	}
+	defer conn.Release()
+	location := sq.Location
+	if location == nil {
+		location = []string{}
+	}
+	rows, err := conn.Query(bctx, q.stocked, int64(sq.Limit), location)
+	if err != nil {
+		return nil, stock.Meta{}, s.unavailable(ctx, err)
+	}
+	var (
+		model, year int32
+		n           int64
+		vin         string
+		asOf        *string
+		meta        stock.Meta
+	)
+	if _, err := pgx.ForEachRow(rows, []any{&model, &year, &n, &vin, &asOf}, func() error {
+		out = append(out, stock.StockedVehicle{Model: model, Year: int(year), Rows: int(n), VIN: vin})
+		// The oldest of the rows counted, as a list's block says.
+		if asOf != nil && (meta.AsOf == "" || *asOf < meta.AsOf) {
+			meta.AsOf = *asOf
+		}
+		return nil
+	}); err != nil {
+		return nil, stock.Meta{}, s.unavailable(ctx, err)
+	}
+	return out, meta, nil
 }
 
 // ShelfByFitment answers the shelf rows of each list's keys: one query.
@@ -584,7 +657,7 @@ func scan(rows pgx.Rows, q *queries, holds stock.Holds, matched stock.Matched, o
 		typ, number, side, partType *string
 		year, dmake, dmodel, dyear  *int32
 		byModel                     *bool
-		fields, asOf                *string
+		fields, asOf, vin           *string
 		vehicle                     = make([]*string, q.nv)
 		meta                        stock.Meta
 	)
@@ -592,7 +665,7 @@ func scan(rows pgx.Rows, q *queries, holds stock.Holds, matched stock.Matched, o
 	for i := range vehicle {
 		dest = append(dest, &vehicle[i])
 	}
-	dest = append(dest, &year, &dmake, &dmodel, &dyear, &byModel, &fields, &asOf)
+	dest = append(dest, &year, &dmake, &dmodel, &dyear, &byModel, &fields, &asOf, &vin)
 	_, err := pgx.ForEachRow(rows, dest, func() error {
 		if release != nil {
 			meta.Release = *release
@@ -640,6 +713,9 @@ func scan(rows pgx.Rows, q *queries, holds stock.Holds, matched stock.Matched, o
 		}
 		if asOf != nil {
 			row.AsOf = *asOf
+		}
+		if vin != nil {
+			row.VIN = *vin
 		}
 		for _, l := range lists {
 			if l < 0 || int(l) >= len(out) {

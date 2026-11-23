@@ -603,7 +603,13 @@ view renames a system's own columns. Each is read in one of a few types:
 | Source | Columns |
 | --- | --- |
 | `shelf` | `id`, `location` (text); `type`, `number`, `side` (text; `side` null for a fitment with none; `number` null on a row with no number, whose `type` and `side` are not read); `part_type` (text, a spine id, for a row with no number); the vehicle columns; `year` (integer); `fields` (jsonb or json); `as_of` (optional) |
-| `yard` | `id`, `location` (text); `decoded_make`, `decoded_model`, `decoded_year` (integer, the source's own vPIC decode of the vehicle's VIN); the vehicle columns; `year` (integer); `fields` (jsonb or json); `as_of` (optional) |
+| `yard` | `id`, `location` (text); `decoded_make`, `decoded_model`, `decoded_year` (integer, the source's own vPIC decode of the vehicle's VIN); the vehicle columns; `year` (integer); `fields` (jsonb or json); `as_of` (optional); `vin` (text, optional) |
+
+A yard's `vin` is the vehicle's VIN (ADR 0028). With the column, a yard
+row says its VIN, as a file's does, and the yard can name the vehicles it
+holds most of ([`stocked`](api/README.md#stocked-stocked)). Without it
+every lookup answers as before and the yard names none. nitrovin still
+never decodes it: the decode is `decoded_*`'s.
 
 The vehicle columns are `vehicle_<field>` (text) for each field of the
 catalog's vehicle vocabulary, `vehicle_make` and `vehicle_model` for

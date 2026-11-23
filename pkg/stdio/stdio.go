@@ -33,13 +33,14 @@ type reply struct {
 	Translation *contract.Translation `json:"translation,omitempty"`
 	List        *contract.List        `json:"list,omitempty"`
 	Fit         *contract.Fit         `json:"fit,omitempty"`
+	Stocked     *contract.Stocked     `json:"stocked,omitempty"`
 	Error       *contract.Problem     `json:"error,omitempty"`
 }
 
 // Reply answers one input line, a StdioRequest without its newline, with
 // one StdioReply of compact JSON without a newline, keyed by the line's op:
-// {"id":…,"decode":{…}}, {"id":…,"translation":{…}}, {"id":…,"list":{…}} or
-// {"id":…,"fit":{…}},
+// {"id":…,"decode":{…}}, {"id":…,"translation":{…}}, {"id":…,"list":{…}},
+// {"id":…,"fit":{…}} or {"id":…,"stocked":{…}},
 // or {"id":…,"error":<problem>} for a line that is not JSON, a refused
 // request, or a fault in nitrovin. The answer is the bytes json.Marshal
 // gives for it. A request without now reads the clock once. The id is
@@ -87,6 +88,11 @@ func answer(t *nitrovin.Translator, req contract.StdioRequest, id json.RawMessag
 		var f contract.Fit
 		if f, err = t.Fit(context.Background(), req.Fit); err == nil {
 			r.Fit = &f
+		}
+	case contract.OpStocked:
+		var s contract.Stocked
+		if s, err = t.Stocked(context.Background(), req.Stocked); err == nil {
+			r.Stocked = &s
 		}
 	default:
 		var dec contract.Decode

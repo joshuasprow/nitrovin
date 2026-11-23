@@ -371,6 +371,39 @@ paths:
         '405': { $ref: '#/components/responses/MethodNotAllowed' }
         '413': { $ref: '#/components/responses/TooLarge' }
         '500': { $ref: '#/components/responses/Internal' }
+  /v1/stocked:
+    get:
+      operationId: stocked
+      summary: The vehicles the loaded yards hold most of.
+      description: |
+        One stocked request as query parameters (ADR 0028): the vehicles the
+        loaded yard sources hold most of, each vPIC model once, in the model
+        year the yard has most of it in, the most yard rows first. Each comes
+        with a VIN of the yard's, to decode, translate or fit from. A yard
+        that cannot name its vehicles gives none, and no yard at all answers
+        an empty list: neither is an error. `sources` says what each yard
+        answered. `location` is repeated, once per location; `limit` is given
+        at most once, and an unknown parameter is refused.
+      parameters:
+        - name: location
+          in: query
+          description: A location to keep yard rows at; repeated for several.
+          schema: { $ref: 'decode.schema.json#/$defs/StockedRequestFields/properties/location' }
+          style: form
+          explode: true
+        - name: limit
+          in: query
+          description: How many vehicles.
+          schema: { $ref: 'decode.schema.json#/$defs/StockedRequestFields/properties/limit' }
+      responses:
+        '200':
+          description: The stocked vehicles.
+          content:
+            application/json:
+              schema: { $ref: 'decode.schema.json#/$defs/Stocked' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '405': { $ref: '#/components/responses/MethodNotAllowed' }
+        '500': { $ref: '#/components/responses/Internal' }
   /v1/vocabularies:
     get:
       operationId: listCatalog

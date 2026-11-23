@@ -22,7 +22,7 @@ func init() {
 	register(command{
 		name:     "mcp",
 		synopsis: "[flags]",
-		summary:  "Serve the decode_vin, translate, list and fit tools to an MCP client over stdin and stdout.",
+		summary:  "Serve the decode_vin, translate, list, fit and stocked tools to an MCP client over stdin and stdout.",
 		setup:    mcpSetup,
 	})
 }
@@ -96,7 +96,7 @@ type nopWriteCloser struct{ io.Writer }
 func (nopWriteCloser) Close() error { return nil }
 
 // newMCPServer returns the MCP server of docs/api/README.md's MCP section:
-// the tools decode_vin, translate, list and fit, answering with d, on every
+// the tools decode_vin, translate, list, fit and stocked, answering with d, on every
 // protocol revision the SDK serves. The SDK's diagnostics
 // go to stderr. `nitrovin mcp` serves it over stdio, `nitrovin serve` over
 // Streamable HTTP at /mcp.
@@ -110,9 +110,10 @@ func newMCPServer(d decodeService, stderr io.Writer) (*mcp.Server, error) {
 		"translate":  func(_ context.Context, args []byte) ([]byte, error) { return translateJSON(d, args) },
 		"list":       func(_ context.Context, args []byte) ([]byte, error) { return listJSON(d, args) },
 		"fit":        func(ctx context.Context, args []byte) ([]byte, error) { return fitJSON(ctx, d, args) },
+		"stocked":    func(ctx context.Context, args []byte) ([]byte, error) { return stockedJSON(ctx, d, args) },
 	}
 	if len(tools) != len(handlers) {
-		return nil, errors.New("mcp-tools.json: want the tools decode_vin, translate, list and fit")
+		return nil, errors.New("mcp-tools.json: want the tools decode_vin, translate, list, fit and stocked")
 	}
 	server := mcp.NewServer(&mcp.Implementation{Name: "nitrovin", Version: nitrovin.Version()}, &mcp.ServerOptions{
 		Logger: slog.New(slog.NewTextHandler(stderr, &slog.HandlerOptions{Level: slog.LevelWarn})),
@@ -248,6 +249,21 @@ func listJSON(t decodeService, args []byte) ([]byte, error) {
 		return nil, err
 	}
 	return json.Marshal(l)
+}
+
+// stockedJSON answers one stocked request object, args, with the answer's
+// compact JSON, its lookups bounded by ctx. The error is a
+// *contract.Problem.
+func stockedJSON(ctx context.Context, t decodeService, args []byte) ([]byte, error) {
+	r, err := contract.ParseStockedRequest(args)
+	if err != nil {
+		return nil, err
+	}
+	s, err := t.Stocked(ctx, r)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(s)
 }
 
 // fitJSON answers one fit request object, args, with the fit's compact
