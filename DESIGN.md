@@ -80,9 +80,10 @@ is shown. One that breaks a rule says which, and why, where it is proposed.
    What serves it sits on the same piece of material, smaller, after it,
    and is dropped first when the window narrows. It never gets a block of
    its own beside the primary.
-   *Sent back: recent part types as a strip of their own under the picker.
-   They went onto the picker's tape, and a phone's tape is the picker
-   alone.*
+   *Sent back: recent part types as a strip of their own under the picker;
+   then as a second row on a wide tape, most of it bare. A wide tape is
+   one line; a narrow one has a second line for them, and the key is as
+   wide as it. A phone's tape with no recents on it was sent back too.*
 5. **One shape at every width.** A component is the same thing at 390,
    768 and 1280 px. It wraps or scrolls; it does not turn into another
    kind of control. A control has a largest width and keeps it: it does
@@ -99,10 +100,14 @@ is shown. One that breaks a rule says which, and why, where it is proposed.
 7. **What belongs together is joined, and a line crosses nothing.** A line
    runs from a card to its word, and from what was asked to what answers
    it; a tag hangs from what it names; a control's tape touches the
-   control. A line has a lane to itself: no tag, control or other line is
-   over it or under it.
-   *Sent back: a picker apart from its tape; lines to the picker running
-   behind the name tags.*
+   control. A line runs straight from the word it leaves to the control it
+   reaches, which sits under that word; it does not run off to a lane at
+   the page's edge, and it is never drawn over anything. A tag hung from
+   the same thing may lie over a line, as a tag hangs in front of tape.
+   *Sent back: a picker apart from its tape; the lines to the picker sent
+   down the page's left edge to clear the name tags; the name tags hung
+   from the picker's tape, which they do not name; lines that ran over a
+   stamp.*
 8. **What opens hangs from its control and overlaps the page.** A list or a
    note opened from a control is anchored to it, no wider than it where it
    is a list, and lies over what is beneath. It does not push the page
@@ -503,20 +508,21 @@ for the vehicle, and the candidates of the one pressed.
   label over each value, raised white on the tape, then the Vehicle
   group's five characters, each over the group's mark, as on the plate,
   with its position under it and no label: the positions say what they
-  are. On a wide page the make is at 8 % of the width and the model at 25 %,
-  under the Maker and Vehicle cards, whose lines come straight down into
-  the tape; the year is at 42 %, and the Model year's line steps left to
-  it. A catalog on vPIC's own vehicles has no make of its own: the block
-  has none, and the Maker's line is not brought down. The page puts the vehicle
-  and the candidates side by side and judges nothing: it marks no
-  candidate as the match. Narrow, the words are at the middle of each third
-  under the strip (of each half with no make), and the details are a row
-  under them.
+  are. On a wide page the make is at 8 % of the block's width and the
+  model at 25 %, under the Maker and Vehicle cards, whose lines come
+  straight down; the year is at 42 %, and the Model year's line steps left
+  to it. On a narrow page, where the cards scroll and the lines are
+  carried, the words are packed at the block's left, a column 6.6 rem wide
+  each, and the details are a row under them. Each line ends on the
+  block's top edge, over the stamp's strip and never across it. A catalog
+  on vPIC's own vehicles has no make of its own: the block has none, and
+  the Maker's line is not brought down. The page puts the vehicle and the
+  candidates side by side and judges nothing: it marks no candidate as
+  the match.
 - **The names** ("Also known as") are manila tags, a tag a vocabulary, in
   one row under the block that scrolls sideways at every width; narrow, it
-  reaches the window's right edge. The row starts 3 rem in from the
-  block's left edge, which leaves a lane for the lines to the picker: no
-  tag is ever over a line. Where tags are out of sight past an end of the
+  reaches the window's right edge. The lines to the picker pass under it:
+  a tag lies over them, as a tag hung in front of tape does. Where tagsWhere tags are out of sight past an end of the
   row, that end fades over 48 px, and the fade goes when the row is
   scrolled to that end; a row that fits has none. It needs scroll-driven
   animation, and without it the row is cut square. A
@@ -535,13 +541,13 @@ for the vehicle, and the candidates of the one pressed.
   from the name itself, which darkens under a pointer. A vocabulary with no
   name keeps a tag that says so, after those with names. Every vocabulary
   is on the page: nothing is stacked or kept behind a switch.
-- **From the block to the picker**, at every width, the two lines leave
-  the block's bottom edge 1.5 rem in from its left end and come straight
-  down the lane beside the names' tags, into the picker where its risers
-  leave it. The block joins what comes in over its words to what goes
-  out at its corner; nothing runs along under it, where the tags' wires
-  are. With nothing pressed no line leaves the block. They need anchor
-  positioning, as the risers do.
+- **From the block to the picker**, at every width, the Vehicle's and the
+  Model year's lines leave the block's bottom edge under their words and
+  come straight down, under the names' tags, into the picker's key, and
+  end there. The key is under the two words: at the tape's left end on a
+  narrow page, and a column in from it on a wide one. No line runs on
+  from the picker: the candidates under it are what it names. With
+  nothing pressed no line leaves the block. They need anchor positioning.
 - **Narrow, the cards move and the block does not**, so the lines are
   carried between them by the row's own scroll (a scroll timeline; no
   script reads a position). In the row each line runs on from its card to
@@ -553,8 +559,12 @@ for the vehicle, and the candidates of the one pressed.
   off the window runs to the window's edge. A browser without scroll
   timelines draws no line between the cards and the block.
 - **The picker** is one key of the second tape on its own piece of label
-  tape, under the strip, the key at most 24 rem wide and the page's width
-  on a phone. Over its name it is labelled "Part type". With nothing pressed
+  tape, under the names' tags, as wide as the vehicle's block at every
+  width. On a wide page the tape is one line: the key, 20 rem wide and a
+  column in from the tape's left end, the key that clears it, then recent
+  part types, and one that does not fit is not shown. On a narrow page
+  the tape is two lines: the keys, then the recent part types; the keys'
+  line is as wide as the recents' and no narrower than 24 rem. Over its name it is labelled "Part type". With nothing pressed
   (no `part.id` in the URL) it reads "Choose a part type" with the count
   of the vehicle's part types in the part types' pill, and a blank strip
   under it asks for a choice. With one pressed it reads the part type's
@@ -589,38 +599,25 @@ for the vehicle, and the candidates of the one pressed.
 - **Recent part types**, with JavaScript, are kept in the browser as
   recent VINs are, the last eight, newest first, and nothing is kept when
   storage fails. The picker's list leads with every one the vehicle has,
-  under "Opened recently" with its "Clear recent", at every width. Above
-  46 rem, up to two, never the pressed one, also sit on the picker's own
-  tape, beside it after a hairline and the word "Recent", each a smaller
-  strip of the second tape with its count: pressing one presses it. A
-  phone's tape is the picker alone. The VINs menu's "Clear recent" forgets
+  under "Opened recently" with its "Clear recent", at every width. Up to
+  two, never the pressed one, also sit on the picker's own tape at every
+  width, after the word "Recent", each a smaller strip of the second tape
+  with its count: pressing one presses it. On a wide page they are beside
+  the keys, after a hairline; on a narrow one they are the tape's second
+  line. One that does not fit its line is not shown. The VINs menu's "Clear recent" forgets
   them and the VINs.
 - **A choice keeps the focus on the picker**, from the list or from under
   it, and so does clearing.
-- **The candidates** are manila tags, three to a row, in the answer's
-  order. Under 34 rem they are one row that scrolls sideways, the next tag
-  showing at the edge; the row reaches both edges of the window, takes
-  focus, and starts at the open candidate where the browser can. A tag's number is a strip of label tape
+- **The candidates** are manila tags in the answer's order, one row that
+  scrolls sideways at every width, each hung from the bottom edge of the
+  picker's tape by a wire from its eyelet, as a name's tag hangs from the
+  block. Three fill a wide window; a narrower one shows the next tag at
+  its edge, and an end with tags past it fades. The row takes focus, and
+  starts at the open candidate where the browser can. A tag's number is a strip of label tape
   across it under the eyelet, where a card prints its band, with the years at
   its trailing end; a candidate has no group and takes no colour. Its side,
   option text (verbatim) and note are rows in the tag's ink under muted
   labels.
-- **The rails** are two lines of pinstripe tape, Vehicle's and Model year's,
-  down from the picker (by anchor positioning) and along to two
-  drops into each eyelet. No piece of tape ends but at an eyelet or a joint
-  with its rail's next piece. One row's rails run only between the riser and
-  the eyelets, from whichever is nearer the leading edge to whichever is
-  further. Several rows' run along to the tags' leading edge, down it to the
-  last row's bar, and along each row to its last eyelet. Where a browser has
-  no anchor positioning, the rails start at the tags' top: at the leading
-  edge for several rows, above the first eyelet for one. Where they cross,
-  Model year's lies over Vehicle's.
-- **Under 34 rem the rails are one row's** and move with the tags: they
-  start at the first tag's drops and end at the last's. The riser from the
-  pressed part type stays put. Where it comes down before the first eyelet's
-  place at the row's start, or past the last eyelet's place at the row's
-  end, a piece that stays put with it runs from the riser to that place,
-  and lies under the tags' own bars once they move.
 - **Marks are ink on the tag**, in its ordinary ink: a solid stamp, a little
   askew, with a tick, "Checked" and the decoded elements that met the
   catalog's conditions; a dashed stamp with a warning triangle, "Not
@@ -660,10 +657,8 @@ for the vehicle, and the candidates of the one pressed.
   sided fitment and `fitment.type` for one whose type is not the pressed
   part type's); the open one's links to the page with none, so one is
   open at a time. The rows are a receipt (thermal paper, above), fed out
-  from under the tag's stock strip: on a wide page in the
-  row under the tag's row, under the tag that is pressed, the tags after
-  it filling theirs first, the rails running on down its leading edge to
-  the next row of tags; under 34 rem right under the tag, in its column,
+  from under the tag's stock strip, in the second row of the candidates'
+  scrolling row: under its tag, in its column,
   moving with it. Shelf is over yard on the one receipt at every width, one
   kind when one is loaded, each under its count on a reversed bar and its
   sources' as-of dates, or why one did not answer. A row is its id, led by

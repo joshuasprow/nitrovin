@@ -250,11 +250,10 @@ types dialog, every part type under the headings of a part vocabulary,
 which hangs from the picker as its list; a key beside the picker clears
 the pressed one, and plate.js lists up to two opened recently beside it
 on the same tape, and all of them at the head of the list;
-and the pressed one's candidates as manila tags on two rails
-of pinstripe tape: Vehicle's and Model year's, carried from the cards to
-the block on a narrow page (.carry), from the block down a lane into
-the picker (.drops), then down from it
-(.risers) and along (.rails) to each eyelet (ui.css). A tag's
+and the pressed one's candidates as manila tags. Two lines of pinstripe
+tape, Vehicle's and Model year's, are carried from the cards to the
+block on a narrow page (.carry) and come down from the block into the
+picker (.drops), where they end (ui.css). A tag's
 number is a strip of label tape across it; its rows are the catalog's
 words, verbatim; its marks are ink on it: a solid stamp checked, a dashed
 one not, plain words for what has nothing checked. Its bottom edge is its
@@ -293,7 +292,7 @@ own, which plate.js swaps in place (swap). */}}
 {{if .Invite}}<p class="blank"><span>Choose a part type to see what fits this vehicle.</span></p>
 {{end}}{{with .NoneFit}}<p class="blank"><span>{{.}}</span></p>
 {{end}}{{if .Tags}}<ol class="cands" aria-label="Candidates: {{.Pressed}}" tabindex="0">
-{{range .Tags}}<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+{{range .Tags}}<li class="cand"><div class="cand-in">
 <p class="numtape"><b class="num">{{.Number}}</b>{{with .Years}} <span class="yrs">{{.}}</span>{{end}}</p>
 <dl>
 {{with .Side}}<div><dt>Side</dt><dd>{{.}}</dd></div>
@@ -306,7 +305,7 @@ own, which plate.js swaps in place (swap). */}}
 </div></li>
 {{with .Panel}}{{template "stock-rows" .}}
 {{end}}{{end}}</ol>
-<span class="rails" aria-hidden="true"></span><span class="risers" aria-hidden="true"></span>
+
 {{end}}{{with .NoNumber}}<div class="nonum" id="stock-nonum" tabindex="-1">
 <h3 class="nonum-tape" id="{{.ID}}-h">{{$.NoNumberName}}</h3>
 <div class="receipt"><div class="stock-col">

@@ -146,6 +146,63 @@ func TestStockStrip(t *testing.T) {
 			tb.audit(name + ", 390 wide")
 			tb.window(1280, 900)
 
+			// Wide, each line into the vehicle's block is one piece: it
+			// starts where the stepped line under the cards ends, and ends
+			// on the block's top edge, not over the stamp inside it.
+			lines := measure[[]float64](tb, `(() => {
+				const strip = document.querySelector(".fitstrip").getBoundingClientRect(), joins = document.querySelector(".joins").getBoundingClientRect();
+				return [...document.querySelectorAll(".fitstrip .seg")].flatMap(seg => {
+					const line = getComputedStyle(seg, "::after"), top = seg.getBoundingClientRect().top + parseFloat(line.top);
+					return [top - joins.bottom, top + parseFloat(line.height) - strip.top];
+				});
+			})()`)
+			// Under the block, the Vehicle's and the Model year's lines
+			// come straight down from under their words into the picker's
+			// key, and end there: [each line's x past its word's middle,
+			// its bottom past the picker's top, the key's edges past it].
+			drops := measure[[]float64](tb, `(() => {
+				const fit = document.querySelector("#fit").getBoundingClientRect(), key = document.querySelector("#pick-type").getBoundingClientRect(), out = [];
+				for (const [group, pseudo] of [["vds", "::before"], ["year", "::after"]]) {
+					const word = document.querySelector(".fitstrip .seg.g-" + group).getBoundingClientRect(), line = getComputedStyle(document.querySelector("#fit .drops"), pseudo);
+					const x = fit.left + parseFloat(line.left) + 2.5;
+					out.push(x - (word.left + word.right) / 2, fit.bottom - parseFloat(line.bottom) - key.top, x - key.left, key.right - x);
+				}
+				return out;
+			})()`)
+			for i := 0; i+3 < len(drops); i += 4 {
+				if math.Abs(drops[i]) > 1.5 || drops[i+1] < -4 || drops[i+1] > 12 || drops[i+2] < 0 || drops[i+3] < 0 {
+					t.Errorf("1280 wide: the line to the picker is %v px off its word's middle, ends %v px past the picker's top, and is %v and %v px inside the key's edges; want it under its word and into the key", drops[i], drops[i+1], drops[i+2], drops[i+3])
+				}
+			}
+			if len(drops) != 8 || eval[int](tb, `document.querySelectorAll("#fit .rails, #fit .risers, #fit .hook").length`) != 0 {
+				t.Errorf("1280 wide: %d measures of the lines to the picker, or a line from the picker to the candidates; want two lines that end at the picker", len(drops))
+			}
+			// The picker's tape is as wide as the vehicle's block, and the
+			// candidates are one row hung from it: each tag's wire runs
+			// from the tape's bottom edge to the tag's eyelet.
+			hung := measure[[]float64](tb, `(() => {
+				const tape = document.querySelector(".ptsel").getBoundingClientRect(), block = document.querySelector(".fitstrip").getBoundingClientRect();
+				const tags = [...document.querySelectorAll(".cands > .cand")], tops = new Set(tags.map(t => Math.round(t.getBoundingClientRect().top)));
+				const wires = tags.map(t => { const w = getComputedStyle(t, "::after"), top = t.getBoundingClientRect().top + parseFloat(w.top); return [top - tape.bottom, top + parseFloat(w.height) - t.getBoundingClientRect().top]; });
+				return [tape.width - block.width, tags.length, tops.size, ...wires.flat()];
+			})()`)
+			if len(hung) < 5 || math.Abs(hung[0]) > 1 || hung[2] != 1 {
+				t.Fatalf("1280 wide: the picker's tape is %v px wider than the block, with %v candidates on %v rows; want the block's width and one row", hung[0], hung[1], hung[2])
+			}
+			for i := 3; i+1 < len(hung); i += 2 {
+				if math.Abs(hung[i]) > 3 || hung[i+1] < 8 || hung[i+1] > 20 {
+					t.Errorf("1280 wide: a candidate's wire starts %v px from the tape's bottom edge and ends %v px into its tag; want it from the tape to the eyelet", hung[i], hung[i+1])
+				}
+			}
+			if len(lines) != 6 {
+				t.Fatalf("1280 wide: %d measures of the block's lines; want 6, two of each of three", len(lines))
+			}
+			for i := 0; i < len(lines); i += 2 {
+				if lines[i] > 0.5 || lines[i+1] < 0 || lines[i+1] > 2 {
+					t.Errorf("1280 wide: line %d into the block starts %v px under the stepped lines and ends %v px into the block; want it to start at them and end on the block's top edge", i/2+1, lines[i], lines[i+1])
+				}
+			}
+
 			// Past ten rows, "Show all": every row, in place where scripts
 			// run.
 			rb := newTab(t, path, ramSrv.URL, ram, js)

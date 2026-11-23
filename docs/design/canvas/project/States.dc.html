@@ -91,16 +91,16 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 .card > h2 .pos{font-weight: 400; opacity: .9}
 .card .how{margin-top: .3rem; padding: .25rem .5rem; font: 700 10px var(--cell-font); letter-spacing: .08em; color: var(--on-tape); text-shadow: -1px -1px 0 rgb(8 7 15 / .5), 1px 1px 0 rgb(255 255 255 / .4), 0 0 3px rgb(255 255 255 / .55); background: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .16) 2px 3px), linear-gradient(color-mix(in srgb, var(--cm) 86%, #fff), var(--cm)); border: 1px solid color-mix(in srgb, var(--cm) 60%, #000); border-top-color: color-mix(in srgb, var(--cm) 68%, #fff); border-radius: 2px; box-shadow: var(--lift-raised)}
 .card .how:is(:active,.is-active){transform: translateY(2px); box-shadow: var(--pressed); background: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .16) 2px 3px), linear-gradient(color-mix(in srgb, var(--cm) 72%, #000), color-mix(in srgb, var(--cm) 84%, #000))}
-.aka{--lane: 3rem; position: relative; z-index: 3; margin: 0 0 0 var(--lane)}
+.aka{position: relative; z-index: 3; margin: 0}
 .aka:has(.nametags:is(:focus-visible,.is-fv)){outline: 3px solid var(--link); outline-offset: 2px}
 .nametags{list-style: none; display: flex; align-items: stretch; gap: 10px; margin: 0; padding: 36px 4px 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding-inline: 4px}
 .name{flex: none; scroll-snap-align: start; box-sizing: border-box; min-width: 11rem; max-width: min(40rem, 72vw); margin: 0; padding-bottom: .6rem}
 .nametags:is(:focus-visible,.is-fv){outline: 0}
 .nrows{display: grid; grid-template-rows: repeat(2, auto); grid-auto-flow: column; grid-auto-columns: max-content; justify-content: start; align-content: start; gap: 0 1.4rem}}
 .vp{@supports (animation-timeline: scroll()){
-.nametags{mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline)}}}
+.nametags, .cands{mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline)}}}
 .vp{
-.name::after{content: ""; position: absolute; left: calc(50% - 1px); top: -36px; width: 2px; height: 50px; background: var(--steel); pointer-events: none}
+.fitstrip ~ .aka .name::after{content: ""; position: absolute; left: calc(50% - 1px); top: -36px; width: 2px; height: 50px; background: var(--steel); pointer-events: none}
 .nrow{position: relative}
 .name .how{position: absolute; inset: 0; width: 100%; padding: 0; background: none; border: 0; box-shadow: none; cursor: pointer}
 .name .how:is(:hover,.is-hover), .name .how:is(:focus-visible,.is-fv){background: rgb(0 0 0 / .07)}
@@ -113,15 +113,17 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 .seg{position: relative; align-self: stretch; display: flex; align-items: center; justify-content: center; padding: .35rem .6rem; text-align: center; min-width: 0}
 .seg .w{font: 900 1.05rem/1.2 var(--cell-font); letter-spacing: .08em; text-shadow: var(--tape-emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere}
 .seg::after{content: ""; position: absolute; left: calc(50% - 2.5px); top: calc(-1px - var(--lead) - var(--prev)); height: calc(var(--lead) + var(--prev) + 1px); border-left: 5px solid var(--c); filter: var(--stripe-lift)}
-.fit{--rail-x: 3px; position: relative; isolation: isolate; display: flow-root; margin: 0 16px}
-.fitstrip{--lead: 30px; --prev: 0px; display: grid; grid-template-columns: 170fr 170fr 170fr 510fr; align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck)}
+.fit{position: relative; isolation: isolate; display: flow-root; margin: 0 16px}
+.fitstrip{--lead: 30px; --prev: 0px; --stamp-h: 1.5rem; display: grid; grid-template-columns: repeat(2, minmax(0, 6.6rem)) minmax(0, 1fr); align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck)}
 .fitstrip .stamp{align-self: stretch; display: flex; align-items: center; min-width: 0; margin: 0; padding: 0 .5rem 0 .7rem; border-right: 1px solid rgb(255 255 255 / .18); font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss)}
-.fitstrip .g-wmi{--cm: #ff6b81; grid-column: 1}
-.fitstrip .g-vds{--cm: #7db4ff; grid-column: 2}
-.fitstrip .g-year{--cm: #ffb067; grid-column: 3}
-.fitstrip .seg{grid-row: 2}
-.fitstrip .vfacts{grid-row: 2; grid-column: 4}
-.fitstrip .stamp{grid-row: 1; grid-column: 1 / -1; padding-block: .3rem; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18)}
+.fitstrip:has(.g-wmi){grid-template-columns: repeat(3, minmax(0, 6.6rem)) minmax(0, 1fr)}
+.fitstrip .g-wmi{--cm: #ff6b81}
+.fitstrip .g-vds{--cm: #7db4ff}
+.fitstrip .g-year{--cm: #ffb067}
+.fitstrip .seg{grid-row: 2; padding-inline: .3rem}
+.fitstrip .vfacts{grid-row: 2; grid-column: -2}
+.fitstrip .stamp{grid-row: 1; grid-column: 1 / -1; box-sizing: border-box; height: var(--stamp-h); padding-block: 0; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18)}
+.fitstrip .seg::after{top: calc(-1px - var(--lead) - var(--prev) - var(--stamp-h))}
 .vfacts{display: flex; flex-wrap: wrap; align-items: center; gap: 4px 22px; min-width: 0; margin: 0; padding: .45rem .7rem; border-left: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss)}
 .vfacts dt{font-size: 11px; line-height: 1.2; letter-spacing: .04em; text-transform: uppercase; color: #aeb7c0; text-shadow: none}
 .vfacts dd{margin: 0; font: 900 .95rem/1.25 var(--cell-font); letter-spacing: .06em}
@@ -130,21 +132,21 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 .vc b{width: 100%; text-align: center; border-bottom: 3px solid #7db4ff}
 .vc small{font: 400 10px/1.3 var(--cell-font); letter-spacing: 0; color: #aeb7c0; text-shadow: none}
 .ptwrap{position: relative; z-index: 3; margin: 30px 0 0}
-.ptsel{display: flex; flex-wrap: wrap; align-items: stretch; gap: 6px 12px; box-sizing: border-box; width: fit-content; max-width: 100%; padding: 5px 6px; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck)}
-.ptkeys{position: relative; flex: none; display: flex; align-items: stretch; gap: 6px; width: 24rem; max-width: 100%; anchor-name: --pick-type}
-.ptkeys::before{content: ""; position: absolute; inset: 0 auto 0 0; width: 3rem; pointer-events: none; anchor-name: --fit-part}
+.ptsel{display: grid; grid-template-columns: fit-content(100%) minmax(0, 1fr); gap: 6px; box-sizing: border-box; padding: 5px 6px; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck)}
+.ptkeys{grid-column: 1; display: flex; align-items: stretch; gap: 6px; min-width: min(24rem, 100%); anchor-name: --fit-part, --pick-type}
 .ptfield{--key: var(--alu); flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: .5rem; align-items: center; min-height: 44px; padding: .25rem .6rem; text-align: left; text-transform: none; letter-spacing: 0}
 .ptfield .plab{grid-column: 1 / -1; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase}
 .ptfield .nm{min-width: 0; font: 900 16px/1.2 var(--cell-font); letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
 .ptfield .n{padding: 1px 7px; border: 1px solid rgb(35 41 48 / .55); border-radius: 9px; font: 900 11px var(--cell-font); text-shadow: none}
 .ptfield svg{width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round}
-.ptrecents{list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0 2px 0 12px; border-left: 1px solid rgb(255 255 255 / .18)}
+.ptrecents{grid-column: 1; min-width: 0; max-height: 44px; overflow: hidden; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0 2px}
 .ptrecents[hidden]{display: none}
 .ptrecents::before{content: "Recent"; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss)}
 .ptgroups:has(> .ptgroup:only-child:not(:has(.pthead))){grid-template-columns: minmax(0, 1fr)}
 :is(.fit, .part, .choice) .blank{display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; box-sizing: border-box; min-height: 46px; margin: 30px 0 0; padding: .5rem .75rem; color: var(--muted); border: 3px dashed var(--faint); border-radius: 2px}
 .choice{margin: 0 16px}
 .fit .ptwrap ~ .blank{margin-top: 14px}
+.fit{--tag: calc((100% - 2 * 12px - 8px) / 3)}
 .cand-in{position: relative; isolation: isolate; display: flex; flex-direction: column; box-sizing: border-box; height: 100%; padding: 28px .7rem .8rem; overflow-wrap: anywhere; color: var(--on-manila); filter: drop-shadow(0 4px 5px rgb(8 7 15 / .28))}
 .numtape{display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0 .5rem; margin: 0 -.7rem .6rem; padding: .3rem .7rem; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 3px solid var(--tape-edge)}
 .numtape .num{font: 900 18px var(--cell-font); letter-spacing: .06em}
@@ -158,8 +160,18 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 .stk svg{flex: none; width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5}
 .stk:not(.none):is(:active,.is-active), .stk[aria-expanded=true]{transform: none; padding-top: 2px; background: var(--alu-in); border-bottom-width: 1px; box-shadow: var(--pressed)}
 .vehicles{background: var(--card-bg); border: 2px solid var(--steel); border-radius: 4px; box-shadow: 0 3px 0 var(--steel-dark), 0 8px 16px rgb(0 0 0 / .25)}
-.drops, .carry{display: none}
+} .drops, .carry{display: none}
+.fit{--xm: 3.3rem; --xv: 3.3rem; --xy: 9.9rem}
+.fit:has(.fitstrip .g-wmi){--xv: 9.9rem; --xy: 16.5rem}
 .fitstrip{anchor-name: --fit-strip}
+.fitstrip, .fitstrip:has(.g-wmi){grid-template-columns: 170fr 170fr 170fr 510fr}
+.fitstrip .g-wmi{grid-column: 1}
+.fitstrip .g-vds{grid-column: 2}
+.fitstrip .g-year{grid-column: 3}
+.fit, .fit:has(.fitstrip .g-wmi){--xm: 8.333%; --xv: 25%; --xy: 41.667%}
+.ptsel{display: flex; gap: 12px}
+.ptkeys{flex: none; width: 20rem; min-width: 0; margin-left: calc(16.667% + 2px)}
+.ptrecents{flex: 0 1 auto; padding-left: 12px; border-left: 1px solid rgb(255 255 255 / .18)}
 .modes{display: inline-flex; margin: 0 0 14px}
 .mode{--key: var(--metal); display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 34px; padding: 0 1rem 0 1.6rem; font: 900 11px var(--label-font); letter-spacing: .1em; text-transform: uppercase; text-decoration: none; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); border: 1px solid var(--steel); box-shadow: var(--raised); background: radial-gradient(circle at .8rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--key)}
 .mode:first-child{border-radius: 3px 0 0 3px}
@@ -220,7 +232,7 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 
 </style>
 </helmet>
-<div class="root sheet" data-scheme="light" style="width: 1280px; height: 3890px; color: var(--fg); background: var(--bg)">
+<div class="root sheet" data-scheme="light" style="width: 1280px; height: 3960px; color: var(--fg); background: var(--bg)">
 <div><h1 class="sh-h1">States</h1><p class="sh-intro">Where the page has no answer, the place stays, as a blank strip: a dashed outline with one sentence. A control in it is a key of metal; a way on is a link.</p></div>
 <h2 class="sh-h2">VIN mode</h2>
 <section>
@@ -633,7 +645,7 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 </section>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3890}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3960}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};

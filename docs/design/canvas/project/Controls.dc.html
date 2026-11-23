@@ -96,16 +96,16 @@ table.sum td{text-align: center; padding: .2rem .45rem}
 table.sum .skip{color: var(--muted)}
 .problems{margin: .75rem 20px 0; color: var(--bad)}
 .problems p{margin: .2rem 0}
-.aka{--lane: 3rem; position: relative; z-index: 3; margin: 0 0 0 var(--lane)}
+.aka{position: relative; z-index: 3; margin: 0}
 .aka:has(.nametags:is(:focus-visible,.is-fv)){outline: 3px solid var(--link); outline-offset: 2px}
 .nametags{list-style: none; display: flex; align-items: stretch; gap: 10px; margin: 0; padding: 36px 4px 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding-inline: 4px}
 .name{flex: none; scroll-snap-align: start; box-sizing: border-box; min-width: 11rem; max-width: min(40rem, 72vw); margin: 0; padding-bottom: .6rem}
 .nametags:is(:focus-visible,.is-fv){outline: 0}
 .nrows{display: grid; grid-template-rows: repeat(2, auto); grid-auto-flow: column; grid-auto-columns: max-content; justify-content: start; align-content: start; gap: 0 1.4rem}}
 .vp{@supports (animation-timeline: scroll()){
-.nametags{mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline)}}}
+.nametags, .cands{mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline)}}}
 .vp{
-.name::after{content: ""; position: absolute; left: calc(50% - 1px); top: -36px; width: 2px; height: 50px; background: var(--steel); pointer-events: none}
+.fitstrip ~ .aka .name::after{content: ""; position: absolute; left: calc(50% - 1px); top: -36px; width: 2px; height: 50px; background: var(--steel); pointer-events: none}
 .nrow{position: relative}
 .name .how{position: absolute; inset: 0; width: 100%; padding: 0; background: none; border: 0; box-shadow: none; cursor: pointer}
 .name .how:is(:hover,.is-hover), .name .how:is(:focus-visible,.is-fv){background: rgb(0 0 0 / .07)}
@@ -118,15 +118,17 @@ table.sum .skip{color: var(--muted)}
 .seg .w{font: 900 1.05rem/1.2 var(--cell-font); letter-spacing: .08em; text-shadow: var(--tape-emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere}
 .seg::after{content: ""; position: absolute; left: calc(50% - 2.5px); top: calc(-1px - var(--lead) - var(--prev)); height: calc(var(--lead) + var(--prev) + 1px); border-left: 5px solid var(--c); filter: var(--stripe-lift)}
 .note.popover{box-sizing: border-box; max-width: min(30rem, calc(var(--vw) - 2rem)); padding: .75rem 1rem; border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .4)}
-.fit{--rail-x: 3px; position: relative; isolation: isolate; display: flow-root; margin: 0 16px}
-.fitstrip{--lead: 30px; --prev: 0px; display: grid; grid-template-columns: 170fr 170fr 170fr 510fr; align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck)}
+.fit{position: relative; isolation: isolate; display: flow-root; margin: 0 16px}
+.fitstrip{--lead: 30px; --prev: 0px; --stamp-h: 1.5rem; display: grid; grid-template-columns: repeat(2, minmax(0, 6.6rem)) minmax(0, 1fr); align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck)}
 .fitstrip .stamp{align-self: stretch; display: flex; align-items: center; min-width: 0; margin: 0; padding: 0 .5rem 0 .7rem; border-right: 1px solid rgb(255 255 255 / .18); font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss)}
-.fitstrip .g-wmi{--cm: #ff6b81; grid-column: 1}
-.fitstrip .g-vds{--cm: #7db4ff; grid-column: 2}
-.fitstrip .g-year{--cm: #ffb067; grid-column: 3}
-.fitstrip .seg{grid-row: 2}
-.fitstrip .vfacts{grid-row: 2; grid-column: 4}
-.fitstrip .stamp{grid-row: 1; grid-column: 1 / -1; padding-block: .3rem; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18)}
+.fitstrip:has(.g-wmi){grid-template-columns: repeat(3, minmax(0, 6.6rem)) minmax(0, 1fr)}
+.fitstrip .g-wmi{--cm: #ff6b81}
+.fitstrip .g-vds{--cm: #7db4ff}
+.fitstrip .g-year{--cm: #ffb067}
+.fitstrip .seg{grid-row: 2; padding-inline: .3rem}
+.fitstrip .vfacts{grid-row: 2; grid-column: -2}
+.fitstrip .stamp{grid-row: 1; grid-column: 1 / -1; box-sizing: border-box; height: var(--stamp-h); padding-block: 0; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18)}
+.fitstrip .seg::after{top: calc(-1px - var(--lead) - var(--prev) - var(--stamp-h))}
 .vfacts{display: flex; flex-wrap: wrap; align-items: center; gap: 4px 22px; min-width: 0; margin: 0; padding: .45rem .7rem; border-left: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss)}
 .vfacts dt{font-size: 11px; line-height: 1.2; letter-spacing: .04em; text-transform: uppercase; color: #aeb7c0; text-shadow: none}
 .vfacts dd{margin: 0; font: 900 .95rem/1.25 var(--cell-font); letter-spacing: .06em}
@@ -139,16 +141,15 @@ table.sum .skip{color: var(--muted)}
 .ptype:is(:active,.is-active), .ptype[aria-current]{transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed)}
 .ptype .n{flex: none}
 .ptwrap{position: relative; z-index: 3; margin: 30px 0 0}
-.ptsel{display: flex; flex-wrap: wrap; align-items: stretch; gap: 6px 12px; box-sizing: border-box; width: fit-content; max-width: 100%; padding: 5px 6px; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck)}
-.ptkeys{position: relative; flex: none; display: flex; align-items: stretch; gap: 6px; width: 24rem; max-width: 100%; anchor-name: --pick-type}
-.ptkeys::before{content: ""; position: absolute; inset: 0 auto 0 0; width: 3rem; pointer-events: none; anchor-name: --fit-part}
+.ptsel{display: grid; grid-template-columns: fit-content(100%) minmax(0, 1fr); gap: 6px; box-sizing: border-box; padding: 5px 6px; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck)}
+.ptkeys{grid-column: 1; display: flex; align-items: stretch; gap: 6px; min-width: min(24rem, 100%); anchor-name: --fit-part, --pick-type}
 .ptfield{--key: var(--alu); flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: .5rem; align-items: center; min-height: 44px; padding: .25rem .6rem; text-align: left; text-transform: none; letter-spacing: 0}
 .ptfield .plab{grid-column: 1 / -1; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase}
 .ptfield .nm{min-width: 0; font: 900 16px/1.2 var(--cell-font); letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
 .ptfield .n{padding: 1px 7px; border: 1px solid rgb(35 41 48 / .55); border-radius: 9px; font: 900 11px var(--cell-font); text-shadow: none}
 .ptfield svg{width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round}
 .fit:has(#part-types.is-open) .ptfield{--key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed)}
-.ptrecents{list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0 2px 0 12px; border-left: 1px solid rgb(255 255 255 / .18)}
+.ptrecents{grid-column: 1; min-width: 0; max-height: 44px; overflow: hidden; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0 2px}
 .ptrecents[hidden]{display: none}
 .ptrecents .ptype{min-height: 38px; padding-inline: 10px; font-size: 13px}
 .ptrecents::before{content: "Recent"; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss)}
@@ -171,7 +172,21 @@ table.sum .skip{color: var(--muted)}
 .fit .ptlist{flex-direction: column; flex-wrap: nowrap; gap: 6px; padding: 0}
 .fit .ptlist .ptype{display: flex; justify-content: space-between}}}
 .vp{
-.fitstrip{anchor-name: --fit-strip}
+.fit{--tag: calc((100% - 2 * 12px - 8px) / 3)}
+} .drops, .carry{display: none}
+.fit{--xm: 3.3rem; --xv: 3.3rem; --xy: 9.9rem}
+.fit:has(.fitstrip .g-wmi){--xv: 9.9rem; --xy: 16.5rem}
+.fitstrip{anchor-name: --fit-strip}}
+.vp-wide{
+.fitstrip, .fitstrip:has(.g-wmi){grid-template-columns: 170fr 170fr 170fr 510fr}
+.fitstrip .g-wmi{grid-column: 1}
+.fitstrip .g-vds{grid-column: 2}
+.fitstrip .g-year{grid-column: 3}
+.fit, .fit:has(.fitstrip .g-wmi){--xm: 8.333%; --xv: 25%; --xy: 41.667%}
+.ptsel{display: flex; gap: 12px}
+.ptkeys{flex: none; width: 20rem; min-width: 0; margin-left: calc(16.667% + 2px)}
+.ptrecents{flex: 0 1 auto; padding-left: 12px; border-left: 1px solid rgb(255 255 255 / .18)}}
+.vp{
 .part-form, .part-answer{--plate-pad: 16px}
 .part{margin: 0 var(--plate-pad)}
 .menu.popover{inset: auto; top: 3.6rem; right: max(1rem, calc((var(--vw) - 62rem) / 2)); margin: 0; box-sizing: border-box; width: min(19rem, calc(var(--vw) - 2rem)); max-height: calc(var(--vh) - 5rem); overflow: auto; padding: .75rem; border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .4)}}
@@ -205,7 +220,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}
 .sheet .vp .name .note.is-open{position:absolute !important;top:calc(100% + 10px) !important;left:0 !important;width:26rem;z-index:2}
 </style>
 </helmet>
-<div class="root sheet" data-scheme="light" style="width: 1280px; height: 4950px; color: var(--fg); background: var(--bg)">
+<div class="root sheet" data-scheme="light" style="width: 1280px; height: 4970px; color: var(--fg); background: var(--bg)">
 <div><h1 class="sh-h1">Dialogs, forms and inputs</h1><p class="sh-intro">Everything behind a button is a popover. A dialog is a panel under a head of metal; a menu hangs from its button; a note has no head.</p></div>
 <h2 class="sh-h2">Dialogs</h2>
 <section>
@@ -662,7 +677,7 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 </section>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":4950}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":4970}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};
