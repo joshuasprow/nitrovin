@@ -29,25 +29,23 @@ body{margin:0}
 a{color: var(--link)}
 header, main, #ui-error{max-width: 62rem; margin-inline: auto}
 header{display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; margin-bottom: 1.5rem}
-nav.top{display: contents}
-nav.top button{order: 2}
-header .version{order: 1; margin-right: auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis}
-.open-nav{display: none}
-nav.top button{padding: .35rem .8rem .35rem 1.4rem; background: radial-gradient(circle at .7rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--key)}
-nav.top .open-vins{anchor-name: --vins}
-nav.top .open-vins::after{content: " ▾"}
+header .open-vocabularies{margin-left: auto}
+.open-vocabularies, .open-vins, .open-developers{padding: .35rem .8rem .35rem 1.4rem; white-space: nowrap; background: radial-gradient(circle at .7rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--key)}
+.open-vins{flex: none; min-height: 34px; anchor-name: --vins}
+.open-vins::after{content: " ▾"}
 #update-now{display: none; order: 1; padding: .35rem .8rem .35rem 1.5rem; white-space: nowrap; background: radial-gradient(circle at .75rem 50%, #fff3c4 0 1.5px, var(--lamp) 2px 3.5px, #7a5200 4px 4.5px, transparent 5px), var(--key); box-shadow: var(--raised), 0 0 0 2px var(--lamp), 0 0 12px 2px rgb(255 179 0 / .55)}
 #update-now:is(:active,.is-active), #update-now:disabled{--key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed), 0 0 0 2px var(--lamp)}
-&:not(:has(#vins)) nav.top .open-vins, &:not(:has(#developers)) nav.top .open-developers{display: none}
+&:not(:has(#developers)) .open-developers{display: none}
+footer{display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; max-width: 62rem; margin: 2.5rem auto 0; padding-top: 1rem; border-top: 1px solid var(--line)}
 header a.brand{padding: .2rem 1.5rem; font: 900 13px var(--label-font); letter-spacing: .22em; text-transform: uppercase; text-decoration: none; color: var(--on-metal); text-shadow: var(--emboss); border: 1px solid var(--steel); border-radius: 3px; box-shadow: inset 0 1px 0 #fff, 0 2px 0 var(--steel); background: radial-gradient(circle at .65rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), radial-gradient(circle at calc(100% - .65rem) 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--metal)}
-header .version, header .version a{font: 600 11px var(--cell-font); letter-spacing: .04em; text-transform: uppercase; color: var(--muted)}
+footer .version, footer .version a{font: 600 11px var(--cell-font); letter-spacing: .04em; text-transform: uppercase; color: var(--muted)}
 h2{font-size: 1.1rem; margin: 1.5rem 0 .5rem}
 h3{font: 900 12px var(--label-font); letter-spacing: .08em; text-transform: uppercase; margin: 1.5rem 0 .5rem; padding-bottom: .2rem; border-bottom: 3px solid var(--c-vds)}
 a:is(:focus-visible,.is-fv), button:is(:focus-visible,.is-fv), summary:is(:focus-visible,.is-fv), input:is(:focus-visible,.is-fv), pre:is(:focus-visible,.is-fv), .hang:is(:focus-visible,.is-fv){outline: 3px solid var(--link); outline-offset: 2px}
 code, pre, .mono{font-family: var(--cell-font)}
 .visually-hidden, .plbl{position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap}
 button{--key: var(--metal); font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase; padding: .45rem .9rem; cursor: pointer; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); background: var(--key); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised)}
-button:is(:active,.is-active), button[aria-pressed=true], &:has(#vins.is-open) .open-vins, &:has(nav.top.is-open) .open-nav{--key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed)}
+button:is(:active,.is-active), button[aria-pressed=true], &:has(#vins.is-open) .open-vins{--key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed)}
 label{font-weight: 600}
 table{border-collapse: collapse; width: 100%}
 th, td{text-align: left; vertical-align: top; padding: .3rem .75rem .3rem 0; border-bottom: 1px solid var(--line)}
@@ -230,7 +228,8 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 .ptsel{display: flex; gap: 12px}
 .ptkeys{flex: none; width: 20rem; min-width: 0; margin-left: calc(16.667% + 2px)}
 .ptrecents{flex: 0 1 auto; padding-left: 12px; border-left: 1px solid rgb(255 255 255 / .18)}
-.modes{display: inline-flex; margin: 0 0 14px}
+.moderow{display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; margin: 0 0 14px}
+.modes{display: inline-flex}
 .mode{--key: var(--metal); display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 34px; padding: 0 1rem 0 1.6rem; font: 900 11px var(--label-font); letter-spacing: .1em; text-transform: uppercase; text-decoration: none; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); border: 1px solid var(--steel); box-shadow: var(--raised); background: radial-gradient(circle at .8rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--key)}
 .mode:first-child{border-radius: 3px 0 0 3px}
 .mode + .mode{margin-left: -1px; border-radius: 0 3px 3px 0}
@@ -253,29 +252,26 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 
 </style>
 </helmet>
-<div class="root sheet" data-scheme="dark" style="width: 1280px; height: 3310px; color: var(--fg); background: var(--bg)">
+<div class="root sheet" data-scheme="dark" style="width: 1280px; height: 3400px; color: var(--fg); background: var(--bg)">
 <div><h1 class="sh-h1">Materials and elevation</h1><p class="sh-intro">Four materials, the same in both colour schemes: brushed aluminum, vinyl tape, manila and thermal paper. Three heights: static tape is stuck on; a control stands raised on a steel ledge; pressed, it sits flush, 2px down and darker.</p></div>
 <h2 class="sh-h2">Aluminum</h2>
 <section>
-<p class="sh-cap">Plates and keys <span>The brand is a static plate. A button is a key of the same metal, raised; Developers is shown pressed, as is the VIN key of the switch.</span></p>
+<p class="sh-cap">Plates and keys <span>The brand is a static plate. A button is a key of the same metal, raised; Vocabularies is shown pressed, as is the VIN key of the switch. VINs ends the row over the plate, and Developers and the release are the foot.</span></p>
 <div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px">
 
 <header>
 <a class="brand" href="#">nitrovin</a>
 <button id="update-now" type="button">Update now</button>
-<button class="open-nav" aria-label="Menu" type="button"></button>
-<nav class="top popover" id="nav-menu" aria-label="Page">
-<button class="open-vins" type="button">VINs</button>
-<button class="open-vocabularies" type="button">Vocabularies</button>
-<button class="open-developers is-active" type="button">Developers</button>
-<small class="version">(devel) · data 2026_11</small>
-</nav>
+<button class="open-vocabularies is-active" type="button">Vocabularies</button>
 </header>
 <main id="ui-main">
 <div id="lookup" class="stage lookup">
+<div class="moderow">
 <nav class="modes" aria-label="Look up by">
 <a class="mode" href="#" aria-current="true">VIN</a><a class="mode" href="#">Part number</a>
 </nav>
+<button class="open-vins" type="button">VINs</button>
+</div>
 <form id="vin-form" class="plate-form live" aria-label="Decode a VIN" data-vin="1FTEW1EG7FFA12345">
 <div class="stage">
 <div class="labels" aria-hidden="true">
@@ -314,6 +310,10 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 </form>
 </div>
 </main>
+<footer>
+<button class="open-developers" type="button">Developers</button>
+<small class="version">(devel) · data 2026_11</small>
+</footer>
 
 </div>
 </section>
@@ -555,7 +555,7 @@ ol.years li.current{color: var(--on-manila); font-weight: 700}
 </section>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3310}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3400}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};

@@ -74,20 +74,17 @@ body { --bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint:
 a { color: var(--link); }
 header, main, #ui-error { max-width: 62rem; margin-inline: auto; }
 header { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; margin-bottom: 1.5rem; }
-/* The header's buttons, at its far end: small tags, a rivet each. They
-   and the release are the header's nav, a popover (ui.html). In a wide
-   window the nav has no box of its own: its contents are the header's,
-   the release beside the brand and the buttons at the far end. Where they
-   would wrap (46rem, below) the nav is a menu behind the Menu button. */
-nav.top { display: contents; }
-nav.top button { order: 2; }
-header .version { order: 1; margin-right: auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.open-nav { display: none; }
-nav.top button { padding: .35rem .8rem .35rem 1.4rem;
+/* The page's keys, each where it belongs, the same at every width: no
+   menu holds them and no row of them scrolls. Vocabularies is the
+   header's, at its far end. VINs is the plate's, beside the mode switch
+   over it (.moderow). Developers and the release are the page's foot.
+   Each is a small tag with a rivet. */
+header .open-vocabularies { margin-left: auto; }
+.open-vocabularies, .open-vins, .open-developers { padding: .35rem .8rem .35rem 1.4rem; white-space: nowrap;
   background: radial-gradient(circle at .7rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--key); }
-nav.top .open-vins { anchor-name: --vins; }
-nav.top .open-vins::after { content: " ▾"; }
-/* Update now, beside the brand at every width and never in the menu: a
+.open-vins { flex: none; min-height: 34px; anchor-name: --vins; }
+.open-vins::after { content: " ▾"; }
+/* Update now, beside the brand at every width: a
    key like the header's others, its rivet a lit lamp and a ring of the
    lamp's light around it. It shows only while vocab.js says a new release
    is there (the document's data-update). */
@@ -96,16 +93,18 @@ nav.top .open-vins::after { content: " ▾"; }
   box-shadow: var(--raised), 0 0 0 2px var(--lamp), 0 0 12px 2px rgb(255 179 0 / .55); }
 :root[data-update] #update-now { display: inline-block; }
 #update-now:active, #update-now:disabled { --key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed), 0 0 0 2px var(--lamp); }
-/* A button shows only where what it opens is: the VINs menu and the
-   Developers dialog are the decoder's, not a vocabulary's list's. */
-body:not(:has(#vins)) nav.top .open-vins, body:not(:has(#developers)) nav.top .open-developers { display: none; }
+/* A button shows only where what it opens is: the Developers dialog is
+   the decoder's, not a vocabulary's list's. */
+body:not(:has(#developers)) .open-developers { display: none; }
+/* The foot: Developers and the release, under a rule. */
+footer { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; max-width: 62rem; margin: 2.5rem auto 0; padding-top: 1rem; border-top: 1px solid var(--line); }
 /* The brand is a small plate of its own, a rivet at each end. It is
    static, not a key: its edge is the metal's, with no ledge or shadow,
    so the header's keys stand higher than it. */
 header a.brand { padding: .2rem 1.5rem; font: 900 13px var(--label-font); letter-spacing: .22em; text-transform: uppercase; text-decoration: none; color: var(--on-metal); text-shadow: var(--emboss);
   border: 1px solid var(--steel); border-radius: 3px; box-shadow: inset 0 1px 0 #fff, 0 2px 0 var(--steel);
   background: radial-gradient(circle at .65rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), radial-gradient(circle at calc(100% - .65rem) 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--metal); }
-header .version, header .version a { font: 600 11px var(--cell-font); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+footer .version, footer .version a { font: 600 11px var(--cell-font); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
 h1 { font: 900 1.3rem var(--label-font); letter-spacing: .04em; text-transform: uppercase; margin: .5rem 0; }
 h2 { font-size: 1.1rem; margin: 1.5rem 0 .5rem; }
 h3 { font: 900 12px var(--label-font); letter-spacing: .08em; text-transform: uppercase; margin: 1.5rem 0 .5rem; padding-bottom: .2rem; border-bottom: 3px solid var(--c-vds); }
@@ -121,7 +120,7 @@ code, pre, .mono { font-family: var(--cell-font); }
    menu it opens hangs from it. */
 button { --key: var(--metal); font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase; padding: .45rem .9rem; cursor: pointer;
   color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); background: var(--key); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised); }
-button:active, button[aria-pressed=true], body:has(#vins:popover-open) .open-vins, body:has(nav.top:popover-open) .open-nav { --key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed); }
+button:active, button[aria-pressed=true], body:has(#vins:popover-open) .open-vins { --key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed); }
 input[type=text], input[type=search] { font: inherit; padding: .35rem .5rem; box-sizing: border-box; color: var(--fg); background: var(--card-bg); border: 1px solid var(--steel); border-radius: 2px; box-shadow: inset 0 2px 3px rgb(0 0 0 / .18); }
 label { font-weight: 600; }
 
@@ -683,7 +682,10 @@ table.sum .skip { color: var(--muted); }
    half, on a narrow page), its rows under it, beside the page's own table
    of its vehicles. Nothing is measured: the line's ends are where the
    grid puts the bracket and the eyelet, each width its own path. */
-.modes { display: inline-flex; margin: 0 0 14px; }
+/* The mode switch and VINs share a row over the plate: the switch at its
+   start, VINs at its end. */
+.moderow { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; margin: 0 0 14px; }
+.modes { display: inline-flex; }
 .mode { --key: var(--metal); display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 34px; padding: 0 1rem 0 1.6rem; font: 900 11px var(--label-font); letter-spacing: .1em; text-transform: uppercase; text-decoration: none; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8);
   border: 1px solid var(--steel); box-shadow: var(--raised); background: radial-gradient(circle at .8rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--key); }
 .mode:first-child { border-radius: 3px 0 0 3px; }
@@ -762,8 +764,8 @@ table.sum .skip { color: var(--muted); }
    runs straight down from the plate's bracket to the tag, which the
    vehicles follow. */
 @media (width <= 34rem) {
-  .modes { display: flex; }
-  .mode { flex: 1; }
+  .modes { display: flex; flex: 1; min-width: 0; }
+  .mode { flex: 1; white-space: nowrap; padding: 0 .7rem 0 1.4rem; }
   .plabels { display: none; }
   .pplate, .punder, .pgrid { grid-template-columns: minmax(0, 1fr); }
   .pplate { row-gap: 12px; }
@@ -798,28 +800,6 @@ button.linkish { border: 0; background: none; box-shadow: none; padding: 0 .25re
 button.linkish:active { transform: none; box-shadow: none; }
 .menu .linkish { display: block; margin: .6rem auto 0; }
 .menu .linkish[hidden] { display: none; }
-
-/* The header's menu, where its buttons would wrap: the Menu button, a
-   key of the plate's metal with three bars struck in it, and behind it the
-   nav as a panel hung from the button, a note's panel: the buttons a
-   column, the release under them past a rule. The column is blocks, not
-   a grid: Safari stretches a grid in an anchored popover to the window's
-   foot. The VINs menu and the
-   dialogs open from inside it, as popovers of a popover. */
-@media (max-width: 46rem) {
-  .open-nav { display: block; order: 3; margin-left: auto; width: 2.75rem; height: 2rem; padding: 0; anchor-name: --nav;
-    background: linear-gradient(var(--on-metal), var(--on-metal)) 50% calc(50% - 5px) / 1.1rem 2px no-repeat, linear-gradient(var(--on-metal), var(--on-metal)) 50% 50% / 1.1rem 2px no-repeat,
-      linear-gradient(var(--on-metal), var(--on-metal)) 50% calc(50% + 5px) / 1.1rem 2px no-repeat, var(--key); }
-  nav.top { display: none; }
-  nav.top:popover-open { display: block; inset: auto; height: fit-content; top: 3.6rem; right: max(.5rem, calc((100vw - 62rem) / 2)); margin: 0; box-sizing: border-box; width: min(16rem, calc(100vw - 1rem)); padding: .75rem;
-    border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .4); }
-  @supports (top: anchor(bottom)) {
-    nav.top:popover-open { position-anchor: --nav; top: calc(anchor(bottom) + .4rem); right: anchor(right); }
-  }
-  nav.top::backdrop { background: transparent; }
-  nav.top button { display: block; width: 100%; margin: 0 0 .5rem; text-align: left; }
-  nav.top .version { display: block; margin: .25rem 0 0; padding-top: .6rem; border-top: 1px solid var(--line); white-space: normal; overflow-wrap: anywhere; }
-}
 
 /* Motion: a group just completed draws its bracket and line in and pops
    its card; a character stamps into its cell. None of it for a visitor
@@ -1001,3 +981,9 @@ button.linkish:active { transform: none; box-shadow: none; }
   .live .cell.he::after { right: -11px; top: 0; bottom: -16px;
     background: radial-gradient(circle at 50% calc(100% - 9px), var(--link) 0 8px, transparent 8.5px), linear-gradient(var(--link), var(--link)) 50% 0 / 3px 100% no-repeat; }
 }
+
+/* A row of the VINs menu is two lines: a vehicle, and under it the part
+   type that was open on it or the yard's count. */
+a.example b { display: block; font: inherit; }
+a.example small { display: block; margin-top: 1px; font: 600 10.5px var(--cell-font); letter-spacing: .02em; color: #3a444e; text-transform: none; white-space: normal; }
+.menu[popover] { overflow-x: hidden; }

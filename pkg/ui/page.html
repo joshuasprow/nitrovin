@@ -27,13 +27,17 @@ a fixed grid of 17 columns. */}}
 <div id="dev">{{template "developers" .}}</div>
 {{- end}}
 
-{{/* modes is the plate's switch: two keys of metal, joined, each a link
-to the page in its mode with nothing on the plate, the mode the page is
-in pressed (aria-current). */}}
+{{/* modes is the row over the plate. Its switch is two keys of metal,
+joined, each a link to the page in its mode with nothing on the plate, the
+mode the page is in pressed (aria-current). At its end is the VINs button,
+which opens the menu of what to try (chips). */}}
 {{define "modes" -}}
+<div class="moderow">
 <nav class="modes" aria-label="Look up by">
 <a class="mode" href="/"{{if not .Part}} aria-current="true"{{end}}>VIN</a><a class="mode" href="{{.PartMode}}"{{if .Part}} aria-current="true"{{end}}>Part number</a>
 </nav>
+<button type="button" class="open-vins" popovertarget="vins">VINs</button>
+</div>
 {{- end}}
 
 {{/* part-plate is the plate in part-number mode (part.go): the same
@@ -414,14 +418,17 @@ data-spine is the spine plate.js keeps them by. */}}
 </dialog>
 {{- end}}
 
-{{/* chips are what to try, the menu the header's VINs button opens (a
+{{/* chips are what to try, the menu the plate's VINs button opens (a
 popover, so it opens without a script): the recent VINs of this browser,
 which plate.js draws in place of the examples once it has any, and
 Surprise me. */}}
 {{define "chips" -}}
 <div id="vins" class="menu" popover aria-label="VINs to try">
 <ul id="recent" class="examples" aria-label="Recent" hidden></ul>
-<ul id="examples" class="examples" aria-label="Examples">
+{{with .Stocked}}<ul id="stocked" class="examples" aria-label="In stock">
+{{range .}}<li><a class="example stocked" href="{{.Href}}"><b>{{.Label}}</b><small>{{.Counts}}</small></a></li>
+{{end}}</ul>
+{{end}}<ul id="examples" class="examples" aria-label="Examples">
 {{range .Examples}}<li><a class="example" href="{{.Href}}" title="{{.Hint}}">{{.Label}}</a></li>
 {{end}}</ul>
 <a class="example surprise" href="/?surprise">Surprise me</a>

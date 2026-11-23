@@ -108,8 +108,8 @@ func TestLibraryDemoFit(t *testing.T) {
 			vins = append(vins, it["vin"].(string))
 		}
 	}
-	if len(s.posts) != 1 || len(vins) != 9 {
-		t.Errorf("%d POSTs of %d VINs; want the yard's 9 VINs in one", len(s.posts), len(vins))
+	if len(s.posts) != 1 || len(vins) != 20 {
+		t.Errorf("%d POSTs of %d VINs; want the yard's 20 VINs in one", len(s.posts), len(vins))
 	}
 	for _, field := range []string{"DEMO-Y-", "DEMO-S-", "stock_number", "demo-north"} {
 		if strings.Contains(string(bytes.Join(s.posts, nil))+strings.Join(s.gets, " "), field) {

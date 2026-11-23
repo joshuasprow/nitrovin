@@ -1,12 +1,10 @@
-{{/* The layout. The header
-is the brand, the release and the data month, and on a page with the
-Vocabularies dialog its buttons, each opening a popover. The buttons and
-the release are the header's nav, itself a popover: a wide window shows
-its contents in the header's row, and a narrow one keeps them behind the
-Menu button, the release under the buttons. The buttons are VINs, the menu of what to try (page.html's chips);
-Vocabularies, its dialog here beside the main (VocabDialog, page.html's
-vocab-dialog); and Developers, its dialog in the page's own fragment
-(decode.html's developers). The main is what htmx fills and restores
+{{/* The layout. The header is the brand and, on a page with the
+Vocabularies dialog, Update now (hidden until vocab.js has an update) and
+the Vocabularies button, its dialog here beside the main (VocabDialog,
+page.html's vocab-dialog). The foot is the Developers button, its dialog
+in the page's own fragment (decode.html's developers), and the release
+and the data month. The VINs button is the plate's, beside its mode
+switch (page.html's modes). The main is what htmx fills and restores
 (hx-history-elt, never from a snapshot); its error slot (#ui-error) takes
 a 4xx or 5xx fragment. No inline script or style: CSP refuses both. */}}
 {{define "page" -}}
@@ -32,21 +30,19 @@ a 4xx or 5xx fragment. No inline script or style: CSP refuses both. */}}
 <a class="brand" href="/">nitrovin</a>
 {{- if .VocabDialog}}
 <button type="button" id="update-now">Update now</button>
-<button type="button" class="open-nav" popovertarget="nav-menu" aria-label="Menu"></button>
-<nav class="top" id="nav-menu" popover aria-label="Page">
-<button type="button" class="open-vins" popovertarget="vins">VINs</button>
 <button type="button" class="open-vocabularies" popovertarget="vocabularies">Vocabularies</button>
-<button type="button" class="open-developers" popovertarget="developers">Developers</button>
-{{template "version" .}}
-</nav>
-{{- else}}
-{{template "version" .}}
 {{- end}}
 </header>
 <div id="ui-error" role="alert"></div>
 <main id="ui-main" hx-history-elt hx-history="false">
 {{.Body}}
 </main>
+<footer>
+{{- if .VocabDialog}}
+<button type="button" class="open-developers" popovertarget="developers">Developers</button>
+{{- end}}
+{{template "version" .}}
+</footer>
 {{.VocabDialog}}
 </body>
 </html>

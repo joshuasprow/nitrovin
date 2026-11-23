@@ -87,7 +87,7 @@ func pageHTML(t *testing.T, h http.Handler, base, target string) string {
 // the translator is outdated and, once the next release's worker is
 // waiting, offers Update now, which hands the page to it and reloads; the
 // files stored survive, and the new worker answers for them. Every page's
-// header shows the release's version, the worker's pages as the server's.
+// foot shows the release's version, the worker's pages as the server's.
 func TestWorkerUpdate(t *testing.T) {
 	path := chromePath()
 	if path == "" {
@@ -110,9 +110,9 @@ func TestWorkerUpdate(t *testing.T) {
 	srv := httptest.NewServer(wire)
 	t.Cleanup(srv.Close)
 
-	// The header of server h's page, as this browser parses it.
-	header := func(tb *tab, h http.Handler) string {
-		return eval[string](tb, `new DOMParser().parseFromString(`+jsString(pageHTML(t, h, srv.URL, "/"))+`, "text/html").querySelector("header").outerHTML`)
+	// The foot of server h's page, which names its release, as this browser parses it.
+	foot := func(tb *tab, h http.Handler) string {
+		return eval[string](tb, `new DOMParser().parseFromString(`+jsString(pageHTML(t, h, srv.URL, "/"))+`, "text/html").querySelector("footer").outerHTML`)
 	}
 	served := func(since int, target string) bool {
 		return slices.ContainsFunc(wire.all()[since:], func(r wireRequest) bool { return r.target == target })
@@ -149,7 +149,7 @@ func TestWorkerUpdate(t *testing.T) {
 	tb.closeVocabularies()
 
 	// The old release's worker draws the page over fleet, a VIN's names in
-	// it; its page's header is the server's: nitrovin v0.3.2, linked to
+	// it; its page's foot is the server's: nitrovin v0.3.2, linked to
 	// its release.
 	entry := "/?from.vin=1D7RV1GT5AS123456"
 	since := len(wire.all())
@@ -158,9 +158,9 @@ func TestWorkerUpdate(t *testing.T) {
 	if served(since, entry) {
 		t.Fatalf("%s: the server answered it; want the worker, fleet is the browser's", entry)
 	}
-	if got, want := eval[string](tb, `document.querySelector("header").outerHTML`), header(tb, old); got != want ||
+	if got, want := eval[string](tb, `document.querySelector("footer").outerHTML`), foot(tb, old); got != want ||
 		!strings.Contains(got, `<a href="https://github.com/joshuasprow/nitrovin/releases/tag/v0.3.2">v0.3.2</a>`) {
-		t.Errorf("the worker's header differs from the server's, or names no v0.3.2\nworker: %s\nserver: %s", got, want)
+		t.Errorf("the worker's foot differs from the server's, or names no v0.3.2\nworker: %s\nserver: %s", got, want)
 	}
 
 	// The deploy: the server now runs v0.3.3.
@@ -181,9 +181,9 @@ func TestWorkerUpdate(t *testing.T) {
 	if got, want := mainHTML(tb), mainAs(tb, mainOf(t, next, srv.URL, "/", false)); got != want {
 		t.Errorf("/ after the deploy: the page differs from the next release's\npage: %s\nserver: %s", got, want)
 	}
-	if got := header(tb, next); !strings.Contains(got, `<a href="https://github.com/joshuasprow/nitrovin/releases/tag/v0.3.3">v0.3.3</a>`) ||
-		eval[string](tb, `document.querySelector("header").outerHTML`) != got {
-		t.Errorf("/ after the deploy: the header is not v0.3.3's: %s", eval[string](tb, `document.querySelector("header").outerHTML`))
+	if got := foot(tb, next); !strings.Contains(got, `<a href="https://github.com/joshuasprow/nitrovin/releases/tag/v0.3.3">v0.3.3</a>`) ||
+		eval[string](tb, `document.querySelector("footer").outerHTML`) != got {
+		t.Errorf("/ after the deploy: the foot is not v0.3.3's: %s", eval[string](tb, `document.querySelector("footer").outerHTML`))
 	}
 
 	// The page says so, and once the next release's worker waits, offers
@@ -242,8 +242,8 @@ func TestWorkerUpdate(t *testing.T) {
 	if got, want := mainHTML(tb), mainAs(tb, mainOf(t, same, srv.URL, entry, false)); got != want {
 		t.Errorf("%s after Update now: the worker's page differs from the server's\nworker: %s\nserver: %s", entry, got, want)
 	}
-	if got, want := eval[string](tb, `document.querySelector("header").outerHTML`), header(tb, next); got != want {
-		t.Errorf("after Update now: the worker's header differs from the server's\nworker: %s\nserver: %s", got, want)
+	if got, want := eval[string](tb, `document.querySelector("footer").outerHTML`), foot(tb, next); got != want {
+		t.Errorf("after Update now: the worker's foot differs from the server's\nworker: %s\nserver: %s", got, want)
 	}
 
 	// A rollout's old container answers once more, after the new one. The

@@ -35,7 +35,7 @@ code, pre, .mono{font-family: var(--cell-font)}
 .hint{color: var(--muted); font-weight: 400}
 .visually-hidden, .plbl{position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap}
 button{--key: var(--metal); font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase; padding: .45rem .9rem; cursor: pointer; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); background: var(--key); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised)}
-button:is(:active,.is-active), button[aria-pressed=true], &:has(#vins.is-open) .open-vins, &:has(nav.top.is-open) .open-nav{--key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed)}
+button:is(:active,.is-active), button[aria-pressed=true], &:has(#vins.is-open) .open-vins{--key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed)}
 input[type=text], input[type=search]{font: inherit; padding: .35rem .5rem; box-sizing: border-box; color: var(--fg); background: var(--card-bg); border: 1px solid var(--steel); border-radius: 2px; box-shadow: inset 0 2px 3px rgb(0 0 0 / .18)}
 label{font-weight: 600}
 dialog.popover{box-sizing: border-box; width: min(56rem, calc(var(--vw) - 2rem)); max-height: calc(var(--vh) - 2rem); padding: 0 1.25rem 1.25rem; border: 2px solid var(--steel); border-radius: 6px; color: var(--fg); background: var(--card-bg); overflow: auto; box-shadow: 0 3px 0 var(--steel-dark), 0 18px 40px rgb(0 0 0 / .45)}}
@@ -204,7 +204,10 @@ a.example:is(:active,.is-active){--key: var(--alu-in); transform: translateY(2px
 button.linkish{border: 0; background: none; box-shadow: none; padding: 0 .25rem; color: var(--link); text-shadow: none; text-decoration: underline; text-transform: none; letter-spacing: 0; font: 13px system-ui, sans-serif}
 button.linkish:is(:active,.is-active){transform: none; box-shadow: none}
 .menu .linkish{display: block; margin: .6rem auto 0}
-#update-now:not(:disabled){animation: lamp 1.6s ease-in-out infinite alternate}}
+#update-now:not(:disabled){animation: lamp 1.6s ease-in-out infinite alternate}
+a.example b{display: block; font: inherit}
+a.example small{display: block; margin-top: 1px; font: 600 10.5px var(--cell-font); letter-spacing: .02em; color: #3a444e; text-transform: none; white-space: normal}
+.menu.popover{overflow-x: hidden}}
 .sheet{--bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint: #a9bccb; --card-bg: #ffffff; --link: #0b4fa8; --bad: #b91c1c; --c-wmi: #c8102e; --c-vds: #0b4fa8; --c-check: #5b2d8e; --c-year: #a34c09; --c-plant: #0f6b46; --c-serial: #3d4650; --on: #ffffff; --label-font: "Arial Black", "Helvetica Neue", system-ui, sans-serif; --cell-font: ui-monospace, monospace; --steel: #6f7b86; --steel-dark: #58626c; --on-metal: #232930; --metal: url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0 / 600px 120px, linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc); --emboss: 0 1px 0 rgb(255 255 255 / .9), 0 -1px 1px rgb(0 0 0 / .45); --lift-stuck: 0 2px 3px rgb(8 7 15 / .32); --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 9px rgb(8 7 15 / .38); --raised: inset 0 1px 0 #fff, var(--lift-raised); --pressed: inset 0 3px 4px rgb(8 7 15 / .4); --alu-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .12) 2px 3px), linear-gradient(#8e99a3, #aab4bd); --alu: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .07) 2px 3px), var(--metal); --tape: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .13) 2px 3px), linear-gradient(#30363d, #171a1e); --tape-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .2) 2px 3px), linear-gradient(#0c0e10, #1d2125); --tape-edge: #050607; --tape-lit: #69727c; --on-tape: #f6f8fa; --tape-emboss: -1px -1px 0 rgb(8 7 15 / .67), 1px 1px 0 rgb(255 255 255 / .33), 0 2px 2px rgb(8 7 15 / .53); --stripe-lift: drop-shadow(-1px -1px 0 rgb(255 255 255 / .4)) drop-shadow(1.5px 2px 1px rgb(8 7 15 / .3)); --manila: url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f); --on-manila: #2b2418; --manila-muted: #5c4c2e; --manila-patch: #c39a5c; --manila-bad: #a01414; --thermal: #f6f4ee; --on-thermal: #232229; --thermal-muted: #62606b; --lamp: #ffb300; --gutter: 1rem; font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 1rem var(--gutter) 3rem; color: var(--fg); background: var(--bg);--bg: #16222d; --fg: #eef2f5; --muted: #a9b6c2; --line: #45566a; --faint: #3a4a5c; --card-bg: #1f2d3a; --link: #8ec5ff; --bad: #ff8a8a; --c-wmi: #ff6b81; --c-vds: #7db4ff; --c-check: #c9a2ff; --c-year: #ffb067; --c-plant: #6fdcab; --c-serial: #b8c4cf; --on: #14181d; --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 10px rgb(0 0 0 / .7);}
 .sheet{box-sizing:border-box;margin:0;padding:40px;display:flex;flex-direction:column;gap:26px}
 .sheet .sh-h1{margin:0;font:900 21px/1.2 var(--label-font);letter-spacing:.04em;text-transform:uppercase;border:0;padding:0}
@@ -222,7 +225,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}
 .sheet .vp .name .note.is-open{position:absolute !important;top:calc(100% + 10px) !important;left:0 !important;width:26rem;z-index:2}
 </style>
 </helmet>
-<div class="root sheet" data-scheme="dark" style="width: 1280px; height: 4960px; color: var(--fg); background: var(--bg)">
+<div class="root sheet" data-scheme="dark" style="width: 1280px; height: 5010px; color: var(--fg); background: var(--bg)">
 <div><h1 class="sh-h1">Dialogs, forms and inputs</h1><p class="sh-intro">Everything behind a button is a popover. A dialog is a panel under a head of metal; a menu hangs from its button; a note has no head.</p></div>
 <h2 class="sh-h2">Dialogs</h2>
 <section>
@@ -370,12 +373,19 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 </div>
 </section>
 <section>
-<p class="sh-cap">Menu <span>Recent VINs, then the examples.</span></p>
+<p class="sh-cap">Menu <span>Recent vehicles, each with the part type that was open on it; then the vehicles the yard holds most of.</span></p>
 <div class="vp vp-tab pad" style="width: 400px; --vw: 768px">
 
 <main id="ui-main" class="is-fw">
 <div id="vins" class="menu is-open popover" aria-label="VINs to try">
-<ul id="recent" class="examples" aria-label="Recent"><li><a class="example recent" href="#" title="1FTEW1EG7FFA12345">2015 FORD F-150</a></li><li><a class="example recent" href="#" title="1GCVKREC6EZ123456">2014 CHEVROLET Silverado</a></li><li><a class="example recent" href="#" title="4T1B11HK7JU512345">2018 TOYOTA Camry</a></li></ul>
+<ul id="recent" class="examples" aria-label="Recent"><li><a class="example recent" href="#" title="1FTEW1EG7FFA12345"><b>2015 FORD F-150</b></a></li><li><a class="example recent" href="#" title="1GCVKREC6EZ123456"><b>2014 CHEVROLET Silverado</b></a></li><li><a class="example recent" href="#" title="4T1B11HK7JU512345"><b>2018 TOYOTA Camry</b></a></li></ul>
+<ul id="stocked" class="examples" aria-label="In stock">
+<li><a class="example stocked" href="#"><b>2018 Toyota Camry</b><small>5 in the yard</small></a></li>
+<li><a class="example stocked" href="#"><b>2017 Toyota RAV4</b><small>4 in the yard</small></a></li>
+<li><a class="example stocked" href="#"><b>2015 Ram 1500</b><small>3 in the yard</small></a></li>
+<li><a class="example stocked" href="#"><b>2015 Ford F-150</b><small>2 in the yard</small></a></li>
+<li><a class="example stocked" href="#"><b>2014 Chevrolet Silverado</b><small>1 in the yard</small></a></li>
+</ul>
 <ul id="examples" class="examples" aria-label="Examples" hidden="">
 <li><a class="example" href="#" title="a 2015 Ford F-150">1FTEW1EG7FFA12345</a></li>
 <li><a class="example" href="#" title="a 2019 Honda CR-V">2HKRW2H53KH612345</a></li>
@@ -492,7 +502,7 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 </tbody>
 </table></div>
 <details class="more"><summary>Details</summary>
-<p id="storage-usage" class="hint">This site keeps 19.7 MB in this browser, of the 10,757 MB the browser allows it; the browser may clear it when it runs short of space.</p>
+<p id="storage-usage" class="hint">This site keeps 19.9 MB in this browser, of the 10,757 MB the browser allows it; the browser may clear it when it runs short of space.</p>
 <p class="hint">Release <code>(devel)/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19</code> · data 2026_11</p>
 </details></div>
 </section>
@@ -520,8 +530,8 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 <p id="vocab-files-hint" class="hint">Kept in this browser · same name replaces · a catalog alone compiles here · no personal data in stock</p>
 </div>
 <div class="offer demo">
-<button id="load-demo" data-demo="{&quot;files&quot;:[{&quot;name&quot;:&quot;demo-catalog&quot;,&quot;file&quot;:&quot;demo-catalog.jsonl&quot;,&quot;kind&quot;:&quot;catalog&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/e65ba8664ef7dcef854cd29e952ef345e6c4a552160a02bb8746ba783b5f4079/demo-catalog.jsonl&quot;},{&quot;name&quot;:&quot;demo-classics&quot;,&quot;file&quot;:&quot;demo-classics.jsonl&quot;,&quot;kind&quot;:&quot;extension-set&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/b75f776e4ede65f61375f37906d6a60a0726b38c25dfb65cd6f6c1cb29fcee7f/demo-classics.jsonl&quot;},{&quot;name&quot;:&quot;demo-part-codes&quot;,&quot;file&quot;:&quot;demo-part-codes.jsonl&quot;,&quot;kind&quot;:&quot;vocabulary&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/c62294a6a36622503671551fe135163b068ffdc693bd3c7b48c539bb1b408c9e/demo-part-codes.jsonl&quot;},{&quot;name&quot;:&quot;demo-part-types&quot;,&quot;file&quot;:&quot;demo-part-types.jsonl&quot;,&quot;kind&quot;:&quot;spine&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/eb39ef39d09ea8d73fea9bd94c26a3d9024be90592f083d70ceaf6dab86d1d58/demo-part-types.jsonl&quot;},{&quot;name&quot;:&quot;demo-shelf&quot;,&quot;file&quot;:&quot;demo-shelf.jsonl&quot;,&quot;kind&quot;:&quot;stock&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/5b6c41e794662b2b02fdf251e6ff3ec37d0c26f77cb27681035f86b71eb3a5c4/demo-shelf.jsonl&quot;},{&quot;name&quot;:&quot;demo-vehicles&quot;,&quot;file&quot;:&quot;demo-vehicles.jsonl&quot;,&quot;kind&quot;:&quot;vocabulary&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/ae4bc8b7d1760ff631f835f82cfa74447a08850e5b5c8a557d1542dbe66e4aaf/demo-vehicles.jsonl&quot;},{&quot;name&quot;:&quot;demo-yard-stock&quot;,&quot;file&quot;:&quot;demo-yard-stock.jsonl&quot;,&quot;kind&quot;:&quot;stock&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/f84819b72926ec25c06ff336475a4112eed4914e9d76a5b322a2511e69189b3b/demo-yard-stock.jsonl&quot;}],&quot;remove&quot;:[]}" aria-describedby="load-demo-hint" type="button">Load demo</button>
-<p id="load-demo-hint" class="hint">2026.11-demo · 15 kB · invented data</p>
+<button id="load-demo" data-demo="{&quot;files&quot;:[{&quot;name&quot;:&quot;demo-catalog&quot;,&quot;file&quot;:&quot;demo-catalog.jsonl&quot;,&quot;kind&quot;:&quot;catalog&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/e65ba8664ef7dcef854cd29e952ef345e6c4a552160a02bb8746ba783b5f4079/demo-catalog.jsonl&quot;},{&quot;name&quot;:&quot;demo-classics&quot;,&quot;file&quot;:&quot;demo-classics.jsonl&quot;,&quot;kind&quot;:&quot;extension-set&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/b75f776e4ede65f61375f37906d6a60a0726b38c25dfb65cd6f6c1cb29fcee7f/demo-classics.jsonl&quot;},{&quot;name&quot;:&quot;demo-part-codes&quot;,&quot;file&quot;:&quot;demo-part-codes.jsonl&quot;,&quot;kind&quot;:&quot;vocabulary&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/c62294a6a36622503671551fe135163b068ffdc693bd3c7b48c539bb1b408c9e/demo-part-codes.jsonl&quot;},{&quot;name&quot;:&quot;demo-part-types&quot;,&quot;file&quot;:&quot;demo-part-types.jsonl&quot;,&quot;kind&quot;:&quot;spine&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/eb39ef39d09ea8d73fea9bd94c26a3d9024be90592f083d70ceaf6dab86d1d58/demo-part-types.jsonl&quot;},{&quot;name&quot;:&quot;demo-shelf&quot;,&quot;file&quot;:&quot;demo-shelf.jsonl&quot;,&quot;kind&quot;:&quot;stock&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/5b6c41e794662b2b02fdf251e6ff3ec37d0c26f77cb27681035f86b71eb3a5c4/demo-shelf.jsonl&quot;},{&quot;name&quot;:&quot;demo-vehicles&quot;,&quot;file&quot;:&quot;demo-vehicles.jsonl&quot;,&quot;kind&quot;:&quot;vocabulary&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/ae4bc8b7d1760ff631f835f82cfa74447a08850e5b5c8a557d1542dbe66e4aaf/demo-vehicles.jsonl&quot;},{&quot;name&quot;:&quot;demo-yard-stock&quot;,&quot;file&quot;:&quot;demo-yard-stock.jsonl&quot;,&quot;kind&quot;:&quot;stock&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/ce07c57f8b7a76a719d0c71669921776763f226694d8eec5c58ee06c6d3db792/demo-yard-stock.jsonl&quot;}],&quot;remove&quot;:[]}" aria-describedby="load-demo-hint" type="button">Load demo</button>
+<p id="load-demo-hint" class="hint">2026.11-demo · 17 kB · invented data</p>
 </div>
 </div>
 <div class="scroll"><table class="catalog">
@@ -538,7 +548,7 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 </tbody>
 </table></div>
 <details class="more"><summary>Details</summary>
-<p id="storage-usage" class="hint">This site keeps 19.7 MB in this browser, of the 10,757 MB the browser allows it; the browser may clear it when it runs short of space.</p>
+<p id="storage-usage" class="hint">This site keeps 19.8 MB in this browser, of the 10,757 MB the browser allows it; the browser may clear it when it runs short of space.</p>
 <p class="hint">Release <code>(devel)/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19</code> · data 2026_11</p>
 </details></div>
 </section>
@@ -679,7 +689,7 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 </section>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":4960}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":5010}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};
