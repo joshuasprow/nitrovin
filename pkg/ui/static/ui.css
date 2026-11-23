@@ -631,12 +631,11 @@ table.sum .skip { color: var(--muted); }
 .nonum-tape { display: flex; align-items: center; box-sizing: border-box; min-height: 2.6rem; margin: 0; padding: .3rem .7rem; color: var(--on-tape); font: 700 12px var(--cell-font); letter-spacing: .04em; text-transform: none; text-shadow: var(--tape-emboss);
   background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck); }
 /* The receipt is its tag's width and under it, and no narrower than a
-     row of it reads at. */
-  .rows .receipt { width: calc((100% - 2 * var(--gap)) / 3); min-width: min(100%, 19rem); }
-  .rows.at2 .receipt { margin-inline: auto; }
-  .rows.at3 .receipt { margin-left: auto; }
-  .rows.more-wide::before, .rows.more-wide::after { content: ""; }
-}
+   row of it reads at. */
+.rows .receipt { width: calc((100% - 2 * var(--gap)) / 3); min-width: min(100%, 19rem); }
+.rows.at2 .receipt { margin-inline: auto; }
+.rows.at3 .receipt { margin-left: auto; }
+.rows.more-wide::before, .rows.more-wide::after { content: ""; }
 /* From the vehicle's block to the picker (.drops): the Vehicle's and the
    Model year's lines leave the block's bottom edge under their words, at
    --xv and --xy of the block, and come straight down into the picker,
