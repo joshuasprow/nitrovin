@@ -162,9 +162,12 @@ is open and the panel shown whole, which plate.js tells a history entry by. */}}
 {{range .Groups}}{{template "card" .}}
 {{end}}</div>
 {{if and (not .Ways) .Fit.Types}}<svg class="joins" viewBox="0 0 1020 28" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-{{if .Fit.Make}}<path class="g-wmi" pathLength="1" d="M85 0V28" vector-effect="non-scaling-stroke"/>
-{{end}}<path class="g-vds" pathLength="1" d="M255 0V28" vector-effect="non-scaling-stroke"/>
-<path class="g-year" pathLength="1" d="M595 0V14H425V28" vector-effect="non-scaling-stroke"/>
+{{if .Fit.Make}}<path class="g-wmi" pathLength="1" d="M85 0V14H56.1V28" vector-effect="non-scaling-stroke"/>
+<path class="g-vds" pathLength="1" d="M255 0V14H168.3V28" vector-effect="non-scaling-stroke"/>
+<path class="g-year" pathLength="1" d="M595 0V14H280.5V28" vector-effect="non-scaling-stroke"/>
+{{else}}<path class="g-vds" pathLength="1" d="M255 0V14H56.1V28" vector-effect="non-scaling-stroke"/>
+<path class="g-year" pathLength="1" d="M595 0V14H168.3V28" vector-effect="non-scaling-stroke"/>
+{{end}}
 </svg>
 {{end}}</div>
 {{with .Ways}}<div class="choice"><p class="blank"><span>{{$.Error}}</span>{{range .}}<a href="{{.Href}}">{{.Text}}</a>{{end}}</p></div>
@@ -250,11 +253,10 @@ types dialog, every part type under the headings of a part vocabulary,
 which hangs from the picker as its list; a key beside the picker clears
 the pressed one, and plate.js lists up to two opened recently beside it
 on the same tape, and all of them at the head of the list;
-and the pressed one's candidates as manila tags on two rails
-of pinstripe tape: Vehicle's and Model year's, carried from the cards to
-the block on a narrow page (.carry), from the block down a lane into
-the picker (.drops), then down from it
-(.risers) and along (.rails) to each eyelet (ui.css). A tag's
+and the pressed one's candidates as manila tags. Two lines of pinstripe
+tape, Vehicle's and Model year's, are carried from the cards to the
+block on a narrow page (.carry) and come down from the block into the
+picker (.drops), where they end (ui.css). A tag's
 number is a strip of label tape across it; its rows are the catalog's
 words, verbatim; its marks are ink on it: a solid stamp checked, a dashed
 one not, plain words for what has nothing checked. Its bottom edge is its
@@ -278,8 +280,7 @@ own, which plate.js swaps in place (swap). */}}
 {{end}}{{with .Chars}}<div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd>{{range .}}<span class="vc"><b>{{.Char}}</b><small>{{.Pos}}</small></span>{{end}}</dd></div>
 {{end}}</dl>
 {{end}}</div>
-{{end}}{{template "aka" .Names}}
-{{if .Types}}<div class="ptwrap" data-spine="{{.Spine}}">
+{{end}}{{if .Types}}<div class="ptwrap" data-spine="{{.Spine}}">
 <div class="ptsel">
 <div class="ptkeys">
 <button type="button" id="pick-type" class="ptfield" popovertarget="part-types"><span class="plab">Part type</span><span class="nm">{{if .Pressed}}{{.Pressed}}{{else}}Choose a part type{{end}}</span><span class="n">{{.PickCount}}<span class="visually-hidden"> {{.PickNoun}}</span></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg></button>
@@ -290,10 +291,11 @@ own, which plate.js swaps in place (swap). */}}
 </div>
 {{if .Pressed}}<span class="drops" aria-hidden="true"></span>
 {{end}}{{template "part-types-dialog" .Dialog}}
-{{if .Invite}}<p class="blank"><span>Choose a part type to see what fits this vehicle.</span></p>
+{{end}}{{template "aka" .Names}}
+{{if .Types}}{{if .Invite}}<p class="blank"><span>Choose a part type to see what fits this vehicle.</span></p>
 {{end}}{{with .NoneFit}}<p class="blank"><span>{{.}}</span></p>
 {{end}}{{if .Tags}}<ol class="cands" aria-label="Candidates: {{.Pressed}}" tabindex="0">
-{{range .Tags}}<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+{{range .Tags}}<li class="cand"><div class="cand-in">
 <p class="numtape"><b class="num">{{.Number}}</b>{{with .Years}} <span class="yrs">{{.}}</span>{{end}}</p>
 <dl>
 {{with .Side}}<div><dt>Side</dt><dd>{{.}}</dd></div>
@@ -306,7 +308,7 @@ own, which plate.js swaps in place (swap). */}}
 </div></li>
 {{with .Panel}}{{template "stock-rows" .}}
 {{end}}{{end}}</ol>
-<span class="rails" aria-hidden="true"></span><span class="risers" aria-hidden="true"></span>
+
 {{end}}{{with .NoNumber}}<div class="nonum" id="stock-nonum" tabindex="-1">
 <h3 class="nonum-tape" id="{{.ID}}-h">{{$.NoNumberName}}</h3>
 <div class="receipt"><div class="stock-col">

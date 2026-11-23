@@ -156,6 +156,27 @@ func TestStockStrip(t *testing.T) {
 					return [top - joins.bottom, top + parseFloat(line.height) - strip.top];
 				});
 			})()`)
+			// Under the block, the Vehicle's and the Model year's lines
+			// come straight down from under their words into the picker's
+			// key, and end there: [each line's x past its word's middle,
+			// its bottom past the picker's top, the key's edges past it].
+			drops := measure[[]float64](tb, `(() => {
+				const fit = document.querySelector("#fit").getBoundingClientRect(), key = document.querySelector("#pick-type").getBoundingClientRect(), out = [];
+				for (const [group, pseudo] of [["vds", "::before"], ["year", "::after"]]) {
+					const word = document.querySelector(".fitstrip .seg.g-" + group).getBoundingClientRect(), line = getComputedStyle(document.querySelector("#fit .drops"), pseudo);
+					const x = fit.left + parseFloat(line.left) + 2.5;
+					out.push(x - (word.left + word.right) / 2, fit.bottom - parseFloat(line.bottom) - key.top, x - key.left, key.right - x);
+				}
+				return out;
+			})()`)
+			for i := 0; i+3 < len(drops); i += 4 {
+				if math.Abs(drops[i]) > 1.5 || drops[i+1] < -4 || drops[i+1] > 12 || drops[i+2] < 0 || drops[i+3] < 0 {
+					t.Errorf("1280 wide: the line to the picker is %v px off its word's middle, ends %v px past the picker's top, and is %v and %v px inside the key's edges; want it under its word and into the key", drops[i], drops[i+1], drops[i+2], drops[i+3])
+				}
+			}
+			if len(drops) != 8 || eval[int](tb, `document.querySelectorAll("#fit .rails, #fit .risers, #fit .hook").length`) != 0 {
+				t.Errorf("1280 wide: %d measures of the lines to the picker, or a line from the picker to the candidates; want two lines that end at the picker", len(drops))
+			}
 			if len(lines) != 6 {
 				t.Fatalf("1280 wide: %d measures of the block's lines; want 6, two of each of three", len(lines))
 			}

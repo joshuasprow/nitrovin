@@ -124,11 +124,8 @@ type laid struct {
 	NamesScroll float64 `json:"namesScroll"`
 	NamesName   string  `json:"namesName"`
 	NamesTab    int     `json:"namesTab"`
-	// Lane is how far the names' row starts in from the section's left
-	// edge: the lane the lines to the picker come down. Fade is the row's
-	// mask, which fades an end with tags past it.
-	Lane float64 `json:"lane"`
-	Fade string  `json:"fade"`
+	// Fade is the row's mask, which fades an end with tags past it.
+	Fade string `json:"fade"`
 	// Region is the cards' region: how wide it is and how wide what it
 	// holds, its name and whether a keyboard reaches it.
 	RegionWidth  float64 `json:"regionWidth"`
@@ -158,7 +155,7 @@ const layoutJS = `(() => {
 		ragged: cards.flatMap(c => [...c.querySelectorAll("dl")]).flatMap(dl => [...dl.querySelectorAll("dd")].filter(dd => { const v = dd.getBoundingClientRect(), k = dd.previousElementSibling.getBoundingClientRect(); return Math.abs(v.left - k.left) > 1 || v.top < k.bottom - 1; })).length,
 		tags: [...names.querySelectorAll(":scope > li.name")].map(box),
 		namesWidth: names.clientWidth, namesScroll: names.scrollWidth, namesName: names.getAttribute("aria-label"), namesTab: names.tabIndex,
-		lane: names.getBoundingClientRect().left - document.querySelector("#fit").getBoundingClientRect().left, fade: getComputedStyle(names).maskImage,
+		fade: getComputedStyle(names).maskImage,
 		regionWidth: hang.clientWidth, regionScroll: hang.scrollWidth,
 		regionName: hang.getAttribute("role") + ": " + hang.getAttribute("aria-label"), regionTab: hang.tabIndex,
 		pageScroll: document.documentElement.scrollWidth, window: innerWidth,
@@ -225,9 +222,6 @@ func (tb *tab) tags(step string, l laid) {
 	}
 	if l.NamesName != "Also known as" || l.NamesTab != 0 {
 		tb.t.Errorf("%s: the names' row is %q, tabindex %d; want a named row a keyboard reaches", step, l.NamesName, l.NamesTab)
-	}
-	if l.Lane < 40 {
-		tb.t.Errorf("%s: the names' row starts %v px in from the section's edge; want a lane of 3rem for the lines to the picker", step, l.Lane)
 	}
 	if l.NamesScroll <= l.NamesWidth {
 		if strings.Contains(l.Fade, "48px") {

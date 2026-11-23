@@ -56,7 +56,7 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 .card::before, .cand-in::before{content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(circle at 50% 14px, transparent 4px, var(--manila-patch) 4.5px 10px, transparent 10.5px), var(--manila); clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%, 0 16px); mask-image: radial-gradient(circle at 50% 14px, transparent 3.5px, #000 4px)}
 .card .how{margin-top: .3rem; padding: .25rem .5rem; font: 700 10px var(--cell-font); letter-spacing: .08em; color: var(--on-tape); text-shadow: -1px -1px 0 rgb(8 7 15 / .5), 1px 1px 0 rgb(255 255 255 / .4), 0 0 3px rgb(255 255 255 / .55); background: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .16) 2px 3px), linear-gradient(color-mix(in srgb, var(--cm) 86%, #fff), var(--cm)); border: 1px solid color-mix(in srgb, var(--cm) 60%, #000); border-top-color: color-mix(in srgb, var(--cm) 68%, #fff); border-radius: 2px; box-shadow: var(--lift-raised)}
 .card .how:is(:active,.is-active){transform: translateY(2px); box-shadow: var(--pressed); background: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .16) 2px 3px), linear-gradient(color-mix(in srgb, var(--cm) 72%, #000), color-mix(in srgb, var(--cm) 84%, #000))}
-.aka{--lane: 3rem; position: relative; z-index: 3; margin: 0 0 0 var(--lane)}
+.aka{position: relative; z-index: 3; margin: 0}
 .aka:has(.nametags:is(:focus-visible,.is-fv)){outline: 3px solid var(--link); outline-offset: 2px}
 .nametags{list-style: none; display: flex; align-items: stretch; gap: 10px; margin: 0; padding: 36px 4px 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding-inline: 4px}
 .name{flex: none; scroll-snap-align: start; box-sizing: border-box; min-width: 11rem; max-width: min(40rem, 72vw); margin: 0; padding-bottom: .6rem}
@@ -65,7 +65,7 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 .vp{@supports (animation-timeline: scroll()){
 .nametags{mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline)}}}
 .vp{
-.name::after{content: ""; position: absolute; left: calc(50% - 1px); top: -36px; width: 2px; height: 50px; background: var(--steel); pointer-events: none}
+.fitstrip ~ .aka .name::after{content: ""; position: absolute; left: calc(50% - 1px); top: -36px; width: 2px; height: 50px; background: var(--steel); pointer-events: none}
 .nrow{position: relative}
 .name .how{position: absolute; inset: 0; width: 100%; padding: 0; background: none; border: 0; box-shadow: none; cursor: pointer}
 .name .how:is(:hover,.is-hover), .name .how:is(:focus-visible,.is-fv){background: rgb(0 0 0 / .07)}
@@ -77,14 +77,15 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 .seg{position: relative; align-self: stretch; display: flex; align-items: center; justify-content: center; padding: .35rem .6rem; text-align: center; min-width: 0}
 .seg .w{font: 900 1.05rem/1.2 var(--cell-font); letter-spacing: .08em; text-shadow: var(--tape-emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere}
 .seg::after{content: ""; position: absolute; left: calc(50% - 2.5px); top: calc(-1px - var(--lead) - var(--prev)); height: calc(var(--lead) + var(--prev) + 1px); border-left: 5px solid var(--c); filter: var(--stripe-lift)}
-.fit{--rail-x: 3px; position: relative; isolation: isolate; display: flow-root; margin: 0 16px}
-.fitstrip{--lead: 30px; --prev: 0px; --stamp-h: 1.5rem; display: grid; grid-template-columns: 170fr 170fr 170fr 510fr; align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck)}
+.fit{position: relative; isolation: isolate; display: flow-root; margin: 0 16px}
+.fitstrip{--lead: 30px; --prev: 0px; --stamp-h: 1.5rem; display: grid; grid-template-columns: repeat(2, minmax(0, 6.6rem)) minmax(0, 1fr); align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck)}
 .fitstrip .stamp{align-self: stretch; display: flex; align-items: center; min-width: 0; margin: 0; padding: 0 .5rem 0 .7rem; border-right: 1px solid rgb(255 255 255 / .18); font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss)}
-.fitstrip .g-wmi{--cm: #ff6b81; grid-column: 1}
-.fitstrip .g-vds{--cm: #7db4ff; grid-column: 2}
-.fitstrip .g-year{--cm: #ffb067; grid-column: 3}
-.fitstrip .seg{grid-row: 2}
-.fitstrip .vfacts{grid-row: 2; grid-column: 4}
+.fitstrip:has(.g-wmi){grid-template-columns: repeat(3, minmax(0, 6.6rem)) minmax(0, 1fr)}
+.fitstrip .g-wmi{--cm: #ff6b81}
+.fitstrip .g-vds{--cm: #7db4ff}
+.fitstrip .g-year{--cm: #ffb067}
+.fitstrip .seg{grid-row: 2; padding-inline: .3rem}
+.fitstrip .vfacts{grid-row: 2; grid-column: -2}
 .fitstrip .stamp{grid-row: 1; grid-column: 1 / -1; box-sizing: border-box; height: var(--stamp-h); padding-block: 0; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18)}
 .fitstrip .seg::after{top: calc(-1px - var(--lead) - var(--prev) - var(--stamp-h))}
 .vfacts{display: flex; flex-wrap: wrap; align-items: center; gap: 4px 22px; min-width: 0; margin: 0; padding: .45rem .7rem; border-left: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss)}
@@ -99,9 +100,8 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 .ptype:is(:active,.is-active), .ptype[aria-current]{transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed)}
 .ptype .n{flex: none}
 .ptwrap{position: relative; z-index: 3; margin: 30px 0 0}
-.ptsel{display: flex; flex-wrap: wrap; align-items: stretch; gap: 6px 12px; box-sizing: border-box; width: fit-content; max-width: 100%; padding: 5px 6px; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck)}
-.ptkeys{position: relative; flex: none; display: flex; align-items: stretch; gap: 6px; width: 24rem; max-width: 100%; anchor-name: --pick-type}
-.ptkeys::before{content: ""; position: absolute; inset: 0 auto 0 0; width: 3rem; pointer-events: none; anchor-name: --fit-part}
+.ptsel{display: flex; align-items: stretch; gap: 12px; box-sizing: border-box; padding: 5px 6px; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck)}
+.ptkeys{flex: none; display: flex; align-items: stretch; gap: 6px; width: 24rem; max-width: 100%; anchor-name: --fit-part, --pick-type}
 .ptfield{--key: var(--alu); flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: .5rem; align-items: center; min-height: 44px; padding: .25rem .6rem; text-align: left; text-transform: none; letter-spacing: 0}
 .ptfield .plab{grid-column: 1 / -1; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase}
 .ptfield .nm{min-width: 0; font: 900 16px/1.2 var(--cell-font); letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
@@ -110,7 +110,7 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 .fit:has(#part-types.is-open) .ptfield{--key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed)}
 .ptclear{flex: none; display: flex; align-items: center; justify-content: center; min-width: 44px; font: 900 18px/1 var(--cell-font); text-decoration: none; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); background: var(--metal); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised)}
 .ptclear:is(:active,.is-active){transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed)}
-.ptrecents{list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0 2px 0 12px; border-left: 1px solid rgb(255 255 255 / .18)}
+.ptrecents{flex: 0 1 auto; min-width: 0; max-height: 44px; overflow: hidden; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0 2px 0 12px; border-left: 1px solid rgb(255 255 255 / .18)}
 .ptrecents[hidden]{display: none}
 .ptrecents::before{content: "Recent"; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss)}
 .ptfind{width: 100%; min-height: 44px}}
@@ -134,7 +134,7 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 .fit .ptlist{flex-direction: column; flex-wrap: nowrap; gap: 6px; padding: 0}
 .fit .ptlist .ptype{display: flex; justify-content: space-between}}}
 .vp{
-.cands{--gap: 12px; anchor-name: --fit-tags; list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: row dense; gap: 40px var(--gap); margin: 14px 0 0; padding: 40px 0 0 22px}
+.cands{--gap: 12px; anchor-name: --fit-tags; list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: row dense; gap: 40px var(--gap); margin: 30px 0 0; padding: 0}
 .cand{position: relative; min-width: 0}
 .cand-in{position: relative; isolation: isolate; display: flex; flex-direction: column; box-sizing: border-box; height: 100%; padding: 28px .7rem .8rem; overflow-wrap: anywhere; color: var(--on-manila); filter: drop-shadow(0 4px 5px rgb(8 7 15 / .28))}
 .numtape{display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0 .5rem; margin: 0 -.7rem .6rem; padding: .3rem .7rem; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 3px solid var(--tape-edge)}
@@ -153,9 +153,6 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 .stk:not(.none):is(:active,.is-active), .stk[aria-expanded=true]{transform: none; padding-top: 2px; background: var(--alu-in); border-bottom-width: 1px; box-shadow: var(--pressed)}
 .rows{position: relative; grid-column: 1 / -1; min-width: 0; margin-top: -40px}
 .vehicles{background: var(--card-bg); border: 2px solid var(--steel); border-radius: 4px; box-shadow: 0 3px 0 var(--steel-dark), 0 8px 16px rgb(0 0 0 / .25)}
-.rows::before, .rows::after{position: absolute; top: -18px; box-sizing: border-box; width: 5px; pointer-events: none; border: 0 solid var(--c-vds); border-left-width: 5px; filter: var(--stripe-lift)}
-.rows::before{z-index: 0; left: calc(var(--rail-x) - 24px); bottom: -16px}
-.rows::after{z-index: 1; left: calc(var(--rail-x) + 9px - 24px); bottom: -27px; border-color: var(--c-year)}
 .receipt{position: relative; box-sizing: border-box; width: min(100%, 23rem); padding: 22px 16px 26px; color: var(--on-thermal); font: 13px/1.45 var(--cell-font); background: linear-gradient(rgb(8 7 15 / .32), rgb(8 7 15 / .07) 6px, transparent 15px), linear-gradient(90deg, rgb(8 7 15 / .05), transparent 5% 95%, rgb(8 7 15 / .05)), var(--thermal); filter: drop-shadow(0 2px 1px rgb(8 7 15 / .35)) drop-shadow(0 10px 12px rgb(8 7 15 / .28))}
 .receipt::after{content: ""; position: absolute; top: 100%; left: 0; right: 0; height: 5px; background: conic-gradient(from -45deg at 50% 100%, var(--thermal) 90deg, transparent 0) 0 0 / 9px 100% repeat-x}
 .receipt-head{margin: 4px 0 16px; text-align: center; font: 700 15px/1.2 var(--cell-font); letter-spacing: .08em; transform: scaleY(1.7)}
@@ -181,52 +178,19 @@ thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform
 .stock-col .fv{max-width: 64%; text-align: right}
 .stock-col .note{display: block; margin-top: 4px; font-size: 12px; color: var(--thermal-muted)}
 .stock-col .note::before{content: "* "}
-.stock-col .note strong{padding: 0 5px; color: var(--thermal); background: var(--on-thermal)}
-.cand::before, .cand::after, .hook::before, .hook::after, .rails::before, .rails::after, .risers::before, .risers::after{content: ""; position: absolute; box-sizing: border-box; pointer-events: none; border: 0 solid var(--c-vds); filter: var(--stripe-lift)}
-.cand::before, .hook::before, .rails::before, .risers::before{z-index: 1}
-.cand::after, .hook::after, .rails::after, .risers::after{z-index: 2; border-color: var(--c-year)}
-.cand::before, .cand::after{left: calc(-1 * var(--gap)); right: 0; border-top-width: 5px}
-.cand::before{top: -31px}
-.cand::after{top: -20px}
-.hook{position: absolute; inset: 0; pointer-events: none}
-.hook::before, .hook::after{top: -31px; height: 31px; border-left-width: 5px}
-.hook::before{left: calc(50% - 7px)}
-.hook::after{top: -20px; height: 20px; left: calc(50% + 2px)}
-.cand:nth-child(1 of .cand) .hook{anchor-name: --fit-first}
-.cand:nth-last-child(1 of .cand) .hook{anchor-name: --fit-last}
-.cand:nth-child(1 of .cand):nth-last-child(1 of .cand) .hook{anchor-name: --fit-first, --fit-last}
-.risers::before, .risers::after{top: calc(anchor(--fit-part bottom) + 2px); width: 5px; border-left-width: 5px}
-.risers::before{bottom: calc(anchor(--fit-tags top) - 14px); left: calc(anchor(--fit-part center) - 7px)}
-.risers::after{bottom: calc(anchor(--fit-tags top) - 25px); left: calc(anchor(--fit-part center) + 2px)}
-.rails::before, .rails::after{height: 5px; border-top-width: 5px}
-.rails::before{top: calc(anchor(--fit-tags top) + 9px); left: calc(anchor(--fit-tags left) + var(--rail-x)); right: calc(anchor(--fit-part center) + 2px)}
-.rails::after{top: calc(anchor(--fit-tags top) + 20px); left: calc(anchor(--fit-tags left) + var(--rail-x) + 9px); right: calc(anchor(--fit-part center) - 7px)}}
+.stock-col .note strong{padding: 0 5px; color: var(--thermal); background: var(--on-thermal)}}
 :is(.vp-wide,.vp-tab){
-.cand:is(:nth-child(3n of .cand), :nth-last-child(1 of .cand))::before{right: calc(50% + 2px)}
-.cand:is(:nth-child(3n of .cand), :nth-last-child(1 of .cand))::after{right: calc(50% - 7px)}
-.cand:nth-child(3n+1 of .cand)::before{left: calc(var(--rail-x) - 22px)}
-.cand:nth-child(3n+1 of .cand)::after{left: calc(var(--rail-x) + 9px - 22px)}
-.cands:not(:has(> .cand:nth-child(4 of .cand))) > .cand:nth-child(1 of .cand)::before{left: calc(50% - 7px)}
-.cands:not(:has(> .cand:nth-child(4 of .cand))) > .cand:nth-child(1 of .cand)::after{left: calc(50% + 2px)}
-.cands:not(:has(> .cand:nth-child(4 of .cand))) ~ .rails::before{left: calc(min(anchor(--fit-part center), anchor(--fit-first center)) - 7px); right: calc(min(anchor(--fit-part center), anchor(--fit-last center)) + 2px)}
-.cands:not(:has(> .cand:nth-child(4 of .cand))) ~ .rails::after{left: calc(min(anchor(--fit-part center), anchor(--fit-first center)) + 2px); right: calc(min(anchor(--fit-part center), anchor(--fit-last center)) - 7px)}
 .rows .receipt{width: calc((100% - 2 * var(--gap)) / 3); min-width: min(100%, 19rem)}}
 .vp{
 .drops, .carry{display: none}
+.fit{--xm: 3.3rem; --xv: 3.3rem; --xy: 9.9rem}
+.fit:has(.fitstrip .g-wmi){--xv: 9.9rem; --xy: 16.5rem}
 .fitstrip{anchor-name: --fit-strip}}
 .vp{@supports (anchor-name: --a){
 .drops{display: inline}
 .drops::before, .drops::after{content: ""; position: absolute; z-index: -1; box-sizing: border-box; pointer-events: none; border: 0 solid var(--c-vds); filter: var(--stripe-lift); top: calc(anchor(--fit-strip bottom) - 2px); bottom: calc(anchor(--fit-part top) - 2px); width: 5px; border-left-width: 5px}
-.drops::before{left: calc(anchor(--fit-part center) - 7px)}
-.drops::after{left: calc(anchor(--fit-part center) + 2px); border-color: var(--c-year)}}}
-.vp{@supports not (anchor-name: --a){
-.rails, .risers{display: none}
-.cands{position: relative}
-.cands::before, .cands::after{content: ""; position: absolute; top: 0; height: 14px; left: var(--rail-x); border-left: 5px solid var(--c-vds); filter: var(--stripe-lift)}
-.cands::after{left: calc(var(--rail-x) + 9px); height: 25px; border-left-color: var(--c-year)}}}
-:is(.vp-wide,.vp-tab){@supports not (anchor-name: --a){
-.cands:not(:has(> .cand:nth-child(4 of .cand)))::before, .cands:not(:has(> .cand:nth-child(4 of .cand)))::after{display: none}
-.cands:not(:has(> .cand:nth-child(4 of .cand))) > .cand:nth-child(1 of .cand) .hook::before, .cands:not(:has(> .cand:nth-child(4 of .cand))) > .cand:nth-child(1 of .cand) .hook::after{top: -40px; height: 40px}}}
+.drops::before{left: calc(var(--xv) - 2.5px)}
+.drops::after{left: calc(var(--xy) - 2.5px); border-color: var(--c-year)}}}
 .vp{
 .plabels, .pplate, .punder{display: grid; grid-template-columns: 1fr 2fr}
 .part-form, .part-answer{--plate-pad: 16px}
@@ -259,19 +223,14 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 :is(.vp-tab,.vp-phone){
 .seg .w{font-size: .9rem; letter-spacing: .04em}
 .fit{margin: 0}
-.fitstrip{grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 30px}
-.fitstrip .g-vds{grid-column: 1}
-.fitstrip .g-year{grid-column: 2}
-.fitstrip:has(.g-wmi){grid-template-columns: repeat(3, minmax(0, 1fr))}
-.fitstrip:has(.g-wmi) .g-vds{grid-column: 2}
-.fitstrip:has(.g-wmi) .g-year{grid-column: 3}
+.fitstrip{margin-top: 30px}
 .fitstrip .vfacts{grid-row: 3; grid-column: 1 / -1; border-left: 0; border-top: 1px solid rgb(255 255 255 / .18)}
 .aka{margin-right: calc(-1 * var(--gutter))}
 .nametags{padding-right: var(--gutter); scroll-padding-right: var(--gutter)}
 .fitstrip .seg::after{display: none}}
 :is(.vp-tab,.vp-phone){@supports (animation-timeline: --a) and (timeline-scope: --a){
 #answer{timeline-scope: --hang; --col: 12.5rem}
-.carry{display: block; position: absolute; z-index: -1; top: -3px; left: calc(-1 * var(--gutter)); right: calc(-1 * var(--gutter)); height: 35px; overflow: clip; pointer-events: none; animation: hang-p linear both; animation-timeline: --hang; --w: calc(100% - 2 * var(--gutter)); --r: calc(6 * var(--col) - var(--w)); --mv: calc(var(--gutter) + 1.5 * var(--col) - round(var(--hang-p) * var(--r), .02px)); --my: calc(var(--gutter) + 3.5 * var(--col) - round(var(--hang-p) * var(--r), .02px)); --fv: calc(var(--gutter) + .25 * var(--w)); --fy: calc(var(--gutter) + .75 * var(--w))}
+.carry{display: block; position: absolute; z-index: -1; top: -3px; left: calc(-1 * var(--gutter)); right: calc(-1 * var(--gutter)); height: 35px; overflow: clip; pointer-events: none; animation: hang-p linear both; animation-timeline: --hang; --w: calc(100% - 2 * var(--gutter)); --r: calc(6 * var(--col) - var(--w)); --mv: calc(var(--gutter) + 1.5 * var(--col) - round(var(--hang-p) * var(--r), .02px)); --my: calc(var(--gutter) + 3.5 * var(--col) - round(var(--hang-p) * var(--r), .02px)); --fv: calc(var(--gutter) + var(--xv)); --fy: calc(var(--gutter) + var(--xy))}
 .carry span{position: absolute; inset: 0}
 .carry span::before, .carry span::after{content: ""; position: absolute; box-sizing: border-box; border: 0 solid var(--c-vds); filter: var(--stripe-lift)}
 .carry span::after{border-color: var(--c-year)}
@@ -284,7 +243,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 .carry span:nth-child(3)::before, .carry span:nth-child(3)::after{bottom: 0; width: 5px; border-left-width: 5px}
 .carry span:nth-child(3)::before{top: 7px; left: calc(var(--fv) - 2.5px)}
 .carry span:nth-child(3)::after{top: 16px; left: calc(var(--fy) - 2.5px)}
-.carry:has(span:nth-child(4)){--mm: calc(var(--gutter) + .5 * var(--col) - round(var(--hang-p) * var(--r), .02px)); --fm: calc(var(--gutter) + var(--w) / 6); --fv: calc(var(--gutter) + .5 * var(--w)); --fy: calc(var(--gutter) + var(--w) * 5 / 6)}
+.carry:has(span:nth-child(4)){--mm: calc(var(--gutter) + .5 * var(--col) - round(var(--hang-p) * var(--r), .02px)); --fm: calc(var(--gutter) + var(--xm))}
 .carry span:nth-child(n + 4)::after{display: none}
 .carry span:nth-child(n + 4)::before{border-color: var(--c-wmi)}
 .carry span:nth-child(4)::before{top: 0; left: calc(var(--mm) - 2.5px); width: 5px; height: 30px; border-left-width: 5px}
@@ -294,18 +253,11 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 &{--gutter: .5rem}
 .hang, #answer{--col: 9.5rem}
 .seg .w{font-size: .8rem; letter-spacing: .03em}
-.cands{grid-template-columns: none; grid-template-rows: auto auto; grid-auto-flow: column; grid-auto-columns: var(--tag); gap: 0 var(--gap); margin-inline: calc(-1 * var(--gutter)); padding: 40px var(--gutter) 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter)}
+.cands{grid-template-columns: none; grid-template-rows: auto auto; grid-auto-flow: column; grid-auto-columns: var(--tag); gap: 0 var(--gap); margin-inline: calc(-1 * var(--gutter)); padding: 6px var(--gutter) 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter)}
 .fit{--tag: calc(100% - 2.5rem)}
-.cands::before, .cands::after{content: none}
 .cands:is(:focus-visible,.is-fv){outline: 3px solid var(--link); outline-offset: -3px}
 .cand{grid-row: 1; scroll-snap-align: start}
 .cand:has(+ .rows){scroll-initial-target: nearest}
-.cand:nth-child(1 of .cand)::before{left: calc(50% - 7px)}
-.cand:nth-child(1 of .cand)::after{left: calc(50% + 2px)}
-.cand:nth-last-child(1 of .cand)::before{right: calc(50% + 2px)}
-.cand:nth-last-child(1 of .cand)::after{right: calc(50% - 7px)}
-.rails::before{left: min(calc(anchor(--fit-part center) - 7px), calc(var(--tag) / 2 - 7px)); right: min(calc(anchor(--fit-part center) + 2px), calc(var(--tag) / 2 + 2px))}
-.rails::after{left: min(calc(anchor(--fit-part center) + 2px), calc(var(--tag) / 2 + 2px)); right: min(calc(anchor(--fit-part center) - 7px), calc(var(--tag) / 2 - 7px))}
 .rows{grid-row: 2; grid-column: auto; margin-top: 0}}
 .sheet{--bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint: #a9bccb; --card-bg: #ffffff; --link: #0b4fa8; --bad: #b91c1c; --c-wmi: #c8102e; --c-vds: #0b4fa8; --c-check: #5b2d8e; --c-year: #a34c09; --c-plant: #0f6b46; --c-serial: #3d4650; --on: #ffffff; --label-font: "Arial Black", "Helvetica Neue", system-ui, sans-serif; --cell-font: ui-monospace, monospace; --steel: #6f7b86; --steel-dark: #58626c; --on-metal: #232930; --metal: url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0 / 600px 120px, linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc); --emboss: 0 1px 0 rgb(255 255 255 / .9), 0 -1px 1px rgb(0 0 0 / .45); --lift-stuck: 0 2px 3px rgb(8 7 15 / .32); --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 9px rgb(8 7 15 / .38); --raised: inset 0 1px 0 #fff, var(--lift-raised); --pressed: inset 0 3px 4px rgb(8 7 15 / .4); --alu-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .12) 2px 3px), linear-gradient(#8e99a3, #aab4bd); --alu: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .07) 2px 3px), var(--metal); --tape: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .13) 2px 3px), linear-gradient(#30363d, #171a1e); --tape-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .2) 2px 3px), linear-gradient(#0c0e10, #1d2125); --tape-edge: #050607; --tape-lit: #69727c; --on-tape: #f6f8fa; --tape-emboss: -1px -1px 0 rgb(8 7 15 / .67), 1px 1px 0 rgb(255 255 255 / .33), 0 2px 2px rgb(8 7 15 / .53); --stripe-lift: drop-shadow(-1px -1px 0 rgb(255 255 255 / .4)) drop-shadow(1.5px 2px 1px rgb(8 7 15 / .3)); --manila: url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f); --on-manila: #2b2418; --manila-muted: #5c4c2e; --manila-patch: #c39a5c; --manila-bad: #a01414; --thermal: #f6f4ee; --on-thermal: #232229; --thermal-muted: #62606b; --gutter: 1rem; font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 1rem var(--gutter) 3rem; color: var(--fg); background: var(--bg);--gutter: .5rem;}
 .sheet{box-sizing:border-box;margin:0;padding:40px;display:flex;flex-direction:column;gap:26px}
@@ -324,8 +276,8 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 
 </style>
 </helmet>
-<div class="root sheet" data-scheme="light" style="width: 1280px; height: 5830px; color: var(--fg); background: var(--bg)">
-<div><h1 class="sh-h1">The fitment card</h1><p class="sh-intro">The parts that fit: the vehicle's block, which says what the vehicle is, its names as manila tags, a picker of the catalog's part types, and the candidates as manila tags on rails that come down from the picker. A candidate's stock strip feeds out its shelf and yard rows, a receipt on thermal paper.</p></div>
+<div class="root sheet" data-scheme="light" style="width: 1280px; height: 5710px; color: var(--fg); background: var(--bg)">
+<div><h1 class="sh-h1">The fitment card</h1><p class="sh-intro">The parts that fit: the vehicle's block, which says what the vehicle is, its names as manila tags, a picker of the catalog's part types, and the candidates as manila tags under the picker, where the lines end. A candidate's stock strip feeds out its shelf and yard rows, a receipt on thermal paper.</p></div>
 <section>
 <p class="sh-cap">Picker, candidates, marks and stock <span>Alternator pressed: the picker names it and counts its candidates, and × beside it clears. Under its tape, what the decode says of this vehicle, to match each candidate's options against. The first candidate's stock is open under its row.</span></p>
 <div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px">
@@ -346,16 +298,6 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>
 </dl>
 </div>
-<section class="aka done" id="aka" aria-labelledby="aka-h">
-<h2 id="aka-h" class="visually-hidden">Also known as</h2>
-<ol class="nametags" aria-label="Also known as" tabindex="0">
-<li class="card done name">
-<h3 class="nvoc">demo-vehicles</h3>
-<p class="nw g-wmi">Ford</p>
-<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="how" aria-label="How Ford F150 was reached" type="button"></button></p>
-</div></li>
-</ol>
-</section>
 <div class="ptwrap live" data-spine="demo-part-types">
 <div class="ptsel">
 <div class="ptkeys">
@@ -366,8 +308,18 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 </div>
 </div>
 <span class="drops" aria-hidden="true"></span>
+<section class="aka done" id="aka" aria-labelledby="aka-h">
+<h2 id="aka-h" class="visually-hidden">Also known as</h2>
+<ol class="nametags" aria-label="Also known as" tabindex="0">
+<li class="card done name">
+<h3 class="nvoc">demo-vehicles</h3>
+<p class="nw g-wmi">Ford</p>
+<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="how" aria-label="How Ford F150 was reached" type="button"></button></p>
+</div></li>
+</ol>
+</section>
 <ol class="cands" aria-label="Candidates: Alternator" tabindex="0">
-<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<li class="cand"><div class="cand-in">
 <p class="numtape"><b class="num">DEMO-1001</b> <span class="yrs">2015–2017</span></p>
 <dl>
 <div><dt>Options</dt><dd>3.5L V6 EcoBoost (VIN G, 8th digit)</dd></div>
@@ -399,7 +351,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <p class="receipt-foot" aria-hidden="true">DEMO-1001</p>
 </div>
 </li>
-<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<li class="cand"><div class="cand-in">
 <p class="numtape"><b class="num">DEMO-1002</b> <span class="yrs">2015–2020</span></p>
 <dl>
 <div><dt>Options</dt><dd>5.0L V8 (VIN F, 8th digit)</dd></div>
@@ -409,7 +361,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 </p>
 <a class="stk swap" id="stk-2" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1002</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
 </div></li>
-<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<li class="cand"><div class="cand-in">
 <p class="numtape"><b class="num">DEMO-1003</b> <span class="yrs">2015–2020</span></p>
 <dl>
 <div><dt>Options</dt><dd>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</dd></div>
@@ -420,7 +372,6 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <a class="stk swap" id="stk-3" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1003</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
 </div></li>
 </ol>
-<span class="rails" aria-hidden="true"></span><span class="risers" aria-hidden="true"></span>
 </section>
 </div>
 </main>
@@ -447,16 +398,6 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>
 </dl>
 </div>
-<section class="aka done" id="aka" aria-labelledby="aka-h">
-<h2 id="aka-h" class="visually-hidden">Also known as</h2>
-<ol class="nametags" aria-label="Also known as" tabindex="0">
-<li class="card done name">
-<h3 class="nvoc">demo-vehicles</h3>
-<p class="nw g-wmi">Ford</p>
-<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="how" aria-label="How Ford F150 was reached" type="button"></button></p>
-</div></li>
-</ol>
-</section>
 <div class="ptwrap live" data-spine="demo-part-types">
 <div class="ptsel">
 <div class="ptkeys">
@@ -520,8 +461,18 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 </section>
 </div>
 </dialog>
+<section class="aka done" id="aka" aria-labelledby="aka-h">
+<h2 id="aka-h" class="visually-hidden">Also known as</h2>
+<ol class="nametags" aria-label="Also known as" tabindex="0">
+<li class="card done name">
+<h3 class="nvoc">demo-vehicles</h3>
+<p class="nw g-wmi">Ford</p>
+<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="how" aria-label="How Ford F150 was reached" type="button"></button></p>
+</div></li>
+</ol>
+</section>
 <ol class="cands" aria-label="Candidates: Alternator" tabindex="0">
-<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<li class="cand"><div class="cand-in">
 <p class="numtape"><b class="num">DEMO-1001</b> <span class="yrs">2015–2017</span></p>
 <dl>
 <div><dt>Options</dt><dd>3.5L V6 EcoBoost (VIN G, 8th digit)</dd></div>
@@ -531,7 +482,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 </p>
 <a class="stk swap" id="stk-1" href="#" aria-expanded="false"><span>Stock · 2 shelf · 2 yard<span class="visually-hidden">, DEMO-1001</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
 </div></li>
-<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<li class="cand"><div class="cand-in">
 <p class="numtape"><b class="num">DEMO-1002</b> <span class="yrs">2015–2020</span></p>
 <dl>
 <div><dt>Options</dt><dd>5.0L V8 (VIN F, 8th digit)</dd></div>
@@ -541,7 +492,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 </p>
 <a class="stk swap" id="stk-2" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1002</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
 </div></li>
-<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<li class="cand"><div class="cand-in">
 <p class="numtape"><b class="num">DEMO-1003</b> <span class="yrs">2015–2020</span></p>
 <dl>
 <div><dt>Options</dt><dd>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</dd></div>
@@ -552,7 +503,6 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <a class="stk swap" id="stk-3" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1003</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
 </div></li>
 </ol>
-<span class="rails" aria-hidden="true"></span><span class="risers" aria-hidden="true"></span>
 </section>
 </div>
 </main>
@@ -560,7 +510,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 </div>
 </section>
 <section>
-<p class="sh-cap">By redirect <span>One tag: the rails run from the riser to its eyelet. The mark names the part type the catalog lists it under.</span></p>
+<p class="sh-cap">By redirect <span>One tag. The mark names the part type the catalog lists it under.</span></p>
 <div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px">
 
 <main id="ui-main" class="is-fw">
@@ -580,16 +530,6 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>V</b><small>4</small></span><span class="vc"><b>K</b><small>5</small></span><span class="vc"><b>R</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>C</b><small>8</small></span></dd></div>
 </dl>
 </div>
-<section class="aka done" id="aka" aria-labelledby="aka-h">
-<h2 id="aka-h" class="visually-hidden">Also known as</h2>
-<ol class="nametags" aria-label="Also known as" tabindex="0">
-<li class="card done name">
-<h3 class="nvoc">demo-vehicles</h3>
-<p class="nw g-wmi">Chevrolet</p>
-<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">Silverado 1500</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="how" aria-label="How Chevrolet Silverado 1500 was reached" type="button"></button></p>
-</div></li>
-</ol>
-</section>
 <div class="ptwrap live" data-spine="demo-part-types">
 <div class="ptsel">
 <div class="ptkeys">
@@ -600,8 +540,18 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 </div>
 </div>
 <span class="drops" aria-hidden="true"></span>
+<section class="aka done" id="aka" aria-labelledby="aka-h">
+<h2 id="aka-h" class="visually-hidden">Also known as</h2>
+<ol class="nametags" aria-label="Also known as" tabindex="0">
+<li class="card done name">
+<h3 class="nvoc">demo-vehicles</h3>
+<p class="nw g-wmi">Chevrolet</p>
+<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">Silverado 1500</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="how" aria-label="How Chevrolet Silverado 1500 was reached" type="button"></button></p>
+</div></li>
+</ol>
+</section>
 <ol class="cands" aria-label="Candidates: Brake Rotor, Rear" tabindex="0">
-<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<li class="cand"><div class="cand-in">
 <p class="numtape"><b class="num">DEMO-2101</b> <span class="yrs">2014–2018</span></p>
 <dl>
 </dl>
@@ -611,7 +561,6 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <a class="stk swap" id="stk-1" href="#" aria-expanded="false"><span>Stock · 0 shelf · 1 yard<span class="visually-hidden">, DEMO-2101</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
 </div></li>
 </ol>
-<span class="rails" aria-hidden="true"></span><span class="risers" aria-hidden="true"></span>
 </section>
 </div>
 </main>
@@ -639,16 +588,6 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>
 </dl>
 </div>
-<section class="aka done" id="aka" aria-labelledby="aka-h">
-<h2 id="aka-h" class="visually-hidden">Also known as</h2>
-<ol class="nametags" aria-label="Also known as" tabindex="0">
-<li class="card done name">
-<h3 class="nvoc">demo-vehicles</h3>
-<p class="nw g-wmi">Ford</p>
-<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="how" aria-label="How Ford F150 was reached" type="button"></button></p>
-</div></li>
-</ol>
-</section>
 <div class="ptwrap live" data-spine="demo-part-types">
 <div class="ptsel">
 <div class="ptkeys">
@@ -659,8 +598,18 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 </div>
 </div>
 <span class="drops" aria-hidden="true"></span>
+<section class="aka done" id="aka" aria-labelledby="aka-h">
+<h2 id="aka-h" class="visually-hidden">Also known as</h2>
+<ol class="nametags" aria-label="Also known as" tabindex="0">
+<li class="card done name">
+<h3 class="nvoc">demo-vehicles</h3>
+<p class="nw g-wmi">Ford</p>
+<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="how" aria-label="How Ford F150 was reached" type="button"></button></p>
+</div></li>
+</ol>
+</section>
 <ol class="cands" aria-label="Candidates: Alternator" tabindex="0">
-<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<li class="cand"><div class="cand-in">
 <p class="numtape"><b class="num">DEMO-1001</b> <span class="yrs">2015–2017</span></p>
 <dl>
 <div><dt>Options</dt><dd>3.5L V6 EcoBoost (VIN G, 8th digit)</dd></div>
@@ -670,7 +619,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 </p>
 <a class="stk swap" id="stk-1" href="#" aria-expanded="false"><span>Stock · 2 shelf · 2 yard<span class="visually-hidden">, DEMO-1001</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
 </div></li>
-<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<li class="cand"><div class="cand-in">
 <p class="numtape"><b class="num">DEMO-1002</b> <span class="yrs">2015–2020</span></p>
 <dl>
 <div><dt>Options</dt><dd>5.0L V8 (VIN F, 8th digit)</dd></div>
@@ -680,7 +629,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 </p>
 <a class="stk swap" id="stk-2" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1002</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
 </div></li>
-<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<li class="cand"><div class="cand-in">
 <p class="numtape"><b class="num">DEMO-1003</b> <span class="yrs">2015–2020</span></p>
 <dl>
 <div><dt>Options</dt><dd>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</dd></div>
@@ -691,7 +640,6 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <a class="stk swap" id="stk-3" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1003</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
 </div></li>
 </ol>
-<span class="rails" aria-hidden="true"></span><span class="risers" aria-hidden="true"></span>
 </section>
 </div>
 </main>
@@ -718,16 +666,6 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>
 </dl>
 </div>
-<section class="aka done" id="aka" aria-labelledby="aka-h">
-<h2 id="aka-h" class="visually-hidden">Also known as</h2>
-<ol class="nametags" aria-label="Also known as" tabindex="0">
-<li class="card done name">
-<h3 class="nvoc">demo-vehicles</h3>
-<p class="nw g-wmi">Ford</p>
-<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="how" aria-label="How Ford F150 was reached" type="button"></button></p>
-</div></li>
-</ol>
-</section>
 <div class="ptwrap live" data-spine="demo-part-types">
 <div class="ptsel">
 <div class="ptkeys">
@@ -738,8 +676,18 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 </div>
 </div>
 <span class="drops" aria-hidden="true"></span>
+<section class="aka done" id="aka" aria-labelledby="aka-h">
+<h2 id="aka-h" class="visually-hidden">Also known as</h2>
+<ol class="nametags" aria-label="Also known as" tabindex="0">
+<li class="card done name">
+<h3 class="nvoc">demo-vehicles</h3>
+<p class="nw g-wmi">Ford</p>
+<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="how" aria-label="How Ford F150 was reached" type="button"></button></p>
+</div></li>
+</ol>
+</section>
 <ol class="cands" aria-label="Candidates: Alternator" tabindex="0">
-<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<li class="cand"><div class="cand-in">
 <p class="numtape"><b class="num">DEMO-1001</b> <span class="yrs">2015–2017</span></p>
 <dl>
 <div><dt>Options</dt><dd>3.5L V6 EcoBoost (VIN G, 8th digit)</dd></div>
@@ -771,7 +719,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <p class="receipt-foot" aria-hidden="true">DEMO-1001</p>
 </div>
 </li>
-<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<li class="cand"><div class="cand-in">
 <p class="numtape"><b class="num">DEMO-1002</b> <span class="yrs">2015–2020</span></p>
 <dl>
 <div><dt>Options</dt><dd>5.0L V8 (VIN F, 8th digit)</dd></div>
@@ -781,7 +729,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 </p>
 <a class="stk swap" id="stk-2" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1002</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
 </div></li>
-<li class="cand"><span class="hook" aria-hidden="true"></span><div class="cand-in">
+<li class="cand"><div class="cand-in">
 <p class="numtape"><b class="num">DEMO-1003</b> <span class="yrs">2015–2020</span></p>
 <dl>
 <div><dt>Options</dt><dd>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</dd></div>
@@ -792,7 +740,6 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 <a class="stk swap" id="stk-3" href="#" aria-expanded="false"><span>Stock · 0 shelf · 2 yard<span class="visually-hidden">, DEMO-1003</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 4l5 5 5-5"></path></svg></a>
 </div></li>
 </ol>
-<span class="rails" aria-hidden="true"></span><span class="risers" aria-hidden="true"></span>
 </section>
 </div>
 </main>
@@ -865,7 +812,7 @@ button.linkish:is(:active,.is-active){transform: none; box-shadow: none}}
 </section>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":5830}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":5710}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};
