@@ -146,6 +146,25 @@ func TestStockStrip(t *testing.T) {
 			tb.audit(name + ", 390 wide")
 			tb.window(1280, 900)
 
+			// Wide, each line into the vehicle's block is one piece: it
+			// starts where the stepped line under the cards ends, and ends
+			// on the block's top edge, not over the stamp inside it.
+			lines := measure[[]float64](tb, `(() => {
+				const strip = document.querySelector(".fitstrip").getBoundingClientRect(), joins = document.querySelector(".joins").getBoundingClientRect();
+				return [...document.querySelectorAll(".fitstrip .seg")].flatMap(seg => {
+					const line = getComputedStyle(seg, "::after"), top = seg.getBoundingClientRect().top + parseFloat(line.top);
+					return [top - joins.bottom, top + parseFloat(line.height) - strip.top];
+				});
+			})()`)
+			if len(lines) != 6 {
+				t.Fatalf("1280 wide: %d measures of the block's lines; want 6, two of each of three", len(lines))
+			}
+			for i := 0; i < len(lines); i += 2 {
+				if lines[i] > 0.5 || lines[i+1] < 0 || lines[i+1] > 2 {
+					t.Errorf("1280 wide: line %d into the block starts %v px under the stepped lines and ends %v px into the block; want it to start at them and end on the block's top edge", i/2+1, lines[i], lines[i+1])
+				}
+			}
+
 			// Past ten rows, "Show all": every row, in place where scripts
 			// run.
 			rb := newTab(t, path, ramSrv.URL, ram, js)

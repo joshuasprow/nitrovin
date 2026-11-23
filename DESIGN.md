@@ -504,8 +504,8 @@ for the vehicle, and the candidates of the one pressed.
   group's five characters, each over the group's mark, as on the plate,
   with its position under it and no label: the positions say what they
   are. On a wide page the make is at 8 % of the width and the model at 25 %,
-  under the Maker and Vehicle cards, whose lines come straight down into
-  the tape; the year is at 42 %, and the Model year's line steps left to
+  under the Maker and Vehicle cards, whose lines come straight down onto
+  the block's top edge, over the stamp's strip and never across it; the year is at 42 %, and the Model year's line steps left to
   it. A catalog on vPIC's own vehicles has no make of its own: the block
   has none, and the Maker's line is not brought down. The page puts the vehicle
   and the candidates side by side and judges nothing: it marks no
