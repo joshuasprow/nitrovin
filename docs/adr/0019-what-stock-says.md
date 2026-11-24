@@ -238,7 +238,8 @@ and the price came last.
   allocations before: a row's fields are now copied once from the
   driver's buffer, in order, where they were copied twice.
 - **`/v1/info` reports it:** a source's declared `fields` beside its
-  `source` and `catalog`, absent when it declares none. `list` names
+  `source` and `catalog`, absent when it declares none; a browser's own
+  `/v1/info` says the same of a stock file it holds. `list` names
   vocabularies, extension sets and spines and no stock source, so it has
   nothing to report it beside.
 - **Not the column's type.** A `json` column keeps the order its text was

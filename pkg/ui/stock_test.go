@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"slices"
 	"strconv"
@@ -35,6 +36,8 @@ func stockPath(name string) string {
 		dir = filepath.Join(dir, "drift")
 	case "shelf-more":
 		dir = filepath.Join(dir, "more")
+	case "shelf-order", "yard-order":
+		dir = filepath.Join(dir, "order")
 	}
 	return filepath.Join(dir, name+".jsonl")
 }
@@ -233,6 +236,44 @@ var stockTargets = []string{
 	"/?from.vin=1D7RV1GT5AS123456&part.id=brake-rotor-front&fitment.number=BR-2001&rows=all",
 	"/?from.vin=1D7RV1GT5AS123456&part.id=mirror",
 	"/?from.vin=1D7RV1GT5AS123456&part.id=mirror&fitment.number=MR-1001&fitment.side=left",
+}
+
+// TestLibraryStockFieldOrder: a stock file the browser holds whose header
+// declares its rows' field order (#390) is listed in the browser's
+// /v1/info with that order, as the server lists its own, and a file that
+// declares none with none; its rows are answered in it; and both hold
+// when the browser opens again from what it stored.
+func TestLibraryStockFieldOrder(t *testing.T) {
+	d := embedded(t)
+	s, disk := newDecoderServer(t, d, "part-types", "part-codes"), newDisk()
+	first := browserStock(t, s, disk)
+	if _, err := first.Load(stockPicked(t, "shelf-order", "yard-order"), quiet); err != nil {
+		t.Fatal(err)
+	}
+	want := map[string][]string{
+		"shelf-annex": nil, "shelf-orphans": nil, "shelf-stock": nil, "yard-stock": nil,
+		"shelf-order": {"stock_number", "condition", "price", "warranty"},
+		"yard-order":  {"stock_number", "row", "photos"},
+	}
+	for i, l := range []*Library{first, openWith(t, s, disk)} {
+		got := map[string][]string{}
+		for _, v := range l.Info().Vocabularies {
+			if v.StockCounts != nil {
+				got[v.Name] = v.Fields
+			}
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("opened %d times, info's declared orders\n%q\nwant\n%q", i+1, got, want)
+		}
+		f, err := l.Fit(context.Background(), contract.FitRequest{From: contract.FitFrom{Fitment: &contract.FitmentKey{Type: "engine", Number: "EN-57"}}, Stock: []string{"shelf"}, Now: fitNow})
+		if err != nil {
+			t.Fatal(err)
+		}
+		const r1 = `{"stock_number":"E500","condition":"A","price":1850.00,"tag":"T-9","miles":61250,"status":"on shelf"}`
+		if f.Shelf == nil || len(f.Shelf.Rows) == 0 || string(f.Shelf.Rows[0].Fields) != r1 {
+			t.Errorf("opened %d times, the engine's shelf: %+v; want R-1 first, its fields %s", i+1, f.Shelf, r1)
+		}
+	}
 }
 
 // TestLibraryStockPage: the browser's library draws the stock strips and

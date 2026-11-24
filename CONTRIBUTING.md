@@ -409,7 +409,8 @@ and `TestServeContract`, `TestStdioOps`, `TestMCPVocabSession`,
 `cmd/nitrovin`'s `TestStockFieldOrder` and the C library's
 `vocab-requests.jsonl` load it beside the synthetic stock and read it in
 each surface's own bytes. `TestFieldOrderPostgres` holds a connector to
-it, over `jsonb`'s own order.
+it, over `jsonb`'s own order, and `TestLibraryStockFieldOrder` (`pkg/ui`)
+a browser holding the two files, opened again from what it stored.
 
 `testdata/vocab/stock/live/` reads the same three sources through
 connectors ([ADR 0020](docs/adr/0020-request-time-stock-the-postgres-connector.md)):
