@@ -223,3 +223,31 @@ candidate's stock or `unnumbered` for every shelf row with no number (#323).
 Each is named after the fit request's own parameter where it has one. The
 decode's options are still ignored, and a whole VIN, a part type pressed, a
 candidate opened and "Show all" are each a history entry.
+
+## Amendment (2026-11-23): under the vehicle's block the page is a counter
+
+The page under its six cards was rebuilt, on the maintainer's rulings.
+[docs/design/page.md](../design/page.md) holds the detail: the composition
+rules this changes knowingly, and what is still open.
+
+- **The lines from the cards end on the vehicle's block.** None runs on
+  from the block to the picker or to a candidate.
+- **One trunk, and rows.** One line of pinstripe tape leaves the block's
+  bottom edge and runs straight down the gutter beside the cards' first
+  column. The part type picker and every candidate are tied to it by a
+  stub. Candidates are rows down the page, where they were tags in a row
+  that scrolled sideways. The stylesheet draws the trunk a piece an item:
+  nothing is measured to draw, as "The rules" has it.
+- **Stock is a print in columns.** An open candidate's stock is a strip of
+  thermal paper under its row: a row's id, its location, then exactly the
+  fields its source's header declares (ADR 0019's amendment of
+  2026-11-23), with what else it has folded under the row. It has no
+  head, no barcode and no dot leaders.
+- **Part-number mode is on the same rows.** The part's tag is a row, the
+  trunk leaves it, and the vehicles the part fits are rows tied to the
+  trunk. Its table panel is gone.
+
+The page still takes a VIN alone or a part number alone. The plate's second
+mode (#325) is the control of its own that "The plate takes a VIN and
+nothing else" left room for, and a URL is one mode. No parameter of the
+page's URL changes.

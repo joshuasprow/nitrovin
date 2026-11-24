@@ -1079,17 +1079,16 @@ A refusal is said below the plate. Older links
 (`/?vin=…`, `/ui/decode`, `/ui/translate`, `/vocab`,
 `/ui/vocabularies`) redirect to it (`301`) with the VIN they named and
 nothing else. Below the plate the answer
-is a card for each group and, under them, "Also known as": a stack for
-each vocabulary, one with a name before one without. A name reads the
-vocabulary, then the make, the rest of the entry and the years its
-mapping holds for. A vocabulary with several names shows its first, with
-their count, and all of them at a click on its name, which needs no
-script. A dashed line or mark is a doubt: a mapping matched by rule, or
+is a card for each group and, under them, "Also known as": a tag for
+each vocabulary, in one row that scrolls sideways, one with a name before
+one without. A tag reads the vocabulary, then the make, the rest of the
+entry and the years its mapping holds for. A vocabulary with several
+names shows every one, with their count. A dashed underline is a doubt:
+a mapping matched by rule, or
 a qualifier or the model year that was not checked; each part's title
 says which, and a small button on the name opens how it was reached.
 A vocabulary with no name for the vehicle
-keeps a blank place that says so. On a phone the lines are hidden and
-the dashed underlines stay. The Developers button in the page's header
+keeps a tag that says so. The Developers button in the page's header
 shows the answer's JSON, the decode's and the translation's. Back and
 forward ask the server for each page again,
 never a copy the browser kept. The header's Vocabularies button

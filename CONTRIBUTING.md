@@ -642,12 +642,12 @@ name the maker, and fewer ask the decoder nothing), the check digit's
 verdict by the page's own arithmetic once the VIN is whole, and then the
 decoder's error texts and the VIN it suggests instead, a link. Under the
 cards "Also known as" holds the vehicle's names in every vocabulary
-loaded on vPIC's spine, the VIN's translation to all of them: a stack to
-a vocabulary, one with a name before one without, a name a strip of
-label-maker tape, a dashed line or mark a doubt (matched by rule, or a
+loaded on vPIC's spine, the VIN's translation to all of them: a tag to
+a vocabulary, one with a name before one without, in one row that
+scrolls sideways, a dashed underline a doubt (matched by rule, or a
 qualifier or the model year not checked). No visitor chooses targets:
-what is loaded is what is shown. A stack of several names shows its
-first, and all of them at a click on its stamp, a checkbox's label. A
+what is loaded is what is shown. A tag shows every name its vocabulary
+has. A
 refusal is the page still, with its status, said below the plate. The
 Developers dialog holds the answer's own request when there is
 one, the plain one for the VIN whatever else the page's URL holds (the
@@ -879,9 +879,9 @@ loads EPA's vocabulary in one click and drops a file on the page.
 `TestVocabTranslate` (`vocabtranslate_test.go`) runs "Also known as" on
 the fixture's 2010 Ram, which `fleet` has three names for and the EPA
 sample none. Without JavaScript, against a server that loaded the fixture
-and the EPA sample, the page has a stack for each vocabulary on vPIC's
-spine, `fleet`'s first, showing its first name, and all three at a click on
-its stamp. With JavaScript, against a server with no vocabulary on vPIC's
+and the EPA sample, the page has a tag for each vocabulary on vPIC's
+spine, `fleet`'s first, with its three names, every one displayed. With
+JavaScript, against a server with no vocabulary on vPIC's
 spine, the worker draws the page over the files the browser holds: a file
 loaded is on the page at once, a second beside it, a file removed is off
 it, the page never reloads, and the server gets no body and no request
