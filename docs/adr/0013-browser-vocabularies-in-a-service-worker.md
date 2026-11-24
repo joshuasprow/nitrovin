@@ -213,7 +213,8 @@ look again.
 **Update now is in the header.** It was inside the Vocabularies dialog,
 which a visitor has to open to learn of a release. It is the header's
 key now, lit, shown at every width only while there is an update
-(DESIGN.md). A page learns the server's release from every answer htmx
+(docs/design/page.md, "Good enough: dialogs"). A page learns the
+server's release from every answer htmx
 gets and from `HEAD /sw.js` when its tab is shown again, five minutes
 apart at most, so a tab with no worker hears of a deploy too; there the
 key reloads the page. A press while the new worker still installs waits
