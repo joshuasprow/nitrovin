@@ -16,9 +16,9 @@ const type = (text, then) => async (c) => {
 const showVocab = async (c) => { await c.eval('document.querySelector("#vocabularies").showPopover(); 1'); await c.sleep(4000); };
 const DIAGRAM = ['#lookup .plate-form', '#answer > .under', '#answer > .leaders', '#answer > .hang', '#fit'];
 // The picker's list is drawn where the page hangs it: from the picker, at
-// its width, 30rem tall at most and scrolling. The engine draws every
-// other open popover in the flow and whole.
-const LIST = '.sheet .vp #fit .ptdialog.is-open{top:calc(anchor(bottom) + var(--s1)) !important;left:anchor(left) !important;width:anchor-size(width) !important;margin-top:0 !important;max-height:30rem !important;overflow:auto !important}';
+// its width (the page's own rule), 30rem tall at most and scrolling. The
+// engine draws every other open popover in the flow and whole.
+const LIST = '.sheet .vp #fit .ptdialog.is-open{top:calc(anchor(bottom) + var(--s1)) !important;left:anchor(left) !important;max-height:30rem !important;overflow:auto !important}';
 
 export const frames = [
   {
