@@ -540,7 +540,9 @@ specifies.
   fitment in the file. A stock file adds: a `source` other than `shelf` or
   `yard`; an `as_of` that is no RFC 3339 time or date; a shelf without a
   `catalog`, or whose catalog is not loaded; a yard with a `catalog` or
-  `release`; a row without `id` or `location`, or two rows with one `id`;
+  `release`; header `fields` (Stock, below) that are not an array of
+  distinct, non-empty strings (`/fields/2: duplicate field "price"`); a
+  row without `id` or `location`, or two rows with one `id`;
   a shelf row with both a fitment key and `part`, or neither whole, or
   whose `fields` are not flat; a yard row naming no route; a `vehicle`
   without its `year`, or one no catalog is loaded to name; a `part` the
@@ -625,7 +627,9 @@ specifies.
   its `source`, a shelf's `catalog`, `connector: "postgres"`, its
   `relation` and its `status`: `unchecked` until its first lookup connects
   (nothing connects at load), then `available`, or `unavailable` with a
-  `reason`. Never a DSN, host or user. No other
+  `reason`. Never a DSN, host or user. Either adds `fields`, the names its
+  header declares, in the order every row's fields are answered in
+  ([Stock](#stock)); absent when it declares none. No other
   kind has them. A compiled
   catalog adds `compiled`: its `format`, the `source_blake3` of the JSON
   Lines file it was compiled from, the `writer` (the nitrovin version that
@@ -775,7 +779,8 @@ MCP and C surfaces carry the same object.
   order, each a `CatalogEntry`: `name`, `kind` (vPIC is a `spine`),
   `version` (vPIC's is the data month), `subject` (`vehicle` or `part`), a
   vocabulary's `fields`, and the `spine` a vocabulary or extension set
-  routes through. A loaded catalog (ADR 0017) is in `/v1/info`, not here.
+  routes through. A loaded catalog (ADR 0017) and a stock source
+  (ADR 0019) are in `/v1/info`, not here.
 - **A catalog's fitments** (ADR 0018): `of` naming the loaded catalog
   pages through its fitments in key order (part type, side, number), each a
   `FitmentLine`, the fitment line as the file has it (`fitment`, `note`,
@@ -1111,7 +1116,8 @@ it tries again, and nothing it reads is cached.
 
 A row (`StockRow`) is its `source` (the source's name), `id`, `location`,
 how it `matched`, what it names, `as_of` when its source keeps a time per
-row, and its `fields`, verbatim and never interpreted:
+row, and its `fields`, verbatim and never interpreted, in its source's
+order (**The order of a row's fields**, below):
 
 - a shelf row with a number: `matched: "fitment"`, its `fitment` key as
   the row wrote it, and `reached`: `direct`, or `retired` when that key is
@@ -1141,10 +1147,44 @@ A shelf row whose number the catalog lacks, current or retired, is an
 **orphan**: it is under no candidate, and `/v1/info` and `vocab check`
 count it as drift.
 
+**The order of a row's fields** ([ADR
+0019](../adr/0019-what-stock-says.md#amendment-2026-11-23-a-header-declares-its-rows-field-order)).
+A row's `fields` come in its source's order: as a stock file's line
+writes them, and from a connector as `jsonb` stores them, by length of
+name and then by bytes, whatever their author wrote first. A stock
+header, a file's or a connector's, may declare the order instead:
+
+```json
+{"format":1,"kind":"stock","name":"shelf-order","version":"2026.11.01","source":"shelf","as_of":"2026-11-03","catalog":"parts-catalog","fields":["stock_number","condition","price","warranty"]}
+```
+
+- `fields` is an array of distinct, non-empty field names. Every row's
+  `fields` are then answered with the names declared first, in the
+  header's order, for those the row has, then the row's other fields in
+  the source's order.
+- It orders and never cuts: a name no row has is no fault and no drift, as
+  two rows of one source need not share their fields.
+- A value is still verbatim. A member moves as the bytes its source
+  wrote, so a number's digits and a string's escapes are the source's, and
+  only an object's own names are ordered: what a yard row nests under one
+  stays as written.
+- Absent, or `[]`, nothing changes: the source's order, byte for byte.
+- The order is in the answer's JSON, so every surface answers through it;
+  no request and no answer gains a property. `/v1/info` reports a source's
+  declared `fields` (Vocabularies, above).
+
+`testdata/vocab/stock/order` declares one on a shelf and a yard whose
+lines are written out of it. With it loaded beside the synthetic stock,
+`{"op":"fit","from":{"fitment":{"type":"engine","number":"EN-57"}},"stock":["shelf","yard"]}`
+answers the shelf's `R-1`, whose line ends with its stock number, as
+`{"stock_number":"E500","condition":"A","price":1850.00,"tag":"T-9","miles":61250,"status":"on shelf"}`,
+tested on every surface.
+
 **Only the fields read** (`stock_fields`, [ADR
 0019](../adr/0019-what-stock-says.md#amendment-2026-11-20-a-request-names-the-row-fields-it-reads)).
 A fit request may name the row fields it reads: every stock row of its
-answer then carries only those of its `fields`, in the source's order,
+answer then carries only those of its `fields`, in the order the row has
+them (its source's, the declared order included, not the request's),
 their values verbatim. Absent keeps every field, as before; `[]` keeps
 none, for rows by identity alone; a name no row has is no error, as two
 sources may name their fields differently. It cuts `fields` alone, in

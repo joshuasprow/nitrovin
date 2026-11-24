@@ -127,3 +127,50 @@ func TestStocked(t *testing.T) {
 		}
 	}
 }
+
+// TestFileFieldOrder: a file source's rows come from every lookup with
+// their fields in the order the file's header declares (#390): the file
+// was read into it, once, so a lookup hands out each row's own bytes and
+// orders nothing.
+func TestFileFieldOrder(t *testing.T) {
+	files, err := vocab.Open("../../testdata/vocab/fitment", "../../testdata/vocab/stock/order")
+	if err != nil {
+		t.Fatal(err)
+	}
+	byName := map[string]*vocab.File{}
+	for _, f := range files {
+		byName[f.Name] = f
+	}
+	shelf, yard := byName["shelf-order"], byName["yard-order"]
+	if shelf == nil || yard == nil {
+		t.Fatal("testdata/vocab/stock/order has no shelf-order or yard-order")
+	}
+	ctx := context.Background()
+	rs, _, err := NewFile(shelf, nil).ShelfByFitment(ctx, [][]vocab.FitmentKey{{{Type: "engine", Number: "EN-57"}}}, Page{Limit: 10})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ram := vocab.Vehicle{Entry: map[string]string{"make": "Dodge", "model": "Ram 1500"}}
+	ys, _, err := NewFile(yard, nil).Yard(ctx, []YardQuery{{Vehicles: []VehicleYears{{Vehicle: ram}}}}, Page{Limit: 10})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got []string
+	for _, r := range slices.Concat(rs[0].Rows, ys[0].Rows) {
+		got = append(got, r.ID+" "+string(r.Fields))
+	}
+	want := []string{
+		`R-1 {"stock_number":"E500","condition":"A","price":1850.00,"tag":"T-9","miles":61250,"status":"on shelf"}`,
+		`R-2 {"stock_number":"E501","price":9.5e2,"comments":"turns over; sold \"as is\""}`,
+		`R-3 {"tag":"T-11","miles":null}`,
+		`R-4 {"stock_number":"E503","condition":"B","price":1200,"tag":"T-12"}`,
+		`V-1 {"stock_number":"V900","row":"K","photos":[{"url":"v900-front.jpg","w":1600,"h":1200},{"url":"v900-rear.jpg","w":1600,"h":1200}],"color":"grey","added":"2026-10-30"}`,
+		`V-2 {"color":"black","keys":true}`,
+	}
+	if !slices.Equal(got, want) {
+		t.Errorf("rows\n%q\nwant\n%q", got, want)
+	}
+	if a, b := rs[0].Rows[0].Fields, shelf.Stock[0].Fields; len(a) == 0 || &a[0] != &b[0] {
+		t.Error("a lookup's row does not share the file's own fields: it was ordered, or copied, again")
+	}
+}

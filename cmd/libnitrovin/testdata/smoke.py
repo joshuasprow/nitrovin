@@ -10,8 +10,9 @@ handle from nitrovin_open, and on one from nitrovin_open_vocab with the
 files, every non-blank request line must get exactly its reply line from
 nitrovin_decode, called in order and then from eight threads at once on
 one handle. Also checked: a fit's confirmed and unconfirmed conditions as
-the library writes them, both open functions' errors, nitrovin_info with
-and without vocabularies, a second handle beside the first, and a NULL
+the library writes them, a stock row's fields in the order its source's
+header declares, both open functions' errors, nitrovin_info with and
+without vocabularies, a second handle beside the first, and a NULL
 handle. Exit 0 when all hold.
 """
 
@@ -173,6 +174,17 @@ for req in lines(vocab_requests_path):
         assert got == want.pop(name), f"fit {name}: (confirmed, unconfirmed) {got}"
 assert not want, f"no request named {sorted(want)}"
 print("fit: applications say what the decode confirmed and what it could not check")
+
+# A stock source's declared field order (ADR 0019): shelf-order's R-1,
+# whose line writes its stock number last, as the library writes it for
+# the request named ordered, each value as the line has it.
+ordered = [r for r in lines(vocab_requests_path) if r.endswith(b"}") and json.loads(r).get("id") == "ordered"]
+assert len(ordered) == 1, f"{len(ordered)} requests named ordered"
+reply = decode(hv, ordered[0])
+row = next(r for r in json.loads(reply)["fit"]["shelf"]["rows"] if r["id"] == "R-1")
+assert list(row["fields"]) == ["stock_number", "condition", "price", "tag", "miles", "status"], list(row["fields"])
+assert b'"fields":{"stock_number":"E500","condition":"A","price":1850.00,"tag":"T-9"' in reply, reply[:300]
+print("fit: a stock row's fields come in the order its source's header declares")
 check(decode(h, requests[0]), 0)
 lib.nitrovin_close(hv)
 check(decode(h, requests[0]), 0)

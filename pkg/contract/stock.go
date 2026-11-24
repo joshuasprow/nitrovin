@@ -98,7 +98,10 @@ type StockRow struct {
 	VIN     string        `json:"vin,omitempty"`
 	Decoded *StockDecoded `json:"decoded,omitempty"`
 	// AsOf is the row's own time, when its source keeps one per row.
-	AsOf   string          `json:"as_of,omitempty"`
+	AsOf string `json:"as_of,omitempty"`
+	// Fields are the row's own fields, verbatim, in its source's order:
+	// the names the source's header declares first, in the header's
+	// order (ADR 0019), then the row's others as the source has them.
 	Fields json.RawMessage `json:"fields"`
 }
 

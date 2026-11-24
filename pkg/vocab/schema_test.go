@@ -70,8 +70,9 @@ func TestSchema(t *testing.T) {
 	stockDrift, _ := filepath.Glob("../../testdata/vocab/stock/drift/*.jsonl")
 	stockLive, _ := filepath.Glob("../../testdata/vocab/stock/live/*.jsonl")
 	stockMore, _ := filepath.Glob("../../testdata/vocab/stock/more/*.jsonl")
-	if len(stockFiles) == 0 || len(stockLive) == 0 || len(stockMore) == 0 {
-		t.Fatal("no testdata/vocab/stock/*.jsonl, testdata/vocab/stock/live/*.jsonl or testdata/vocab/stock/more/*.jsonl")
+	stockOrder, _ := filepath.Glob("../../testdata/vocab/stock/order/*.jsonl")
+	if len(stockFiles) == 0 || len(stockLive) == 0 || len(stockMore) == 0 || len(stockOrder) == 0 {
+		t.Fatal("no testdata/vocab/stock/*.jsonl, or none in its live, more or order")
 	}
 	strip, _ := filepath.Glob("../../testdata/vocab/strip/*.jsonl")
 	if len(strip) == 0 {
@@ -86,7 +87,7 @@ func TestSchema(t *testing.T) {
 	if len(demo) == 0 || len(vpicDemo) == 0 {
 		t.Fatal("no pkg/ui/demo/*.jsonl or pkg/ui/demo/vpic/*.jsonl")
 	}
-	for _, p := range slices.Concat(paths, drift, fitment, stockFiles, stockDrift, stockLive, stockMore, strip, partMode, demo, vpicDemo) {
+	for _, p := range slices.Concat(paths, drift, fitment, stockFiles, stockDrift, stockLive, stockMore, stockOrder, strip, partMode, demo, vpicDemo) {
 		data, err := os.ReadFile(p)
 		if err != nil {
 			t.Fatal(err)
@@ -119,6 +120,11 @@ func TestSchema(t *testing.T) {
 		`{"format":1,"kind":"stock","name":"s","version":"1","source":"yard","connector":{"postgres":{"relation":"s","release_relation":"r","dsn_env":"DSN"}}}`,
 		`{"format":1,"kind":"stock","name":"s","version":"1","source":"yard","connector":{"mysql":{}}}`,
 		`{"format":1,"kind":"stock","name":"s","version":"1","source":"yard","connector":{"postgres":{"relation":"Stock.Yard","dsn_env":"DSN"}}}`,
+		`{"format":1,"kind":"stock","name":"s","version":"1","source":"yard","as_of":"2026-11-01","fields":"stock_number"}`,
+		`{"format":1,"kind":"stock","name":"s","version":"1","source":"yard","as_of":"2026-11-01","fields":["stock_number",""]}`,
+		`{"format":1,"kind":"stock","name":"s","version":"1","source":"yard","as_of":"2026-11-01","fields":["stock_number",7]}`,
+		`{"format":1,"kind":"stock","name":"s","version":"1","source":"yard","as_of":"2026-11-01","fields":["price","row","price"]}`,
+		`{"format":1,"kind":"stock","name":"s","version":"1","source":"yard","connector":{"postgres":{"relation":"s","dsn_env":"DSN","fields":["row"]}}}`,
 		`{"format":1,"kind":"stock","name":"s","version":"1","source":"yard","connector":{"postgres":{"relation":"s","dsn_env":"DSN","dsn":"postgres://h"}}}`,
 		`{"format":1,"kind":"stock","name":"s","version":"1","source":"yard","connector":{"postgres":{"relation":"s","dsn_env":"DSN","max_connections":0}}}`,
 		`{"id":"S-1","location":"a","type":"mirror","number":"M1","part":{"spine":"p","id":"mirror"}}`,
@@ -137,6 +143,16 @@ func TestSchema(t *testing.T) {
 	} {
 		if validLine(s, line) == nil {
 			t.Errorf("%s validates; the schema should refuse it as Read does", line)
+		}
+	}
+	// What Read takes of a stock header's fields beyond the fixtures': an
+	// empty order, and a connector's.
+	for _, line := range []string{
+		`{"format":1,"kind":"stock","name":"s","version":"1","source":"yard","as_of":"2026-11-01","fields":[]}`,
+		`{"format":1,"kind":"stock","name":"s","version":"1","source":"shelf","catalog":"cat","fields":["stock_number","condition","price"],"connector":{"postgres":{"relation":"s","dsn_env":"DSN"}}}`,
+	} {
+		if err := validLine(s, line); err != nil {
+			t.Errorf("%s does not validate: %v", line, err)
 		}
 	}
 }

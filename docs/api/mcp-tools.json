@@ -2063,7 +2063,7 @@
                   "type": "string",
                   "minLength": 1
                 },
-                "description": "Keeps, of every stock row's fields in the answer, only those named (ADR 0019): empty keeps none, and a name no row has is no error. Only fields are cut: a row's source, id, location, matched, what it names (fitment and reached, part, vehicle, year, vin, decoded) and as_of stay. Absent: every field. Only with stock."
+                "description": "Keeps, of every stock row's fields in the answer, only those named (ADR 0019), in the order the row has them: empty keeps none, and a name no row has is no error. Only fields are cut: a row's source, id, location, matched, what it names (fitment and reached, part, vehicle, year, vin, decoded) and as_of stay. Absent: every field. Only with stock."
               },
               "limit": {
                 "type": "integer",
@@ -3288,7 +3288,7 @@
               },
               "fields": {
                 "type": "object",
-                "description": "The row's own fields, verbatim, never interpreted; with stock_fields, only those it names."
+                "description": "The row's own fields, verbatim, never interpreted, in its source's order: the names the source's header declares first, in the header's order, then the row's others as the source has them. With stock_fields, only those it names."
               }
             },
             "additionalProperties": false

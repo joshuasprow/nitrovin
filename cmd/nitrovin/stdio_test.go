@@ -170,14 +170,15 @@ func TestStdio(t *testing.T) {
 // fixture loaded: decodes, translations and lists, with and without an id,
 // refused by the parser and by the loaded files. Each line gets one reply,
 // in order, keyed by its op: the contract layer's answer, or its refusal.
-// Both runs are byte-identical and every reply is a StdioReply.
+// Both runs are byte-identical and every reply is a StdioReply. A stock
+// source's declared field order (#390) is in its fits' bytes.
 func TestStdioOps(t *testing.T) {
 	fixtureData(t)
 	d, err := nitrovin.Embedded()
 	if err != nil {
 		t.Fatal(err)
 	}
-	files, err := vocab.Open(fixture, fitmentFixture, stockFixture)
+	files, err := vocab.Open(fixture, fitmentFixture, stockFixture, orderStockFixture)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -194,6 +195,8 @@ func TestStdioOps(t *testing.T) {
 		// conditions is, for one of fitConditions, what its reply's
 		// applications must read.
 		conditions []string
+		// holds is what the reply's own bytes must hold, as written.
+		holds []string
 	}
 	script := []line{
 		{in: `{"vin":"1GCVKREC6EZ123456","now":"` + now + `"}`, kind: "decode"},
@@ -225,6 +228,8 @@ func TestStdioOps(t *testing.T) {
 		{in: `{"op":"stocked","location":["north"]}`, kind: "stocked"},
 		{in: `{"id":18,"op":"stocked","limit":101}`, id: "18", kind: string(contract.InvalidRequest), pointer: "/limit"},
 		{in: `{"id":19,"op":"stocked","stock":["yard"]}`, id: "19", kind: string(contract.InvalidRequest), pointer: "/stock"},
+		{in: `{"id":20,"op":"fit",` + orderFit[1:len(orderFit)-1] + `,"now":"` + now + `"}`, id: "20", kind: "fit", holds: orderedFields},
+		{in: `{"op":"fit",` + orderCut[1:len(orderCut)-1] + `,"now":"` + now + `"}`, kind: "fit", holds: orderedCut},
 	}
 
 	for _, c := range fitConditions {
@@ -284,7 +289,7 @@ func TestStdioOps(t *testing.T) {
 		want.WriteString("}\n")
 	}
 
-	first := cli(t, nil, stdin.String(), "--vocab", fixture, "--vocab", fitmentFixture, "--vocab", stockFixture, "stdio")
+	first := cli(t, nil, stdin.String(), "--vocab", fixture, "--vocab", fitmentFixture, "--vocab", stockFixture, "--vocab", orderStockFixture, "stdio")
 	if first.exit != 0 || first.stderr != "" || first.stdout != want.String() {
 		t.Errorf("first run: exit %d, stderr %q, stdout equals the contract layer's replies: %t", first.exit, first.stderr, first.stdout == want.String())
 		for i, l := range strings.SplitAfter(first.stdout, "\n") {
@@ -293,7 +298,18 @@ func TestStdioOps(t *testing.T) {
 			}
 		}
 	}
-	second := cli(t, []string{"NITROVIN_VOCAB=" + fixture + string(os.PathListSeparator) + fitmentFixture + string(os.PathListSeparator) + stockFixture}, stdin.String(), "stdio")
+	replies := strings.Split(strings.TrimSuffix(first.stdout, "\n"), "\n")
+	n := 0
+	for _, l := range script {
+		if l.kind == "" {
+			continue // blank: no reply
+		}
+		if l.holds != nil && n < len(replies) {
+			holds(t, "the reply to "+l.in, []byte(replies[n]), l.holds)
+		}
+		n++
+	}
+	second := cli(t, []string{"NITROVIN_VOCAB=" + strings.Join([]string{fixture, fitmentFixture, stockFixture, orderStockFixture}, string(os.PathListSeparator))}, stdin.String(), "stdio")
 	if second != first {
 		t.Errorf("second run differs: exit %d, stderr %q, stdout identical: %t", second.exit, second.stderr, second.stdout == first.stdout)
 	}

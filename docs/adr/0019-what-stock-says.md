@@ -195,3 +195,59 @@ MB.
 - **Not a projection in the lookup.** A connector's `fields` column is the
   source's own choice of what it shows (above); cutting it in SQL would give each
   cut a query of its own and split ADR 0020's one lookup a batch.
+
+## Amendment (2026-11-23): a header declares its rows' field order
+
+[#390](https://github.com/joshuasprow/nitrovin/issues/390): a row's `fields`
+are answered in the source's order, and only a stock file's author chooses
+that order, by how each line is written. A connector's author cannot. Its
+`fields` column is read as `jsonb` (ADR 0020), which stores an object's
+keys by length and then by bytes, so a row's fields arrive as `tag`,
+`kind`, `miles`, `status`, whatever their author meant to lead with.
+Measured on a shelf whose rows carry 11 fields: the first five a caller
+showed were the five shortest names, and the stock number, the condition
+and the price came last.
+
+- **`fields`, a stock header's property**, on a stock file's header and on
+  a connector's: an array of distinct, non-empty field names. Anything
+  else there is a fault at `/fields`, and `[]` declares no order.
+- **A row's `fields` are answered in that order:** the names declared, in
+  the header's order, where the row has them; then the row's other fields,
+  in the source's order as before.
+- **It orders and never cuts.** A name no row has is no fault and no
+  drift, as two rows of one source need not share their fields.
+  `stock_fields` still cuts, and what it keeps is in the declared order.
+- **Absent, nothing changes:** the source's order, byte for byte.
+- **A value is still verbatim.** A member moves as the bytes its source
+  wrote: a number's digits, a string's escapes and nested JSON are never
+  decoded and written again. Only an object's own keys are ordered: what a
+  yard row nests under one stays as written. A key a row has twice keeps
+  both members, the earlier first, as before.
+- **In the source, once.** A stock file's rows are put in order when the
+  file loads; a connector's as each is read. The order is the source's own,
+  as its rows' is, so `contract.Fitter` and every surface read rows already
+  in it: `stock_fields`' cut keeps a row's own order and is unchanged, and
+  no surface post-processes an answer.
+- **What it costs.** One pass over a row's members, and no allocation
+  beyond the copy every row is already made with. A row of 11 fields as
+  `jsonb`'s text takes 35 ns to copy and 295 ns to order
+  (`BenchmarkAppendStockFields`, an M5 Pro), one allocation either way. One
+  lookup of 20,000 such rows under 200 fitment keys, from a local Postgres
+  17: 59.0 ms with no order declared and 60.2 ms with one, 282,554
+  allocations either way. The same lookup took 59.4 ms and 322,555
+  allocations before: a row's fields are now copied once from the
+  driver's buffer, in order, where they were copied twice.
+- **`/v1/info` reports it:** a source's declared `fields` beside its
+  `source` and `catalog`, absent when it declares none; a browser's own
+  `/v1/info` says the same of a stock file it holds. `list` names
+  vocabularies, extension sets and spines and no stock source, so it has
+  nothing to report it beside.
+- **Not the column's type.** A `json` column keeps the order its text was
+  written in, but the connector reads `fields` as `jsonb`'s text whatever
+  the column is, and a view that builds its object, or reads a `jsonb`
+  column a system already has, has no order to keep.
+- **Not the request's.** What a row leads with is its source's to say, the
+  same for every caller; a request already names the fields it reads.
+- **Additive to `/v1`:** a header without `fields`, and an answer from
+  one, are unchanged. No request or answer gains a property but
+  `/v1/info`'s.

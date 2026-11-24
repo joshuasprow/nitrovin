@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"os"
+	"path/filepath"
 	"reflect"
 	"slices"
 	"strings"
@@ -679,6 +681,123 @@ func TestInfoStock(t *testing.T) {
 	}
 	if !slices.Equal(got, want) {
 		t.Errorf("stock in Info\n%q\nwant\n%q", got, want)
+	}
+}
+
+// TestFitStockFieldOrder: a source whose header declares its rows' field
+// order (#390) answers every row's fields in it, the names declared first
+// and then the row's others, each value as its line writes it, and a
+// source beside it that declares none answers as it did. stock_fields
+// cuts, and what it keeps is in the declared order, whatever order the
+// request names it in; a batch's rows once hold the same bytes; and Info
+// reports each source's declared order, a connector's too, and none for a
+// source that declares none.
+func TestFitStockFieldOrder(t *testing.T) {
+	dir := t.TempDir()
+	const live = `{"format":1,"kind":"stock","name":"yard-live","version":"1","source":"yard","fields":["stock_number","row"],"connector":{"postgres":{"relation":"stock.yard_live","dsn_env":"DSN"}}}`
+	if err := os.WriteFile(filepath.Join(dir, "yard-live.jsonl"), []byte(live+"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	files, err := vocab.Open("../../testdata/vocab", "../../testdata/vocab/fitment", "../../testdata/vocab/stock", "../../testdata/vocab/stock/order", dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tr, err := NewTranslator(embeddedDecoder(t), files...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(tr.Close)
+
+	const engine = `{"from":{"fitment":{"type":"engine","number":"EN-57"}},"stock":["shelf","yard"]`
+	const photos = `[{"url":"v900-front.jpg","w":1600,"h":1200},{"url":"v900-rear.jpg","w":1600,"h":1200}]`
+	for _, tc := range []struct {
+		name, request string
+		// want is each row's fields, by its id: R of shelf-order and V
+		// of yard-order, which declare an order, and Y of yard-stock,
+		// which declares none.
+		want map[string]string
+	}{
+		{"every field", engine + `}`, map[string]string{
+			"R-1": `{"stock_number":"E500","condition":"A","price":1850.00,"tag":"T-9","miles":61250,"status":"on shelf"}`,
+			"R-2": `{"stock_number":"E501","price":9.5e2,"comments":"turns over; sold \"as is\""}`,
+			"R-3": `{"tag":"T-11","miles":null}`,
+			"R-4": `{"stock_number":"E503","condition":"B","price":1200,"tag":"T-12"}`,
+			"V-1": `{"stock_number":"V900","row":"K","photos":` + photos + `,"color":"grey","added":"2026-10-30"}`,
+			"V-2": `{"color":"black","keys":true}`,
+			"Y-1": `{"stock_number":"Y100","color":"red","row":"B","photos":["y100-1.jpg","y100-2.jpg"]}`,
+			"Y-2": `{"stock_number":"Y101","color":"white","row":"C"}`,
+		}},
+		{"stock_fields, named out of the declared order", engine + `,"stock_fields":["tag","photos","price","stock_number"]}`, map[string]string{
+			"R-1": `{"stock_number":"E500","price":1850.00,"tag":"T-9"}`,
+			"R-2": `{"stock_number":"E501","price":9.5e2}`,
+			"R-3": `{"tag":"T-11"}`,
+			"R-4": `{"stock_number":"E503","price":1200,"tag":"T-12"}`,
+			"V-1": `{"stock_number":"V900","photos":` + photos + `}`,
+			"V-2": `{}`,
+			"Y-1": `{"stock_number":"Y100","photos":["y100-1.jpg","y100-2.jpg"]}`,
+			"Y-2": `{"stock_number":"Y101"}`,
+		}},
+		{"stock_fields, a name declared that no row has", engine + `,"stock_fields":["warranty","miles","row"]}`, map[string]string{
+			"R-1": `{"miles":61250}`, "R-2": `{}`, "R-3": `{"miles":null}`, "R-4": `{}`,
+			"V-1": `{"row":"K"}`, "V-2": `{}`, "Y-1": `{"row":"B"}`, "Y-2": `{"row":"C"}`,
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			f, err := fit(t, tr, tc.request)
+			if err != nil {
+				t.Fatal(err)
+			}
+			got := map[string]string{}
+			for _, r := range slices.Concat(f.Shelf.Rows, f.Yard.Rows) {
+				got[r.ID] = string(r.Fields)
+			}
+			if !maps.Equal(got, tc.want) {
+				t.Errorf("rows' fields\n%q\nwant\n%q", got, tc.want)
+			}
+			if b, w := conforms(t, "Fit", f), `"id":"R-1","location":"west","matched":"fitment","fitment":{"type":"engine","number":"EN-57"},"reached":"direct","fields":`+tc.want["R-1"]+`}`; !strings.Contains(string(b), w) {
+				t.Errorf("the answer's JSON holds no %s:\n%s", w, b)
+			}
+			req, err := contract.ParseFitRequest([]byte(tc.request))
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.Now = fitNow
+			once, err := tr.FitBatchRows(context.Background(), []contract.FitRequest{req})
+			if err != nil {
+				t.Fatal(err)
+			}
+			got = map[string]string{}
+			for _, r := range once.StockRows {
+				got[r.ID] = string(r.Fields)
+			}
+			if !maps.Equal(got, tc.want) {
+				t.Errorf("the batch's rows once\n%q\nwant\n%q", got, tc.want)
+			}
+		})
+	}
+
+	info := tr.Info()
+	b := conforms(t, "Info", info)
+	declared := map[string][]string{}
+	for _, v := range info.Vocabularies {
+		if v.StockCounts != nil {
+			declared[v.Name] = v.Fields
+		}
+	}
+	want := map[string][]string{
+		"shelf-annex": nil, "shelf-stock": nil, "yard-stock": nil,
+		"shelf-order": {"stock_number", "condition", "price", "warranty"},
+		"yard-order":  {"stock_number", "row", "photos"},
+		"yard-live":   {"stock_number", "row"},
+	}
+	if !reflect.DeepEqual(declared, want) {
+		t.Errorf("Info's declared orders\n%q\nwant\n%q", declared, want)
+	}
+	if n := strings.Count(string(b), `"fields":`); n != 3 {
+		t.Errorf("Info's JSON reports fields %d times; want 3, absent for a source that declares none:\n%s", n, b)
+	}
+	if w := `"source":"yard","fields":["stock_number","row"],"connector":"postgres","relation":"stock.yard_live"`; !strings.Contains(string(b), w) {
+		t.Errorf("Info's JSON holds no %s:\n%s", w, b)
 	}
 }
 

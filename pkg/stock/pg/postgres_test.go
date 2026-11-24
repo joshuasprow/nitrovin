@@ -684,6 +684,122 @@ func TestRowsPostgres(t *testing.T) {
 	}
 }
 
+// orderedRows is a shelf whose rows' fields were written stock number
+// first, in a jsonb column, which keeps no such order: R-1's 11 fields, a
+// row with nested JSON, one with none of the names a header declares, and
+// fields that are null or no object. ordered_json is the same rows with
+// the column as json.
+const orderedRows = `CREATE TABLE nvtest.ordered (id text, location text, type text, number text, side text, part_type text,
+  vehicle_make text, vehicle_model text, year smallint, fields jsonb);
+INSERT INTO nvtest.ordered (id, location, type, number, fields) VALUES
+  ('R-1', 'west', 'engine', 'EN-57', '{"stock_number":"E500","condition":"A","price":1850.00,"warranty":"30 days","comments":"turns over","tag":"T-9","kind":"used","miles":61250,"status":"on shelf","date_added":"2026-10-30","core_charge":75}'),
+  ('R-2', 'west', 'engine', 'EN-57', '{"stock_number":"E501","price":9.5e2,"photos":[{"url":"e501.jpg","w":1600}],"comments":"sold \"as is\""}'),
+  ('R-3', 'west', 'engine', 'EN-57', '{"tag":"T-11","miles":null}'),
+  ('R-4', 'west', 'engine', 'EN-57', NULL),
+  ('R-5', 'west', 'engine', 'EN-57', '[1, 2]');
+CREATE VIEW nvtest.ordered_json AS SELECT id, location, type, number, side, part_type, vehicle_make, vehicle_model, year, fields::json AS fields FROM nvtest.ordered`
+
+// TestFieldOrderPostgres: a connector's header declares its rows' field
+// order (#390), which its jsonb column cannot keep. With no fields in the
+// header a source serves jsonb's text as it is, its keys by length and
+// then bytes; with them, each row's fields come with the names declared
+// first, in the header's order, for those the row has, then the rest in
+// jsonb's, every member the text's own bytes, nested JSON included. A json
+// column is read as jsonb's and ordered alike; fields that are null or no
+// object stay {}; in a fit, stock_fields keeps what it keeps in the
+// declared order; and Info reports the order beside the connector.
+func TestFieldOrderPostgres(t *testing.T) {
+	conn, u := testDB(t)
+	exec(t, conn, nvtest)
+	exec(t, conn, orderedRows)
+	t.Cleanup(func() { exec(t, conn, `DROP SCHEMA IF EXISTS nvtest CASCADE`) })
+	ctx := context.Background()
+
+	dir := t.TempDir()
+	source := func(name, relation, fields string) *Source {
+		t.Helper()
+		header := `{"format":1,"kind":"stock","name":"` + name + `","version":"1","source":"shelf","catalog":"parts-catalog"` + fields + `,"connector":{"postgres":{"relation":"` + relation + `","dsn_env":"DSN"}}}`
+		if err := os.WriteFile(filepath.Join(dir, name+".jsonl"), []byte(header+"\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		files, err := vocab.Open("../../../testdata/vocab/fitment", filepath.Join(dir, name+".jsonl"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		byName := map[string]*vocab.File{}
+		for _, f := range files {
+			byName[f.Name] = f
+		}
+		s := New(stock.Declared{File: byName[name], Catalog: byName["parts-catalog"], Vehicles: byName["catalog-models"]}, u.String())
+		t.Cleanup(s.Close)
+		return s
+	}
+	const declared = `,"fields":["stock_number","condition","price","warranty"]`
+	engine := [][]vocab.FitmentKey{{{Type: "engine", Number: "EN-57"}}}
+	for _, tc := range []struct {
+		name string
+		s    *Source
+		want []string
+	}{
+		{"no order declared: jsonb's own", source("shelf-jsonb", "nvtest.ordered", ""), []string{
+			`R-1 {"tag": "T-9", "kind": "used", "miles": 61250, "price": 1850.00, "status": "on shelf", "comments": "turns over", "warranty": "30 days", "condition": "A", "date_added": "2026-10-30", "core_charge": 75, "stock_number": "E500"}`,
+			`R-2 {"price": 950, "photos": [{"w": 1600, "url": "e501.jpg"}], "comments": "sold \"as is\"", "stock_number": "E501"}`,
+			`R-3 {"tag": "T-11", "miles": null}`,
+			`R-4 {}`,
+			`R-5 {}`,
+		}},
+		{"the declared order", source("shelf-ordered", "nvtest.ordered", declared), []string{
+			`R-1 {"stock_number": "E500", "condition": "A", "price": 1850.00, "warranty": "30 days", "tag": "T-9", "kind": "used", "miles": 61250, "status": "on shelf", "comments": "turns over", "date_added": "2026-10-30", "core_charge": 75}`,
+			`R-2 {"stock_number": "E501", "price": 950, "photos": [{"w": 1600, "url": "e501.jpg"}], "comments": "sold \"as is\""}`,
+			`R-3 {"tag": "T-11", "miles": null}`,
+			`R-4 {}`,
+			`R-5 {}`,
+		}},
+		{"a json column", source("shelf-json", "nvtest.ordered_json", declared), []string{
+			`R-1 {"stock_number": "E500", "condition": "A", "price": 1850.00, "warranty": "30 days", "tag": "T-9", "kind": "used", "miles": 61250, "status": "on shelf", "comments": "turns over", "date_added": "2026-10-30", "core_charge": 75}`,
+			`R-2 {"stock_number": "E501", "price": 950, "photos": [{"w": 1600, "url": "e501.jpg"}], "comments": "sold \"as is\""}`,
+			`R-3 {"tag": "T-11", "miles": null}`,
+			`R-4 {}`,
+			`R-5 {}`,
+		}},
+	} {
+		rs, _, err := tc.s.ShelfByFitment(ctx, engine, stock.Page{Limit: 10})
+		if err != nil {
+			t.Fatalf("%s: %v", tc.name, err)
+		}
+		var got []string
+		for _, r := range rs[0].Rows {
+			got = append(got, r.ID+" "+string(r.Fields))
+		}
+		if !slices.Equal(got, tc.want) {
+			t.Errorf("%s:\n%s\nwant\n%s", tc.name, strings.Join(got, "\n"), strings.Join(tc.want, "\n"))
+		}
+	}
+
+	// In a fit, whole and cut by stock_fields named out of the order, and
+	// in Info.
+	d, err := nitrovin.Embedded()
+	if err != nil {
+		t.Fatal(err)
+	}
+	tr := open(t, d, map[string]string{"DSN": u.String()}, "../../../testdata/vocab", "../../../testdata/vocab/fitment", filepath.Join(dir, "shelf-ordered.jsonl"))
+	t.Cleanup(tr.Close)
+	const request = `{"from":{"fitment":{"type":"engine","number":"EN-57"}},"stock":["shelf"]`
+	for _, tc := range []struct{ request, want string }{
+		{request + `}`, `"id":"R-1","location":"west","matched":"fitment","fitment":{"type":"engine","number":"EN-57"},"reached":"direct","fields":{"stock_number":"E500","condition":"A","price":1850.00,"warranty":"30 days","tag":"T-9","kind":"used","miles":61250,"status":"on shelf","comments":"turns over","date_added":"2026-10-30","core_charge":75}}`},
+		{request + `,"stock_fields":["tag","warranty","price","stock_number"]}`, `"reached":"direct","fields":{"stock_number":"E500","price":1850.00,"warranty":"30 days","tag":"T-9"}}`},
+	} {
+		if got := fitJSON(t, tr, tc.request); !strings.Contains(string(got), tc.want) {
+			t.Errorf("%s: the answer holds no %s:\n%s", tc.request, tc.want, got)
+		}
+	}
+	for _, h := range tr.Info().Vocabularies {
+		if want := []string{"stock_number", "condition", "price", "warranty"}; h.StockCounts != nil && (!slices.Equal(h.Fields, want) || h.Connector != "postgres" || h.Status != contract.StockAvailable) {
+			t.Errorf("%s in Info: %+v; want fields %q beside its connector", h.Name, *h.StockCounts, want)
+		}
+	}
+}
+
 // TestSlowPostgres: a query that outlives the caller's deadline stops
 // there, unavailable, and the database stops running it; one that outlives
 // the statement timeout says so; Close with a slow query under way waits

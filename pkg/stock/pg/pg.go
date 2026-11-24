@@ -57,6 +57,9 @@ type Source struct {
 	info stock.Info
 	c    vocab.StockConnector
 	cols columns
+	// order is the order the header declares of its rows' fields
+	// (ADR 0019), nil when it declares none.
+	order []string
 	// cfg is the pool's configuration, nil when broken says why there is
 	// none: no DSN, or one that does not parse.
 	cfg    *pgxpool.Config
@@ -90,9 +93,10 @@ var (
 func New(d stock.Declared, dsn string) *Source {
 	f, catalog, vehicles := d.File, d.Catalog, d.Vehicles
 	s := &Source{
-		info: stock.Info{Name: f.Name, Holds: f.Holds, Kind: stock.KindLive, Catalog: f.StockCatalog, Connector: vocab.ConnectorPostgres, Relation: f.Connector.Relation},
-		c:    *f.Connector,
-		now:  time.Now,
+		info:  stock.Info{Name: f.Name, Holds: f.Holds, Kind: stock.KindLive, Catalog: f.StockCatalog, Connector: vocab.ConnectorPostgres, Relation: f.Connector.Relation},
+		c:     *f.Connector,
+		order: f.Fields,
+		now:   time.Now,
 	}
 	switch {
 	case vehicles != nil:

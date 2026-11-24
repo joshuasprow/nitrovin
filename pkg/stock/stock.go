@@ -124,7 +124,9 @@ type Row struct {
 	// AsOf is the row's own time, when the source keeps one per row
 	// (ADR 0020's as_of column); "" otherwise.
 	AsOf string
-	// Fields are the row's own fields, verbatim: a JSON object.
+	// Fields are the row's own fields, verbatim: a JSON object, its
+	// members in the order its source's header declares
+	// (vocab.AppendStockFields), the source's own when it declares none.
 	Fields json.RawMessage
 }
 

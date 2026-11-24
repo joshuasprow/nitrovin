@@ -409,6 +409,7 @@
               },
               "source": { "enum": ["shelf", "yard"], "description": "What a stock source holds: shelf parts or yard vehicles; absent for every other kind." },
               "catalog": { "type": "string", "minLength": 1, "description": "A shelf stock source's catalog; absent for every other kind." },
+              "fields": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 }, "description": "The field names a stock source's header declares, in the order every row's fields are answered in (ADR 0019); absent when it declares none and for every other kind." },
               "as_of": { "type": "string", "minLength": 1, "description": "A stock file's time, as its header gives it; absent for a connector, whose rows carry their own, and for every other kind." },
               "rows": { "type": "integer", "minimum": 0, "description": "A stock file's rows; absent for a connector and for every other kind." },
               "connector": { "const": "postgres", "description": "How a connector's stock source is read (ADR 0020); absent for a stock file and every other kind." },
@@ -465,7 +466,7 @@
                   "else": { "required": ["as_of", "rows"], "not": { "anyOf": [{ "required": ["relation"] }, { "required": ["status"] }, { "required": ["reason"] }] } }
                 },
                 "else": {
-                  "not": { "anyOf": [{ "required": ["source"] }, { "required": ["catalog"] }, { "required": ["as_of"] }, { "required": ["rows"] }, { "required": ["connector"] }, { "required": ["relation"] }, { "required": ["status"] }, { "required": ["reason"] }] }
+                  "not": { "anyOf": [{ "required": ["source"] }, { "required": ["catalog"] }, { "required": ["fields"] }, { "required": ["as_of"] }, { "required": ["rows"] }, { "required": ["connector"] }, { "required": ["relation"] }, { "required": ["status"] }, { "required": ["reason"] }] }
                 }
               },
               {
@@ -929,7 +930,7 @@
         "stock_fields": {
           "type": "array",
           "items": { "type": "string", "minLength": 1 },
-          "description": "Keeps, of every stock row's fields in the answer, only those named (ADR 0019): empty keeps none, and a name no row has is no error. Only fields are cut: a row's source, id, location, matched, what it names (fitment and reached, part, vehicle, year, vin, decoded) and as_of stay. Absent: every field. Only with stock."
+          "description": "Keeps, of every stock row's fields in the answer, only those named (ADR 0019), in the order the row has them: empty keeps none, and a name no row has is no error. Only fields are cut: a row's source, id, location, matched, what it names (fitment and reached, part, vehicle, year, vin, decoded) and as_of stay. Absent: every field. Only with stock."
         },
         "limit": { "type": "integer", "minimum": 1, "maximum": 1000, "default": 100 },
         "after": { "type": "string", "minLength": 1, "description": "The previous page's next cursor." },
@@ -1262,7 +1263,7 @@
           "properties": { "make": { "type": "integer", "minimum": 1 }, "model": { "type": "integer", "minimum": 1 }, "year": { "type": "integer" } },
           "additionalProperties": false
         },
-        "fields": { "type": "object", "description": "The row's own fields, verbatim, never interpreted; with stock_fields, only those it names." }
+        "fields": { "type": "object", "description": "The row's own fields, verbatim, never interpreted, in its source's order: the names the source's header declares first, in the header's order, then the row's others as the source has them. With stock_fields, only those it names." }
       },
       "additionalProperties": false
     },

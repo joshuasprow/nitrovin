@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/joshuasprow/nitrovin/pkg/stock"
@@ -628,7 +629,7 @@ func (s *Source) lookup(ctx context.Context, holds stock.Holds, n int, p stock.P
 	if err != nil {
 		return nil, stock.Meta{}, s.unavailable(ctx, err)
 	}
-	meta, err := scan(rows, q, holds, matched, out)
+	meta, err := scan(rows, q, s.order, holds, matched, out)
 	if err != nil {
 		return nil, stock.Meta{}, s.unavailable(ctx, err)
 	}
@@ -647,8 +648,9 @@ func (s *Source) acquireFailed(ctx context.Context, pool *pgxpool.Pool, err erro
 }
 
 // scan reads a lookup's result into out, one Result per list: each list's
-// total, then each row, appended to every list it names.
-func scan(rows pgx.Rows, q *queries, holds stock.Holds, matched stock.Matched, out []stock.Result) (stock.Meta, error) {
+// total, then each row, its fields in order (the order the source's
+// header declares, nil for none), appended to every list it names.
+func scan(rows pgx.Rows, q *queries, order []string, holds stock.Holds, matched stock.Matched, out []stock.Result) (stock.Meta, error) {
 	var (
 		list                        *int32
 		total                       *int64
@@ -657,7 +659,8 @@ func scan(rows pgx.Rows, q *queries, holds stock.Holds, matched stock.Matched, o
 		typ, number, side, partType *string
 		year, dmake, dmodel, dyear  *int32
 		byModel                     *bool
-		fields, asOf, vin           *string
+		asOf, vin                   *string
+		fields                      pgtype.DriverBytes
 		vehicle                     = make([]*string, q.nv)
 		meta                        stock.Meta
 	)
@@ -665,6 +668,8 @@ func scan(rows pgx.Rows, q *queries, holds stock.Holds, matched stock.Matched, o
 	for i := range vehicle {
 		dest = append(dest, &vehicle[i])
 	}
+	// fields are the driver's own bytes, good until the next row: a row
+	// keeps a copy of its own, made in the declared order.
 	dest = append(dest, &year, &dmake, &dmodel, &dyear, &byModel, &fields, &asOf, &vin)
 	_, err := pgx.ForEachRow(rows, dest, func() error {
 		if release != nil {
@@ -706,10 +711,12 @@ func scan(rows pgx.Rows, q *queries, holds stock.Holds, matched stock.Matched, o
 		}
 		// fields are a JSON object, as a file's are; null, or any other
 		// value, which the column type allows, is served as {}. The text
-		// is jsonb's, so an object starts with '{'.
+		// is jsonb's, so an object starts with '{', and its keys come by
+		// length, then bytes, whatever their author wrote first: the
+		// header's order is the only one a connector's author can give.
 		row.Fields = json.RawMessage("{}")
-		if fields != nil && strings.HasPrefix(*fields, "{") {
-			row.Fields = json.RawMessage(*fields)
+		if len(fields) > 0 && fields[0] == '{' {
+			row.Fields = vocab.AppendStockFields(make([]byte, 0, len(fields)), fields, order)
 		}
 		if asOf != nil {
 			row.AsOf = *asOf
