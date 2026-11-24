@@ -7,7 +7,7 @@ nitrovin is a Go port of NHTSA vPIC's Postgres procedure `vpic.spvindecode`: an 
 This file holds only what an agent can't find with one lookup. Pointers to the rest:
 - [CONTRIBUTING.md](CONTRIBUTING.md): ground rules, the oracle, the refresh, releases, CI paths.
 - [README.md](README.md): usage and data precedence.
-- [DESIGN.md](DESIGN.md): the page's look, and which parts of it are settled.
+- [DESIGN.md](DESIGN.md): the map of the page's look. [docs/design/page.md](docs/design/page.md) holds the look in full, and says which parts of it are settled.
 - [mise.toml](mise.toml)'s header: tool pins, how to bump them, and what is pinned outside mise.
 
 ## Architecture & Data Flow
@@ -138,21 +138,22 @@ uvx openapi-spec-validator docs/api/openapi.yaml
 
 ## Design Changes
 
-A change to how the page looks follows [DESIGN.md](DESIGN.md)'s "Composition rules". They are the maintainer's corrections, written down so that the same version is not built twice.
+A change to how the page looks follows the ["Composition rules"](docs/design/page.md#composition-rules) of [docs/design/page.md](docs/design/page.md), the file [DESIGN.md](DESIGN.md) maps. They are the maintainer's corrections, written down so that the same version is not built twice.
 
 - **Read the rules before proposing.** State which rule a change serves, and which it breaks, if any, where it is proposed.
 - **Prototype when a decision is reopened.** A request that questions what the page does gets two or three variants on the real page, on a throwaway branch, before any is built in. A variant differs in structure, not colour.
 - **Say what a change removes.** A redesign drops things: a switch, a link, a heading. List each one in the report and in the pull request, as a decision to review.
 - **Ask when a design word could mean two things.** Build the parts that are clear, and put the question once, with the reading taken and the reason against the other.
 - **Look at it full.** Load several vocabularies and a vehicle with many part types before showing a change. A row of one tag proves nothing about a row of five.
-- **A correction made twice becomes a rule.** Add it to DESIGN.md's list, with what was sent back, in the pull request that fixes it.
+- **A correction made twice becomes a rule.** Add it to the composition rules' list, with what was sent back, in the pull request that fixes it.
+- **DESIGN.md is a map and stays within 1,600 bytes.** Past that, the Impeccable skill's `doctor` reports `design-md-sprawl`, and its `context` carries only the files DESIGN.md names. Detail goes in docs/design/page.md. The map's headings "Colors", "Typography" and "Components" are the names `doctor` looks for (`design-md-coverage`), so they keep that spelling.
 
 ## Design Canvas
 
 UI that is not built yet is drawn on a Claude Design canvas before it is specified. The canvas is private to the maintainer. **The canvas is the source of truth; the repo holds snapshots of it.**
 
 - **Three records, one job each:**
-  - [DESIGN.md](DESIGN.md) describes the page that exists. It changes in the PR that changes the stylesheet, never ahead of it.
+  - [DESIGN.md](DESIGN.md) and the file it maps, [docs/design/page.md](docs/design/page.md), describe the page that exists. They change in the PR that changes the stylesheet, never ahead of it.
   - The canvas holds what is proposed: wireframes first, then textures.
   - An issue is the public record of a decision. It states the layout in words and never links the canvas, which only its owner can open.
 - **Snapshots** go in `docs/design/canvas/`, and hold two of the canvas's pages and no other: "nitrovin UI", the page as built, and "Swatches". `project/` has one `.dc.html` per frame of those pages and `canvas.json` cut to them. A proposal's page and a page drawn by hand stay on the canvas. `scripts/canvas.sh --check` fails naming anything else in the folder. Cite a frame by commit and path.
