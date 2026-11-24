@@ -26,7 +26,7 @@
   {
     "name": "The second tape",
     "family": "vinyl tape",
-    "where_seen": "The part type picker's key, a part type opened recently, and a candidate's stock strip: a name that is pressed.",
+    "where_seen": "The part type picker's key, a part type in its list, and a candidate's stock strip: a name that is pressed.",
     "base": "#cdd5dc",
     "ink": "#232930",
     "accent": "#58626c",
@@ -62,7 +62,7 @@
   {
     "name": "Manila",
     "family": "paper tag",
-    "where_seen": "Every card of the decode and every candidate: a parts tag hung by its eyelet from its group's line.",
+    "where_seen": "Every card of the decode, hung by its eyelet from its group's line; and under the cards a vehicle's names, every candidate and every vehicle a part fits: a parts tag laid long, its eyelet at its leading end.",
     "base": "#e2c88f",
     "ink": "#2b2418",
     "accent": "#c39a5c",
@@ -74,7 +74,7 @@
   {
     "name": "Pinstripe tape",
     "family": "vinyl tape",
-    "where_seen": "The brackets over the plate, the leader lines to the cards, and the rails to the candidates: one colour for each group of the VIN.",
+    "where_seen": "The brackets over the plate, the leader lines to the cards, and the trunk with its stubs to the picker and every candidate: one colour for each group of the VIN.",
     "base": "#dcecf7",
     "ink": "#14181d",
     "accent": "#0b4fa8",
@@ -86,13 +86,13 @@
   {
     "name": "Thermal paper",
     "family": "paper strip",
-    "where_seen": "A candidate's open stock rows, and a part's: what a stock file says of a part, fed out from under its tag's stock strip and torn at the foot.",
+    "where_seen": "A candidate's open stock rows, and a part's: what a stock file says of a part, fed out from under its row and torn at the foot.",
     "base": "#f6f4ee",
     "ink": "#232229",
     "accent": "#62606b",
-    "texture": "Off-white coated paper, shaded where it leaves the tag, printed in one near-black in the monospace face: a reversed bar, a rule of dashes, a name led by dots to its value, a barcode. The same in both colour schemes.",
-    "css": "linear-gradient(rgb(8 7 15 / .32), rgb(8 7 15 / .07) 6px, transparent 15px), linear-gradient(90deg, rgb(8 7 15 / .05), transparent 5% 95%, rgb(8 7 15 / .05)), #f6f4ee",
-    "in": "--thermal, --on-thermal, --thermal-muted, .receipt",
+    "texture": "Off-white coated paper, shaded where it leaves the tag, printed in one near-black in the monospace face: a reversed bar over each kind of stock, column names over a rule of dashes, a row a line with its location in bold, and the fields no column holds folded under it in fainter print. The same in both colour schemes.",
+    "css": "linear-gradient(rgb(8 7 15 / .32), rgb(8 7 15 / .07) 6px, transparent 15px), linear-gradient(90deg, rgb(8 7 15 / .05), transparent 2% 98%, rgb(8 7 15 / .05)), #f6f4ee",
+    "in": "--thermal, --on-thermal, --thermal-muted, .receipt, .print",
     "sources": []
   },
   {
@@ -114,9 +114,9 @@
     "base": "#e2c88f",
     "ink": "#2b2418",
     "accent": "#5c4c2e",
-    "texture": "The stamp's box, dashed and unturned. Plain muted words, with no box, are nothing checked.",
+    "texture": "The stamp's box, dashed and unturned. Plain words in the tag's ink, with no box, are nothing checked.",
     "css": "repeating-linear-gradient(90deg, #2b2418 0 7px, transparent 7px 12px) 24px 24px / 170px 2px no-repeat, repeating-linear-gradient(90deg, #2b2418 0 7px, transparent 7px 12px) 24px calc(80px - 2px) / 170px 2px no-repeat, repeating-linear-gradient(0deg, #2b2418 0 7px, transparent 7px 12px) 24px 24px / 2px 56px no-repeat, repeating-linear-gradient(0deg, #2b2418 0 7px, transparent 7px 12px) calc(194px - 2px) 24px / 2px 56px no-repeat, url(paper.svg) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f)",
-    "in": ".mk.unchecked, .mk.text, --manila-muted",
+    "in": ".mk.unchecked, .mk.text",
     "sources": []
   },
   {

@@ -91,7 +91,7 @@
       "title": "Swatches: thermal paper",
       "w": 1280,
       "x": 0,
-      "y": 2230,
+      "y": 2270,
       "page": "swatches"
     },
     "Swatches-Yard.dc.html": {
@@ -99,7 +99,7 @@
       "title": "Swatches: the yard and the shelf",
       "w": 1280,
       "x": 1360,
-      "y": 2230,
+      "y": 2270,
       "page": "swatches"
     },
     "Swatches-Vehicle.dc.html": {
@@ -107,11 +107,11 @@
       "title": "Swatches: the vehicle and the garage",
       "w": 1280,
       "x": 2720,
-      "y": 2230,
+      "y": 2270,
       "page": "swatches"
     },
     "Swatches-Page.dc.html": {
-      "h": 1710,
+      "h": 1750,
       "page": "swatches",
       "title": "Swatches: in use",
       "w": 1280,
@@ -165,7 +165,7 @@
       "text": "Found: by a web search, none settled",
       "w": 240,
       "x": 0,
-      "y": 1930
+      "y": 1970
     }
   },
   "order": [
