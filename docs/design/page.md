@@ -316,9 +316,8 @@ lengths are the module's or a floor of their own.
 
 The Developers dialog asks once more, at 40 rem, where a snippet's label
 no longer fits beside it. Every query is the window's, not a container's:
-under the cards a part's width is the window's less the page's margins,
-and the canvas's frames are built by resolving the window's queries
-(`scripts/canvas.sh`). At 1023 and 1024 px the page differs only in what
+under the cards a part's width is the window's less the page's margins.
+At 1023 and 1024 px the page differs only in what
 the cards' row forces: the picker is the same width on either side, and a
 row's columns are within 6 px.
 

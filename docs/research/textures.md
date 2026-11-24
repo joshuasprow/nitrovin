@@ -5,7 +5,8 @@ Research date: 2026-11-17. Scope: textures a page can draw with CSS gradients,
 beside the existing brushed-metal data plate.
 
 Companion to [vin-page.md](vin-page.md), for draft PR
-[#303](https://github.com/joshuasprow/nitrovin/pull/303).
+[#303](https://github.com/joshuasprow/nitrovin/pull/303). The materials
+found and tried for the look are cards in [swatches/](swatches/README.md).
 
 **What has been taken.** One candidate: embossed label-maker tape (candidate
 1), on the names under "Also known as" and that card's caption, as black tape
