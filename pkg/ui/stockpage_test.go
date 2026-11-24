@@ -56,7 +56,8 @@ var (
 	stripTagRE  = regexp.MustCompile(`<(?:a|p|button) [^>]*class="stk[^"]*"[^>]*>`)
 	saidRE      = regexp.MustCompile(`<span class="visually-hidden">([^<]*)</span>`)
 	stockRowRE  = regexp.MustCompile(`(?s)<tbody>\n<tr><th scope="row" class="id">([^<]*)</th><td class="loc">([^<]*)</td>(.*?)</tr>\n(?:<tr class="rest"><td colspan="\d+">(.*?)</td></tr>\n)?</tbody>`)
-	stockCellRE = regexp.MustCompile(`<td data-k="([^"]*)">([^<]*)</td>`)
+	stockHeadRE = regexp.MustCompile(`<th scope="col">([^<]*)</th>`)
+	stockCellRE = regexp.MustCompile(`<td>([^<]*)</td>`)
 	stockFoldRE = regexp.MustCompile(`<div(?: class="(?:json|long)")?><dt>([^<]*)</dt> <dd>(?:<details><summary>)?([^<]*)(?:</summary></details>)?</dd></div>`)
 	stockNoteRE = regexp.MustCompile(`(?s)<p class="note">(.*?)</p>`)
 )
@@ -101,26 +102,39 @@ func strip(s, number string) string {
 
 // stockRows are rows of a print, "id | location | folded fields and
 // notes", with "name=value" for each of the print's columns before the
-// folded fields where it has any.
+// folded fields where it has any: a cell under the column's name in its
+// table's head, in the head's order.
 func stockRows(s string) []string {
 	var out []string
-	for _, m := range stockRowRE.FindAllStringSubmatch(s, -1) {
-		parts := []string{m[1], m[2]}
-		var cells, folded []string
-		for _, c := range stockCellRE.FindAllStringSubmatch(m[3], -1) {
-			cells = append(cells, c[1]+"="+c[2])
+	for _, table := range strings.Split(s, `<table class="print`)[1:] {
+		var heads []string
+		for _, h := range stockHeadRE.FindAllStringSubmatch(table, -1) {
+			heads = append(heads, h[1])
 		}
-		if cells != nil {
-			parts = append(parts, strings.Join(cells, ", "))
+		for _, m := range stockRowRE.FindAllStringSubmatch(table, -1) {
+			parts := []string{m[1], m[2]}
+			var cells, folded []string
+			if heads != nil {
+				for i, c := range stockCellRE.FindAllStringSubmatch(m[3], -1) {
+					name := "no column"
+					if i < len(heads) {
+						name = heads[i]
+					}
+					cells = append(cells, name+"="+c[1])
+				}
+			}
+			if cells != nil {
+				parts = append(parts, strings.Join(cells, ", "))
+			}
+			for _, f := range stockFoldRE.FindAllStringSubmatch(m[4], -1) {
+				folded = append(folded, f[1]+" "+f[2])
+			}
+			rest := strings.Join(folded, " · ")
+			for _, n := range stockNoteRE.FindAllStringSubmatch(m[4], -1) {
+				rest += " " + plain(n[1])
+			}
+			out = append(out, html.UnescapeString(strings.Join(append(parts, strings.TrimSpace(rest)), " | ")))
 		}
-		for _, f := range stockFoldRE.FindAllStringSubmatch(m[4], -1) {
-			folded = append(folded, f[1]+" "+f[2])
-		}
-		rest := strings.Join(folded, " · ")
-		for _, n := range stockNoteRE.FindAllStringSubmatch(m[4], -1) {
-			rest += " " + plain(n[1])
-		}
-		out = append(out, html.UnescapeString(strings.Join(append(parts, strings.TrimSpace(rest)), " | ")))
 	}
 	return out
 }
@@ -494,7 +508,7 @@ func TestStockPrint(t *testing.T) {
 	var asked []contract.FitRequest
 	fixture := stockPages(stockServerOf(t, embedded(t), moreStockNames()), &asked)
 	s = fitSection(t, fixture, "/?from.vin=1D7RV1GT5AS123456&part.id=brake-rotor-front&fitment.number=BR-2001")
-	if !strings.Contains(s, `<table class="print bare">`) || strings.Contains(s, `<table class="print">`) || strings.Contains(s, "data-k=") ||
+	if !strings.Contains(s, `<table class="print bare">`) || strings.Contains(s, `<table class="print">`) || stockHeadRE.MatchString(s) ||
 		!strings.Contains(s, `<p class="more-rows">The first 10 of 16. <a class="swap"`) {
 		t.Errorf("BR-2001's print, of sources that declare no field: want no column but the id and the location, and its sixteen rows counted\n%s", s)
 	}

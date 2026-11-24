@@ -140,7 +140,10 @@ data-label are what it answers, which plate.js keeps as a recent VIN once
 it is whole; data-done the groups whose characters are all typed;
 data-part and data-after the part type pressed and its page, and
 data-type, data-number, data-side and data-rows the candidate whose stock
-is open and the panel shown whole, which plate.js tells a history entry by. */}}
+is open and the panel shown whole, which plate.js tells a history entry by.
+Its last part is what the decoder says is wrong with a whole VIN
+(problems), a strip of label tape with a warning triangle and, where the
+decoder reads another VIN in its place, a link to it. */}}
 {{define "answer" -}}
 <div id="answer" class="stage" data-vin="{{.VIN}}" data-label="{{.Label}}"{{if .Complete}} data-complete{{end}} data-done="{{range .Groups}}{{if .Done}}{{.Key}} {{end}}{{end}}"{{with .Fit.Part}} data-part="{{.}}"{{end}}{{with .Fit.After}} data-after="{{.}}"{{end}}{{with .Fit.Type}} data-type="{{.}}"{{end}}{{with .Fit.Number}} data-number="{{.}}"{{end}}{{with .Fit.Side}} data-side="{{.}}"{{end}}{{with .Fit.Rows}} data-rows="{{.}}"{{end}}>
 <div class="under" aria-hidden="true">
@@ -167,7 +170,7 @@ is open and the panel shown whole, which plate.js tells a history entry by. */}}
 {{with .Ways}}<div class="choice"><p class="blank"><span>{{$.Error}}</span>{{range .}}<a href="{{.Href}}">{{.Text}}</a>{{end}}</p></div>
 {{else}}{{template "fit" .FitView}}
 {{with .Error}}<p class="error" role="alert">{{.}}</p>{{end}}{{end}}
-{{if or .Problems .Fix}}<div class="problems" role="status">
+{{if or .Problems .Fix}}<div class="problems" role="status"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>
 {{range .Problems}}<p>{{.}}</p>
 {{end}}{{with .Fix}}<p><a class="fix" href="{{.}}">Use <span class="mono">{{$.FixV}}</span> instead</a></p>{{end}}
 </div>{{end}}
@@ -243,11 +246,12 @@ cards' columns. Found, it is the vehicle's block, a strip of label tape
 that says what the vehicle is: the make, the model and the year it asked
 the catalog with, on the lines from their cards, "This vehicle", the
 catalog, and what the decode says of the vehicle to match a candidate's
-options against (.vfacts). Under the block is one band (.band): the part
-type picker (#366), a key of the second tape on a short piece of label
-tape, which names the pressed part type and opens the part types dialog
-as its list, with a key beside it that clears the pressed one; and
-beside the picker the vehicle's names (aka), found or not. Under the
+options against (.vfacts). Under the block is one band, the section's
+next row: the part type picker (#366), a key of the second tape on a
+short piece of label tape (.ptwrap), which names the pressed part type
+and opens the part types dialog as its list, with a key beside it that
+clears the pressed one; and beside the picker the vehicle's names (aka),
+found or not, which a phone draws last, under the candidates. Under the
 band are the pressed part type's candidates, rows down the page
 (.cands), each a manila tag laid long (.line): its number on label tape
 with its side and its years, its option text, its marks and its note in
@@ -275,13 +279,11 @@ plate.js swaps in place (swap). */}}
 {{end}}{{with .Chars}}<div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd>{{range .}}<span class="vc"><b>{{.Char}}</b><small>{{.Pos}}</small></span>{{end}}</dd></div>
 {{end}}</dl>
 {{end}}</div>
-{{end}}<div class="band">
-{{if .Types}}<div class="ptwrap" data-spine="{{.Spine}}">
+{{end}}{{if .Types}}<div class="ptwrap" data-spine="{{.Spine}}">
 <button type="button" id="pick-type" class="ptfield" popovertarget="part-types"><span class="plab">Part type</span><span class="nm">{{if .Pressed}}{{.Pressed}}{{else}}Choose a part type{{end}}</span><span class="n">{{.PickCount}}<span class="visually-hidden"> {{.PickNoun}}</span></span><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 6l5 5 5-5"/></svg></button>
 {{if .Pressed}}<a class="ptclear swap" id="clear-type" data-focus="pick-type" href="{{.Clear}}" aria-label="Clear {{.Pressed}}">×</a>
 {{end}}</div>
 {{end}}{{template "aka" .Names}}
-</div>
 {{if .Types}}{{template "part-types-dialog" .Dialog}}
 {{if .Invite}}<p class="blank"><span>Choose a part type to see what fits this vehicle.</span></p>
 {{end}}{{with .NoneFit}}<p class="blank"><span>{{.}}</span></p>
@@ -342,18 +344,20 @@ a list or an object there is its JSON, cut to one line. Under those are
 the row's notes: the retired number a shelf row is tagged with, and
 "This VIN" on the yard's vehicle the VIN on the plate is. A kind with no
 row says "None."; one with more rows than it shows says how many, with
-the page showing all. A phone prints a row's cells one after another,
-each after its field's name (data-k). */}}
+the page showing all. The table is in a group of its own (.pscroll),
+named by the kind's heading, which scrolls sideways where the paper is
+narrower than the columns, a phone's, and takes focus, so a keyboard
+scrolls it. */}}
 {{define "stock-kind" -}}
 <section class="stock-kind" aria-labelledby="{{.ID}}-h">
 <p class="kind" id="{{.ID}}-h" role="heading" aria-level="{{.Level}}"><span class="bar">{{.Heading}}</span>{{with .AsOf}} <span class="asof">{{.}}</span>{{end}}</p>
-{{if .Rows}}<table class="print{{if not .Heads}} bare{{end}}">
+{{if .Rows}}<div class="pscroll" role="group" aria-labelledby="{{.ID}}-h" tabindex="0"><table class="print{{if not .Heads}} bare{{end}}">
 <thead><tr><th scope="col" class="id"><span class="visually-hidden">Id</span></th><th scope="col" class="loc"><span class="visually-hidden">Location</span></th>{{range .Heads}}<th scope="col">{{.}}</th>{{else}}<td></td>{{end}}</tr></thead>
 {{range .Rows}}<tbody>
-<tr><th scope="row" class="id{{if gt (len .ID) 24}} long{{end}}">{{.ID}}</th><td class="loc{{if gt (len .Location) 24}} long{{end}}">{{.Location}}</td>{{range .Cells}}<td data-k="{{.Name}}">{{.Value}}</td>{{else}}<td></td>{{end}}</tr>
+<tr><th scope="row" class="id{{if gt (len .ID) 24}} long{{end}}">{{.ID}}</th><td class="loc{{if gt (len .Location) 24}} long{{end}}">{{.Location}}</td>{{range .Cells}}<td>{{.Value}}</td>{{else}}<td></td>{{end}}</tr>
 {{if .Rest}}<tr class="rest"><td colspan="{{$.Span}}">{{with .Folded}}<dl class="fold">{{range .}}<div{{if .JSON}} class="json"{{else if .Long}} class="long"{{end}}><dt>{{.Name}}</dt> <dd>{{if .Long}}<details><summary>{{.Value}}</summary></details>{{else}}{{.Value}}{{end}}</dd></div> {{end}}</dl>{{end}}{{with .Retired}}<p class="note">Tagged with a retired number, {{.}}</p>{{end}}{{if .ThisVIN}}<p class="note"><strong>This VIN</strong>: the vehicle being looked up</p>{{end}}</td></tr>
 {{end}}</tbody>
-{{end}}</table>
+{{end}}</table></div>
 {{else}}<p class="stock-none">None.</p>
 {{end}}{{with .More}}<p class="more-rows">The first {{$.Shown}} of {{$.Total}}. <a class="swap" href="{{.}}" data-focus="{{$.Focus}}">Show all</a></p>
 {{end}}</section>

@@ -125,6 +125,26 @@ func TestStockStrip(t *testing.T) {
 			if yardT < shelfB || math.Abs(yardL-shelfL) > 1 {
 				t.Errorf("390 wide: the shelf at %v down to %v, the yard at %v from %v; want the shelf over the yard", shelfL, shelfB, yardL, yardT)
 			}
+			// A phone is pressed with a finger: the picker's key and a
+			// stock strip are 44 px high or more. The names, which are
+			// secondary, are drawn under the candidates. The print keeps
+			// its columns and scrolls sideways by itself: scrolled to
+			// its end, its location is at its leading edge, and the
+			// page has not moved.
+			phone := measure[[]float64](tb, `(() => {
+				const r = e => e.getBoundingClientRect(), cands = [...document.querySelectorAll(".cands > .cand")], print = document.querySelector("#stock-region .pscroll");
+				const at = () => r(print.querySelector("td.loc")).left - r(print).left, more = print.scrollWidth - print.clientWidth, first = at();
+				print.scrollTo({left: print.scrollWidth, behavior: "instant"});
+				const scrolled = print.scrollLeft, held = at();
+				print.scrollTo({left: 0, behavior: "instant"});
+				return [r(document.getElementById("pick-type")).height, Math.min(...[...document.querySelectorAll(".cands a.stk")].map(e => r(e).height)),
+					r(document.querySelector("#aka .nametags")).top - r(cands[cands.length - 1]).bottom, more, first, scrolled, held, document.documentElement.scrollWidth - innerWidth, scrollX];
+			})()`)
+			if len(phone) != 9 || phone[0] < 44 || phone[1] < 44 || phone[2] < -1 {
+				t.Errorf("390 wide: the picker's key is %v px high, the lowest strip %v, and the names' row %v px under the last candidate; want 44 px or more to press, and the names under the candidates", phone[0], phone[1], phone[2])
+			} else if phone[3] <= 0 || phone[4] <= 0 || phone[5] <= 0 || math.Abs(phone[6]) > 1 || phone[7] > 0 || phone[8] != 0 {
+				t.Errorf("390 wide: the print holds %v px more than it shows, its location %v px in; scrolled %v, the location is %v px in, the page %v px wider than the window and scrolled %v; want the print to scroll sideways by itself, its location kept in sight", phone[3], phone[4], phone[5], phone[6], phone[7], phone[8])
+			}
 			// The vehicle's line is carried from the names, which scroll,
 			// to the strip of parts, which does not: under the row it
 			// comes down where the row left it, wherever the row is.
@@ -170,7 +190,7 @@ func TestStockStrip(t *testing.T) {
 					return {left, right: left + parseFloat(s.width), top, bottom: top + parseFloat(s.height)}; };
 				const block = document.querySelector(".fitstrip").getBoundingClientRect(), card = document.querySelector(".cards .card").getBoundingClientRect();
 				const tape = document.querySelector(".ptwrap"), cands = [...document.querySelectorAll(".cands > .cand")];
-				const pieces = [piece(document.querySelector(".band"), "::before"), ...cands.map(c => piece(c, "::after"))], stubs = cands.map(c => piece(c, "::before")), key = piece(tape, "::before");
+				const pieces = [piece(tape, "::after"), ...cands.map(c => piece(c, "::after"))], stubs = cands.map(c => piece(c, "::before")), key = piece(tape, "::before");
 				const tags = cands.map(c => c.querySelector(".line").getBoundingClientRect()), last = pieces[pieces.length - 1];
 				return [pieces.length, pieces[0].top - block.bottom, Math.max(...pieces.map(p => Math.abs(p.left - pieces[0].left))), pieces[0].left - block.left, card.left - pieces[0].right,
 					Math.max(...pieces.slice(1).map((p, i) => p.top - pieces[i].bottom)), last.bottom - stubs[stubs.length - 1].bottom,
