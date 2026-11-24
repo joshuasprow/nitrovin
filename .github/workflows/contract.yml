@@ -23,7 +23,9 @@
 # ones under it, on the strip fixture (TestPartTypePicker, in pkg/ui and in
 # the same Chrome); the plate's part-number mode, its part, vehicles and stock, by
 # the server and the browser alike (TestPagePartMode, TestLibraryPartMode)
-# and in the same Chrome (TestPartMode); the demo set's vPIC catalog
+# and in the same Chrome (TestPartMode), and there with the worker in
+# control on a server that holds the catalog (TestWorkerPartMode), its
+# picker's headings the server's (TestLibraryPickerHeadings); the demo set's vPIC catalog
 # (pkg/ui/demo/vpic) checked beside it (TestDemoCheck), on each surface of
 # the page (TestPageDemoVPIC) and never in Load demo
 # (TestDemoVPICNotOffered); and the packages it runs built
@@ -111,6 +113,7 @@ jobs:
             "cmd/nitrovin "{TestVocabCheck,TestVocabLoad,TestServeVocabularies,TestVocabCheckCatalog,TestTranslate,TestTranslateRefused,TestList,TestListRefused}
             "cmd/nitrovin "{TestStdioOps,TestMCPVocabSession,TestWorker,TestWorkerCatalog,TestWorkerCatalogParts,TestWorkerStock,TestVocabPage,TestVocabTranslate}
             "cmd/nitrovin "{TestDemoCheck,TestDemoHints,TestWorkerDemo,TestFitCard,TestStockStrip,TestPartTypePicker,TestPartMode,TestReveal}
+            "cmd/nitrovin TestWorkerPartMode" "pkg/ui TestLibraryPickerHeadings"
             "pkg/nitrovin TestFitConfirmed" "cmd/nitrovin TestFitConfirmed"
             "pkg/nitrovin "{TestListCatalogVehicle,TestListCatalogVPIC}
             "pkg/ui "{TestLibraryDemoFit,TestDemoPanel,TestPageFit,TestCatalogEntries,TestLibraryPageFit,TestPageStock,TestLibraryStockPage,TestPartTypePicker,TestPagePartMode,TestLibraryPartMode}

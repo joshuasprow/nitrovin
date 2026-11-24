@@ -56,9 +56,11 @@ type Library struct {
 	month  *vocab.Bundle
 	disk   Disk
 	remote Remote
-	// serverCatalog is the server's catalog as its worker config names it,
-	// a zero Name when it has none: one catalog per nitrovin (ADR 0023),
-	// so the browser then compiles none.
+	// serverCatalog is the server's catalog as its worker config names it
+	// (ReadWorkerConfig): its name, version, blake3, spine, vehicle
+	// vocabulary and filed-under vocabulary, as /v1/info lists them, and
+	// nothing else of it. A zero Name when the server has none: one
+	// catalog per nitrovin (ADR 0023), so the browser then compiles none.
 	serverCatalog contract.VocabularyFile
 	// serverStock are the server's stock sources as its worker config
 	// names them, never published: the page's fit asks the server for
@@ -505,8 +507,9 @@ func (l *Library) infoWith(drift bool) contract.Info {
 	return info
 }
 
-// ServerCatalog is the server's catalog, its name and vehicle vocabulary,
-// a zero Name when it has none.
+// ServerCatalog is the server's catalog as its worker config names it:
+// its name, its spine, its vehicle vocabulary and its filed-under
+// vocabulary; a zero Name when it has none.
 func (l *Library) ServerCatalog() contract.VocabularyFile { return l.serverCatalog }
 
 // ServerStock are the server's stock sources, each its name and kind.

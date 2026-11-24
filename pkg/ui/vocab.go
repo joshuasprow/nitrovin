@@ -685,20 +685,48 @@ type workerConfig struct {
 	DataRelease string `json:"data_release,omitempty"`
 }
 
-// workerFile is one of the server's files. Vehicles is the catalog's
-// vehicle vocabulary, or vpic, which the browser's lines page filters on
-// (catalogLines); Holds is a stock source's kind, shelf or yard, and
-// Fields the fields its header declares, which the page prints as
-// columns (#390); each empty for every other file.
+// workerFile is one of the server's files, what /v1/info says of it that
+// the browser's pages read (configFile writes it, served reads it back).
+// Spine, Vehicles and FiledUnder are the catalog's: the spine its part
+// types are on, which part-number mode lists before any fit; its vehicle
+// vocabulary, or vpic, which the browser's lines page filters on
+// (catalogLines); and its filed-under vocabulary, whose headings the part
+// types dialog takes (headingVocabulary). Holds is a stock source's kind,
+// shelf or yard, and Fields the fields its header declares, which the
+// page prints as columns (#390). Each is "", and absent, for every other
+// file, and URL for a file the server does not publish.
 type workerFile struct {
-	Name     string   `json:"name"`
-	Kind     string   `json:"kind"`
-	Version  string   `json:"version"`
-	Blake3   string   `json:"blake3"`
-	URL      string   `json:"url,omitempty"`
-	Vehicles string   `json:"vehicles,omitempty"`
-	Holds    string   `json:"holds,omitempty"`
-	Fields   []string `json:"fields,omitempty"`
+	Name       string   `json:"name"`
+	Kind       string   `json:"kind"`
+	Version    string   `json:"version"`
+	Blake3     string   `json:"blake3"`
+	URL        string   `json:"url,omitempty"`
+	Spine      string   `json:"spine,omitempty"`
+	Vehicles   string   `json:"vehicles,omitempty"`
+	FiledUnder string   `json:"filed_under,omitempty"`
+	Holds      string   `json:"holds,omitempty"`
+	Fields     []string `json:"fields,omitempty"`
+}
+
+// configFile is f, a file as /v1/info lists it, as the worker's config
+// carries it, without a URL. It and served are one pair: a field the
+// pages read of a server's file is added to both, here.
+func configFile(f contract.VocabularyFile) workerFile {
+	w := workerFile{Name: f.Name, Kind: f.Kind, Version: f.Version, Blake3: f.Blake3, Spine: f.Spine, Vehicles: f.Vehicles, FiledUnder: f.FiledUnder}
+	if f.StockCounts != nil {
+		w.Holds, w.Fields = f.Source, f.Fields
+	}
+	return w
+}
+
+// served is w as /v1/info lists the file, of kind kind: configFile's
+// inverse, over the fields the config carries.
+func (w workerFile) served(kind vocab.Kind) contract.VocabularyFile {
+	f := contract.VocabularyFile{Name: w.Name, Kind: string(kind), Version: w.Version, Blake3: w.Blake3, Spine: w.Spine, Vehicles: w.Vehicles, FiledUnder: w.FiledUnder}
+	if kind == vocab.KindStock {
+		f.StockCounts = &contract.StockCounts{Source: w.Holds, Fields: w.Fields}
+	}
+	return f
 }
 
 // BrowserConfig is what the server gives the browser's pages
@@ -716,7 +744,9 @@ type BrowserConfig struct {
 
 // ReadWorkerConfig reads a worker's config, /sw.js's. The server's
 // catalog and stock, which it does not publish, are among Info's
-// vocabularies, of kinds catalog and stock.
+// vocabularies, of kinds catalog and stock: the catalog with its spine,
+// its vehicle vocabulary and its filed-under vocabulary, as /v1/info
+// lists them, a stock source with what it holds.
 func ReadWorkerConfig(config []byte) (BrowserConfig, error) {
 	var c workerConfig
 	if err := json.Unmarshal(config, &c); err != nil {
@@ -724,14 +754,13 @@ func ReadWorkerConfig(config []byte) (BrowserConfig, error) {
 	}
 	info := contract.Info{DecoderVersion: c.DecoderVersion, DataMonth: c.DataMonth, ArtifactHash: c.ArtifactHash, Elements: c.Elements, Vocabularies: []contract.VocabularyFile{}}
 	for _, f := range c.Files {
-		info.Vocabularies = append(info.Vocabularies, contract.VocabularyFile{Name: f.Name, Kind: f.Kind, Version: f.Version, Blake3: f.Blake3})
+		info.Vocabularies = append(info.Vocabularies, f.served(vocab.Kind(f.Kind)))
 	}
 	if f := c.Catalog; f != nil {
-		info.Vocabularies = append(info.Vocabularies, contract.VocabularyFile{Name: f.Name, Kind: string(vocab.KindCatalog), Version: f.Version, Blake3: f.Blake3, Vehicles: f.Vehicles})
+		info.Vocabularies = append(info.Vocabularies, f.served(vocab.KindCatalog))
 	}
 	for _, f := range c.Stock {
-		info.Vocabularies = append(info.Vocabularies, contract.VocabularyFile{Name: f.Name, Kind: string(vocab.KindStock), Version: f.Version, Blake3: f.Blake3,
-			StockCounts: &contract.StockCounts{Source: f.Holds, Fields: f.Fields}})
+		info.Vocabularies = append(info.Vocabularies, f.served(vocab.KindStock))
 	}
 	return BrowserConfig{Info: info, Offer: c.EPA, DataRelease: c.DataRelease, ErrorTexts: c.ErrorTexts}, nil
 }
@@ -750,9 +779,10 @@ func (h *Handler) serviceWorker(w http.ResponseWriter, info contract.Info) error
 	}
 	for _, f := range info.Vocabularies {
 		if f.Kind == string(vocab.KindCatalog) {
-			// Not published: the browser only needs to know there is one,
-			// and which vehicle fields its lines take.
-			c.Catalog = &workerFile{Name: f.Name, Kind: f.Kind, Version: f.Version, Blake3: f.Blake3, Vehicles: f.Vehicles}
+			// Not published: the browser needs to know there is one, and
+			// what the pages read of it (workerFile).
+			w := configFile(f)
+			c.Catalog = &w
 			continue
 		}
 		if f.Kind == string(vocab.KindStock) {
@@ -760,11 +790,13 @@ func (h *Handler) serviceWorker(w http.ResponseWriter, info contract.Info) error
 			// needs to know what the server's fit can ask of it, and the
 			// fields its header declares, the columns of its print.
 			if f.StockCounts != nil {
-				c.Stock = append(c.Stock, workerFile{Name: f.Name, Kind: f.Kind, Version: f.Version, Blake3: f.Blake3, Holds: f.Source, Fields: f.Fields})
+				c.Stock = append(c.Stock, configFile(f))
 			}
 			continue
 		}
-		c.Files = append(c.Files, workerFile{Name: f.Name, Kind: f.Kind, Version: f.Version, Blake3: f.Blake3, URL: FilePath(info, f)})
+		w := configFile(f)
+		w.URL = FilePath(info, f)
+		c.Files = append(c.Files, w)
 	}
 	config, err := json.Marshal(c)
 	if err != nil {
