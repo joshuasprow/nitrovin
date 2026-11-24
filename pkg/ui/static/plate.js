@@ -802,6 +802,7 @@
     if (!history.state) history.replaceState({ whole: input.value.length === LENGTH }, '', location.href);
     chips();
     remember(document.getElementById('answer'));
+    seat();
     parts(document.getElementById('answer'));
   };
   init();
@@ -809,4 +810,3 @@
     if (e.detail.target && e.detail.target.id === 'ui-main') init();
   });
 })();
-    seat();
