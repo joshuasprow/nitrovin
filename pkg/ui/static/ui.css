@@ -582,6 +582,8 @@ table.sum .skip { color: var(--muted); }
 .nw { width: fit-content; max-width: 100%; margin: 0; border-bottom: 3px solid var(--cm); }
 .nw.unsure, .nrow.rule .nw:is(.g-wmi, .g-vds), .name.rule .nrows > .nw { border-bottom-style: dashed; }
 .name .how { position: absolute; inset: 0; width: 100%; padding: 0; background: none; border: 0; box-shadow: none; cursor: pointer; }
+/* Held, it is darker still, and does not travel: it is ink, not a key. */
+.name .how:active { transform: none; background: rgb(0 0 0 / .14); }
 .name .how:hover, .name .how:focus-visible { background: rgb(0 0 0 / .07); }
 /* The "i" is drawn 22px high, so two stand on two lines with their
    ledges clear, and is pressed over the line's whole 24px. */
