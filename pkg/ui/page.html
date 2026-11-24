@@ -168,8 +168,7 @@ decoder reads another VIN in its place, a link to it. */}}
 </svg>
 {{end}}</div>
 {{with .Ways}}<div class="choice"><p class="blank"><span>{{$.Error}}</span>{{range .}}<a href="{{.Href}}">{{.Text}}</a>{{end}}</p></div>
-{{else}}{{template "fit" .FitView}}
-{{with .Error}}<p class="error" role="alert">{{.}}</p>{{end}}{{end}}
+{{else}}{{template "fit" .FitView}}{{end}}
 {{if or .Problems .Fix}}<div class="problems" role="status"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>
 {{range .Problems}}<p>{{.}}</p>
 {{end}}{{with .Fix}}<p><a class="fix" href="{{.}}">Use <span class="mono">{{$.FixV}}</span> instead</a></p>{{end}}
@@ -267,8 +266,9 @@ section that only a script can focus keeps the Tab key out of what it
 holds where the page's order is drawn: reading-flow, ui.css). Where
 there is nothing to list, the
 part types' place is a blank strip with a sentence, and the Vocabularies
-dialog's button or a link on. Every link here is the page's own, which
-plate.js swaps in place (swap). */}}
+dialog's button or a link on. A refusal that names no cell is the
+section's last line, on its columns. Every link here is the page's own,
+which plate.js swaps in place (swap). */}}
 {{define "fit" -}}
 <section class="fit" id="fit" aria-labelledby="fit-h">
 <h2 id="fit-h" class="visually-hidden">Parts that fit</h2>
@@ -311,6 +311,7 @@ plate.js swaps in place (swap). */}}
 </div>
 {{end}}{{if .Tags}}{{with .Next}}<p class="more-cands">This page shows {{len $.Tags}} of {{$.Total}} candidates. <a class="swap" href="{{.}}">Next page</a></p>
 {{end}}{{end}}{{else}}<p class="blank"><span>{{.Blank}}</span>{{if .Add}}<button type="button" popovertarget="vocabularies">Add a catalog</button>{{end}}{{range .Ways}}<a href="{{.Href}}">{{.Text}}</a>{{end}}</p>
+{{end}}{{with .Error}}<p class="error" role="alert">{{.}}</p>
 {{end}}</section>
 {{- end}}
 

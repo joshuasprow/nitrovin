@@ -649,7 +649,7 @@ table.sum .skip { color: var(--muted); }
    colour with its sentence, and in it a key of metal or a link on. Under
    the cards it is set on the columns, and in the band it is a row high. */
 :is(.fit, .part, .choice) .blank { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s4); box-sizing: border-box; min-height: var(--row); margin: 30px 0 0; padding: var(--s2) var(--inset); color: var(--muted); border: 3px dashed var(--faint); border-radius: 2px; }
-:is(.fit, .part) > .blank, .part > .error { margin: var(--s2) var(--end) 0 var(--rail); }
+:is(.fit, .part) > :is(.blank, .error) { margin: var(--s2) var(--end) 0 var(--rail); }
 .aka .blank { margin: var(--s2) 0 0; }
 /* A link naming a VIN and a part number: the choice of each, in the
    names' place under the empty cards, as a blank strip with its links. */

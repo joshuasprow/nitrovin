@@ -575,12 +575,13 @@ var surpriseVINs = []string{
 	"JSA1NJ4C2JA804306", "1N4AL3AP7JC232819", "WA1AXAF7XLA009291", "4JGFB8KA0MA967423", "JKAVN2D11RA714730", "KMTGE4S13RU371707",
 }
 
-// fitView is the fit card as its template draws it: the card, and the
-// names that hang under its block.
+// fitView is the fit card as its template draws it: the card, the names
+// that hang under its block, and the page's refusal, its last line.
 type fitView struct {
 	fitCard
 	Names akaCard
+	Error string
 }
 
-// FitView is d's fit card with its names.
-func (d diagram) FitView() fitView { return fitView{fitCard: d.Fit, Names: d.Names} }
+// FitView is d's fit card with its names and its refusal.
+func (d diagram) FitView() fitView { return fitView{fitCard: d.Fit, Names: d.Names, Error: d.Error} }
