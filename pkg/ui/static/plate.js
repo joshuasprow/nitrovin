@@ -711,6 +711,18 @@
   document.addEventListener('input', (e) => {
     if (e.target.classList && e.target.classList.contains('ptfind')) filter(e.target);
   });
+  // Escape in the filter shuts the list or the dialog, as it does from
+  // anywhere else in it, and the focus goes back to what opened it. Safari
+  // gives a search field's Escape to the field alone, and the list opens
+  // with the focus in its filter: there Escape did nothing.
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || e.isComposing || !e.target.classList || !e.target.classList.contains('ptfind')) return;
+    const dialog = e.target.closest('[popover]');
+    if (!dialog || !dialog.matches(':popover-open')) return;
+    dialog.hidePopover();
+    const opener = document.querySelector('[popovertarget="' + dialog.id + '"]:not([popovertargetaction])');
+    if (opener) opener.focus({ preventScroll: true });
+  });
   // strip draws answer's part types as this browser has them: the filter
   // shown, and the recent part types in the dialog's "Opened recently".
   function strip(answer) {
