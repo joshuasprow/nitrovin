@@ -81,7 +81,7 @@ thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform
 .live .plate textarea:placeholder-shown{text-align: center}
 .live .plate textarea::selection{background: transparent; color: transparent}
 .live .plate textarea::placeholder{color: var(--steel-dark); font: 900 clamp(13px, 2.2cqw, 20px)/var(--cell-h) var(--label-font); letter-spacing: .14em; text-transform: uppercase; text-shadow: var(--emboss)}
-.live .decode{position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%)}
+.live .decode{display: none}
 .live .plate:is(:focus-within,.is-fw){outline: 3px solid var(--link); outline-offset: 3px}
 .live .plate:is(:focus-within,.is-fw) .cell.next{box-shadow: inset 0 -6px 0 var(--link); animation: caret 1s steps(2) infinite}
 .cards{display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); padding: 0 16px}
@@ -92,7 +92,7 @@ thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform
 .card:not(.done) > h2{margin: 0; padding: 0; background: none; color: var(--muted)}
 .card > h2{margin: 0 -.6rem .35rem; padding: .25rem .6rem; font: 900 11px/1.3 var(--label-font); letter-spacing: .06em; text-transform: uppercase; color: #fff; display: flex; justify-content: space-between; gap: .5rem; background: var(--cm)}
 .card > h2 .pos{font-weight: 400}
-.fit, .part{position: relative; isolation: isolate; display: flow-root; margin: 0; container-type: inline-size; --rail: 20px; --end: 20px; --m: calc((100cqw - var(--rail) - var(--end) + 8px) / 6); --lead: 28px; --trunk: var(--c-vds)}
+.fit, .part{position: relative; isolation: isolate; display: flow-root; margin: 0; container-type: inline-size; --rail: 20px; --end: 20px; --m: calc((100cqw - var(--rail) - var(--end) + 8px) / 6); --lead: 28px; --trunk: var(--c-vds); --num: calc(2 * var(--m) - 8px - var(--lead)); --strip: calc(var(--m) - 8px)}
 .part{--trunk: var(--c-serial)}
 .fitstrip .stamp, .vfacts dt, .vc small, .ptfield .plab, :is(.ptfield, .ptype) .n, .name .nvoc, .ink .k, .mk, .stk, .stk .sc small, .numtape .side, .stock-kind .bar, .stock-none, .vnames .voc{font: var(--type-micro); letter-spacing: var(--track-micro); text-transform: uppercase}
 .receipt, .print :is(th, td), .stock-kind .kind, .says, .vnames, .nrow .g-year, .name .none{font: var(--type-value); letter-spacing: normal; text-transform: none}
@@ -102,8 +102,8 @@ thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform
 .print .loc{font: var(--type-head)}
 .numtape, .stk .sc b{font: var(--type-display); letter-spacing: var(--track-tape); text-transform: none}
 .mk:is(.checked, .unchecked, .redirect, .replaces){font: var(--type-key); line-height: 1.09; letter-spacing: var(--track-key)}
-.fitstrip{--drop: 30px; --stamp-h: 1.5rem; display: grid; grid-template-columns: repeat(2, minmax(0, 6.6rem)) minmax(0, 1fr); align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck)}
-.fitstrip:has(.g-wmi){grid-template-columns: repeat(3, minmax(0, 6.6rem)) minmax(0, 1fr)}
+.fitstrip{--drop: 30px; --stamp-h: 1.5rem; display: grid; grid-template-columns: repeat(2, var(--wc)) minmax(0, 1fr); align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck)}
+.fitstrip:has(.g-wmi){grid-template-columns: repeat(3, var(--wc)) minmax(0, 1fr)}
 .fitstrip .stamp{grid-row: 1; grid-column: 1 / -1; display: flex; align-items: center; box-sizing: border-box; min-width: 0; height: var(--stamp-h); margin: 0; padding: 0 var(--inset); border-bottom: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss)}
 .fitstrip .g-wmi{--cm: #ff6b81}
 .fitstrip .g-vds{--cm: #7db4ff}
@@ -121,9 +121,12 @@ thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform
 .vc{display: grid; justify-items: center; min-width: 1.15rem}
 .vc b{width: 100%; text-align: center; border-bottom: 3px solid #7db4ff}
 .vc small{color: #aeb7c0; text-shadow: none}
-.band{position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s2); margin: 0 var(--end) 0 var(--rail)}
-.band:has(.ptwrap){grid-template-columns: calc(2 * var(--m) - 8px) minmax(0, 1fr)}
-.fit:not(:has(.fitstrip)) .band{margin-top: 22px}
+.fit{display: grid; grid-template-columns: auto minmax(0, 1fr)}
+.fit > *{grid-column: 1 / -1}
+.fit > .ptwrap{grid-column: 1; width: calc(2 * var(--m) - 8px); margin: var(--s2) var(--s2) 0 var(--rail)}
+.fit > .aka{margin: 0 var(--end) 0 var(--rail)}
+.fit > .ptwrap + .aka{grid-column: 2; margin-left: 0}
+.fit:not(:has(.fitstrip)) > .aka{margin-top: 22px}
 .ptwrap{position: relative; display: flex; gap: var(--s1); box-sizing: border-box; height: var(--row); margin-top: var(--s2); padding: var(--s1); anchor-name: --pick-type; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck)}
 .ptfield{--key: var(--alu); flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: var(--s2); align-items: center; align-content: center; padding: 0 10px; text-align: left}
 .ptfield .plab{grid-column: 1 / -1}
@@ -141,7 +144,7 @@ thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform
 .vp{
 .name{flex: none; scroll-snap-align: start; box-sizing: border-box; display: grid; grid-template-columns: var(--lead) calc(var(--nm) - 8px - var(--lead)) auto; min-width: calc(var(--n, 2) * var(--nm) - 8px); height: var(--row); margin: 0}
 .name.c3{--n: 3}
-.fitstrip ~ .band .name::after{content: ""; position: absolute; left: 13px; top: calc(-1px - var(--s2)); width: 2px; height: calc(var(--s2) + var(--eye) - 2px); background: var(--steel); pointer-events: none}
+.fitstrip ~ .aka .name::after{content: ""; position: absolute; left: 13px; top: calc(-1px - var(--s2)); width: 2px; height: calc(var(--s2) + var(--eye) - 2px); background: var(--steel); pointer-events: none}
 .name .nvoc{grid-column: 2; display: flex; flex-wrap: wrap; align-items: center; align-content: center; gap: 0 6px; min-width: 0; margin: 0; padding: var(--s1) var(--inset); overflow-wrap: anywhere; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 3px solid var(--tape-edge)}
 .name .nvoc > span:first-child{min-width: 0}
 .nrows{grid-column: 3; display: grid; grid-template-rows: repeat(2, auto); grid-auto-flow: column; grid-auto-columns: max-content; align-content: center; column-gap: var(--s4); padding: 0 var(--inset)}
@@ -154,11 +157,11 @@ thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform
 .ptgroups:has(> .ptgroup:only-child:not(:has(.pthead))){grid-template-columns: minmax(0, 1fr)}
 :is(.fit, .part, .choice) .blank{display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s4); box-sizing: border-box; min-height: var(--row); margin: 30px 0 0; padding: var(--s2) var(--inset); color: var(--muted); border: 3px dashed var(--faint); border-radius: 2px}
 :is(.fit, .part) > .blank, .part > .error{margin: var(--s2) var(--end) 0 var(--rail)}
-.band .blank{margin: var(--s2) 0 0}
+.aka .blank{margin: var(--s2) 0 0}
 .choice{margin: 0 16px}
 .cands{list-style: none; margin: 0 var(--end) 0 var(--rail); padding: 0}
 .cand{position: relative; margin-top: var(--s2)}
-.line{z-index: 1; display: grid; grid-template-columns: var(--lead) calc(2 * var(--m) - 8px - var(--lead)) minmax(0, 1fr) calc(var(--m) - 8px); min-height: var(--row); overflow-wrap: anywhere}
+.line{z-index: 1; display: grid; grid-template-columns: var(--lead) var(--num) minmax(0, 1fr) var(--strip); min-height: var(--row); overflow-wrap: anywhere}
 .numtape{grid-column: 2; display: flex; align-items: center; justify-content: space-between; gap: var(--s2); min-width: 0; margin: 0; padding: var(--s1) var(--inset); color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border: 0; border-top: 1px solid var(--tape-lit); border-bottom: 3px solid var(--tape-edge)}
 .numtape .num{min-width: 0}
 .numtape .of{display: grid; justify-items: end; min-width: min-content; text-align: right}
@@ -177,29 +180,34 @@ thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform
 .stk svg{flex: none; margin-left: auto; width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5}
 .stk:not(.none):is(:active,.is-active), .stk[aria-expanded=true]{transform: none; padding-top: 2px; color: color-mix(in srgb, var(--on-metal) 55%, #000); background: var(--alu-in); border-bottom-width: 1px; box-shadow: var(--pressed)}
 .stk.none{cursor: auto; color: var(--manila-muted); text-shadow: none; background: none; border: 0; border-left: 2px dashed var(--manila-muted); box-shadow: none}
-.band:has(.ptwrap)::before, .cand::after, .phead .rows::before, .ptwrap::before, .cand::before{content: ""; position: absolute; z-index: 2; background: var(--trunk); pointer-events: none}
-.band:has(.ptwrap)::before, .cand::after, .phead .rows::before{left: calc(8px - var(--rail)); width: 5px; box-shadow: -1px 0 0 rgb(255 255 255 / .4), 1.5px 0 1px rgb(8 7 15 / .3)}
-.band:has(.ptwrap)::before{top: 0; bottom: calc(var(--row) / 2 - 2.5px); border-bottom-left-radius: 2.5px}
+.ptwrap::after, .cand::after, .phead .rows::before, .ptwrap::before, .cand::before{content: ""; position: absolute; z-index: 2; background: var(--trunk); pointer-events: none}
+.ptwrap::after, .cand::after, .phead .rows::before{left: calc(8px - var(--rail)); width: 5px; box-shadow: -1px 0 0 rgb(255 255 255 / .4), 1.5px 0 1px rgb(8 7 15 / .3)}
+.ptwrap::after{left: calc(7px - var(--rail)); top: calc(-1px - var(--s2)); height: calc(var(--s2) + var(--row) / 2 + 2.5px); border-bottom-left-radius: 2.5px}
 .cand::after{top: 0; bottom: calc(-1 * var(--s2))}
 .cand:last-child::after{bottom: auto; height: calc(var(--row) / 2 + 2.5px); border-bottom-left-radius: 2.5px}
 .ptwrap::before, .cand::before{left: calc(13px - var(--rail)); height: 5px; top: calc(var(--row) / 2 - 2.5px); box-shadow: 0 -1px 0 rgb(255 255 255 / .4), 0 2px 1px rgb(8 7 15 / .3)}
-.ptwrap::before{width: calc(var(--rail) - 13px); margin: -1px 0 0 -1px}
+.ptwrap::before{z-index: 3; width: calc(var(--rail) - 13px); margin: -1px 0 0 -1px}
 .cand::before{width: calc(var(--rail) - 2px); border-radius: 0 2.5px 2.5px 0}
 .rows{position: relative; margin: -2px 0 0 var(--lead)}
 .receipt{position: relative; box-sizing: border-box; padding: var(--s3) var(--inset) var(--s2); color: var(--on-thermal); background: linear-gradient(rgb(8 7 15 / .32), rgb(8 7 15 / .07) 6px, transparent 15px), linear-gradient(90deg, rgb(8 7 15 / .05), transparent 2% 98%, rgb(8 7 15 / .05)), var(--thermal); filter: drop-shadow(0 2px 1px rgb(8 7 15 / .35)) drop-shadow(0 8px 10px rgb(8 7 15 / .24))}
 .receipt::after{content: ""; position: absolute; top: 100%; left: 0; right: 0; height: 5px; background: conic-gradient(from -45deg at 50% 100%, var(--thermal) 90deg, transparent 0) 0 0 / 9px 100% repeat-x}
+.more-rows a, .more-cands a, :is(.fit, .part, .choice) .blank a{display: inline-block; padding-block: 3px; margin-block: -3px}
 .receipt ::selection{color: var(--thermal); background: var(--on-thermal)}
 .receipt:is(:focus-visible,.is-fv), .nonum:is(:focus-visible,.is-fv){outline: 3px solid var(--link); outline-offset: 2px}
 .stock-kind + .stock-kind{margin-top: var(--s4)}
 .stock-kind .kind{display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 var(--s3); margin: 0 0 var(--s1)}
 .stock-kind .bar{padding: 0 var(--s2); color: var(--thermal); background: var(--on-thermal)}
+.pscroll{container-type: inline-size; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: var(--thermal-muted) transparent; background: linear-gradient(var(--thermal), var(--thermal)) right / 16px 100% no-repeat local, linear-gradient(to left, rgb(8 7 15 / .26), transparent) right / 12px 100% no-repeat scroll}
+.pscroll:is(:focus-visible,.is-fv){outline: 3px solid var(--link); outline-offset: 2px}
 .print{width: 100%; border-collapse: collapse}
-.print :is(th, td){box-sizing: border-box; max-width: 24ch; padding: 0 var(--s3) 0 0; text-align: left; vertical-align: baseline; overflow-wrap: anywhere; border: 0}
+.print :is(th, td){box-sizing: border-box; max-width: 24ch; padding: 0 var(--s3) 0 0; text-align: left; vertical-align: baseline; overflow-wrap: break-word; border: 0}
 .print tr > :last-child{padding-right: 0}
 .print :is(.id, .loc){width: 1%; max-width: none; white-space: nowrap}
-.print thead th{padding-bottom: 2px; color: var(--thermal-muted); border-bottom: 1px dashed var(--on-thermal)}
+.print .loc{position: sticky; left: 0; z-index: 1; background: var(--thermal)}
+.print thead th{padding-bottom: 2px; white-space: nowrap; color: var(--thermal-muted); border-bottom: 1px dashed var(--on-thermal)}
 .print tbody > tr:first-child > *{padding-top: var(--s1)}
 .print .rest td{max-width: 0; padding-left: var(--s5); color: var(--thermal-muted)}
+.print .rest td > *{position: sticky; left: var(--s5); max-width: calc(100cqw - var(--s5))}
 .fold{margin: 0}
 .fold > div{display: inline-block; max-width: min(100%, 80ch); margin-right: var(--s4); vertical-align: top; text-wrap: pretty}
 .fold :is(dt, dd){display: inline; margin: 0}
@@ -211,8 +219,8 @@ thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform
 .stock-none::before{content: "*** "}
 .stock-none::after{content: " ***"}
 .carry{display: none}
-.fit{--xm: 3.3rem; --xv: 3.3rem; --xy: 9.9rem}
-.fit:has(.fitstrip .g-wmi){--xv: 9.9rem; --xy: 16.5rem}
+.fit{--wc: min(8rem, (100cqw - 2px) / 3); --xm: calc(.5 * var(--wc)); --xv: calc(.5 * var(--wc)); --xy: calc(1.5 * var(--wc))}
+.fit:has(.fitstrip .g-wmi){--xv: calc(1.5 * var(--wc)); --xy: calc(2.5 * var(--wc))}
 .fitstrip, .fitstrip:has(.g-wmi){--drop: 8px; --stamp-h: 20px; grid-template-columns: 170fr 170fr 170fr 510fr; min-height: 0; margin-top: 8px; padding-inline: 15px}
 .fitstrip .stamp{margin-inline: -15px; padding-left: calc(var(--rail) + var(--lead) + var(--inset) - 1px)}
 .fitstrip .g-wmi{grid-column: 1}
@@ -245,9 +253,9 @@ thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform
 .pleader::after{left: 31.5px; right: calc(100% - var(--px) - 2.5px); top: 15.5px; bottom: -21px; border: 0 solid var(--c-serial); border-width: 5px 0 0 5px; border-top-left-radius: 3px}
 .phead{position: relative}
 .part > :is(.blank, .error){margin-top: var(--s4)}
-.ptag{--eye-x: calc(var(--rail) + 14px); grid-template-columns: calc(var(--rail) + var(--lead)) calc(2 * var(--m) - 8px - var(--lead)) minmax(0, 1fr) calc(var(--m) - 8px + var(--end))}
+.ptag{--eye-x: calc(var(--rail) + 14px); grid-template-columns: calc(var(--rail) + var(--lead)) var(--num) minmax(0, 1fr) calc(var(--strip) + var(--end))}
 .vehs > .cand:first-child::after{top: calc(-1 * var(--s2))}
-.veh .line{grid-template-columns: var(--lead) calc(2 * var(--m) - 8px - var(--lead)) minmax(0, 1fr)}
+.veh .line{grid-template-columns: var(--lead) var(--num) minmax(0, 1fr)}
 .vnames{margin: 0}
 .vn{display: inline-block; max-width: 100%; margin-right: var(--s3)}
 .vnames .voc{white-space: nowrap; color: var(--manila-muted)}
@@ -281,12 +289,10 @@ thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform
 <div id="answer" class="stage" data-vin="1FTEW" data-label="FORD" data-done="wmi ">
 <section class="fit" id="fit" aria-labelledby="fit-h">
 <h2 id="fit-h" class="visually-hidden">Parts that fit</h2>
-<div class="band">
 <section class="aka" id="aka" aria-labelledby="aka-h">
 <h3 id="aka-h" class="visually-hidden">Also known as</h3>
 <p class="blank"><span>Names turn up once the model is known.</span></p>
 </section>
-</div>
 <p class="blank"><span>Part types turn up once the model is known.</span></p>
 </section>
 </div>
@@ -302,7 +308,6 @@ thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform
 <div id="answer" class="stage" data-vin="1HGCM82633A004352" data-label="2003 HONDA Accord" data-complete="" data-done="wmi vds check year plant serial ">
 <section class="fit" id="fit" aria-labelledby="fit-h">
 <h2 id="fit-h" class="visually-hidden">Parts that fit</h2>
-<div class="band">
 <section class="aka done" id="aka" aria-labelledby="aka-h">
 <h3 id="aka-h" class="visually-hidden">Also known as</h3>
 <ol class="nametags" aria-label="Also known as" tabindex="0">
@@ -312,7 +317,6 @@ thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform
 </li>
 </ol>
 </section>
-</div>
 <p class="blank"><span>demo-catalog has no 2003 HONDA Accord.</span><a href="#">See the vehicles demo-catalog covers</a></p>
 </section>
 </div>
@@ -328,7 +332,6 @@ thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform
 <div id="answer" class="stage" data-vin="1FTFW1EF6DFA12345" data-label="2013 FORD F-150" data-complete="" data-done="wmi vds check year plant serial ">
 <section class="fit" id="fit" aria-labelledby="fit-h">
 <h2 id="fit-h" class="visually-hidden">Parts that fit</h2>
-<div class="band">
 <section class="aka done" id="aka" aria-labelledby="aka-h">
 <h3 id="aka-h" class="visually-hidden">Also known as</h3>
 <ol class="nametags" aria-label="Also known as" tabindex="0">
@@ -339,7 +342,6 @@ thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform
 </div></li>
 </ol>
 </section>
-</div>
 <p class="blank"><span>demo-catalog has the Ford F150, and nothing in it fits a 2013.</span><a href="#">See demo-catalog's Ford F150 lines</a></p>
 </section>
 </div>
@@ -367,7 +369,6 @@ thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform
 <div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>
 </dl>
 </div>
-<div class="band">
 <div class="ptwrap" data-spine="demo-part-types">
 <button id="pick-type" class="ptfield" type="button"><span class="plab">Part type</span><span class="nm">Choose a part type</span><span class="n">8<span class="visually-hidden"> part types</span></span><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 6l5 5 5-5"></path></svg></button>
 </div>
@@ -381,7 +382,6 @@ thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform
 </div></li>
 </ol>
 </section>
-</div>
 <p class="blank"><span>Choose a part type to see what fits this vehicle.</span></p>
 </section>
 </div>
@@ -409,7 +409,6 @@ thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform
 <div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>
 </dl>
 </div>
-<div class="band">
 <div class="ptwrap" data-spine="demo-part-types">
 <button id="pick-type" class="ptfield" type="button"><span class="plab">Part type</span><span class="nm">Choose a part type</span><span class="n">8<span class="visually-hidden"> part types</span></span><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 6l5 5 5-5"></path></svg></button>
 </div>
@@ -423,7 +422,6 @@ thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform
 </div></li>
 </ol>
 </section>
-</div>
 <p class="blank"><span>Nothing demo-catalog lists as "wiper" fits this vehicle.</span></p>
 </section>
 </div>
@@ -482,17 +480,17 @@ thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform
 </section>
 <section class="stock-kind" aria-labelledby="stock-yard-h">
 <p class="kind" id="stock-yard-h" role="heading" aria-level="4"><span class="bar">In the yard · 2</span> <span class="asof">as of 2026-11-12</span></p>
-<table class="print">
+<div class="pscroll" role="group" aria-labelledby="stock-yard-h" tabindex="0"><table class="print">
 <thead><tr><th scope="col" class="id"><span class="visually-hidden">Id</span></th><th scope="col" class="loc"><span class="visually-hidden">Location</span></th><th scope="col">stock_number</th><th scope="col">row</th></tr></thead>
 <tbody>
-<tr><th scope="row" class="id">DEMO-Y-01</th><td class="loc">demo-north</td><td data-k="stock_number">DEMO-Y-01</td><td data-k="row">D-1</td></tr>
+<tr><th scope="row" class="id">DEMO-Y-01</th><td class="loc">demo-north</td><td>DEMO-Y-01</td><td>D-1</td></tr>
 <tr class="rest"><td colspan="4"><dl class="fold"><div><dt>color</dt> <dd>demo: white</dd></div> </dl><p class="note"><strong>This VIN</strong>: the vehicle being looked up</p></td></tr>
 </tbody>
 <tbody>
-<tr><th scope="row" class="id">DEMO-Y-02</th><td class="loc">demo-south</td><td data-k="stock_number">DEMO-Y-02</td><td data-k="row">D-1</td></tr>
+<tr><th scope="row" class="id">DEMO-Y-02</th><td class="loc">demo-south</td><td>DEMO-Y-02</td><td>D-1</td></tr>
 <tr class="rest"><td colspan="4"><dl class="fold"><div><dt>color</dt> <dd>demo: blue</dd></div> </dl></td></tr>
 </tbody>
-</table>
+</table></div>
 </section>
 </div>
 </div>
@@ -519,12 +517,10 @@ thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform
 <div id="answer" class="stage" data-vin="1FTEW1EG7FFA12345" data-label="2015 FORD F-150" data-complete="" data-done="wmi vds check year plant serial ">
 <section class="fit" id="fit" aria-labelledby="fit-h">
 <h2 id="fit-h" class="visually-hidden">Parts that fit</h2>
-<div class="band">
 <section class="aka" id="aka" aria-labelledby="aka-h">
 <h3 id="aka-h" class="visually-hidden">Also known as</h3>
 <p class="blank"><span>No vocabulary loaded.</span><button type="button">Add a vocabulary</button></p>
 </section>
-</div>
 <p class="blank"><span>No catalog loaded.</span><button type="button">Add a catalog</button></p>
 </section>
 </div>
