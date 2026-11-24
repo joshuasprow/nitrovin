@@ -991,9 +991,11 @@ a.example:active { --key: var(--alu-in); transform: translateY(2px); box-shadow:
    that was open on it or the yard's count. */
 a.example b { display: block; font: inherit; }
 a.example small { display: block; margin-top: 1px; font: 600 11px var(--cell-font); letter-spacing: .02em; color: #3a444e; text-transform: none; white-space: normal; }
-button.linkish { border: 0; background: none; box-shadow: none; padding: 0 .25rem; color: var(--link); text-shadow: none; text-decoration: underline; text-transform: none; letter-spacing: 0; font: 13px system-ui, sans-serif; }
+/* A link-like button is a target 24px high (WCAG 2.5.8) that takes the
+   room its 16px line did: the rest is given back in its margins. */
+button.linkish { min-height: 24px; margin-block: -4px; border: 0; background: none; box-shadow: none; padding: 0 .25rem; color: var(--link); text-shadow: none; text-decoration: underline; text-transform: none; letter-spacing: 0; font: 13px system-ui, sans-serif; }
 button.linkish:active { transform: none; box-shadow: none; }
-.menu .linkish { display: block; margin: .6rem auto 0; }
+.menu .linkish { display: block; margin: calc(.6rem - 4px) auto -4px; }
 .menu .linkish[hidden] { display: none; }
 
 /* Motion: a group just completed draws its bracket and line in and pops
