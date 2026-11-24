@@ -11,6 +11,16 @@
     "ignoreFiles": [
       "docs/design/canvas/**"
     ],
-    "ignoreValues": []
+    "ignoreValues": [
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "pkg/ui/static/ui.css"
+        ],
+        "createdAt": "2026-11-24T03:04:44.890Z",
+        "reason": "Agent: docs/design/page.md Ground rules define a raised control as a 3 px ledge of --steel-dark; the three hits are the plate's ledge (8 px radius), and the stock strip and part-number field, both border-radius 0"
+      }
+    ]
   }
 }

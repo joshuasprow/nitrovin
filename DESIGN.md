@@ -17,6 +17,7 @@ are: a change fixes a bug or follows a signature part.
 - [Composition rules](docs/design/page.md#composition-rules): how a change is
   put together, each from a correction.
 - [Building something new](docs/design/page.md#building-something-new).
+- [Widths](docs/design/page.md#widths): where the page changes, and why.
 
 ## Colors
 
@@ -26,8 +27,8 @@ group colours change between light and dark. The four materials do not.
 
 ## Typography
 
-Tokens, too: two system typefaces, a label face for what is stamped and a
-monospace for data, over `system-ui` body text.
+[Type roles](docs/design/page.md#type-roles): a label face for what is
+stamped, a monospace for data, `system-ui` for prose.
 
 ## Components
 

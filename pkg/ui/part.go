@@ -117,15 +117,16 @@ type partTag struct {
 
 // vehicleRow is one vehicle a part fits: the catalog's name for it, its
 // years, its option text verbatim, and its names in the vocabularies
-// loaded.
+// loaded, a vocabulary once with every name it has for the vehicle.
 type vehicleRow struct {
 	Name, Years, Options string
-	Names                []vehicleName
+	Names                []vehicleNames
 }
 
-// vehicleName is a vehicle's name in one vocabulary.
-type vehicleName struct {
-	Vocabulary, Name string
+// vehicleNames are a vehicle's names in one vocabulary.
+type vehicleNames struct {
+	Vocabulary string
+	Names      []string
 }
 
 // partKey is the plate's key: a part type, a number and a side.
@@ -342,7 +343,7 @@ func (h *Handler) partHome(r *http.Request, q url.Values, info contract.Info, pa
 	}
 	v.title = tag.Number + " · " + tag.TypeName
 	p.Tag, p.Total = tag, fit.Total
-	if err := h.partStock(r.Context(), p, key, fit, kinds, res); err != nil {
+	if err := h.partStock(r.Context(), p, key, fit, kinds, h.stockDeclared(info), res); err != nil {
 		return view{}, err
 	}
 	fields := map[string][]string{}
@@ -360,8 +361,12 @@ func (h *Handler) partHome(r *http.Request, q url.Values, info contract.Info, pa
 			}
 		}
 		for _, t := range fv.To {
+			names := vehicleNames{Vocabulary: t.Vocabulary}
 			for _, e := range t.Entries {
-				row.Names = append(row.Names, vehicleName{Vocabulary: t.Vocabulary, Name: vehicleText(contract.CatalogVehicle{Entry: e.Entry}, fields[t.Vocabulary])})
+				names.Names = append(names.Names, vehicleText(contract.CatalogVehicle{Entry: e.Entry}, fields[t.Vocabulary]))
+			}
+			if len(names.Names) > 0 {
+				row.Names = append(row.Names, names)
 			}
 		}
 		p.Vehicles = append(p.Vehicles, row)
@@ -444,8 +449,8 @@ func plural(n int, one, many string) string {
 
 // partStock fills the part's stock strip and, when the URL opens it, its
 // rows, as a candidate's (stockColumns), key the key the part was
-// answered from.
-func (h *Handler) partStock(ctx context.Context, p *partPage, key partKey, fit contract.Fit, kinds []string, res *result) error {
+// answered from, kinds and declared the stock loaded.
+func (h *Handler) partStock(ctx context.Context, p *partPage, key partKey, fit contract.Fit, kinds []string, declared map[string][]string, res *result) error {
 	cand := contract.FitCandidate{Fitment: *fit.Fitment, Shelf: fit.Shelf, Yard: fit.Yard}
 	own := candidateKey(cand)
 	s := newStockStrip(cand, kinds)
@@ -462,9 +467,14 @@ func (h *Handler) partStock(ctx context.Context, p *partPage, key partKey, fit c
 	if p.Rows != rowsAll {
 		p.Rows = ""
 	}
-	cols, err := h.stockColumns(ctx, own, cand, kinds, p.Rows == rowsAll, partHref(key, p.After, own, rowsAll), "", res)
+	cols, err := h.stockColumns(ctx, own, cand, kinds, declared, p.Rows == rowsAll, partHref(key, p.After, own, rowsAll), "", res)
 	if err != nil {
 		return err
+	}
+	// The part's number is the page's second heading, a candidate's a
+	// third: a kind of its stock is one under it.
+	for i := range cols {
+		cols[i].Level = 3
 	}
 	p.Tag.Panel = &stockPanel{Number: own.Number, Columns: cols}
 	return nil

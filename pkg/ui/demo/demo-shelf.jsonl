@@ -1,4 +1,4 @@
-{"format":1,"kind":"stock","name":"demo-shelf","version":"2026.11-demo","source":"shelf","as_of":"2026-11-12","catalog":"demo-catalog","release":"DEMO-1"}
+{"format":1,"kind":"stock","name":"demo-shelf","version":"2026.11-demo","source":"shelf","as_of":"2026-11-12","catalog":"demo-catalog","release":"DEMO-1","fields":["stock_number","condition"]}
 {"id":"DEMO-S-01","location":"demo-north","type":"alternator","number":"DEMO-1001","fields":{"stock_number":"DEMO-S-01","condition":"demo: used, grade A"}}
 {"id":"DEMO-S-02","location":"demo-south","type":"alternator","number":"DEMO-0901","fields":{"stock_number":"DEMO-S-02","condition":"demo: used, grade B; tagged with its old number"}}
 {"id":"DEMO-S-03","location":"demo-north","type":"brake-rotor-front","number":"DEMO-1102","fields":{"stock_number":"DEMO-S-03","condition":"demo: new"}}

@@ -90,7 +90,7 @@ func sectionOf(t *testing.T, h *Handler, target, open string) string {
 var (
 	partTypeRE = regexp.MustCompile(`<a class="ptype swap" href="([^"]*)"( aria-current="true")?><span class="nm">([^<]*)</span> <span class="n">(\d+)`)
 	markRE     = regexp.MustCompile(`<span class="mk (\w+)">(?:<svg[^>]*><path[^>]*/></svg>)?([^<]*)</span>`)
-	numberRE   = regexp.MustCompile(`<b class="num">([^<]*)</b>`)
+	numberRE   = regexp.MustCompile(`<span class="num">([^<]*)</span>`)
 )
 
 // partTypes are a section's part types, each once, by name, whatever
@@ -210,23 +210,25 @@ func TestPageFit(t *testing.T) {
 		}
 	}
 
-	// A candidate's tag: its number and years on its tape, the option text
-	// verbatim and the note; the pressed part type's link takes it away.
+	// A candidate's row: a list item whose heading is its number, with its
+	// years, on its tape; then the option text verbatim and the note. The
+	// pressed part type's link takes it away.
 	s = fitSection(t, h, pickup+"&part.id=alternator")
 	for _, want := range []string{
 		`<a class="ptype swap" href="/?from.vin=1FTEW1EG7FFA12345&amp;part.id=alternator" aria-current="true"><span class="nm">Alternator</span> <span class="n">3`,
 		`<span class="nm">Alternator</span><span class="n">3<span class="visually-hidden"> candidates</span></span>`,
 		`<a class="ptclear swap" id="clear-type" data-focus="pick-type" href="/?from.vin=1FTEW1EG7FFA12345" aria-label="Clear Alternator">×</a>`,
-		`<ol class="cands" aria-label="Candidates: Alternator" tabindex="0">`,
-		`<p class="numtape"><b class="num">DEMO-1001</b> <span class="yrs">2015–2017</span></p>`,
-		`<div><dt>Options</dt><dd>2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</dd></div>`,
-		`<div><dt>Note</dt><dd>demo: 240 A</dd></div>`,
+		`<ol class="cands" aria-label="Candidates: Alternator">`,
+		`<h3 class="numtape"><span class="num">DEMO-1001</span> <span class="of"><span class="yrs">2015–2017</span></span></h3>`,
+		`<p class="opts">2.7L V6 EcoBoost (VIN P, 8th digit), w/ start-stop</p>`,
+		`<span class="nt"><span class="k">Note</span> demo: 240 A</span>`,
 	} {
 		if !strings.Contains(s, want) {
 			t.Errorf("the alternators lack %s\n%s", want, s)
 		}
 	}
-	if s := fitSection(t, h, pickup+"&part.id=mirror"); !strings.Contains(s, `<div><dt>Side</dt><dd>left</dd></div>`) || !strings.Contains(s, `<div><dt>Side</dt><dd>right</dd></div>`) {
+	// A side is on the tape with the number it tells apart from its pair.
+	if s := fitSection(t, h, pickup+"&part.id=mirror"); !strings.Contains(s, `<span class="num">DEMO-1301</span> <span class="of"><span class="side">left</span> `) || !strings.Contains(s, `<span class="num">DEMO-1301</span> <span class="of"><span class="side">right</span> `) {
 		t.Errorf("the mirrors lack their sides\n%s", s)
 	}
 	// The page's own URL, to copy, is the pressed part type's.

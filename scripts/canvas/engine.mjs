@@ -182,8 +182,9 @@ const SHEET = `
 .sheet .vp.pad{padding:0 var(--gutter)}
 .sheet .vp header,.sheet .vp main{margin-bottom:0}
 .sheet .vp .popover.is-open{display:block !important;position:relative !important;inset:auto !important;margin:0 !important;max-height:none !important;overflow:visible !important}
-/* The part type picker's list hangs from the picker, over what follows it. */
-.sheet .vp #fit .ptdialog.is-open{position:absolute !important;z-index:5;width:min(24rem,calc(100% - 2 * var(--gutter))) !important;margin-top:6px !important}
+/* The part type picker's list lies over what follows it; a frame that
+   opens it says where it hangs (frames.mjs, LIST). */
+.sheet .vp #fit .ptdialog.is-open{position:absolute !important;z-index:5}
 `;
 
 export async function buildFrame(c, frame, scheme) {

@@ -301,7 +301,7 @@ func (h *Handler) home(r *http.Request) (view, error) {
 	if d.Names.Waiting {
 		return v, nil
 	}
-	ask.Stock = h.stockKinds(info)
+	ask.Stock, ask.Declared = h.stockKinds(info), h.stockDeclared(info)
 	if err := h.fitVIN(r.Context(), d, vd, cat, info.Elements, ask, res); err != nil {
 		return refuse(err)
 	}

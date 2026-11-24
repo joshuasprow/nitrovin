@@ -692,18 +692,20 @@ type workerConfig struct {
 // vocabulary, or vpic, which the browser's lines page filters on
 // (catalogLines); and its filed-under vocabulary, whose headings the part
 // types dialog takes (headingVocabulary). Holds is a stock source's kind,
-// shelf or yard. Each is "", and absent, for every other file, and URL
-// for a file the server does not publish.
+// shelf or yard, and Fields the fields its header declares, which the
+// page prints as columns (#390). Each is "", and absent, for every other
+// file, and URL for a file the server does not publish.
 type workerFile struct {
-	Name       string `json:"name"`
-	Kind       string `json:"kind"`
-	Version    string `json:"version"`
-	Blake3     string `json:"blake3"`
-	URL        string `json:"url,omitempty"`
-	Spine      string `json:"spine,omitempty"`
-	Vehicles   string `json:"vehicles,omitempty"`
-	FiledUnder string `json:"filed_under,omitempty"`
-	Holds      string `json:"holds,omitempty"`
+	Name       string   `json:"name"`
+	Kind       string   `json:"kind"`
+	Version    string   `json:"version"`
+	Blake3     string   `json:"blake3"`
+	URL        string   `json:"url,omitempty"`
+	Spine      string   `json:"spine,omitempty"`
+	Vehicles   string   `json:"vehicles,omitempty"`
+	FiledUnder string   `json:"filed_under,omitempty"`
+	Holds      string   `json:"holds,omitempty"`
+	Fields     []string `json:"fields,omitempty"`
 }
 
 // configFile is f, a file as /v1/info lists it, as the worker's config
@@ -712,7 +714,7 @@ type workerFile struct {
 func configFile(f contract.VocabularyFile) workerFile {
 	w := workerFile{Name: f.Name, Kind: f.Kind, Version: f.Version, Blake3: f.Blake3, Spine: f.Spine, Vehicles: f.Vehicles, FiledUnder: f.FiledUnder}
 	if f.StockCounts != nil {
-		w.Holds = f.Source
+		w.Holds, w.Fields = f.Source, f.Fields
 	}
 	return w
 }
@@ -722,7 +724,7 @@ func configFile(f contract.VocabularyFile) workerFile {
 func (w workerFile) served(kind vocab.Kind) contract.VocabularyFile {
 	f := contract.VocabularyFile{Name: w.Name, Kind: string(kind), Version: w.Version, Blake3: w.Blake3, Spine: w.Spine, Vehicles: w.Vehicles, FiledUnder: w.FiledUnder}
 	if kind == vocab.KindStock {
-		f.StockCounts = &contract.StockCounts{Source: w.Holds}
+		f.StockCounts = &contract.StockCounts{Source: w.Holds, Fields: w.Fields}
 	}
 	return f
 }
@@ -785,7 +787,8 @@ func (h *Handler) serviceWorker(w http.ResponseWriter, info contract.Info) error
 		}
 		if f.Kind == string(vocab.KindStock) {
 			// Never published: a browser loads stock of its own. It only
-			// needs to know what the server's fit can ask of it.
+			// needs to know what the server's fit can ask of it, and the
+			// fields its header declares, the columns of its print.
 			if f.StockCounts != nil {
 				c.Stock = append(c.Stock, configFile(f))
 			}

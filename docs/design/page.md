@@ -47,7 +47,10 @@ Each part has one of two standings.
 - **Motion marks a change: a stamp, a draw and a pop**, each under 0.4 s, and
   none of it under `prefers-reduced-motion`. A typed character stamps in; a
   finished group draws its bracket and line and pops its card. The only
-  motion that loops is the caret's blink on the focused plate, once a second.
+  motion that loops is the caret's blink on the focused plate, once a
+  second; under `prefers-reduced-motion` the caret stands still. What a
+  scroll moves, a row's fade and the lines a narrow page carries, is tied
+  to the scroll and not to a clock, so it stays.
 
 ## Composition rules
 
@@ -55,6 +58,8 @@ The ground rules say what the page is built with. These say how a change
 is put together, and each came from a correction: a version that was built,
 looked at, and sent back. A change is checked against every one before it
 is shown. One that breaks a rule says which, and why, where it is proposed.
+Where the maintainer later changed a rule knowingly, the rule says so after
+*Ruled*, with the date.
 
 1. **Nothing floats.** A fact about the vehicle, an answer and a control
    each sit on a material: the plate, a strip of tape or a tag. Bare text on
@@ -66,11 +71,16 @@ is shown. One that breaks a rule says which, and why, where it is proposed.
 2. **A material says what a thing is.** The plate is what is typed. Label
    tape is the page's own word on something: a stamp, what was asked, a
    tag's heading. A manila tag is a thing found: a card, a name, a
-   candidate. Thermal paper is what a stock file says of a thing found: a
-   receipt, a print and not the thing. Metal is a control. Pinstripe tape is a connection. Before
-   content is placed, it is one of these, and it takes that material.
+   candidate, a part, a vehicle a part fits. Thermal paper is what a stock
+   file says of a thing found: a print, and not the thing. Metal is a
+   control. Pinstripe tape is a connection. Before content is placed, it
+   is one of these, and it takes that material.
    *Sent back: names as strips of label tape. A name is found, so it is a
    tag.*
+   *Ruled, 2026-11-23: in part-number mode a vehicle's names are
+   underlined ink on that vehicle's tag. The table panel that set them on
+   label tape is gone, which ends the contradiction between this rule and
+   the second mode's section.*
 3. **Colour and texture before words.** A group's colour says which card a
    word comes from, so no label repeats it. A label stays only where
    nothing else says what a value is, as "Body" and "Engine" do. Nothing
@@ -83,15 +93,29 @@ is shown. One that breaks a rule says which, and why, where it is proposed.
    and is dropped first when the window narrows. It never gets a block of
    its own beside the primary.
    *Sent back: recent part types as a strip of their own under the picker;
-   then as a second row on a wide tape, most of it bare. A wide tape is
-   one line; a narrow one has a second line for them, and the key is as
-   wide as it. A phone's tape with no recents on it was sent back too.*
+   then as a second row on a wide tape, most of it bare. A wide tape
+   became one line, and a narrow one kept a second line for them, the key
+   as wide as it. A phone's tape with no recents on it was sent back too.*
+   *Ruled, 2026-11-23: recent part types left the picker's tape and stay
+   in its list. The tape holds the picker and the key that clears it. The
+   vehicle's names are secondary: compact tags hung from the block, in
+   one row that scrolls sideways beside the picker.*
+   On a phone nothing fits beside the picker, and the names' row is
+   drawn last, under the candidates, the last thing on the trunk (the
+   parts that fit, below). That is as built, and not ruled.
 5. **One shape at every width.** A component is the same thing at 390,
    768 and 1280 px. It wraps or scrolls; it does not turn into another
    kind of control. A control has a largest width and keeps it: it does
    not stretch to fill a wide window.
    *Sent back: a strip of part types on a wide page and a list on a phone.
-   Both became the one picker, no wider than 24 rem.*
+   Both became the one picker, then no wider than 24 rem.*
+   The picker is now 19.5 rem, two of a wide page's columns, at every
+   width from 34 rem up; under 34 rem it is the row's width, where the
+   row is narrower than that or nothing is beside it. A stock print is
+   columns at every width, and scrolls sideways where its paper is too
+   narrow (thermal paper, below). The widths under 64 rem had a pass of
+   their own: what the page does there is described with each part
+   below, as built, and is not yet ruled.
 6. **A row scrolls sideways before it stacks or hides.** Things of a kind
    are one row. Past the window, the row scrolls by itself, shows the next
    one at its edge, and fades at an end with more beyond it. Nothing is
@@ -99,29 +123,47 @@ is shown. One that breaks a rule says which, and why, where it is proposed.
    On a phone an item of a list is compact: several show at once.
    *Sent back: names in stacks behind two switches; a list of part types
    that showed four on a phone.*
+   *Ruled, 2026-11-23: candidates, and in part-number mode the vehicles a
+   part fits, are rows stacked down the page, scanned down. It is a
+   knowing change to this rule, which still governs the names and the
+   cards. On a stock print, a folded value past 160 characters is cut to
+   two lines and opens in place, without a script: a knowing, narrow
+   exception to "nothing is kept behind a 'more' switch".*
 7. **What belongs together is joined, and a line crosses nothing.** A line
    runs from a card to its word, and from what was asked to what answers
    it; a tag hangs from what it names; a control's tape touches the
-   control. A line runs straight from the word it leaves to the control it
-   reaches, which sits under that word; it does not run off to a lane at
-   the page's edge, and it is never drawn over anything. A tag hung from
-   the same thing may lie over a line, as a tag hangs in front of tape.
+   control. A line from a card ends on the vehicle's block, over its
+   word. From the block one trunk runs straight down, and the picker and
+   every candidate are tied to it by a stub. No line detours, and none is
+   drawn over anything but the eyelet it lands in.
    *Sent back: a picker apart from its tape; the lines to the picker sent
    down the page's left edge to clear the name tags; the name tags hung
    from the picker's tape, which they do not name; lines that ran over a
    stamp.*
+   *Ruled, 2026-11-23: under the vehicle's block the page is a counter.
+   The lines from the cards end on the block. One trunk of pinstripe tape
+   replaces the lines from the block to the picker and the candidates'
+   wires. The history above stands: the trunk differs from the lane that
+   was sent back because it never detours. It leaves the block and goes
+   straight down, in the gutter between the plate's edge and the cards'
+   edge.*
 8. **What opens hangs from its control and overlaps the page.** A list or a
    note opened from a control is anchored to it, no wider than it where it
    is a list, and lies over what is beneath. It does not push the page
    down.
    *Sent back: a list of part types as wide as the page that moved the
    candidates.*
+   *Ruled, 2026-11-23: the picker's list always opens downward. On a page
+   too short for it the list lengthens the page, and it never opens
+   upward over the plate. It is a bend of this rule: the list still lies
+   over the candidates and moves none of them.*
 9. **Bracket ends are the plate's.** Only the VIN input's brackets end in
    a bracket. Every other line ends on the thing it reaches.
 
 ## Tokens
 
-All tokens are custom properties on `body` in `ui.css`.
+All tokens are custom properties in `ui.css`, on `body` unless the table
+says where.
 
 | Role | Light | Dark |
 | --- | --- | --- |
@@ -129,8 +171,18 @@ All tokens are custom properties on `body` in `ui.css`.
 | Text `--fg` / `--muted` | `#14181d` / `#47515c` | `#eef2f5` / `#a9b6c2` |
 | Panel ground `--card-bg` | `#ffffff` | `#1f2d3a` |
 | Rule `--line`, not-yet `--faint` | `#9fb3c2`, `#a9bccb` | `#45566a`, `#3a4a5c` |
-| Link and focus `--link` | `#0b4fa8` | `#8ec5ff` |
+| Link `--link`, and the focus ring on the ground and a panel, `--ring` | `#0b4fa8` | `#8ec5ff` |
 | Error `--bad` | `#b91c1c` | `#ff8a8a` |
+
+A focus ring is drawn on something, and takes the colour that shows on
+it. On the ground and on a dialog's panel, which change with the scheme,
+it is `--ring`, the link's blue. A material does not change, so a ring
+on one is fixed, as a group's mark is: `--ring-pale`, the light scheme's
+blue (`#0b4fa8`), on metal, manila and thermal paper, and `--ring-tape`,
+the dark scheme's (`#8ec5ff`), on label tape. Each is 3:1 or more
+against what it is on, in both schemes. It was `--link` everywhere, which
+in the dark scheme was pale blue on manila, on thermal paper and on the
+plate, and in the light scheme dark blue on black tape.
 
 Each of the six groups of a VIN has one colour, `--c`. Its label, bracket and
 leader line all use it, and its card prints it as a band.
@@ -149,15 +201,126 @@ light-scheme colour in both schemes, except the year's, which is a shade
 brighter there (`#b3540a`). On label tape it is the dark-scheme colour in both
 schemes.
 
-Two typefaces carry the look, and both are system fonts.
+Three typefaces carry the page, and all are the system's: no font file is
+sent.
 
-- `--label-font` (Arial Black, then Helvetica Neue): everything stamped or
-  printed as a heading. Weight 900, upper case, tracked from `.04em` to
-  `.22em`, mostly 11–13 px.
-- `--cell-font` (`ui-monospace`): everything that is data to read or copy: the
-  VIN's characters, serials, code, and the words on the tape.
+- `--label-font` (Arial Black, then Helvetica Neue): what is stamped or
+  struck: a key's word, a label over the plate, a card's band, a mark's
+  stamp. Weight 900, upper case, tracked.
+- `--cell-font`, the monospace: data, which is what a visitor reads or
+  copies: the VIN's characters, a make, a model, a year, a part number,
+  option text, a stock field, a location, a count. Under the cards a datum
+  is this face on every material, so it is one voice on the vehicle's
+  block, a name tag, a row and a print.
+- `system-ui`: prose. Body text is 15 px (`.9375rem`) on a line of 1.5: a
+  blank strip's sentence, a dialog, a card's rows.
 
-Body text is `system-ui` at 15 px.
+Few browsers know `ui-monospace`, so `--cell-font` names a designed face
+for each system: `ui-monospace` (Safari's, SF Mono), Menlo (macOS),
+Cascadia Mono and Consolas (Windows), Roboto Mono and Droid Sans Mono
+(Android), DejaVu Sans Mono, Liberation Mono and Noto Sans Mono (Linux),
+then `monospace`. No character of them is wider than .62 em, and the
+plate's field spaces its characters by `1ch`, so the 17 cells hold in
+each. Only SF Mono has a weight above bold. In every other face 900 draws
+as 700, so size carries the hierarchy and weight only helps it.
+
+### Type roles
+
+Under the cards, type is six roles. A role fixes face, size, weight,
+line height, tracking and case together. Each is a token on `body`, a
+`font` value, beside a token for its tracking, and every rule under the
+cards takes one: none writes a size, a weight or a tracking of its own.
+Five carry the hierarchy. The sixth, the fine print, is one size under
+the row for one place, the fold of a stock print, where a row's size
+would turn a file's undeclared fields from one line into two.
+
+| Role | Token | What takes it | Size | Weight | Line | Tracking | Case |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Micro label | `--type-micro` | The page's own word for a value, a column or a count: the block's stamp and its labels, "Part type", a vocabulary's name, "Note", "shelf", a kind of stock's bar, a count in a pill, a mark in plain words | 11 px | 700 | 1.2 | `--track-micro`, .04 em | Upper |
+| Row value | `--type-value`, `--type-value-b` | What a row says: a print's cells and its columns' names, a note, a name's years. Bold (`-b`) where it leads its row or sits on tape: option text, a name, the block's details, a row's years | 13 px | 400, and 700 | 18 px | None | As written |
+| Fine print | `--type-fine` | What a stock row carries beyond its declared fields, folded under it | 12 px | 400 | 18 px | None | As written |
+| Head | `--type-head` | What a strip of tape is headed with: the block's make, model and year, a vehicle's name on its row, the pressed part type, the tape over the rows with no number. On a print, the location, which is walked to | 16 px | 900 | 18 px | `--track-tape`, .04 em, on tape; none in ink | As written |
+| Display | `--type-display` | What was asked for and how many there are: a part's number and its stock counts. On a card, its one large value: the serial, the model year | 20 px | 900 | 24 px | `--track-tape` on tape; none in ink | As written |
+| Key | `--type-key` | What is struck or stamped: a key's word, a table's header, a mark's stamp | 11 px | 900 | The face's own; 12 px in a stamp | `--track-key`, .08 em | Upper |
+
+All but the key are the monospace, and the key is the label face.
+
+- **The hierarchy is the sizes**, largest first: a part's number and its
+  stock counts; then a print's location and the block's words; then a
+  row's values; then the labels. Each step is about a fifth larger than
+  the one under it: 11, 13, 16 and 20 px. Nothing under the plate is
+  larger than a part's number: a card's large value, the serial or the
+  model year, is its size. The fine print is no step of it: colour
+  and its indent set it under its row.
+  *Ruled, 2026-11-24: a card's large value dropped from 24 px to the
+  display role, so that nothing under the plate is larger than a part's
+  number.*
+- **Tracking and weight follow the ground.** A head and a display are
+  raised white on label tape or struck in the second tape, where letters
+  fill in, so they are tracked. The location is a head in ink and a
+  card's large value a display in ink, and neither is. A value is never
+  tracked, and on tape it is always bold.
+- **A stamp holds data in the data's face.** "Replaces" is stamped in the
+  label face; the number after it is a bold row value, in its own case.
+- **Sizes are in rem**, so a visitor's font setting scales them, and
+  `--row` is in rem with them. A micro label and a key's word are never
+  under 11 px, whatever that setting.
+- **No text on the page is under 11 px.**
+- **Under 64 rem one role is redefined:** the display is 18 px, in every
+  row and on a card. The head is 16 px on the block at every width, and
+  a row's years are the bold row value, 13 px, as on a wide page. The
+  smaller sizes the page was first built with there, 14.4 and 12.8 px on
+  the block and 12 px on a row's tape, are gone: the block's words have
+  columns wide enough for the head, and a row's years are under its
+  number.
+- **Off the scale, and in px:** the plate, whose characters follow its
+  width through container units; the six cards, whose rows are the body
+  face and whose check digit's verdict is the label face at 16 px; the
+  header, the foot and the dialogs. They take a role's token where they
+  already had its values: a key (`button`), a table's header, the
+  foot's release and a count in the picker's list. Two places on a card
+  take one by decision: its large value takes the display (the ruling
+  above), and its "Show the sum" takes the micro label, which raised it
+  from 10 px.
+
+Everything under the six cards is set on one module and a few lengths, so
+that its parts line up down the page.
+
+| Token | Value | What it sets |
+| --- | --- | --- |
+| Module `--m` | a sixth of the row under the block: 160 px on a wide page | A column. A card is a module less the 8 px between two, and what hangs under the vehicle's block is a whole number of modules wide, less those 8 px. Under 64 rem the cards scroll, and no card stands over a column |
+| `--rail`, `--end` | 20 px each; `--end` is 0 under 64 rem | How far the first column's leading edge and the last column's trailing edge are in from the block's. The gutter that `--rail` leaves beside the first column is the trunk's |
+| `--num`, `--strip` | two modules, and one, each less the 8 px, the first less the lead too. Under 64 rem no narrower than 9.5 rem and 7.5 rem | A row's two fixed columns: its number's tape and its stock strip. The floors are what they hold: a number of eleven characters, and two counts of three digits |
+| Spacing `--s1` to `--s5` | 4, 8, 12, 16 and 24 px | The one scale of spaces |
+| Inset `--inset` | 12 px | Text's distance from the edge of its material, on every material |
+| Row `--row` | 3 rem, 48 px; 3.5 rem, 56 px, under 64 rem | The height of a tag laid long, the picker and a blank strip. Under 64 rem it is a finger's: the picker's key in it is 45 px high, a stock strip is a row high, and a tag's two names, 24 px each, are 8 px apart |
+| Lead `--lead` | 28 px | The leading end of a tag laid long, which holds its eyelet. Its content begins after it |
+| `--trunk` | the Vehicle group's `--c`; the Serial group's in part-number mode | The trunk and its stubs |
+| `--gutter` | 1 rem; 0.5 rem under 46 rem | The page's side margin |
+
+`--m`, `--rail`, `--end`, `--num`, `--strip`, `--lead` and `--trunk` are
+set on the parts that fit (`.fit`) and on a part's answer (`.part`). The
+others are on `body`.
+
+### Widths
+
+The stylesheet asks the window's width at three places, and each is where
+something stops fitting. Between them a part keeps one shape, and its
+lengths are the module's or a floor of their own.
+
+| Width | What stops fitting | What changes under it |
+| --- | --- | --- |
+| 64 rem | Six cards in one row, each wide enough for its rows | The cards scroll sideways. The leader lines and the stepped lines are not drawn, and the lines to the block are carried. The block's words are packed at its leading end. `--end` is 0, the row is 3.5 rem and the display 18 px. A row's years are under its number. The keys over the plate are 44 px high |
+| 46 rem | The label of a one-cell group, 47 px, over a cell of 40 | Those three labels are not drawn. The cells stand 2 px apart, not 4, and the page's margin is 0.5 rem |
+| 34 rem | A cell wide enough for a finger, in one row of 17; the names beside the picker; a row's ink beside its number; a print's columns on its paper | The plate is two rows, and a card's column 9.5 rem. The picker is the row's width, and the names are under the candidates. A row is two lines. The print scrolls sideways. Part-number mode's fields stack, and its switch is the plate's width. The check digit's sum is turned on its side |
+
+The Developers dialog asks once more, at 40 rem, where a snippet's label
+no longer fits beside it. Every query is the window's, not a container's:
+under the cards a part's width is the window's less the page's margins,
+and the canvas's frames are built by resolving the window's queries
+(`scripts/canvas.sh`). At 1023 and 1024 px the page differs only in what
+the cards' row forces: the picker is the same width on either side, and a
+row's columns are within 6 px.
 
 ## Signature: the VIN input
 
@@ -168,7 +331,9 @@ text field laid over them.
   cells. The field keeps paste, selection and the phone's keyboard. The
   cells draw the text, the caret and the selection; the field shows none of
   its own. Without JavaScript the field is a plain input below the cells with
-  a Decode button.
+  a Decode button. With it the plate answers as it is typed and Enter
+  sends it, so the button is not drawn, and the Tab key stops on nothing
+  a visitor cannot see.
 - **A fixed grid of 17 columns with no gaps.** Labels, cells and brackets
   share it. The field's letter-spacing is `100cqw / 17 - 1ch`, so each
   character sits on its cell and a click lands on the cell it shows.
@@ -176,23 +341,35 @@ text field laid over them.
   by `--emboss`, over a 4 px underline in its group's mark. Its size follows
   the plate's width through container units.
 - **Empty**, the plate reads "Type a VIN" in the label face across its middle.
-- **Focused**, the plate takes the 3 px `--link` outline, 3 px off every side
-  of what is seen, and the next empty cell blinks a 6 px bar of `--link` along
-  its bottom. The brackets above and below stand 7 px off the plate, clear of
-  the ring.
+- **Focused**, the plate takes the 3 px `--ring` outline, 3 px off every side
+  of what is seen, and the next empty cell blinks a 6 px bar along its
+  bottom, in `--ring-pale`, the same blue on the metal in both schemes.
+  The brackets above and below stand 7 px off the plate, clear of the
+  ring.
+  *Ruled, 2026-11-24: in the dark scheme the bar marking the next cell
+  and the touch selection handles take the light scheme's blue, for
+  contrast on the metal.*
 - **The caret among characters** is a 4 px bar in the gap before its cell.
   Under a mouse, the gap a click would pick shows the same bar at 35%.
 - **A selected cell** is inked: `#16202b`, white character, ringed 3 px in its
   group's colour.
 - **A character no VIN holds** fills its cell with `--bad`. A bad VIN is not
   an error: the plate still decodes, and once the VIN is whole its problems
-  are listed under the answer.
+  are on a strip of label tape under the answer (vinyl tape, below).
 - **A typed character stamps** into its cell (scale 1.6 to 1, 0.18 s).
 - **Narrow windows keep the plate.** Under 34 rem the cells wrap to two rows of
   nine, breaking after the check digit, so a cell stays wide enough for a
   finger. Under a coarse pointer the selection handles are the cells' own,
-  and a long press selects the whole VIN, drawn on the cells; the phone
-  draws no handles of its own over them.
+  in `--ring-pale`, and a long press selects the whole VIN, drawn on the
+  cells; the phone draws no handles of its own over them.
+- **A one-cell group's label is wider than its cell** under 64 rem, and
+  the three are neighbours. Check ends on its bracket's trailing edge and
+  Plant begins on its bracket's leading edge, with Year centred between
+  them, so none runs into the next. Under 46 rem the three are not
+  drawn: their cards name them. Under 34 rem Check is over the upper
+  row's last cell, and the lower row's brackets hold their names under
+  them: the Year's ends on its bracket's trailing edge and the Plant's
+  begins on its bracket's leading edge, 14 px apart at any width.
 - **The second mode changes none of this.** In VIN mode the plate, its
   cells, its field and its answer are as above. The one addition is the
   switch over the plate's leading edge (the plate's second mode, below).
@@ -209,6 +386,7 @@ mode is in the URL, and nothing is remembered between visits.
   empty, and its answer are swapped in place, the pressed key's too, a
   history entry of their own.
   Under 34 rem the switch is the plate's width, the keys halves of it.
+  Under 64 rem its keys, and VINs beside them, are 44 px high.
 - **The URL** names the mode by the fit request's own fitment key:
   `from.fitment.type`, `from.fitment.number` and, for a sided part,
   `from.fitment.side`, as the VIN's is `from.vin`, and the request is the
@@ -239,39 +417,50 @@ mode is in the URL, and nothing is remembered between visits.
   underline in the Serial group's mark, in the case it was typed. Empty, it
   reads "Type its number" in the label face. Without a script Look up sends
   it; with one the page asks as it is typed, 150 ms after the last key, in
-  the same history entry, and Look up (Enter) makes one of its own.
+  the same history entry, Enter makes one of its own, and the Look up key
+  is not drawn.
 - **Under the plate** the number's bracket opens upward, flat and faint
   until a number is typed. One line of pinstripe tape in the Serial group's
-  colour runs from its foot to the eyelet of the part's tag: an SVG path in
-  the leader lines' 1020-unit box, from 680 (the number's third's centre)
-  to the tag's centre, 170 on a wide page and 255 on a narrow one, and on
-  down into the eyelet. Under 34 rem it runs straight down. No line is
-  drawn without a tag. Each width draws its own path; nothing is measured.
-- **The part** is a manila parts tag in the first third (the first half on
-  a narrow page), as a candidate's:
-  its number on black label tape under the eyelet with its part type's name
-  at the tape's trailing end, then its side, how many vehicles it fits in
-  the catalog, its note, and its stock strip along its bottom edge. A
-  retired number answers with the part that replaced it: its tag carries a
-  solid ink stamp, "Replaces" and the number asked for, and the catalog's
-  note on the retirement as a row.
+  colour runs from its foot into the eyelet of the part's tag: down from
+  the bracket's middle, two thirds of the way across the plate, along to
+  the tag's leading end, and down into the eyelet. Under 34 rem the
+  bracket's middle is the plate's. The line is two boxes on the plate's
+  grid, so nothing is measured. No line is drawn without a tag.
+- **The part** is a manila tag laid long, as a candidate's is (the parts
+  that fit, below), and as wide as the plate, as the vehicle's block is in
+  VIN mode. After its eyelet, its number is on black label tape with its
+  part type's name and its side at the tape's trailing end, and under the
+  number under 64 rem; then, in the tag's ink, how many vehicles it fits
+  in the catalog, over its note; and
+  its stock strip is its trailing end. Its lead is the gutter's width
+  longer than a vehicle's, so its tape and its stock strip stand over the
+  vehicles' columns. A retired number answers with the part that replaced
+  it: its tag carries a solid ink stamp, "Replaces" and the number asked
+  for, and the catalog's note on the retirement beside its own.
 - **Its stock** behaves as a candidate's: the strip opens the shelf rows and
   the yard vehicles among the vehicles listed, named in the URL as a
-  candidate's are (`fitment.number`). They are a receipt
-  under the tag and its width, as a candidate's are, shelf over yard at
-  every width (thermal paper, below). The rows are the page's, paged with
-  the vehicles; "Show all" is every one.
-- **The vehicles** are the page's own table panel beside the tag, with no
-  line to it: the catalog's name for each vehicle (a vPIC
-  catalog's as VIN mode names one, "vPIC model 1801 (F-150)", where the
-  answer carries the name), its years, its option text verbatim, and its
-  names in the vehicle vocabularies loaded, each a strip of label tape
-  after its vocabulary's name. While the server holds the catalog, a
-  browser names them in the server's vocabularies alone, which the
-  server's fit knows. A vehicle is no link. More than a page (30) are a
-  "Next page" link away. On a narrow page each vehicle is a row of its
-  own under the table's caption (name and years, then options, then
-  names), and under 34 rem the table follows the tag.
+  candidate's are (`fitment.number`). They are a print under the tag, from
+  its number's tape to its trailing edge, shelf over yard at every width
+  (thermal paper, below). The rows are the page's, paged with the
+  vehicles; "Show all" is every one.
+- **The trunk** leaves the tag's bottom edge and runs straight down, in the
+  Serial group's colour, beside the open print and through the vehicles,
+  each tied to it by a stub into its eyelet, as a candidate is in VIN
+  mode.
+- **The vehicles** the part fits are rows down the page under the tag, each
+  a manila tag laid long with no stock strip. On its label tape is the
+  catalog's name for the vehicle (a vPIC catalog's as VIN mode names one,
+  "vPIC model 1801 (F-150)", where the answer carries the name), with its
+  years at the tape's trailing end, and under the name under 64 rem. In
+  the tag's ink is its option text
+  verbatim, over its names in the vehicle vocabularies loaded: a
+  vocabulary's name once, a micro label, muted, before every name it has for
+  the vehicle, each underlined in the Vehicle group's colour, as a name
+  is on its own tag. A vehicle no vocabulary names says "No name". While
+  the server holds the catalog, a browser names them in the server's
+  vocabularies alone, which the server's fit knows. A vehicle is no link.
+  More than a page (30) are a "Next page" link away. Under 34 rem a row
+  is two lines: its tape, then its ink.
 - **A sided part** asked for with no side is asked on each side: one found
   is the answer, and its side stays on every link from it; several are
   links, one to each side.
@@ -322,8 +511,8 @@ copy sits in a recess: an inset shadow on a slightly darkened ground.
 
 Vinyl is three tapes. The page's own word on a thing, a stamp or a tag's
 heading, is a strip of black label-maker tape. A name that can be pressed
-is the second tape, embossing tape in the plate's metal. A bracket or a leader line is pinstripe tape in
-its group's colour.
+is the second tape, embossing tape in the plate's metal. A bracket, a
+leader line or the trunk is pinstripe tape in a group's colour.
 
 ### Label tape
 
@@ -336,11 +525,24 @@ its group's colour.
   `--tape-emboss`, a dark edge up and left and a light edge down and right, so
   the letter reads as raised.
 - **Case is kept.** A vocabulary's entry is case-exact, so its name is never
-  upper-cased. A vocabulary's own name, on the strip across its tag, and a
-  stamp are upper case.
+  upper-cased. A vocabulary's own name, on its tag's strip, and a stamp are
+  upper case.
 - **A word on the vehicle's block** sits over a 3 px underline in its
-  group's mark, on the line that runs straight down into the tape from its
-  card. No line ends in a bracket but the plate's own.
+  group's mark, under the line that comes down to the block from its card.
+  No line ends in a bracket but the plate's own.
+- **A tag's heading** under the cards is label tape after the tag's eyelet,
+  with the tape's lit top and heavy bottom and no shadow of its own: a
+  vocabulary's name on a name's tag, and a candidate's or a part's number,
+  or a vehicle's name, on a row's.
+- **What the decoder says is wrong** with a whole VIN is a strip of label
+  tape, stuck on, as wide as the plate: a warning triangle in the error
+  colour as tape takes it (`#ff8a8a`), then the decoder's sentences, each
+  a bold row value raised white, and, where the decoder reads another
+  VIN in its place, a link to it, underlined in the tape's own white. It
+  was text in `--bad` on the ground, which rule 1 does not allow. It is
+  under the answer at every width, where the text was, and so far from
+  the plate it is about: between the brackets and the cards it would
+  push the picker under a phone's fold on every VIN with a problem.
 - **An empty place stays.** With no vocabulary loaded, or before the model
   is known, the names' place is a blank strip: a 3 px dashed `--faint`
   outline with a sentence in it (empty places, below).
@@ -360,20 +562,24 @@ a key of metal for a control that names nothing.
 
 - **Body:** `--alu`, the tape's faint ridges over `--metal`, a 1 px `--steel`
   edge with a white top and a `--steel-dark` bottom.
-- **Lettering:** `--on-metal` in the monospace face at 14 px, weight 900,
-  struck as the plate's characters are (`--emboss`), in the name's own case.
+- **Lettering:** `--on-metal` in the monospace face, weight 900, struck as
+  the plate's characters are (`--emboss`), in the name's own case: the
+  head role on the picker, 16 px, and 14 px in its list.
 - **A count** sits after the name in a small pill outlined in `--on-metal`
   at 55%.
 - **Raised and pressed** as every control: `--raised` unpressed; pressed
   (`aria-current`, the part type the page shows), flush on `--alu-in` under
   `--pressed`.
-- **Along a tag's bottom edge** (a candidate's stock strip) it runs edge to
-  edge inside the tag and casts no shadow off it, so it stands raised by its
-  edges alone: a white top and 3 px of `--steel-dark` below. Pressed (open)
-  it is `--alu-in` under `--pressed`, its bottom edge 1 px, and its chevron
-  turns up. Its words are no vocabulary's name but the page's own count of
-  stock, so they are 12 px and upper case, as drawn, to sit as a footer
-  under the tag's rows, not as large as a part type's name.
+- **At a tag's trailing end** (a candidate's stock strip) it is the tag's
+  last column, edge to edge, and casts no shadow off the tag, so it stands
+  raised by its edges alone: a white top and 3 px of `--steel-dark` below.
+  A kind of stock is a cell of it: its count in the display role, as large
+  as the part's number, over the kind's name, a micro label. A chevron ends
+  it. Pressed (open) it is `--alu-in` under `--pressed`, its lettering
+  darker, its bottom edge 1 px, and its chevron turns up.
+- **It carries** the picker's key, each part type in the picker's list and
+  in the part types dialog, part-number mode's part type on the plate, and
+  a stock strip.
 
 ### Pinstripe tape
 
@@ -384,6 +590,10 @@ a key of metal for a control that names nothing.
 - **Not yet typed**, a bracket or a line is flat: 3 px of `--faint`, no lift.
 - **A bracket that holds its name** (the lower row on a phone) lies flat, so
   the lift does not edge the letters.
+- **The trunk** is 5 px of `--trunk`: the Vehicle group's colour, and the
+  Serial group's in part-number mode. The stylesheet draws it a piece an
+  item. A piece is lit and shaded along its sides alone, so no seam shows
+  where two meet; a stub, along its top and bottom.
 
 ## Signature: manila tags
 
@@ -394,6 +604,11 @@ A decoded card is a manila parts tag, hung by its eyelet from its leader line.
 - **Shape:** the top corners are clipped 16 px by a `clip-path`. The stock is
   the card's `::before`, so the card's own `drop-shadow` follows the shape; a
   `box-shadow` would be clipped away.
+- **Laid long**, a tag has its leading corners clipped 12 px and its eyelet
+  at its leading end, in the tag's lead and half a row down, where the
+  stub or the wire it hangs by lands. Every tag under the cards is one: a
+  name's, a candidate's, a part's and a vehicle's. It prints no band: its
+  heading is a strip of label tape (vinyl tape, above).
 - **Eyelet:** a 3.5 px hole at the top centre, in a 10 px patch of
   `--manila-patch` (`#c39a5c`). The ground shows through the hole.
 - **Band:** the group's mark, `--cm`, printed across the tag under the eyelet,
@@ -408,66 +623,122 @@ A decoded card is a manila parts tag, hung by its eyelet from its leader line.
   with raised white letters. Aluminum clashed with the paper, and nothing
   bolts metal to a tag. A candidate's stock strip is the one metal on a
   tag, and it is tape, not bolted: it names what it opens, so it is the
-  second tape, and it runs along the tag's bottom edge, its footer, rather
-  than sitting on the paper as a control.
+  second tape, and it is the tag's trailing end, edge to edge, rather
+  than a control sitting on the paper.
 - **Not yet typed**, a card keeps its place as a 2 px dashed `--faint` outline
   with its muted title, and no stock.
 
 ## Signature: thermal paper
 
-What a stock file says of a part is a receipt: a strip of thermal paper, fed
-out from under the stock strip of the tag it is of, and torn at its foot
-(#376). A tag is a thing found; the receipt is a print about it, so it is
-neither hung nor stuck. It is drawn with only what a receipt printer does.
+What a stock file says of a part is a print: a strip of thermal paper, fed
+out from under the tag it is of, and torn at its foot (#376). A tag is a
+thing found; the print is about it, so it is neither hung nor stuck. It is
+a print in columns (#390), drawn with only what a receipt printer does.
 "Strip" alone, here and in the stylesheet, is the tag's stock strip, the
-control; the paper is the receipt.
+control; the paper is the print (`.receipt` in the stylesheet).
 
 - **Stock:** `--thermal` (`#f6f4ee`), the same in both colour schemes,
   shaded for 15 px where it leaves the tag and faintly down each edge. Its
-  `drop-shadow` is on the receipt itself, so it follows the torn foot.
+  `drop-shadow` is on the paper itself, so it follows the torn foot.
 - **Print:** `--on-thermal` (`#232229`), one near-black in the page's
-  monospace face at 13 px: the system's, since the page ships no font file.
-  `--thermal-muted` (`#62606b`) is a note's fainter print. No other colour
+  monospace face, the row value: 13 px on an 18 px line, the system's,
+  since the page ships no font file. `--thermal-muted` (`#62606b`) is the
+  fainter print: a column's name, what is folded, a note. No other colour
   is printed, and a group's colour never is.
-- **Width:** a receipt is its tag's width and no wider than 23 rem: about 35
-  columns under a candidate's tag on a wide page, 42 at its widest. Where
-  three tags share a row narrower than 64 rem it is no narrower than 19 rem,
-  and so wider than its tag, under whichever tag is pressed.
-- **Head:** "Stock of" and the number, centred, in double height
-  (`scaleY(1.7)`).
-- **A kind of stock:** its name and count reversed, `--thermal` on a bar of
-  `--on-thermal`; its sources' dates on the line under it, at the right;
-  and a rule of dashes under both, dated or not.
-- **A row:** the id in bold, led by dots to its location; then each field,
-  its name led by dots to its value at the right. A location too long for
-  the id's line takes the next. A rule of dashes parts two rows. A field is
-  printed as its file has it, so a file that repeats a row's id as a field
-  prints it twice.
-- **A note** is a starred line under its row, in the fainter print and as
-  the page writes it, not in capitals: it quotes a number as typed. "This
-  VIN" is reversed.
-- **Nothing in a kind** is "None." between asterisks, under its bar and date.
+- **Width:** the paper runs from its tag's content, after the tag's lead,
+  to the tag's trailing end.
+- **A kind of stock:** its name and count reversed, a micro label,
+  `--thermal` on a small bar of `--on-thermal`, and on the bar's line, at
+  the right, its sources' as-of dates, or why one did not answer, each
+  named when there are several. A kind none of whose sources answered
+  states no count: a dash stands where the count would, read out as
+  "unavailable". Shelf is over yard, and one kind is printed when one is
+  loaded.
+- **Columns:** a row is a line. Its id is first, then its location in the
+  head role, larger and heavier than the row, as it is what is walked to,
+  then a column for each field its
+  source's header declares (`fields`, ADR 0019's amendment of 2026-11-23),
+  in the header's order. A declared column stands under its field's name,
+  in the fainter print over a rule of dashes; the id and the location have
+  no name printed. The id and the location are each as wide as the longest
+  of them and never wrap, short of 24 characters. A declared column is
+  never narrower than its field's name. The declared columns
+  share the rest of the paper by what they hold: none asks for more than
+  24 characters, and a longer value wraps in its column, between words.
+  Where rows of two
+  sources share a print, it has a column for every field either declares,
+  each once, and a row leaves empty those its own source does not declare.
+- **Exactly the declared fields are columns.** A source that declares none
+  prints an id and a location a row, and folds the rest. A null prints
+  nothing. A number or a boolean prints as its JSON. A list or an object
+  is never a column's. A field is printed as its file has it, so a file
+  that repeats a row's id as a field prints it twice.
+- **The fold:** what a row has beyond its declared fields is under it,
+  indented 24 px, in the fine role: the fainter print, a size under the
+  row, at regular weight, so the declared columns and the location are the
+  darkest things in a row.
+  Each is a name, a colon and its value, one after another, wrapping at 80
+  characters where the paper is wider. A list or an object is its JSON,
+  compact, cut to one line.
+- **The clamp:** a folded value past 160 characters, two such lines, is cut
+  to two lines behind a plus sign. Pressing it prints it whole, in place,
+  behind a minus sign. It is a `details` element whose summary is the
+  value, so it opens without a script, and every field's name shows while
+  it is shut.
+- **A note** is a starred line under its row, after what is folded, in the
+  fainter print and as the page writes it, not in capitals: a shelf row
+  tagged with a retired number quotes the number as typed, and the yard's
+  vehicle that is the VIN looked up says "This VIN", reversed.
+- **Nothing in a kind** that answered is "None." between asterisks, under
+  its bar and date. A kind that did not answer prints its bar and why,
+  and no "None.": what it holds is not known.
 - **Past ten rows** a kind says how many it prints, under a rule of dashes,
-  with "Show all" underlined.
-- **Foot:** a barcode over the number, then a torn edge of 9 px teeth. The
-  bars are a fixed pattern and encode nothing.
-- **Case:** nothing typed into a stock file changes case on a receipt: an
+  with "Show all" underlined, in bold.
+- **Foot:** a torn edge of 9 px teeth.
+- **Case:** nothing typed into a stock file changes case on a print: an
   id, a location, a field's name and its value are as written. Of the
-  page's own words, a kind's name, "Stock of" and "None." are capitals.
-- **The head and the foot are print.** They are hidden from a screen reader,
-  which is told the same by the region's name.
-- **It breaks two composition rules, knowingly.**
-  - *Rule 6.* Shelf and yard are one receipt, one over the other, at every
-    width, where a row would scroll sideways: a receipt is one column, and
-    two side by side are two prints. Rule 5 is kept by it: the receipt is
-    the same thing at 390, 768 and 1280 px.
-  - *Rule 3.* The part's number is on its tag, at the receipt's head and
-    under its barcode. A print says what it is of, and the head is what
-    names the part once a long receipt has scrolled its tag away: a press
-    keeps the stock strip in sight, not the tag (the parts that fit,
-    below).
-- **The rows with no number** are a receipt with no head and no foot, under
-  the label tape that names them.
+  page's own words, a kind's name and "None." are capitals.
+- **Where the paper is too narrow for its columns** the print scrolls
+  sideways under its bar, by itself, and the page stays. It is the same
+  columns at every width. The location stays at the print's leading edge
+  while the id and the columns slide under it, so the eye still runs
+  down the locations, and what is folded keeps the paper's width and
+  does not move. An end with more beyond it is shaded for 12 px, as the
+  paper is where it leaves its tag, and the shade goes at that end:
+  paper does not fade, and a fade would take the last characters of
+  what is folded with it. It needs no script and no scroll timeline.
+- **Under 34 rem** a phone's paper is narrower than most prints, so the
+  columns keep the widths their values ask, and the print scrolls. The
+  location is never wider than half the paper there: a longer one
+  wraps. What is folded is indented 12 px, not 24, and wraps as one row
+  whose space between two fields is not counted at a line's end, so a
+  field as long as the paper keeps one line. On a deployer's shelf rows
+  of eleven fields a row is 76 px high there. The form it replaced, a
+  row's fields one after another, each after its name, took 146.
+- **A screen reader** is told what the print is of by the region's name,
+  "Stock of" and the number. A kind's bar is a heading one level under the
+  part's number, and the columns are a table's, the id's and the
+  location's named out of sight. The table is in a group named by its
+  kind's bar, which is what scrolls, and takes focus, so a keyboard
+  scrolls it: a kind of stock is one stop of the Tab key, whether or not
+  its paper is wide enough for its columns.
+- **It has no head, no barcode and no dot leaders.** It names no part: its
+  tag does, and a press keeps the tag in sight (the parts that fit,
+  below). So the print no longer breaks rule 3.
+- **It breaks one composition rule, knowingly, in three places.**
+  - *Rule 6, stacked.* Shelf and yard are one print, one over the other,
+    at every width, where a row would scroll sideways: a print is one
+    strip of paper, and two side by side are two prints.
+  - *Rule 6, folded.* A folded value past 160 characters is behind its
+    plus sign, where the rule keeps nothing behind a "more" switch. The
+    exception is the maintainer's ruling, and narrow: that value alone,
+    opened in place, with no script.
+  - *Rule 6, shaded.* Where a print scrolls, an end with more beyond it
+    is shaded, where the rule fades it. Not ruled.
+- **The rows with no number** are the same print, under the strip of label
+  tape that names them (the parts that fit, below).
+- **Still open:** photos on a yard's rows are #391, and a yard's very long
+  lists are not addressed.
 
 ## Good enough: what a card holds
 
@@ -477,7 +748,7 @@ that it is narrow.
 
 - The band reads the group's title and its positions ("Vehicle 4–8").
 - The body is either label and value rows, or one large value in the monospace
-  face. A row is its label, small, with its value under it, both at the
+  face, the display role (Tokens, above). A row is its label, small, with its value under it, both at the
   card's leading edge, so every row reads alike whatever its value's length. The check digit's card opens its arithmetic in a dialog.
   The year's card shows the year, then the codes around its own as one run of
   small text with its own in bold.
@@ -488,13 +759,21 @@ that it is narrow.
 - **Wide**, the six cards span the plate's width, each under its leader line.
 - **Narrow**, the six cards are one row that scrolls sideways, in the VIN's
   order, six columns of one width (12.5 rem, and 9.5 rem under 34 rem). The region reaches both edges of the
-  window, is named, and takes focus, so a keyboard scrolls it.
+  window, is named, and takes focus, so a keyboard scrolls it. An end of
+  it with more beyond fades over 48 px, as the names' row does, but for
+  the row's last 14 px, where the lines to the block leave it whole. The
+  fade needs scroll-driven animation, and without it the row is cut
+  square.
 
 ## Good enough: the parts that fit
 
-Under the cards, in the page's single column: the vehicle's block, its names
-in the vocabularies loaded, a picker of the part types the loaded catalog has
-for the vehicle, and the candidates of the one pressed.
+Under the cards is the vehicle's block, and under the block the page is a
+counter: rows, read down. They are the picker of the part types the loaded
+catalog has for the vehicle, with the vehicle's names beside it, and the
+candidates of the part type pressed, each with its stock. Everything is set
+on the cards' columns (Tokens, above). The block is the plate's width. What
+is under it starts on the first card's leading edge, ends on the last
+card's trailing edge, and is a whole number of columns wide.
 
 - **The vehicle's block** is label tape, stuck on: a strip across its top
   with its stamp, "This vehicle ·" and the catalog's name, as a name tag
@@ -502,87 +781,134 @@ for the vehicle, and the candidates of the one pressed.
   files the vehicle under, in the catalog's word, where it has one; the
   catalog's model the decode reached; and the year it asked with ("any
   year" without one), each over its group's underline, the Maker's red,
-  the Vehicle's blue and the Model year's orange, lightened for the tape;
-  then what the decode says of the
-  vehicle that a catalog's option text names, so a candidate's options
-  are matched at a glance: the Vehicle card's rows but the model, a small
-  label over each value, raised white on the tape, then the Vehicle
-  group's five characters, each over the group's mark, as on the plate,
-  with its position under it and no label: the positions say what they
-  are. On a wide page the make is at 8 % of the block's width and the
-  model at 25 %, under the Maker and Vehicle cards, whose lines come
-  straight down; the year is at 42 %, and the Model year's line steps left
-  to it. On a narrow page, where the cards scroll and the lines are
-  carried, the words are packed at the block's left, a column 6.6 rem wide
-  each, and the details are a row under them. Each line ends on the
-  block's top edge, over the stamp's strip and never across it. A catalog
-  on vPIC's own vehicles has no make of its own: the block has none, and
-  the Maker's line is not brought down. The page puts the vehicle and the
-  candidates side by side and judges nothing: it marks no candidate as
-  the match.
-- **The names** ("Also known as") are manila tags, a tag a vocabulary, in
-  one row under the block that scrolls sideways at every width; narrow, it
-  reaches the window's right edge. The lines to the picker pass under it:
-  a tag lies over them, as a tag hung in front of tape does. Where tags are out of sight past an end of the
-  row, that end fades over 48 px, and the fade goes when the row is
-  scrolled to that end; a row that fits has none. It needs scroll-driven
-  animation, and without it the row is cut square. A
-  tag is a card's stock, hung from the block's bottom edge by a wire
-  2 px wide from its eyelet, which moves along the edge with it. It is no wider than 72% of the window, so the next
-  one shows. Across it, the vocabulary's name on a strip of
-  label tape, with how many names it holds where it has several. Under
-  that its words, with no labels: each stands over its group's colour,
-  which says what it is. The make is over the Maker's, once where every
-  name of the tag shares it; then a line a name, the model over the
-  Vehicle's and the years its mapping holds for, lighter, over the Model
-  year's. A tag's names fill two lines, then a second column, so no tag
-  is taller than its strip, a make and two names. A dashed underline is a doubt, and only a name with
-  one has the "i", a key of label tape. Every name opens a note that says
-  in words how it was reached: a doubtful one from its "i", a sure one
-  from the name itself, which darkens under a pointer. A vocabulary with no
-  name keeps a tag that says so, after those with names. Every vocabulary
-  is on the page: nothing is stacked or kept behind a switch.
-- **From the block to the picker**, at every width, the Vehicle's and the
-  Model year's lines leave the block's bottom edge under their words and
-  come straight down, under the names' tags, into the picker's key, and
-  end there. The key is under the two words: at the tape's left end on a
-  narrow page, and a column in from it on a wide one. No line runs on
-  from the picker: the candidates under it are what it names. With
-  nothing pressed no line leaves the block. They need anchor positioning.
+  the Vehicle's blue and the Model year's orange, lightened for the tape.
+  Then comes what the decode says of the vehicle that a catalog's option
+  text names: the Vehicle card's rows but the model, a small label before
+  each value, raised white on the tape, in the face and size of a
+  candidate's option text, which they are read against; and at the
+  block's trailing end the Vehicle group's five characters, each over the
+  group's mark, as on the plate, with its position under it and no label:
+  the positions say what they are. On a wide page the block's first three
+  columns are the cards': the make is under the Maker's card and the
+  model under the Vehicle's, whose lines come straight down, and the year
+  is in the third, where the Model year's line steps left to it. On a
+  narrow page, where the cards scroll and the lines are carried, the
+  words are packed at the block's left, a column 8 rem wide each, or a
+  third of the block where that is less, so a word of eleven characters
+  keeps the head's size on one line, and
+  the details are a row under them. Each line ends on the block's top
+  edge, over the stamp's strip and never across it. The page puts the
+  vehicle's details over the candidates' options and judges nothing: it
+  marks no candidate as the match.
+- **A catalog that files the vehicle under no make**, as one on vPIC's own
+  vehicles does, has a block with no make, and the Maker's line is not
+  brought down. On a wide page the stamp then takes the first column,
+  beside the catalog's word for the vehicle, and the block is a row
+  shorter. On a narrow page the stamp stays a strip across the top.
 - **Narrow, the cards move and the block does not**, so the lines are
   carried between them by the row's own scroll (a scroll timeline; no
   script reads a position). In the row each line runs on from its card to
   the row's bottom edge. In the 30 px above the block it comes down where
-  the row left it, turns (Vehicle's 4 px down, Model year's 13 px, Maker's 22 px), and
-  runs along to drop into the block over its word. The Maker's, whose card
-  and word are both the first, turns deepest, so it crosses neither of
-  the others. A line whose column is
-  off the window runs to the window's edge. A browser without scroll
-  timelines draws no line between the cards and the block.
-- **The picker** is one key of the second tape on its own piece of label
-  tape, under the names' tags, as wide as the vehicle's block at every
-  width. On a wide page the tape is one line: the key, 20 rem wide and a
-  column in from the tape's left end, the key that clears it, then recent
-  part types, and one that does not fit is not shown. On a narrow page
-  the tape is two lines: the keys, then the recent part types; the keys'
-  line is as wide as the recents' and no narrower than 24 rem. Over its name it is labelled "Part type". With nothing pressed
-  (no `part.id` in the URL) it reads "Choose a part type" with the count
-  of the vehicle's part types in the part types' pill, and a blank strip
-  under it asks for a choice. With one pressed it reads the part type's
-  name, cut with "…" where it does not fit, and counts its candidates.
-- **Clearing is its own key.** Beside the picker, with one pressed, a key
-  of the plate's metal reads "×" and links to the page with none pressed.
-  Nothing else un-presses a part type.
+  the row left it, turns (Vehicle's 4 px down, Model year's 13 px, Maker's
+  22 px), and runs along to drop into the block over its word. The
+  Maker's, whose card and word are both the first, turns deepest, so it
+  crosses neither of the others. A line whose column is off the window
+  runs to the window's edge. A browser without scroll timelines draws no
+  line between the cards and the block.
+- **The trunk** is the one line under the block: pinstripe tape in the
+  Vehicle group's colour, from the block's bottom edge straight down the
+  gutter beside the first column, to the last thing tied to it. That is
+  the picker with no candidates listed, and the last candidate with some.
+  Each is tied to it by a stub half a row down: the picker's ends on its
+  tape, and a candidate's runs into its eyelet. The trunk is there
+  whenever the picker is, with a part type pressed or none. It is drawn a
+  piece an item, so nothing is measured and it needs no anchor
+  positioning. It ends before the shelf rows with no number. Under
+  34 rem the last thing tied to it is the names' row (the names, below).
+- **The band** under the block holds the picker and, beside it, the
+  names' row, which reaches the block's trailing edge. The picker is two
+  columns wide on a wide page, 312 px, and keeps that width under
+  64 rem, as 19.5 rem. Under 34 rem nothing fits beside it: the picker is
+  as wide as a candidate's row, and the names are drawn last, under the
+  candidates (the names, below).
+- **The picker** is one key of the second tape on a short piece of label
+  tape, a row high, tied to the trunk by a stub. Over its name the key is
+  labelled "Part type". With nothing pressed (no `part.id` in the URL) it
+  reads "Choose a part type" with the count of the vehicle's part types
+  in the part types' pill, and a blank strip under the band asks for a
+  choice. With one pressed it reads the part type's name, cut with "…"
+  where it does not fit, and counts its candidates. While its list is
+  open the key is pressed. Under 64 rem the key is 45 px high.
+- **Clearing is its own key.** Beside the picker, on its tape, with one
+  pressed, a key of the plate's metal reads "×" and links to the page
+  with none pressed. Nothing else un-presses a part type. Under 64 rem it
+  is 44 px wide and 8 px from the picker's key.
+- **The names** ("Also known as") are secondary: compact manila tags, a
+  tag a vocabulary, in one row beside the picker that scrolls sideways by
+  itself. Each hangs from the block's bottom edge by a wire 2 px wide to
+  its eyelet. A tag is laid long, a row high, and a whole number of
+  columns wide, from two to nine, which the page counts from the tag's
+  words; one whose words turn out wider grows past its columns and cuts
+  nothing off. A tag's column is no narrower than 10 rem. Its first
+  column is its eyelet and the vocabulary's name on a strip of label
+  tape, with how many names it holds where it has several. The rest is
+  its words, with no labels: each stands over its group's colour, which
+  says what it is. The make is over the Maker's, once where every name of
+  the tag shares it; then a line a name, the model over the Vehicle's and
+  the years its mapping holds for, lighter, over the Model year's. A
+  tag's names fill two lines, then a second column, so no tag is taller
+  than a row. A dashed underline is a doubt, and only a name with one has
+  the "i", a key of label tape. Every name opens a note that says in
+  words how it was reached: a doubtful one from its "i", a sure one from
+  the name itself, which darkens under a pointer and more while it is
+  held, without the travel of a key: it is ink. The note hangs from
+  what opened it (dialogs, below). Where tags are out of
+  sight past an end of the row, that end fades over 48 px, and the fade
+  goes when the row is scrolled to that end; a row that fits has none.
+  It needs scroll-driven animation, and without it the row is cut square.
+  The row takes focus, so a keyboard scrolls it. A vocabulary with no
+  name keeps a tag that says so, after those with names. Every vocabulary
+  is on the page: nothing is stacked or kept behind a switch. Under
+  64 rem a tag's two names, each 24 px high with its "i", are 8 px apart.
+- **Under 34 rem the names are drawn last**, under the candidates and
+  over the shelf rows with no number, as rule 4 drops what is secondary.
+  The row cannot hang from the block there, so it is the last thing on
+  the trunk: its first tag takes a stub of the trunk in its eyelet, as a
+  candidate does, and each tag after it is wired to the one before, the
+  wire the tags hang by on a wide page turned along the row. The stub's
+  first piece, from the trunk to the row's edge, is the row's and stays;
+  the rest is the tag's, and scrolls with it under the row's fade. With
+  nothing pressed the row is under the blank strip that asks for a
+  choice, and the trunk runs past the strip to it. The page writes the
+  names after the picker, where a wide page draws them. Where scripts
+  run, `plate.js` moves them in the document to where a phone draws
+  them, before the rows with no number and "Next page", and back when
+  the window widens, so the Tab key and a screen reader go down the page
+  as it reads in every browser. Without scripts a browser that knows
+  `reading-flow` still takes the Tab key that way; another takes it to
+  the names before the candidates, and skips nothing.
 - **The picker's list** is the part types dialog, hung from the picker at
-  its width, over whatever is under it: it pushes nothing down. It has no
-  head and no backdrop, and pressing outside it or Escape shuts it. It
-  holds the filter (with JavaScript), then those opened recently, then
-  every part type under its
-  headings in one column, each a row of the second tape with its count at
-  the far end. It is never taller than half the window less the picker,
-  so it fits under the picker, or over it where there is no room under,
-  and scrolls. It hangs by anchor positioning; a browser without it shows
-  the same list as the page's dialog, with its head and Close.
+  its width, 4 px under it, over the candidates: it moves none of them.
+  It has no head, no line saying what it lists and no backdrop, and
+  pressing outside it or Escape shuts it, and the focus goes back to the
+  picker. It opens with the focus in its filter, a search field, whose
+  Escape Safari keeps for the field: `plate.js` shuts the list on it, as
+  the other browsers do. Under a coarse pointer, a finger, it opens with
+  the focus on the list itself, as part-number mode's dialog does, so a
+  phone raises no keyboard over it; a tap on the filter focuses it, and
+  clearing the recent part types leaves the focus on the list. It
+  always opens downward, and
+  it is laid on the page, not on the window. It moves with the page; a
+  page too short for it grows longer; and where the window ends before
+  the list does, the page scrolls to it where scripts run, the picker
+  still in sight above it. It never opens upward, over the plate. It
+  holds the filter (with JavaScript), then the part types opened
+  recently, then every part type under its headings in one column, each
+  a row of the second tape with its count at the far end. It is never
+  taller than 30 rem, nor than the window less the picker and 3 rem, and
+  scrolls inside itself. It hangs by anchor positioning; a browser
+  without it shows the same list as the page's dialog, with its head and
+  Close.
 - **Order never changes.** The headings are the entries of a part
   vocabulary on the catalog's spine (the one the catalog files its
   fitments under, else the first loaded), each over the part types it maps
@@ -599,35 +925,40 @@ for the vehicle, and the candidates of the one pressed.
   None matching says so under it.
 - **Recent part types**, with JavaScript, are kept in the browser as
   recent VINs are, the last eight, newest first, and nothing is kept when
-  storage fails. The picker's list leads with every one the vehicle has,
-  under "Opened recently" with its "Clear recent", at every width. Up to
-  two, never the pressed one, also sit on the picker's own tape at every
-  width, after the word "Recent", each a smaller strip of the second tape
-  with its count: pressing one presses it. On a wide page they are beside
-  the keys, after a hairline; on a narrow one they are the tape's second
-  line. One that does not fit its line is not shown. The VINs menu's "Clear recent" forgets
-  them and the VINs.
-- **A choice keeps the focus on the picker**, from the list or from under
-  it, and so does clearing.
-- **The candidates** are manila tags in the answer's order, one row that
-  scrolls sideways at every width, each hung from the bottom edge of the
-  picker's tape by a wire from its eyelet, as a name's tag hangs from the
-  block. Three fill a wide window; a narrower one shows the next tag at
-  its edge, and an end with tags past it fades. The row takes focus, and
-  starts at the open candidate where the browser can. A tag's number is a strip of label tape
-  across it under the eyelet, where a card prints its band, with the years at
-  its trailing end; a candidate has no group and takes no colour. Its side,
-  option text (verbatim) and note are rows in the tag's ink under muted
-  labels.
+  storage fails. They are the list's alone: it leads with every one the
+  vehicle has, under "Opened recently" with its "Clear recent", in the
+  order they were opened. None sits on the picker's tape. The VINs menu's
+  "Clear recent" forgets them and the VINs.
+- **A choice keeps the focus on the picker**, and so does clearing.
+- **The candidates** are rows down the page, in the answer's order, each a
+  manila tag laid long, tied to the trunk by a stub into its eyelet. A
+  row is one grid on the columns, so its parts line up down the list and
+  are scanned down. After the tag's lead comes its number on label tape,
+  with its side and its years at the tape's trailing end, two columns;
+  then, in the tag's ink, its option text (verbatim, each application's
+  on a line of its own) over its marks and its note; then its stock
+  strip, the last column. A candidate has no group and takes no colour. A
+  row is a row high, and grows only where the option text or the note
+  needs another line, or a kind of stock is unavailable (the stock
+  strip, below). Under 64 rem a row is 3.5 rem and a finger's. Its
+  side and its years are under its number there, so a number never
+  breaks for want of room. The number's tape is two columns and no
+  narrower than 9.5 rem, the strip one column and no narrower than
+  7.5 rem, and a mark's stamp wraps before it leaves the ink. Under
+  34 rem a row is two lines: its number and its stock strip, a row high,
+  then its ink.
 - **Marks are ink on the tag**, in its ordinary ink: a solid stamp, a little
   askew, with a tick, "Checked" and the decoded elements that met the
   catalog's conditions; a dashed stamp with a warning triangle, "Not
   checked" and what could not be; "Match the options yourself" and "No
-  conditions", plain muted words, when nothing was either: the first where
+  conditions", plain words in capitals with no box, when nothing was either:
+  in the tag's ink, as a stamp is, so that they stand apart from the muted
+  label of the note after them; the first where
   the catalog gives option text, which the page cannot read and the reader
   matches against the vehicle; and a solid stamp with an
   arrow, "By redirect" and the part type the catalog lists it under. A model
-  year confirmed alone earns no stamp: every candidate's years held.
+  year confirmed alone earns no stamp: every candidate's years held. The
+  marks begin the line under the option text, and the note follows them.
 - **Weakest wins.** Each of a candidate's applications earns its own marks,
   and the tag shows their union, each kind once with its elements merged, so
   it never claims more than the weakest way the candidate fits: an
@@ -637,90 +968,112 @@ for the vehicle, and the candidates of the one pressed.
   Checked,
   then By redirect.
 - **More candidates** than a page holds (30) are a "Next page" link away.
-- **The stock strip** is the bottom edge of every tag, and the only part of
-  it that presses: the second tape, "Stock · 2 shelf · 2 yard", naming only
-  the kinds of stock loaded, with a chevron at its trailing end. Every
-  candidate arrives with its totals from the candidates' one request, which
-  asks for the stock loaded beside the catalog. A kind none of whose
-  sources answered reads "yard unavailable", never 0: a 0 is a loaded
-  source with none. The number above it stays black label tape. With stock
-  loaded and none for the candidate it is "Stock · none", muted ink over a
-  2 px dashed rule, and presses nothing; with none loaded it is "Stock ·
-  not loaded" with "Add stock" underlined, and opens the Vocabularies
-  dialog.
-- **A press shows what it opened.** A part type's candidates and a strip's
-  rows open under the control pressed, often below the window. Where
-  scripts run the page scrolls down just far enough to bring them in, never
-  so far that the part types or the pressed stock strip leave the top, and
-  never up. It scrolls smoothly unless the visitor asks for less motion.
+- **The stock strip** is the trailing end of every tag, and the only part
+  of it that presses: the second tape, a cell for each kind of stock
+  loaded, its count over its name, and a chevron. A screen reader is told
+  it once, in words: "Stock · 2 shelf · 2 yard" and the number. Every
+  candidate arrives with its totals from the candidates' one request,
+  which asks for the stock loaded beside the catalog. A kind none of
+  whose sources answered reads a dash over "yard", with "unavailable" on
+  a line under it, never 0: a 0 is a loaded source with none. That cell
+  is wider and a line taller than a count's, so the strip is as wide as
+  it asks, 167 px for one kind and 163 under 64 rem, the one state in
+  which a strip is wider than its column, and the cells stand on their
+  counts' line. It was one line that ran off the tag, and on a narrow
+  page took the window sideways. Under 34 rem the wider strip takes its
+  width from the number's tape: a number of eleven characters keeps one
+  line down to 378 px, and breaks under that. With stock loaded and
+  none for the
+  candidate it is "Stock · none", muted ink beside a 2 px dashed rule,
+  and presses nothing; with none loaded it is "Stock · not loaded" with
+  "Add stock" underlined, and opens the Vocabularies dialog.
+- **A press shows what it opened.** The picker's list, a part type's
+  candidates and a strip's rows open under the control pressed, often
+  below the window. Where scripts run the page scrolls down just far
+  enough to bring in the list, a part type's first two candidates or the
+  sentence in their place, or the strip's rows. It never scrolls so far
+  that the picker, or the open candidate's tag, leaves the top, and never
+  up. It scrolls smoothly unless the visitor asks for less motion.
 - **The open candidate's rows.** A strip is a link to the page with its
   candidate open (the URL's `fitment.number`, with `fitment.side` for a
   sided fitment and `fitment.type` for one whose type is not the pressed
   part type's); the open one's links to the page with none, so one is
-  open at a time. The rows are a receipt (thermal paper, above), fed out
-  from under the tag's stock strip, in the second row of the candidates'
-  scrolling row: under its tag, in its column,
-  moving with it. Shelf is over yard on the one receipt at every width, one
-  kind when one is loaded, each under its count on a reversed bar and its
-  sources' as-of dates, or why one did not answer. A row is its id, led by
-  dots to its location, and its source's fields verbatim, each name led to
-  its value. A shelf row tagged with a retired number says which in a
-  starred line under it; the yard's vehicle that is the VIN looked up says
-  "This VIN", reversed.
+  open at a time. The rows are a print (thermal paper, above), fed out
+  from under the candidate's tag, in its own item of the list: the
+  candidates after it are under the print. Shelf is over yard on the one
+  print at every width, one kind when one is loaded, each under its count
+  on a reversed bar and its sources' as-of dates, or why one did not
+  answer. A row is its id, its location and the fields its source
+  declares, in columns, with what else it has folded under it. A shelf
+  row tagged with a retired number says which in a starred line under
+  it; the yard's vehicle that is the VIN looked up says "This VIN",
+  reversed.
 - **Past ten rows** a kind of stock says how many it shows, and "Show all" is a
   link to the page with every row (`rows=all`), swapped in place where
   scripts run.
 - **Shelf rows with no number** belong to no candidate: after the first
   page's candidates, a strip of label tape, stuck on, names the part type
-  and the vehicle in their own case, over a receipt with no head and no
-  foot, under their count and as-of dates. Past the candidates' page of them, "Show all" is
-  the page with every one (`rows=unnumbered`). They never keep the
-  candidates' "Next page".
+  and the vehicle in their own case, over the same print, under their
+  count and as-of dates. They hang from no tag. Past the candidates' page
+  of them, "Show all" is the page with every one (`rows=unnumbered`).
+  They never keep the candidates' "Next page". "Show all" leaves the
+  focus on the strip's heading. The section itself takes none: where
+  the page's order is drawn (`reading-flow`), a part of it that only a
+  script can focus keeps the Tab key out of everything in it.
 
 ## Good enough: empty places
 
 Where the page has no answer, the place stays, as a blank strip: a 3 px dashed
 `--faint` outline with one sentence in `--muted`. A control in it is a key of
-metal; a way on is a link.
+metal; a way on is a link. Under the cards a blank strip is set on the
+columns and is at least a row high.
 
-- **The names' place:** no vocabulary loaded, with a key that opens the
-  Vocabularies dialog, or a model not known yet. A vocabulary with no name
-  for the vehicle is not a blank strip: its tag says so.
+- **The names' place**, in the band: no vocabulary loaded, with a key that
+  opens the Vocabularies dialog, or a model not known yet. A vocabulary
+  with no name for the vehicle is not a blank strip: its tag says so.
 - **The parts that fit:** no catalog loaded, with a key that opens the
   Vocabularies dialog; the model not known yet; the catalog lacks the
   vehicle, naming both, with a link to the catalog's lines; the catalog has
   the vehicle and nothing for its year, with a link to its lines for the
   vehicle; nothing pressed; and a pressed part type with nothing for the
   vehicle.
-- **A part number's place**, the tag's and the table's: nothing typed yet,
+- **A part number's place**, the tag's and its vehicles': nothing typed yet,
   asking for a part type and a number; a number with no part type, asking
   for its part type; no catalog loaded, with the same key; no such part,
   naming the catalog, the part type and the number; a part listed with no
   vehicle, saying so; and a part on more than one side, with a link to
   each.
 - **A card** not typed yet is a 2 px dashed outline (manila tags, above).
-- **A candidate's stock** with none for it is muted words over a dashed
-  rule on its tag, and a kind of stock with none says "None." between
-  asterisks on the receipt (the parts that fit, above).
+- **A candidate's stock** with none for it is muted words beside a dashed
+  rule at its tag's trailing end, and a kind of stock that answered with
+  none says "None." between asterisks on the print (the parts that fit,
+  above).
 
 ## Good enough: where the brackets and lines run
 
 - A label sits over its cells with a bracket opening downward. A second
   bracket under the plate opens upward. Both are borders, not images.
 - **Wide**, a leader line runs from each lower bracket to its card, with
-  square turns and one elbow. A second set of lines joins the vehicle's and
-  the year's cards to the block's two words, where a block is drawn.
+  square turns and one elbow. A second set of lines joins the cards to the
+  words of the vehicle's block, where a block is drawn: the Vehicle's
+  straight down, the Maker's too where the catalog files the vehicle under
+  a make, and the Model year's stepped left.
 - Those lines are SVG paths in a 1020-unit box (60 a cell, 170 a card),
   stretched to the stage with `vector-effect="non-scaling-stroke"`. Positions
   come from arithmetic on the grid, and nothing is measured at run time.
 - **Narrow**, the stepped lines are not drawn, and neither are the leader
-  lines: the cards they would end on move.
+  lines: the cards they would end on move. The lines to the block are
+  carried by the row's scroll (the parts that fit, above). Under 34 rem
+  the trunk's last stub runs into the eyelet of the names' first tag,
+  under the candidates, and a wire joins each tag to the next.
 - A newly finished group draws its bracket and line in.
-- **The lines never stop short.** Vehicle's and Model year's run from the
-  card into the vehicle's block, and from it to the picker and its
-  candidates' eyelets, at every width. Maker's ends at its card: a name's
-  make carries the Maker's colour instead of a line.
-- No line ends on a blank strip: with no block, none is drawn from the cards.
+- **The lines from the cards end on the block.** None runs on from it.
+  Under the block the one line is the trunk, from the block's bottom edge
+  straight down the gutter, with a stub to the picker and to each
+  candidate. In part-number mode the number's line ends in the eyelet of
+  the part's tag, and the trunk runs from that tag through its vehicles.
+- No line ends on a blank strip: with no block, none is drawn from the
+  cards, and with no picker there is no trunk.
 
 ## Good enough: dialogs
 
@@ -729,8 +1082,8 @@ script. There are three kinds.
 
 | Kind | Used for | Width | Backdrop |
 | --- | --- | --- | --- |
-| Dialog (`dialog[popover]`) | Vocabularies, Developers, JSON, the check digit's sum, the part types | `min(56rem, 100vw - 2rem)` | `rgb(10 18 26 / .55)` |
-| Note (`.note[popover]`) | How a name on the tape was reached | up to `30rem` | `rgb(10 18 26 / .35)` |
+| Dialog (`dialog[popover]`) | Vocabularies, Developers, JSON, the check digit's sum, part-number mode's part types | `min(56rem, 100vw - 2rem)` | `rgb(10 18 26 / .55)` |
+| Note (`.note[popover]`) | How a name on a tag was reached | up to `30rem` | `rgb(10 18 26 / .35)` |
 | Menu (`.menu[popover]`) | The VINs to try | `19rem` | none |
 
 - **Panel:** panel ground and `--fg`, a 2 px `--steel` edge, on 3 px of
@@ -745,6 +1098,15 @@ script. There are three kinds.
 - **The menu hangs from its button** by CSS anchor positioning, and from the
   page's end where the browser has none. Its rows are small metal tags,
   raised as keys are. While it is open, its button is pressed.
+- **A note hangs from the name that opened it** (rule 8): 6 px under it,
+  centred on it, moved along only as far as keeps it 1 rem inside the
+  window, and over the name where the window ends first. It is anchored
+  to its button, with no script. A browser without anchor positioning
+  opens it in the window's middle, as every browser did.
+- **The part types dialog** is one dialog in two places. Part-number mode
+  opens it as a dialog, with its head, a line saying what it lists, and
+  its part types under their headings in two columns. On a VIN's page it
+  is the picker's list, hung from the picker (the parts that fit, above).
 - **Each key is where it belongs, the same at every width** (rules 5, 6
   and 7). No menu holds the page's keys and no row of them scrolls.
   Vocabularies is the header's, at its far end, as it is about the whole
@@ -805,34 +1167,58 @@ Every other control is plain and small.
   search field, then a Filter button and a "Show all" link, in a wrapping
   row. A catalog's lines filter on the part type and the vehicle's fields.
 - **Inline form** (Remove, in a table row): a form that is only its button.
-- **Switch without a script:** a visually hidden checkbox whose label is the
-  control, as on a stack of label tape. Off, it stands raised; on, it is
-  pressed. A stack's stamp on a wide page is the one switch that lies level
-  with its strip (vinyl tape, above).
 - **Disclosure:** `details` with a weight-600 `summary`, in a 1 px `--line`
-  box. In a table row it has no box.
+  box. In a table row it has no box. On a stock print it has neither box
+  nor weight: its summary is a folded value, cut to two lines (thermal
+  paper, above).
 - **Table:** rows ruled 1 px in `--line`. The header row is the label face at
   11 px over a 3 px `--steel` rule. A page's own table (a vocabulary's
   entries) sits in a panel like a note's: panel ground, a 2 px `--steel` edge,
   4 px corners, on 3 px of `--steel-dark` and a soft shadow.
 - **Focus:** every link, button, summary, field and `pre` takes a 3 px
-  `--link` outline, 2 px off. The plate takes it 3 px off.
+  outline, 2 px off, in the ring's colour for what it is drawn on
+  (Tokens, above). The plate takes it 3 px off. A stock strip is its
+  tag's edge, so its ring is inside it, 6 px in, on its metal and clear
+  of its ledge, as the cards' row's is inside its region under 64 rem.
+  The mode switch's focused key lies over its neighbour, so its ring is
+  whole.
 - **Errors:** `--bad` text. A refusal and the page's error slot add a 4 px
-  `--bad` rule down the left.
-- **Targets:** a link or a button in a table row is at least 24 px high.
+  `--bad` rule down the left. Under the plate a refusal is the last line
+  of the parts that fit, or of a part's answer, on the columns. What the
+  decoder says is wrong with a whole VIN is not an error of the page's:
+  it is on label tape (vinyl tape, above).
+- **Targets:** a link or a button in a table row is at least 24 px high,
+  and so is a key on a card, and a link in a sentence under the cards
+  ("Show all", "Next page", a blank strip's way on), whose line is no
+  taller for it. Under 64 rem, where a finger presses, the picker's key
+  and a stock strip are 44 px high or more, as are the keys over the
+  plate, and two targets that are not joined are 8 px apart. The mode
+  switch's two keys are joined, by design. The header's and the foot's
+  keys are 26 to 28 px high at every width.
 
 ## Building something new
 
 - A new control is a piece of metal. Reuse `--metal`, `--raised` and
   `--emboss`, and pick its fastener from the table above. On a manila tag it
   is a strip of label tape in the tag's colour, unless it names what it
-  opens and runs along the tag's edge, as the stock strip does. Either way
+  opens and is the tag's trailing end, as the stock strip is. Either way
   it stands at the controls' one height, and pressed it is flush.
 - A new static strip of tape is stuck on, with `--lift-stuck`, never raised.
-- A new name from a vocabulary is on a manila tag, under a heading of
-  label tape; one that can be pressed is the second tape.
+- A new name from a vocabulary is ink on a manila tag, after its
+  vocabulary's name; one that can be pressed is the second tape.
 - A new fact about the VIN itself is a row on a tag, under its group's band.
-- A new connection between two things is a line of pinstripe tape.
+- A new connection between two things is a line of pinstripe tape. Under
+  the vehicle's block it is a stub to the trunk: no second line runs down
+  the page.
+- A new list under the vehicle's block is rows down the page, set on the
+  cards' columns with the page's inset, spaces and row height (Tokens,
+  above).
+- A new part under the cards keeps one shape at every width. Where it
+  must change, it changes at one of the page's three widths, for what
+  stops fitting there (Tokens, "Widths"), and what a finger presses is
+  44 px high under 64 rem.
+- New text under the cards takes a type role (Tokens, above). It writes no
+  size, weight or tracking of its own, and data is the monospace.
 - A fifth material needs a reason, as manila and thermal paper had:
   something the page hangs, sticks, bolts on or prints that the four cannot
   be.
@@ -840,7 +1226,8 @@ Every other control is plain and small.
   besides `--link` and `--bad`.
 - Check it against each composition rule above.
 - Check both colour schemes, a wide window (1280 px), a narrow one (768 px), a
-  390 px one, and the page with JavaScript off. Check it with as much on
+  390 px one and a 320 px one, and the page with JavaScript off. Check it
+  with as much on
   the page as a deployer has: several vocabularies, a vehicle with many
-  part types, a long body or engine. The demo set alone hides what
-  crowds.
+  part types, a long body or engine, a stock file of a dozen fields. The
+  demo set alone hides what crowds.

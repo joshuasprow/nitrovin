@@ -21,8 +21,11 @@
 //   draw them. A whole VIN takes no more: nothing is pushed off its end;
 // - whole VINs that decoded are kept in this browser (the last 8) and
 //   offered as chips in the examples' place;
-// - the part types a page pressed are kept too, and lead the strip of
-//   part types, which the visitor can filter as they type (strip);
+// - the part types a page pressed are kept too, and lead the picker's
+//   list, which the visitor can filter as they type (strip);
+// - on a phone the vehicle's names stand in the document where they are
+//   drawn, under the candidates, so the Tab key and a screen reader go
+//   down the page as it reads (seat);
 // - the plate's switch (page.html's modes), two links, swaps in the other
 //   mode's plate and answer in place, a history entry of its own; in
 //   part-number mode the page asks as the number is typed, as it does for
@@ -98,9 +101,7 @@
     for (const key of done(answer)) {
       if (!before.has(key)) answer.querySelectorAll('.g-' + key).forEach((el) => el.classList.add('fresh'));
     }
-    if (!before.has('aka') && answer.querySelector('#aka.done') && !old.querySelector('#aka.done')) {
-      answer.querySelector('#aka').classList.add('fresh');
-    }
+    seat();
     const dev = document.getElementById('dev');
     const next = doc.getElementById('dev');
     if (dev && next && !dev.querySelector(':popover-open')) dev.replaceWith(next);
@@ -453,20 +454,21 @@
   // candidate's stock strip, is a link to the page (page.html's fit): its
   // answer is swapped in place, as a VIN's is, and is a history entry of
   // its own. The link the visitor followed keeps the focus, in the answer
-  // that replaced it: a part type, chosen in the picker's list or under the
-  // picker, leaves it on the picker; anything else the element of its id, else the
-  // link in its place. "Show all", which the answer it brings has no
-  // more, leaves the focus on what it names (data-focus), the rows it
-  // showed. In part-number mode a part type chosen in the dialog fills
-  // the plate's field, and the focus is the number's, its caret at the
-  // end, for the next number.
+  // that replaced it: a part type, chosen in the picker's list, leaves it
+  // on the picker; anything else the element of its id, else the link in
+  // its place. "Show all", which the answer it brings has no more, leaves
+  // the focus on what it names (data-focus), the rows it showed. In
+  // part-number mode a part type chosen in the dialog fills the plate's
+  // field, and the focus is the number's, its caret at the end, for the
+  // next number.
   // reveal scrolls the page down just far enough to show what a press
-  // opened, when it opened below the window's bottom edge: the candidates
-  // under a pressed part type, the rows under a candidate's stock strip.
-  // It never scrolls what was pressed (from) off the top, so the part type
-  // or the stock strip stays in sight above its answer, and it never
-  // scrolls up. Following the link's focus would do as much for a
-  // keyboard; a pointer has no focus to follow.
+  // opened, when it opened below the window's bottom edge: the picker's
+  // list, the first candidates under a pressed part type, the rows under
+  // a candidate's stock strip. It never scrolls what was pressed (from)
+  // off the top, so the picker or the candidate's tag stays in sight
+  // above what it opened, and it never scrolls up. Following the link's
+  // focus would do as much for a keyboard; a pointer has no focus to
+  // follow.
   const reveal = (what, from) => {
     if (!what) return;
     const pad = 16;
@@ -475,6 +477,45 @@
     const by = Math.min(over, room);
     if (by > 0) window.scrollBy({ top: by, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   };
+  // The vehicle's names are written after the picker, where a wide page
+  // draws them. A phone draws them last on the trunk, under the
+  // candidates (ui.css, under 34rem), and only a browser that knows
+  // reading-flow follows a drawn order. So seat moves them to where they
+  // are drawn: before the rows with no number and "Next page" on a phone,
+  // after the picker on anything wider. What had the focus in them keeps
+  // it. Without this script the markup's order stands.
+  const phone = matchMedia('(max-width: 34rem)');
+  const seat = () => {
+    const fit = document.getElementById('fit');
+    const aka = document.getElementById('aka');
+    const picker = fit && fit.querySelector(':scope > .ptwrap');
+    if (!picker || !aka || aka.parentElement !== fit) return;
+    const next = phone.matches ? fit.querySelector(':scope > .nonum, :scope > .more-cands') : picker.nextElementSibling;
+    if (next === aka || (phone.matches && aka.nextElementSibling === next)) return;
+    const held = aka.contains(document.activeElement) ? document.activeElement : null;
+    fit.insertBefore(aka, next);
+    if (held) held.focus({ preventScroll: true });
+  };
+  phone.addEventListener('change', seat);
+
+  // The picker's list opens downward, on the page (ui.css): where the
+  // window ends before it does, the page scrolls to it, the picker still
+  // in sight above it. The toggle event does not bubble.
+  document.addEventListener('toggle', (e) => {
+    if (e.newState === 'open' && e.target.matches && e.target.matches('#fit .ptdialog')) reveal(e.target, document.querySelector('#fit .ptwrap'));
+  }, true);
+  // Under a finger the list and the dialog open with the focus on
+  // themselves, not in the filter, so a phone raises no keyboard over
+  // them; a tap on the filter focuses it. A dialog with autofocus takes
+  // the focus its first field would. Asked as each opens: a pointer can
+  // be plugged in.
+  const finger = matchMedia('(pointer: coarse)');
+  document.addEventListener('beforetoggle', (e) => {
+    if (e.newState !== 'open' || !e.target.matches || !e.target.matches('.ptdialog')) return;
+    e.target.toggleAttribute('autofocus', finger.matches);
+    if (finger.matches) e.target.tabIndex = -1;
+    else e.target.removeAttribute('tabindex');
+  }, true);
 
   document.addEventListener('click', (e) => {
     const a = e.target.closest && e.target.closest('#answer a.swap');
@@ -494,30 +535,18 @@
     const dialog = a.closest('[popover]');
     if (dialog) dialog.hidePopover();
     const opens = a.classList.contains('stk') && a.getAttribute('aria-expanded') === 'false';
-    // On a phone the candidates are a row that scrolls sideways: the
-    // answer that replaces it keeps its place, and shows the candidate
-    // whose rows it opened.
-    const row = a.closest('.cands');
-    const left = row ? row.scrollLeft : 0;
     const u = new URL(a.href);
     ask(u.pathname + u.search, 'push').then(() => {
-      const cands = row && document.querySelector('#answer .cands');
-      if (cands) {
-        cands.scrollLeft = left;
-        const open = cands.querySelector('.cand:has(+ .rows)');
-        if (open) open.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-      }
-      // What the press opened is shown: a stock strip's rows under it, a
-      // part type's candidates, or the sentence in their place, under it.
-      // The stock strip stays in sight, not its whole tag: the rows are a
-      // receipt as tall as its rows are many, and its head says which part
-      // it is of.
+      // What the press opened is shown: a stock strip's rows under its
+      // candidate's tag, which stays in sight as the rows name no part;
+      // or a part type's first two candidates, or the sentence in their
+      // place, under the picker.
       const fit = document.getElementById('fit');
       if (opens) {
         const strip = id && document.getElementById(id);
-        reveal(document.getElementById('stock-rows'), strip);
+        reveal(document.getElementById('stock-rows'), strip && strip.closest('.line'));
       } else if (part && fit && fit.querySelector('.ptype[aria-current]')) {
-        reveal(fit.querySelector('.cands') || fit.querySelector('p.blank'), fit.querySelector('.ptwrap'));
+        reveal(fit.querySelector('.cand:nth-child(2) > .line, .cand:only-child > .line, #fit > p.blank'), fit.querySelector('.ptwrap'));
       }
       const number = part && document.getElementById('from-number');
       if (number) {
@@ -600,7 +629,7 @@
   };
   function remember(answer) {
     if (!answer || !('complete' in answer.dataset) || !answer.dataset.label || answer.querySelector('.card.bad')) return;
-    const vin = answer.dataset.vin, part = answer.querySelector('.drops') ? answer.dataset.part || '' : '';
+    const vin = answer.dataset.vin, part = answer.querySelector('#clear-type') ? answer.dataset.part || '' : '';
     const name = part && answer.querySelector('#pick-type .nm');
     const was = recent().find((r) => r.vin === vin);
     // A VIN looked at again with no part type keeps the one it had.
@@ -631,12 +660,10 @@
   // With it:
   //
   // - a part type a page presses is kept in this browser (the last 8,
-  //   newest first, by its spine). Up to two the vehicle has, the
-  //   pressed one aside, sit beside the picker on its tape where the page
-  //   is wide enough to show them (ui.css), in the order they were
-  //   opened; the list, and part-number mode's dialog, lead with every
-  //   one it has under "Opened recently", whose Clear recent forgets
-  //   them, as the VINs menu's forgets them and the VINs;
+  //   newest first, by its spine). The list, and part-number mode's
+  //   dialog, lead with every one the vehicle or the catalog has under
+  //   "Opened recently", in the order they were opened, whose Clear
+  //   recent forgets them, as the VINs menu's forgets them and the VINs;
   // - the filter narrows the list as it is typed, by name, hiding a
   //   heading left with none;
   // - pressing the pressed part type in the list shuts the list and
@@ -644,7 +671,6 @@
   //
   // Nothing is kept when storage fails.
   const PARTS = 'nitrovin.recent-parts';
-  const UNDER = 2;
   const recentParts = () => {
     try {
       return JSON.parse(localStorage.getItem(PARTS) || '[]').filter((r) => r && r.spine && r.id).slice(0, KEPT);
@@ -660,7 +686,7 @@
     if (!dialog) return null;
     const wrap = answer.querySelector('.ptwrap');
     const spine = wrap ? wrap.dataset.spine : dialog.dataset.spine;
-    return spine ? { wrap, dialog, spine, items: [...dialog.querySelectorAll('.ptgroups li[data-part]')] } : null;
+    return spine ? { dialog, spine, items: [...dialog.querySelectorAll('.ptgroups li[data-part]')] } : null;
   };
   // keep keeps the part type answer presses, when its list has it, or
   // the one the plate holds, in part-number mode.
@@ -697,24 +723,28 @@
   document.addEventListener('input', (e) => {
     if (e.target.classList && e.target.classList.contains('ptfind')) filter(e.target);
   });
+  // Escape in the filter shuts the list or the dialog, as it does from
+  // anywhere else in it, and the focus goes back to what opened it. Safari
+  // gives a search field's Escape to the field alone, and the list opens
+  // with the focus in its filter: there Escape did nothing.
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || e.isComposing || !e.target.classList || !e.target.classList.contains('ptfind')) return;
+    const dialog = e.target.closest('[popover]');
+    if (!dialog || !dialog.matches(':popover-open')) return;
+    dialog.hidePopover();
+    const opener = document.querySelector('[popovertarget="' + dialog.id + '"]:not([popovertargetaction])');
+    if (opener) opener.focus({ preventScroll: true });
+  });
   // strip draws answer's part types as this browser has them: the filter
-  // shown, and the recent part types under the picker and in the dialog's
-  // "Opened recently".
+  // shown, and the recent part types in the dialog's "Opened recently".
   function strip(answer) {
     const list = listed(answer);
     if (!list) return;
-    const { wrap, dialog, items } = list;
+    const { dialog, items } = list;
     answer.querySelectorAll('.ptf').forEach((f) => { f.hidden = false; });
     const has = new Set(items.map((li) => li.dataset.part));
     const recent = recentParts().filter((r) => r.spine === list.spine && has.has(r.id)).map((r) => r.id);
     const copy = (id) => dialog.querySelector('.ptgroups li[data-part="' + CSS.escape(id) + '"]').cloneNode(true);
-    if (wrap) {
-      wrap.classList.add('live');
-      const under = recent.filter((id) => id !== answer.dataset.part).slice(0, UNDER);
-      const row = wrap.querySelector('.ptrecents');
-      row.replaceChildren(...under.map(copy));
-      row.hidden = under.length === 0;
-    }
     const sec = dialog.querySelector('.ptrecent');
     sec.querySelector('.ptlist').replaceChildren(...recent.map(copy));
     sec.hidden = recent.length === 0;
@@ -734,8 +764,9 @@
     chips();
     strip(document.getElementById('answer'));
     // The button's section is gone with what it listed: the focus stays
-    // in the dialog, on its filter.
-    const find = e.target.closest('.ptdialog')?.querySelector('.ptfind');
+    // in the dialog, on its filter, or under a finger on the dialog.
+    const dialog = e.target.closest('.ptdialog');
+    const find = dialog && (finger.matches ? dialog : dialog.querySelector('.ptfind'));
     if (find) find.focus();
   });
 
@@ -784,6 +815,7 @@
     if (!history.state) history.replaceState({ whole: input.value.length === LENGTH }, '', location.href);
     chips();
     remember(document.getElementById('answer'));
+    seat();
     parts(document.getElementById('answer'));
   };
   init();

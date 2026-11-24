@@ -18,17 +18,17 @@ var stripFixture = abs("../../testdata/vocab/strip")
 // server that loaded the strip fixture, without JavaScript and with it,
 // at 1280 and 390. The picker asks for a part type and counts the
 // vehicle's eighteen. Pressing it opens its list, every part type under
-// its headings: where the browser has anchor positioning, hung from the
-// picker at its width, inside the window. A part type chosen there is the
-// picker's, with its candidates' count and the key that clears it beside
-// it. Pressing the pressed one in the list changes nothing; the key
-// clears it. Without JavaScript there is no filter and nothing is recent.
-// With it, the filter narrows the list and a filter matching nothing says
-// so; a part type opened before leads the list, and sits on the picker's
-// tape, beside the keys at 1280 and under them at 390, never the pressed
-// one, and pressing it there presses it; the focus stays on the picker.
-// axe audits each state. CI (CI set) needs the browser; a machine without
-// one skips.
+// its headings: where the browser has anchor positioning, hung under the
+// picker at its width, never over it, and with scripts brought into the
+// window. A part type chosen there is the picker's, with its candidates'
+// count and the key that clears it beside it. Pressing the pressed one in
+// the list changes nothing; the key clears it. Without JavaScript there
+// is no filter and nothing is recent. With it, the filter narrows the
+// list and a filter matching nothing says so; a part type opened before
+// leads the list, the latest first, and nothing but the picker and the
+// key that clears it is on the picker's tape; pressing one there presses
+// it; the focus stays on the picker. axe audits each state. CI (CI set)
+// needs the browser; a machine without one skips.
 func TestPartTypePicker(t *testing.T) {
 	path := chromePath()
 	if path == "" {
@@ -69,18 +69,20 @@ func TestPartTypePicker(t *testing.T) {
 				tb.wait(`#pick-type`)
 				if js {
 					tb.wait("#vin-form.live")
-					tb.wait(".ptwrap.live")
+					tb.wait("#part-types .ptf:not([hidden])")
 				}
 				if got, want := eval[[]string](tb, picker), []string{"Choose a part type", "18 part types"}; !slices.Equal(got, want) {
 					t.Errorf("nothing pressed, the picker reads %q; want %q", got, want)
 				}
-				if tb.count("#part-types:popover-open") != 0 || tb.count("#clear-type") != 0 || tb.count(".ptrecents:not([hidden])") != 0 {
+				if tb.count("#part-types:popover-open") != 0 || tb.count("#clear-type") != 0 || tb.count("#part-types .ptrecent:not([hidden])") != 0 {
 					t.Error("nothing pressed: the list is open, a key clears, or a part type is recent")
 				}
 				tb.audit(name + ", nothing pressed")
 
 				// The list, opened: every part type, and where the browser
-				// can hang it, under the picker at its width, in the window.
+				// can hang it, under the picker's tape at its width, inside
+				// the window's sides; with scripts the page has scrolled
+				// it into the window whole.
 				settle()
 				tb.do(chromedp.Click(chromedp.CSS(`#pick-type`)))
 				tb.wait(`#part-types:popover-open`)
@@ -91,11 +93,13 @@ func TestPartTypePicker(t *testing.T) {
 					t.Errorf("the list's filter is shown %d times with scripts %v", n, js)
 				}
 				if eval[bool](tb, `CSS.supports("anchor-name: --a")`) {
-					off := eval[[]float64](tb, `(() => { const p = document.querySelector(".ptkeys").getBoundingClientRect(), d = document.getElementById("part-types").getBoundingClientRect();
-						return [Math.abs(d.left - p.left), Math.abs(d.width - p.width), Math.min(d.top, innerHeight - d.bottom, d.left, innerWidth - d.right),
-							Math.min(Math.abs(d.top - p.bottom), Math.abs(p.top - d.bottom))]; })()`)
-					if off[0] > 1 || off[1] > 1 || off[2] < 0 || off[3] > 8 {
-						t.Errorf("the list is %v px off the picker's edge, %v px off its width, %v px inside the window and %v px from the picker; want it hung from the picker, in the window", off[0], off[1], off[2], off[3])
+					settle()
+					off := eval[[]float64](tb, `(() => { const p = document.querySelector(".ptwrap").getBoundingClientRect(), d = document.getElementById("part-types").getBoundingClientRect();
+						return [Math.abs(d.left - p.left), Math.abs(d.width - p.width), Math.min(p.top, d.left, innerWidth - d.right), d.top - p.bottom, innerHeight - d.bottom]; })()`)
+					// A page that ends with the list ends at the list's
+					// bottom edge: the window's, to the pixel.
+					if off[0] > 1 || off[1] > 1 || off[2] < 0 || off[3] < 0 || off[3] > 8 || js && off[4] < -1 {
+						t.Errorf("the list is %v px off the picker's edge, %v px off its width, the picker and its sides %v px inside the window, %v px under the picker and %v px above the window's bottom edge; want it hung under the picker, and in the window where scripts run", off[0], off[1], off[2], off[3], off[4])
 					}
 				}
 				tb.audit(name + ", the list open")
@@ -130,8 +134,8 @@ func TestPartTypePicker(t *testing.T) {
 				if js && eval[bool](tb, `document.activeElement !== document.getElementById("pick-type")`) {
 					t.Errorf("the picker lost the focus to %s", eval[string](tb, `document.activeElement.outerHTML`))
 				}
-				if n := tb.count(".ptrecents:not([hidden]) li"); n != 0 {
-					t.Errorf("Water Pump pressed: %d part types under the picker; want none, the pressed one is not listed", n)
+				if n := tb.count("#fit .ptwrap > :not(#pick-type, #clear-type)"); n != 0 {
+					t.Errorf("Water Pump pressed: %d things on the picker's tape beside the picker and the key that clears it; want none", n)
 				}
 				tb.audit(name + ", Water Pump pressed")
 
@@ -146,8 +150,9 @@ func TestPartTypePicker(t *testing.T) {
 					t.Errorf("Water Pump pressed again, the tab is at %s; want %s", got, pump)
 				}
 
-				// Fog Lamp chosen: with scripts, Water Pump sits under the
-				// picker, and pressing it there presses it.
+				// Fog Lamp chosen: with scripts, the list leads with what
+				// was opened, the latest first, and pressing Water Pump
+				// there presses it.
 				settle()
 				tb.do(chromedp.Click(chromedp.CSS(`#pick-type`)))
 				tb.wait(`#part-types:popover-open`)
@@ -157,39 +162,20 @@ func TestPartTypePicker(t *testing.T) {
 					t.Errorf("Fog Lamp chosen, the tab is at %s; want %s", got, fog)
 				}
 				if js {
-					if got := eval[[]string](tb, `[...document.querySelectorAll(".ptrecents:not([hidden]) li")].map((li) => li.dataset.part)`); !slices.Equal(got, []string{"water-pump"}) {
-						t.Errorf("Fog Lamp pressed, beside the picker: %q; want Water Pump alone", got)
-					}
-					// On the tape at every width: beside the keys on a wide
-					// page, on a line of its own under them on a narrow
-					// one, inside the tape and the window. It is pressed
-					// there at 1280, and from the head of the list at 390.
-					onTape := eval[[]float64](tb, `(() => {
-						const row = document.querySelector(".ptrecents li a.ptype"), keys = document.querySelector(".ptkeys").getBoundingClientRect(), tape = document.querySelector(".ptsel").getBoundingClientRect();
-						if (!row || !row.getClientRects().length) return [];
-						const r = row.getBoundingClientRect();
-						return [r.top - keys.bottom, r.left - tape.left, tape.right - r.right, tape.bottom - r.bottom, innerWidth - document.documentElement.scrollWidth];
-					})()`)
-					if len(onTape) != 5 || (onTape[0] >= 0) != (size.width < 1024) || onTape[1] < 0 || onTape[2] < 0 || onTape[3] < 0 || onTape[4] < 0 {
-						t.Errorf("at %d wide the recent part type is %v [under the keys, in from the tape's left, right and bottom, the window past the page]; want it on the tape, under the keys only on a narrow page", size.width, onTape)
-					}
-					tb.audit(name + ", a recent part type")
 					settle()
-					if size.width >= 1024 {
-						tb.do(chromedp.Click(chromedp.CSS(`.ptrecents li[data-part="water-pump"] a.ptype`)))
-					} else {
-						tb.do(chromedp.Click(chromedp.CSS(`#pick-type`)))
-						tb.wait(`#part-types:popover-open`)
-						if got := eval[[]string](tb, `[...document.querySelectorAll("#part-types .ptrecent:not([hidden]) li")].map((li) => li.dataset.part)`); !slices.Equal(got, []string{"fog-lamp", "water-pump"}) {
-							t.Errorf("the list's Opened recently: %q; want Fog Lamp then Water Pump", got)
-						}
-						tb.do(chromedp.Click(chromedp.CSS(`#part-types .ptrecent li[data-part="water-pump"] a.ptype`)))
+					tb.do(chromedp.Click(chromedp.CSS(`#pick-type`)))
+					tb.wait(`#part-types:popover-open`)
+					if got := eval[[]string](tb, `[...document.querySelectorAll("#part-types .ptrecent:not([hidden]) li")].map((li) => li.dataset.part)`); !slices.Equal(got, []string{"fog-lamp", "water-pump"}) {
+						t.Errorf("the list's Opened recently: %q; want Fog Lamp then Water Pump", got)
 					}
-					tb.wait(`#answer[data-part="water-pump"] .ptrecents li[data-part="fog-lamp"]`)
+					tb.audit(name + ", recent part types")
+					settle()
+					tb.do(chromedp.Click(chromedp.CSS(`#part-types .ptrecent li[data-part="water-pump"] a.ptype`)))
+					tb.wait(`#answer[data-part="water-pump"] #clear-type`)
 					if got := tb.at(); got != pump {
 						t.Errorf("Water Pump pressed among the recent, the tab is at %s; want %s", got, pump)
 					}
-				} else if n := tb.count(".ptrecents:not([hidden])"); n != 0 {
+				} else if n := tb.count("#part-types .ptrecent:not([hidden])"); n != 0 {
 					t.Error("without scripts a part type is recent")
 				}
 

@@ -1071,25 +1071,25 @@ one.
 **In a browser**: `serve`'s page at `/` decodes a VIN, as a diagram of
 its six groups, and shows the vehicle's names in every vocabulary loaded
 on vPIC's spine, with JavaScript or without. Its form is a plate that
-takes a VIN and nothing else, so the page's URL is `/?from.vin=…` and
-names no vocabulary: there are no targets to pick, and what is loaded is
-what is shown. The page reads no other parameter: a model year or a
-clock in its URL is ignored, and the translation is the VIN's as of now.
+takes a VIN (or, in its second mode, a part type and a part number), so
+a VIN's page is `/?from.vin=…` and names no vocabulary: there are no
+targets to pick, and what is loaded is what is shown. The page reads no
+model year and no clock: either in its URL is ignored, and the
+translation is the VIN's as of now.
 A refusal is said below the plate. Older links
 (`/?vin=…`, `/ui/decode`, `/ui/translate`, `/vocab`,
 `/ui/vocabularies`) redirect to it (`301`) with the VIN they named and
 nothing else. Below the plate the answer
-is a card for each group and, under them, "Also known as": a stack for
-each vocabulary, one with a name before one without. A name reads the
-vocabulary, then the make, the rest of the entry and the years its
-mapping holds for. A vocabulary with several names shows its first, with
-their count, and all of them at a click on its name, which needs no
-script. A dashed line or mark is a doubt: a mapping matched by rule, or
+is a card for each group and, under them, "Also known as": a tag for
+each vocabulary, in one row that scrolls sideways, one with a name before
+one without. A tag reads the vocabulary, then the make, the rest of the
+entry and the years its mapping holds for. A vocabulary with several
+names shows every one, with their count. A dashed underline is a doubt:
+a mapping matched by rule, or
 a qualifier or the model year that was not checked; each part's title
 says which, and a small button on the name opens how it was reached.
 A vocabulary with no name for the vehicle
-keeps a blank place that says so. On a phone the lines are hidden and
-the dashed underlines stay. The Developers button in the page's header
+keeps a tag that says so. The Developers button at the page's foot
 shows the answer's JSON, the decode's and the translation's. Back and
 forward ask the server for each page again,
 never a copy the browser kept. The header's Vocabularies button
@@ -1285,7 +1285,7 @@ against, reaches every EPA name mapped to vPIC's Silverado for 2004.
 The **demo set** is a small, invented catalog and the files around it, so
 fitment, stock and translation can be seen without files of your own:
 [`pkg/ui/demo/`](../pkg/ui/demo), every file named `demo-*` directly in it
-(15 kB in all), and a second catalog of the same vehicles in `vpic/`.
+(17 kB in all), and a second catalog of the same vehicles in `vpic/`.
 It is built around popular vPIC models of the pinned data month (a Ford
 F-150, a Chevrolet Silverado 1500, a Ram 1500, a Honda Civic and CR-V, a
 Toyota Camry and RAV4) and two vehicles vPIC lacks. Every number
@@ -1299,8 +1299,8 @@ value in it is made up, and says so.
 | `demo-vehicles` | `vocabulary` (vehicle) | the catalog's vehicles, mapped onto vPIC: `F150` is vPIC's `F-150`, `Silverado 1500` its `Silverado` of Series 1500, the Ram 1500 a Dodge to 2012 and a Ram from 2013 |
 | `demo-classics` | `extension-set` | a Studebaker Champion and a Volkswagen Type 2, which vPIC lacks |
 | `demo-catalog` | `catalog` | 46 fitments, release `DEMO-2`: qualified applications, sides, a redirect and a retired number |
-| `demo-shelf` | `stock` (shelf) | numbered parts, one under a retired number and one with none, of release `DEMO-1` |
-| `demo-yard-stock` | `stock` (yard) | whole vehicles, twenty by VIN and two by the catalog's vehicle; five Camrys and four 2017 RAV4s, so the page's "In stock" has an order |
+| `demo-shelf` | `stock` (shelf) | numbered parts, one under a retired number and one with none, of release `DEMO-1`; its header declares `stock_number` and `condition`, the page's columns for a shelf row |
+| `demo-yard-stock` | `stock` (yard) | whole vehicles, twenty by VIN and two by the catalog's vehicle; five Camrys and four 2017 RAV4s, so the page's "In stock" has an order; its header declares `stock_number` and `row` and leaves `color` out, so the page prints two columns and folds the colour under its row |
 | `vpic/demo-vpic-catalog` | `catalog` (`"vehicles": "vpic"`) | the same vehicles and part types as vPIC's own, with no vehicle vocabulary: 46 fitments, release `DEMO-V1`, numbers `DEMO-V…`; applications to vPIC models (the F-150 is model 1801), to a make (every Toyota) and to `demo-classics`' extensions; qualified applications, sides, a redirect and a retired number. A server's alone, in place of `demo-catalog` (below) |
 
 **In a browser**, the Vocabularies dialog of any `serve` with the browser

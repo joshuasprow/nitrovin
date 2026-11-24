@@ -153,8 +153,8 @@ func (s *decoderServer) Post(path string, body []byte) (int, []byte, error) {
 
 // serve has s serve data as its file name, a catalog naming its spine,
 // its vehicle vocabulary and its filed-under vocabulary, and a stock
-// file what it holds, as /v1/info does. A Library sees of them what
-// /sw.js carries (openWith).
+// file what it holds and the fields its header declares, as /v1/info
+// does. A Library sees of them what /sw.js carries (openWith).
 func (s *decoderServer) serve(t *testing.T, name string, data []byte) {
 	t.Helper()
 	f, err := vocab.Read(name+".jsonl", bytes.NewReader(data))
@@ -166,7 +166,7 @@ func (s *decoderServer) serve(t *testing.T, name string, data []byte) {
 		v.Spine, v.Vehicles, v.FiledUnder = c.Info().Spine, c.Info().Vehicles, c.Info().FiledUnder
 	}
 	if f.Kind == vocab.KindStock {
-		v.StockCounts = &contract.StockCounts{Source: string(f.Holds)}
+		v.StockCounts = &contract.StockCounts{Source: string(f.Holds), Fields: f.Fields}
 	}
 	s.info.Vocabularies = append(s.info.Vocabularies, v)
 	s.files[FilePath(s.info, v)] = data

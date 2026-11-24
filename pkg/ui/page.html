@@ -3,19 +3,19 @@
 the plate: 17 cells under six brackets' labels, and one real input, which
 plate.js lays over the cells (without JavaScript it sits below them, and
 Decode sends it). Everything below the plate is the answer (#answer): the
-brackets under the plate, a card for each on its leader line, the derived
-card "Also known as", and the parts that fit (fit). The cards and the
-names are one region (hang): on a page narrower than 64rem it scrolls
-sideways, six columns wide, the names under the cards they come from. The
-server draws it for whatever is typed so far; plate.js asks again as the
-visitor types, or presses a part type, and swaps #answer and #dev.
+brackets under the plate, a card for each on its leader line, and the
+parts that fit (fit), which holds the vehicle's names, "Also known as"
+(aka). The cards are one region (hang): on a page narrower than 64rem it
+scrolls sideways, six columns wide. The server draws it for whatever is
+typed so far; plate.js asks again as the visitor types, or presses a part
+type, and swaps #answer and #dev.
 Above the plate, a switch of two links (modes) turns it to part-number
 mode (part.go): the plate holds a part type and a number (part-plate),
 and the answer is the part's tag and its vehicles (part-answer).
-What developers need is behind the header's Developers button (developers,
-decode.html), and the VINs to try behind its VINs button (chips). No
-inline script or style: CSP refuses both, so every position is a class on
-a fixed grid of 17 columns. */}}
+What developers need is behind the foot's Developers button (developers,
+decode.html), and the VINs to try behind the VINs button over the plate
+(chips). No inline script or style: CSP refuses both, so every position
+is a class on a fixed grid of 17 columns. */}}
 {{define "home" -}}
 <h1 class="visually-hidden">{{if .Part}}Part number lookup{{else}}VIN decoder{{end}}</h1>
 <div id="lookup" class="stage lookup">
@@ -70,51 +70,44 @@ stack. */}}
 
 {{/* part-answer is what hangs off the plate in part-number mode: the
 number's bracket under it, and, when there is a part, one line of
-pinstripe tape from the bracket to its tag's eyelet; the tag, a manila
-parts tag as a candidate's, its stock strip along its bottom edge and
-its rows under it when open; and beside it the vehicles it fits, the
-page's own table. Where there is no part, the place is a blank strip
-with a sentence. data-q is the query it answers, and data-part the part
-type on the plate, which plate.js keeps as a recent part type. */}}
+pinstripe tape (.pleader) from the bracket into the eyelet of the part's
+tag; the tag, a manila tag laid long as a candidate's is (line), as wide
+as the plate: its number on label tape with its part type's name and its
+side, how many vehicles it fits, its marks and notes in the tag's ink,
+and its stock strip at its trailing end, its rows under it when open; and
+from its bottom edge the trunk, down through the vehicles the part fits,
+each a row tied to it: the catalog's name on label tape with its years,
+its option text, and its names in the vocabularies loaded as underlined
+ink, a vocabulary once. Where there is no part, the place is a blank
+strip with a sentence. data-q is the query it answers, and data-part the
+part type on the plate, which plate.js keeps as a recent part type. */}}
 {{define "part-answer" -}}
 <div id="answer" class="stage part-answer" data-mode="part" data-q="{{.Query}}"{{with .Type}} data-part="{{.}}"{{end}}>
 <div class="punder" aria-hidden="true"><span class="brk g-serial{{if .Number}} done{{end}}"></span></div>
-{{if .Tag}}<svg class="pleader" viewBox="0 0 1020 36" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-<path class="g-serial wide" d="M680 0V18H170V36" vector-effect="non-scaling-stroke"/>
-<path class="g-serial mid" d="M680 0V18H255V36" vector-effect="non-scaling-stroke"/>
-<path class="g-serial narrow" d="M510 0V36" vector-effect="non-scaling-stroke"/>
-</svg>
+{{if .Tag}}<span class="pleader" aria-hidden="true"></span>
 {{end}}<section class="part" id="part" aria-labelledby="part-h">
-{{with .Tag}}<h2 id="part-h" class="visually-hidden">{{.TypeName}} {{.Number}}</h2>
-<div class="pgrid">
-<div class="pcol">
-<div class="ptag"><div class="cand-in">
-<p class="numtape"><b class="num">{{.Number}}</b> <span class="ptn">{{.TypeName}}</span></p>
-{{with .Replaces}}<p class="marks"><span class="mk replaces">Replaces {{.}}</span></p>
-{{end}}<dl>
-{{with .Side}}<div><dt>Side</dt><dd>{{.}}</dd></div>
-{{end}}<div><dt>Fits</dt><dd>{{.Fits}}</dd></div>
-{{with .Note}}<div><dt>Note</dt><dd>{{.}}</dd></div>
-{{end}}{{with .RetiredNote}}<div><dt>Retirement</dt><dd>{{.}}</dd></div>
-{{end}}</dl>
+{{with .Tag}}<div class="phead">
+<div class="ltag line ptag">
+<h2 class="numtape" id="part-h"><span class="num">{{.Number}}</span> <span class="of"><span class="ptn">{{.TypeName}}</span>{{with .Side}} <span class="side">{{.}}</span>{{end}}</span></h2>
+<div class="ink"><p class="opts"><span class="k">Fits</span> {{.Fits}}</p>
+{{if or .Replaces .Note .RetiredNote}}<p class="says">{{with .Replaces}}<span class="mk replaces">Replaces <b>{{.}}</b></span> {{end}}{{with .Note}}<span class="nt"><span class="k">Note</span> {{.}}</span> {{end}}{{with .RetiredNote}}<span class="nt"><span class="k">Retirement</span> {{.}}</span>{{end}}</p>
+{{end}}</div>
 {{template "stock-strip" .Strip}}
-</div></div>
-{{with .Panel}}<div class="prows" id="stock-rows">
-{{template "stock-cols" .}}
+</div>
+{{with .Panel}}<div class="rows" id="stock-rows">
+{{template "stock-print" .}}
 </div>
 {{end}}</div>
-<div class="vehicles">
-<table>
-<caption class="visually-hidden">The vehicles {{.Number}} fits, as {{$.Catalog}} names them</caption>
-<thead><tr><th scope="col">Vehicle <span class="hint">as {{$.Catalog}} names it</span></th><th scope="col">Years</th><th scope="col">Options</th>{{if $.Named}}<th scope="col">Also known as</th>{{end}}</tr></thead>
-<tbody>
-{{range $.Vehicles}}<tr><th scope="row">{{.Name}}</th><td class="yrs">{{.Years}}</td><td class="opts">{{.Options}}</td>{{if $.Named}}<td class="names">{{range .Names}}<span class="vn"><span class="voc">{{.Vocabulary}}</span> <span class="vtape">{{.Name}}</span></span>{{else}}<span class="hint">None</span>{{end}}</td>{{end}}</tr>
-{{end}}</tbody>
-</table>
-{{with $.Next}}<p class="more-cands">This page shows {{len $.Vehicles}} of {{$.Total}} vehicles. <a class="swap" href="{{.}}">Next page</a></p>
+{{if $.Vehicles}}<ol class="cands vehs" aria-label="The vehicles {{.Number}} fits, as {{$.Catalog}} names them">
+{{range $.Vehicles}}<li class="cand veh"><div class="ltag line">
+<h3 class="numtape"><span class="num">{{.Name}}</span>{{with .Years}} <span class="of"><span class="yrs">{{.}}</span></span>{{end}}</h3>
+<div class="ink">{{with .Options}}<p class="opts">{{.}}</p>
+{{end}}{{if $.Named}}<p class="vnames">{{range .Names}}<span class="vn"><span class="voc">{{.Vocabulary}}</span>{{range .Names}} <span class="nw g-vds">{{.}}</span>{{end}}</span> {{else}}<span class="voc">No name</span>{{end}}</p>
 {{end}}</div>
-</div>
-{{else}}<h2 id="part-h" class="visually-hidden">The part</h2>
+</div></li>
+{{end}}</ol>
+{{end}}{{with $.Next}}<p class="more-cands">This page shows {{len $.Vehicles}} of {{$.Total}} vehicles. <a class="swap" href="{{.}}">Next page</a></p>
+{{end}}{{else}}<h2 id="part-h" class="visually-hidden">The part</h2>
 {{with .Error}}<p class="error" role="alert">{{.}}</p>
 {{else}}<p class="blank"><span>{{.Blank}}</span>{{if .Add}}<button type="button" popovertarget="vocabularies">Add a catalog</button>{{end}}{{range .Ways}}<a class="swap" href="{{.Href}}">{{.Text}}</a>{{end}}</p>
 {{end}}{{end}}{{if .Groups}}{{template "part-types-dialog" .Dialog}}
@@ -147,7 +140,10 @@ data-label are what it answers, which plate.js keeps as a recent VIN once
 it is whole; data-done the groups whose characters are all typed;
 data-part and data-after the part type pressed and its page, and
 data-type, data-number, data-side and data-rows the candidate whose stock
-is open and the panel shown whole, which plate.js tells a history entry by. */}}
+is open and the panel shown whole, which plate.js tells a history entry by.
+Its last part is what the decoder says is wrong with a whole VIN
+(problems), a strip of label tape with a warning triangle and, where the
+decoder reads another VIN in its place, a link to it. */}}
 {{define "answer" -}}
 <div id="answer" class="stage" data-vin="{{.VIN}}" data-label="{{.Label}}"{{if .Complete}} data-complete{{end}} data-done="{{range .Groups}}{{if .Done}}{{.Key}} {{end}}{{end}}"{{with .Fit.Part}} data-part="{{.}}"{{end}}{{with .Fit.After}} data-after="{{.}}"{{end}}{{with .Fit.Type}} data-type="{{.}}"{{end}}{{with .Fit.Number}} data-number="{{.}}"{{end}}{{with .Fit.Side}} data-side="{{.}}"{{end}}{{with .Fit.Rows}} data-rows="{{.}}"{{end}}>
 <div class="under" aria-hidden="true">
@@ -172,9 +168,8 @@ is open and the panel shown whole, which plate.js tells a history entry by. */}}
 </svg>
 {{end}}</div>
 {{with .Ways}}<div class="choice"><p class="blank"><span>{{$.Error}}</span>{{range .}}<a href="{{.Href}}">{{.Text}}</a>{{end}}</p></div>
-{{else}}{{template "fit" .FitView}}
-{{with .Error}}<p class="error" role="alert">{{.}}</p>{{end}}{{end}}
-{{if or .Problems .Fix}}<div class="problems" role="status">
+{{else}}{{template "fit" .FitView}}{{end}}
+{{if or .Problems .Fix}}<div class="problems" role="status"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>
 {{range .Problems}}<p>{{.}}</p>
 {{end}}{{with .Fix}}<p><a class="fix" href="{{.}}">Use <span class="mono">{{$.FixV}}</span> instead</a></p>{{end}}
 </div>{{end}}
@@ -216,25 +211,28 @@ carries the codes around it, one run of small text. */}}
 
 {{/* aka is "Also known as" (#366): the vehicle's names in the
 vocabularies loaded, a manila tag a vocabulary, in one row that scrolls
-sideways under the vehicle's block (fit). A tag has the vocabulary's name
-on a strip of label tape across it, with its count where it holds several
-names; the make once, where every name shares it; then a line a name: the
-model, and the years its mapping holds for. No word has a label: each
-stands over its group's colour, the Maker's, the Vehicle's or the Model
-year's. A dashed underline is a doubt (akaTag), which the word's title and
-the name's note, a popover behind its button, say in words. A vocabulary
-with no name keeps a tag that says so. Before the model is known, or with
-no vocabulary loaded, the names' place is a blank strip. */}}
+sideways beside the picker, hung from the vehicle's block (fit). A tag is
+laid long, as a candidate's is, and a whole number of the page's columns
+wide (akaRow.Span): its eyelet, the vocabulary's name on a strip of
+label tape, with its count where it holds several names, then its names
+in the tag's ink: the make once, where every name shares it; then a line
+a name, two lines and then a second column: the model, and the years its
+mapping holds for. No word has a label: each stands over its group's
+colour, the Maker's, the Vehicle's or the Model year's. A dashed
+underline is a doubt (akaTag), which the word's title and the name's
+note, a popover behind its button, say in words. A vocabulary with no
+name keeps a tag that says so. Before the model is known, or with no
+vocabulary loaded, the names' place is a blank strip. */}}
 {{define "aka" -}}
 <section class="aka{{if not (or .Waiting .None)}} done{{end}}" id="aka" aria-labelledby="aka-h">
-<h2 id="aka-h" class="visually-hidden">Also known as</h2>
+<h3 id="aka-h" class="visually-hidden">Also known as</h3>
 {{if .None}}<p class="blank"><span>No vocabulary loaded.</span><button type="button" popovertarget="vocabularies">Add a vocabulary</button></p>
 {{else if .Waiting}}<p class="blank"><span>Names turn up once the model is known.</span></p>
 {{else}}<ol class="nametags" aria-label="Also known as" tabindex="0">
-{{range .Rows}}{{$make := .Make}}<li class="card done name{{if .Rule}} rule{{end}}">
-<h3 class="nvoc">{{.Vocabulary}}{{if gt (len .Names) 1}} <span class="count">{{len .Names}}<span class="visually-hidden"> names</span></span>{{end}}</h3>
-{{with $make}}<p class="nw g-wmi">{{.}}</p>
-{{end}}{{if .Names}}<div class="nrows">{{range .Names}}{{$n := .}}<p class="nrow{{if .Rule}} rule{{end}}">{{if and .Make (not $make)}}<span class="nw g-wmi" title="{{.MakeNote}}">{{.Make}}</span>{{end}}<span class="nw g-vds{{if .ModelUnsure}} unsure{{end}}" title="{{.ModelNote}}">{{.Model}}</span><span class="nw g-year{{if .YearUnsure}} unsure{{end}}" title="{{.YearNote}}">{{.Years}}</span>{{with .Details}}<button type="button" class="{{if $n.Doubt}}info{{else}}how{{end}}" popovertarget="{{$n.ID}}" aria-label="How {{$n.Make}} {{$n.Model}} was reached">{{if $n.Doubt}}i{{end}}</button>{{end}}</p>
+{{range .Rows}}{{$make := .Make}}<li class="ltag name c{{.Span}}{{if .Rule}} rule{{end}}">
+<h4 class="nvoc"><span>{{.Vocabulary}}</span>{{if gt (len .Names) 1}} <span class="count">{{len .Names}}<span class="visually-hidden"> names</span></span>{{end}}</h4>
+{{if .Names}}<div class="nrows">{{with $make}}<p class="nw g-wmi">{{.}}</p>
+{{end}}{{range .Names}}{{$n := .}}<p class="nrow{{if .Rule}} rule{{end}}">{{if and .Make (not $make)}}<span class="nw g-wmi" title="{{.MakeNote}}">{{.Make}}</span>{{end}}<span class="nw g-vds{{if .ModelUnsure}} unsure{{end}}" title="{{.ModelNote}}">{{.Model}}</span><span class="nw g-year{{if .YearUnsure}} unsure{{end}}" title="{{.YearNote}}">{{.Years}}</span>{{with .Details}}<button type="button" class="{{if $n.Doubt}}info{{else}}how{{end}}" popovertarget="{{$n.ID}}" aria-label="How {{$n.Make}} {{$n.Model}} was reached">{{if $n.Doubt}}i{{end}}</button>{{end}}</p>
 {{with .Details}}<div class="note" id="{{$n.ID}}" popover>{{.}}</div>
 {{end}}{{end}}</div>{{else}}<p class="none">No name for this one yet.</p>
 {{end}}</li>
@@ -242,31 +240,35 @@ no vocabulary loaded, the names' place is a blank strip. */}}
 {{end}}</section>
 {{- end}}
 
-{{/* fit is the parts that fit (fit.go), under the cards. Found, it is the
-vehicle's block, a strip of label tape that says what the vehicle is: the
-model and the year it asked the catalog with, on the lines from the
-Vehicle and Model year cards, then "This vehicle", the catalog, and what
-the decode says of the vehicle to match a candidate's options against
-(.vfacts); the vehicle's names under it (aka), found or not;
-the part type picker under it (#366), a key of the second tape on its own
-piece of label tape that names the pressed part type and opens the part
-types dialog, every part type under the headings of a part vocabulary,
-which hangs from the picker as its list; a key beside the picker clears
-the pressed one, and plate.js lists up to two opened recently beside it
-on the same tape, and all of them at the head of the list;
-and the pressed one's candidates as manila tags. Two lines of pinstripe
-tape, Vehicle's and Model year's, are carried from the cards to the
-block on a narrow page (.carry) and come down from the block into the
-picker (.drops), where they end (ui.css). A tag's
-number is a strip of label tape across it; its rows are the catalog's
-words, verbatim; its marks are ink on it: a solid stamp checked, a dashed
-one not, plain words for what has nothing checked. Its bottom edge is its
-stock strip (stock-strip), and the open one's rows hang under its row of
-tags (stock-rows); the shelf rows with no number follow the candidates,
-under a strip of label tape of their own. Where there is nothing
-to list, the part types' place is a blank strip with a sentence, and the
-Vocabularies dialog's button or a link on. Every link here is the page's
-own, which plate.js swaps in place (swap). */}}
+{{/* fit is the parts that fit (fit.go), under the cards, set on the
+cards' columns. Found, it is the vehicle's block, a strip of label tape
+that says what the vehicle is: the make, the model and the year it asked
+the catalog with, on the lines from their cards, "This vehicle", the
+catalog, and what the decode says of the vehicle to match a candidate's
+options against (.vfacts). Under the block is one band, the section's
+next row: the part type picker (#366), a key of the second tape on a
+short piece of label tape (.ptwrap), which names the pressed part type
+and opens the part types dialog as its list, with a key beside it that
+clears the pressed one; and beside the picker the vehicle's names (aka),
+found or not, which a phone draws last, under the candidates. Under the
+band are the pressed part type's candidates, rows down the page
+(.cands), each a manila tag laid long (.line): its number on label tape
+with its side and its years, its option text, its marks and its note in
+the tag's ink, and its stock strip (stock-strip) at its trailing end;
+the open one's rows are a print under its tag, in its list item
+(stock-print). One trunk of pinstripe tape leaves the block's bottom
+edge and runs down the gutter beside the first column, the picker and
+every candidate tied to it by a stub; the stylesheet draws it a piece an
+item. The shelf rows with no number follow the candidates, under a
+strip of label tape of their own, whose heading takes the focus when
+"Show all" has brought every row (the heading, since a child of this
+section that only a script can focus keeps the Tab key out of what it
+holds where the page's order is drawn: reading-flow, ui.css). Where
+there is nothing to list, the
+part types' place is a blank strip with a sentence, and the Vocabularies
+dialog's button or a link on. A refusal that names no cell is the
+section's last line, on its columns. Every link here is the page's own,
+which plate.js swaps in place (swap). */}}
 {{define "fit" -}}
 <section class="fit" id="fit" aria-labelledby="fit-h">
 <h2 id="fit-h" class="visually-hidden">Parts that fit</h2>
@@ -281,101 +283,92 @@ own, which plate.js swaps in place (swap). */}}
 {{end}}{{with .Chars}}<div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd>{{range .}}<span class="vc"><b>{{.Char}}</b><small>{{.Pos}}</small></span>{{end}}</dd></div>
 {{end}}</dl>
 {{end}}</div>
-{{end}}{{template "aka" .Names}}
-{{if .Types}}<div class="ptwrap" data-spine="{{.Spine}}">
-<div class="ptsel">
-<div class="ptkeys">
-<button type="button" id="pick-type" class="ptfield" popovertarget="part-types"><span class="plab">Part type</span><span class="nm">{{if .Pressed}}{{.Pressed}}{{else}}Choose a part type{{end}}</span><span class="n">{{.PickCount}}<span class="visually-hidden"> {{.PickNoun}}</span></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg></button>
+{{end}}{{if .Types}}<div class="ptwrap" data-spine="{{.Spine}}">
+<button type="button" id="pick-type" class="ptfield" popovertarget="part-types"><span class="plab">Part type</span><span class="nm">{{if .Pressed}}{{.Pressed}}{{else}}Choose a part type{{end}}</span><span class="n">{{.PickCount}}<span class="visually-hidden"> {{.PickNoun}}</span></span><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 6l5 5 5-5"/></svg></button>
 {{if .Pressed}}<a class="ptclear swap" id="clear-type" data-focus="pick-type" href="{{.Clear}}" aria-label="Clear {{.Pressed}}">×</a>
 {{end}}</div>
-<ul class="ptrecents" aria-label="Opened recently" hidden></ul>
-</div>
-</div>
-{{if .Pressed}}<span class="drops" aria-hidden="true"></span>
-{{end}}{{template "part-types-dialog" .Dialog}}
+{{end}}{{template "aka" .Names}}
+{{if .Types}}{{template "part-types-dialog" .Dialog}}
 {{if .Invite}}<p class="blank"><span>Choose a part type to see what fits this vehicle.</span></p>
 {{end}}{{with .NoneFit}}<p class="blank"><span>{{.}}</span></p>
-{{end}}{{if .Tags}}<ol class="cands" aria-label="Candidates: {{.Pressed}}" tabindex="0">
-{{range .Tags}}<li class="cand"><div class="cand-in">
-<p class="numtape"><b class="num">{{.Number}}</b>{{with .Years}} <span class="yrs">{{.}}</span>{{end}}</p>
-<dl>
-{{with .Side}}<div><dt>Side</dt><dd>{{.}}</dd></div>
-{{end}}{{range .Options}}<div><dt>Options</dt><dd>{{.}}</dd></div>
-{{end}}{{with .Note}}<div><dt>Note</dt><dd>{{.}}</dd></div>
-{{end}}</dl>
-<p class="marks">{{range .Marks}}<span class="mk {{.Kind}}">{{if eq .Kind "checked"}}<svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 7.5l3.5 3.5L12 3.5"/></svg>{{else if eq .Kind "unchecked"}}<svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>{{else if eq .Kind "redirect"}}<svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 7h9M7.5 3.5L11 7l-3.5 3.5"/></svg>{{end}}{{.Text}}</span>
-{{end}}</p>
+{{end}}{{if .Tags}}<ol class="cands" aria-label="Candidates: {{.Pressed}}">
+{{range .Tags}}<li class="cand"><div class="ltag line">
+<h3 class="numtape"><span class="num">{{.Number}}</span>{{if or .Side .Years}} <span class="of">{{with .Side}}<span class="side">{{.}}</span> {{end}}{{with .Years}}<span class="yrs">{{.}}</span>{{end}}</span>{{end}}</h3>
+<div class="ink">{{with .Options}}<p class="opts">{{range $i, $o := .}}{{if $i}}<br>{{end}}{{.}}{{end}}</p>
+{{end}}<p class="says">{{range .Marks}}<span class="mk {{.Kind}}">{{if eq .Kind "checked"}}<svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 7.5l3.5 3.5L12 3.5"/></svg>{{else if eq .Kind "unchecked"}}<svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>{{else if eq .Kind "redirect"}}<svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 7h9M7.5 3.5L11 7l-3.5 3.5"/></svg>{{end}}{{.Text}}</span> {{end}}{{with .Note}}<span class="nt"><span class="k">Note</span> {{.}}</span>{{end}}</p></div>
 {{template "stock-strip" .Strip}}
-</div></li>
-{{with .Panel}}{{template "stock-rows" .}}
-{{end}}{{end}}</ol>
-
-{{end}}{{with .NoNumber}}<div class="nonum" id="stock-nonum" tabindex="-1">
-<h3 class="nonum-tape" id="{{.ID}}-h">{{$.NoNumberName}}</h3>
-<div class="receipt"><div class="stock-col">
-<h4><span>{{.Heading}}</span>{{with .AsOf}} <span class="asof">{{.}}</span>{{end}}</h4>
-{{template "stock-table" .Rows}}
-{{with .More}}<p class="more-rows">The first {{$.NoNumber.Shown}} of {{$.NoNumber.Total}}. <a class="swap" href="{{.}}" data-focus="stock-nonum">Show all</a></p>
-{{end}}</div></div>
+</div>
+{{with .Panel}}<div class="rows" id="stock-rows">
+{{template "stock-print" .}}
+</div>
+{{end}}</li>
+{{end}}</ol>
+{{end}}{{with .NoNumber}}<div class="nonum">
+<h3 class="nonum-tape" id="stock-nonum" tabindex="-1">{{$.NoNumberName}}</h3>
+<div class="receipt">
+{{template "stock-kind" .}}
+</div>
 </div>
 {{end}}{{if .Tags}}{{with .Next}}<p class="more-cands">This page shows {{len $.Tags}} of {{$.Total}} candidates. <a class="swap" href="{{.}}">Next page</a></p>
 {{end}}{{end}}{{else}}<p class="blank"><span>{{.Blank}}</span>{{if .Add}}<button type="button" popovertarget="vocabularies">Add a catalog</button>{{end}}{{range .Ways}}<a href="{{.Href}}">{{.Text}}</a>{{end}}</p>
+{{end}}{{with .Error}}<p class="error" role="alert">{{.}}</p>
 {{end}}</section>
 {{- end}}
 
-{{/* stock-strip is a candidate's stock strip, along its tag's bottom
-edge (fitstock.go): the second tape, a link to the page with the
-candidate's rows open, its chevron down, or, open, pushed in, its chevron
-up, a link that closes them. With stock loaded and none for the
-candidate it is muted words over a dashed rule, and presses nothing;
-with none loaded it opens the Vocabularies dialog. */}}
+{{/* stock-strip is a candidate's stock strip, at its tag's trailing end
+(fitstock.go): the second tape, a link to the page with the candidate's
+rows open, its chevron down, or, open, pushed in, its chevron up, a link
+that closes them; a kind of stock a cell, its count large over its name,
+and under the name "unavailable" where none of its sources answered,
+the whole said once for a screen reader. With stock loaded and none for
+the candidate it is muted words beside a dashed rule, and presses
+nothing; with none loaded it opens the Vocabularies dialog. */}}
 {{define "stock-strip" -}}
-{{if eq .Kind "counts"}}<a class="stk swap" id="{{.ID}}" href="{{.Href}}" aria-expanded="{{.Open}}"{{if .Open}} aria-controls="stock-rows"{{end}}><span>{{.Text}}<span class="visually-hidden">, {{.Number}}</span></span><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="{{if .Open}}M2 10l5-5 5 5{{else}}M2 4l5 5 5-5{{end}}"/></svg></a>
+{{if eq .Kind "counts"}}<a class="stk swap" id="{{.ID}}" href="{{.Href}}" aria-expanded="{{.Open}}"{{if .Open}} aria-controls="stock-rows"{{end}}><span class="visually-hidden">{{.Text}}, {{.Number}}</span>{{range .Counts}}<span class="sc" aria-hidden="true"><b>{{.N}}</b><small>{{.Kind}}{{if .Down}} <span class="down">unavailable</span>{{end}}</small></span>{{end}}<svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="{{if .Open}}M2 10l5-5 5 5{{else}}M2 4l5 5 5-5{{end}}"/></svg></a>
 {{- else if eq .Kind "none"}}<p class="stk none">{{.Text}}</p>
 {{- else}}<button type="button" class="stk" popovertarget="vocabularies"><span>{{.Text}}</span> <u>Add stock</u></button>
 {{- end}}
 {{- end}}
 
-{{/* stock-rows is the open candidate's rows, an item of the candidates'
-list after its tag: a receipt, a strip of thermal paper, which on a wide page is in
-the row under the tag's, under the tag (ui.css). A kind of stock loaded
-after another, shelf over yard, each under its count and its sources'
-dates. */}}
-{{define "stock-rows" -}}
-<li class="rows at{{.Col}}{{if .MoreWide}} more-wide{{end}}{{if .MoreNarrow}} more-narrow{{end}}" id="stock-rows">
-{{template "stock-cols" .}}
-</li>
+{{/* stock-print is the print of an open candidate's or part's stock: a
+strip of thermal paper under its tag, a kind of stock after another
+(stock-kind). The region names the part, and takes the focus when "Show
+all" has brought every row. */}}
+{{define "stock-print" -}}
+<div class="receipt" id="stock-region" role="region" aria-label="Stock of {{.Number}}" tabindex="-1">
+{{range .Columns}}{{template "stock-kind" .}}
+{{end}}</div>
 {{- end}}
 
-{{/* stock-cols is a receipt of stock (#376): what it is of at its head, a
-kind of stock after another, and the number again under a barcode at its
-foot. The head and the foot are print, hidden from a screen reader, which
-is told the same by the region's name; the region takes the focus. A
-candidate's (stock-rows) or a part's (part-answer). */}}
-{{define "stock-cols" -}}
-<div class="receipt">
-<p class="receipt-head" aria-hidden="true"><span>Stock of</span> {{.Number}}</p>
-<div class="stock-cols" id="stock-region" role="region" aria-label="Stock of {{.Number}}" tabindex="0">
-{{range $col := .Columns}}<div class="stock-col">
-<h3 id="{{.ID}}-h"><span>{{.Heading}}</span>{{with .AsOf}} <span class="asof">{{.}}</span>{{end}}</h3>
-{{if .Rows}}{{template "stock-table" .Rows}}{{else}}<p class="stock-none">None.</p>{{end}}
-{{with .More}}<p class="more-rows">The first {{$col.Shown}} of {{$col.Total}}. <a class="swap" href="{{.}}" data-focus="stock-region">Show all</a></p>
-{{end}}</div>
-{{end}}</div>
-<p class="receipt-foot" aria-hidden="true">{{.Number}}</p>
-</div>
-{{- end}}
-
-{{/* stock-table is stock rows, one kind's: a row's id led to its
-location, then its source's fields, each a name and a value in elements
-of their own, which the receipt leads one to the other; a separator between
-fields stays in the text, for a page with no stylesheet. Its notes are
-under them: the retired number a shelf row is tagged with, and "This VIN"
-on the yard's vehicle the VIN on the plate is. */}}
-{{define "stock-table" -}}
-<table><tbody>
-{{range .}}<tr><th scope="row" class="id">{{.ID}}</th><td class="loc">{{.Location}}</td><td class="fds">{{range $i, $f := .Fields}}{{if $i}}<span class="fsep"> · </span>{{end}}<span class="fd"><span class="fk">{{.Name}}</span> <span class="fv">{{.Value}}</span></span>{{end}}{{with .Retired}}<span class="note">Tagged with a retired number, {{.}}</span>{{end}}{{if .ThisVIN}}<span class="note"><strong>This VIN</strong>: the vehicle being looked up</span>{{end}}</td></tr>
-{{end}}</tbody></table>
+{{/* stock-kind is one kind of stock on a print: its name and count on a
+reversed bar (a dash for the count where none of its sources answered,
+Down, read out as "unavailable") with its sources' dates, or why one did
+not answer, a
+heading one level under what the print is of (Level); its rows in
+columns: the id, the location, then a column for each field its sources'
+headers declare (Heads), under the field's name. What a row has beyond
+those is under it in fainter print, a name and its value each, wrapping;
+a list or an object there is its JSON, cut to one line. Under those are
+the row's notes: the retired number a shelf row is tagged with, and
+"This VIN" on the yard's vehicle the VIN on the plate is. A kind that
+answered with no row says "None."; one with more rows than it shows says
+how many, with the page showing all. The table is in a group of its own (.pscroll),
+named by the kind's heading, which scrolls sideways where the paper is
+narrower than the columns, a phone's, and takes focus, so a keyboard
+scrolls it. */}}
+{{define "stock-kind" -}}
+<section class="stock-kind" aria-labelledby="{{.ID}}-h">
+<p class="kind" id="{{.ID}}-h" role="heading" aria-level="{{.Level}}"><span class="bar">{{.Heading}} · {{if .Down}}<span aria-hidden="true">—</span><span class="visually-hidden">unavailable</span>{{else}}{{.Total}}{{end}}</span>{{with .AsOf}} <span class="asof">{{.}}</span>{{end}}</p>
+{{if .Rows}}<div class="pscroll" role="group" aria-labelledby="{{.ID}}-h" tabindex="0"><table class="print{{if not .Heads}} bare{{end}}">
+<thead><tr><th scope="col" class="id"><span class="visually-hidden">Id</span></th><th scope="col" class="loc"><span class="visually-hidden">Location</span></th>{{range .Heads}}<th scope="col">{{.}}</th>{{else}}<td></td>{{end}}</tr></thead>
+{{range .Rows}}<tbody>
+<tr><th scope="row" class="id{{if gt (len .ID) 24}} long{{end}}">{{.ID}}</th><td class="loc{{if gt (len .Location) 24}} long{{end}}">{{.Location}}</td>{{range .Cells}}<td>{{.Value}}</td>{{else}}<td></td>{{end}}</tr>
+{{if .Rest}}<tr class="rest"><td colspan="{{$.Span}}">{{with .Folded}}<dl class="fold">{{range .}}<div{{if .JSON}} class="json"{{else if .Long}} class="long"{{end}}><dt>{{.Name}}</dt> <dd>{{if .Long}}<details><summary>{{.Value}}</summary></details>{{else}}{{.Value}}{{end}}</dd></div> {{end}}</dl>{{end}}{{with .Retired}}<p class="note">Tagged with a retired number, {{.}}</p>{{end}}{{if .ThisVIN}}<p class="note"><strong>This VIN</strong>: the vehicle being looked up</p>{{end}}</td></tr>
+{{end}}</tbody>
+{{end}}</table></div>
+{{else if not .Down}}<p class="stock-none">None.</p>
+{{end}}{{with .More}}<p class="more-rows">The first {{$.Shown}} of {{$.Total}}. <a class="swap" href="{{.}}" data-focus="{{$.Focus}}">Show all</a></p>
+{{end}}</section>
 {{- end}}
 
 {{/* ptype is a part type, the second tape: a link to the page with it
@@ -391,9 +384,9 @@ catalog's in part-number mode count nothing. */}}
 head of metal with Close, the filter (with a script), a line saying
 what it lists, the part types this browser opened recently (with a
 script), and every part type under the headings of a part vocabulary.
-On a VIN's page it lists the vehicle's, opened by "N more"; in
-part-number mode, the catalog's, opened by the plate's part type, and
-data-spine is the spine plate.js keeps them by. */}}
+On a VIN's page it lists the vehicle's, opened by the picker as its
+list; in part-number mode, the catalog's, opened by the plate's part
+type, and data-spine is the spine plate.js keeps them by. */}}
 {{define "part-types-dialog" -}}
 <dialog id="part-types" class="ptdialog" popover aria-labelledby="part-types-h"{{with .Spine}} data-spine="{{.}}"{{end}}>
 <div class="dialog-head">

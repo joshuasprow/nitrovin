@@ -24,17 +24,21 @@ body{margin:0}
 @keyframes hang-p{ to { --hang-p: 1; } }
 .vp{
 &{color-scheme: light dark}
-&{--bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint: #a9bccb; --card-bg: #ffffff; --link: #0b4fa8; --bad: #b91c1c; --c-wmi: #c8102e; --c-vds: #0b4fa8; --c-check: #5b2d8e; --c-year: #a34c09; --c-plant: #0f6b46; --c-serial: #3d4650; --on: #ffffff; --label-font: "Arial Black", "Helvetica Neue", system-ui, sans-serif; --cell-font: ui-monospace, monospace; --steel: #6f7b86; --steel-dark: #58626c; --on-metal: #232930; --metal: url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0 / 600px 120px, linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc); --emboss: 0 1px 0 rgb(255 255 255 / .9), 0 -1px 1px rgb(0 0 0 / .45); --lift-stuck: 0 2px 3px rgb(8 7 15 / .32); --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 9px rgb(8 7 15 / .38); --raised: inset 0 1px 0 #fff, var(--lift-raised); --pressed: inset 0 3px 4px rgb(8 7 15 / .4); --alu-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .12) 2px 3px), linear-gradient(#8e99a3, #aab4bd); --alu: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .07) 2px 3px), var(--metal); --tape: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .13) 2px 3px), linear-gradient(#30363d, #171a1e); --tape-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .2) 2px 3px), linear-gradient(#0c0e10, #1d2125); --tape-edge: #050607; --tape-lit: #69727c; --on-tape: #f6f8fa; --tape-emboss: -1px -1px 0 rgb(8 7 15 / .67), 1px 1px 0 rgb(255 255 255 / .33), 0 2px 2px rgb(8 7 15 / .53); --stripe-lift: drop-shadow(-1px -1px 0 rgb(255 255 255 / .4)) drop-shadow(1.5px 2px 1px rgb(8 7 15 / .3)); --manila: url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f); --on-manila: #2b2418; --manila-muted: #5c4c2e; --manila-patch: #c39a5c; --manila-bad: #a01414; --thermal: #f6f4ee; --on-thermal: #232229; --thermal-muted: #62606b; --lamp: #ffb300; --gutter: 1rem; font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 1rem var(--gutter) 3rem; color: var(--fg); background: var(--bg)}
+&{--bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint: #a9bccb; --card-bg: #ffffff; --link: #0b4fa8; --bad: #b91c1c; --c-wmi: #c8102e; --c-vds: #0b4fa8; --c-check: #5b2d8e; --c-year: #a34c09; --c-plant: #0f6b46; --c-serial: #3d4650; --on: #ffffff; --label-font: "Arial Black", "Helvetica Neue", system-ui, sans-serif; --cell-font: ui-monospace, Menlo, "Cascadia Mono", Consolas, "Roboto Mono", "DejaVu Sans Mono", "Liberation Mono", "Noto Sans Mono", "Droid Sans Mono", monospace; --steel: #6f7b86; --steel-dark: #58626c; --on-metal: #232930; --metal: url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0 / 600px 120px, linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc); --emboss: 0 1px 0 rgb(255 255 255 / .9), 0 -1px 1px rgb(0 0 0 / .45); --lift-stuck: 0 2px 3px rgb(8 7 15 / .32); --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 9px rgb(8 7 15 / .38); --raised: inset 0 1px 0 #fff, var(--lift-raised); --pressed: inset 0 3px 4px rgb(8 7 15 / .4); --alu-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .12) 2px 3px), linear-gradient(#8e99a3, #aab4bd); --alu: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .07) 2px 3px), var(--metal); --tape: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .13) 2px 3px), linear-gradient(#30363d, #171a1e); --tape-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .2) 2px 3px), linear-gradient(#0c0e10, #1d2125); --tape-edge: #050607; --tape-lit: #69727c; --on-tape: #f6f8fa; --tape-emboss: -1px -1px 0 rgb(8 7 15 / .67), 1px 1px 0 rgb(255 255 255 / .33), 0 2px 2px rgb(8 7 15 / .53); --stripe-lift: drop-shadow(-1px -1px 0 rgb(255 255 255 / .4)) drop-shadow(1.5px 2px 1px rgb(8 7 15 / .3)); --manila: url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f); --on-manila: #2b2418; --manila-muted: #5c4c2e; --manila-patch: #c39a5c; --manila-bad: #a01414; --thermal: #f6f4ee; --on-thermal: #232229; --thermal-muted: #62606b; --lamp: #ffb300; --ring: var(--link); --ring-pale: #0b4fa8; --ring-tape: #8ec5ff; --gutter: 1rem; --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --inset: 12px; --row: 3rem; --type-micro: 700 max(11px, .6875rem)/1.2 var(--cell-font); --type-value: 400 .8125rem/1.125rem var(--cell-font); --type-value-b: 700 .8125rem/1.125rem var(--cell-font); --type-fine: 400 .75rem/1.125rem var(--cell-font); --type-head: 900 1rem/1.125 var(--cell-font); --type-display: 900 1.25rem/1.2 var(--cell-font); --type-key: 900 max(11px, .6875rem) var(--label-font); --track-micro: .04em; --track-tape: .04em; --track-key: .08em; font: .9375rem/1.5 system-ui, sans-serif; margin: 0; padding: 1rem var(--gutter) 3rem; color: var(--fg); background: var(--bg)}
 &{--bg: #16222d; --fg: #eef2f5; --muted: #a9b6c2; --line: #45566a; --faint: #3a4a5c; --card-bg: #1f2d3a; --link: #8ec5ff; --bad: #ff8a8a; --c-wmi: #ff6b81; --c-vds: #7db4ff; --c-check: #c9a2ff; --c-year: #ffb067; --c-plant: #6fdcab; --c-serial: #b8c4cf; --on: #14181d; --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 10px rgb(0 0 0 / .7)}
 a{color: var(--link)}
 header, main, #ui-error{max-width: 62rem; margin-inline: auto}
 h2{font-size: 1.1rem; margin: 1.5rem 0 .5rem}
 h3{font: 900 12px var(--label-font); letter-spacing: .08em; text-transform: uppercase; margin: 1.5rem 0 .5rem; padding-bottom: .2rem; border-bottom: 3px solid var(--c-vds)}
-a:is(:focus-visible,.is-fv), button:is(:focus-visible,.is-fv), summary:is(:focus-visible,.is-fv), input:is(:focus-visible,.is-fv), pre:is(:focus-visible,.is-fv), .hang:is(:focus-visible,.is-fv){outline: 3px solid var(--link); outline-offset: 2px}
+a:is(:focus-visible,.is-fv), button:is(:focus-visible,.is-fv), summary:is(:focus-visible,.is-fv), input:is(:focus-visible,.is-fv), pre:is(:focus-visible,.is-fv), .hang:is(:focus-visible,.is-fv), .pscroll:is(:focus-visible,.is-fv), .receipt:is(:focus-visible,.is-fv), .nonum-tape:is(:focus-visible,.is-fv), .aka:has(.nametags:is(:focus-visible,.is-fv)){outline: 3px solid var(--ring); outline-offset: 2px}
+.card, .ltag, .stock-kind, .ptpick{--ring: var(--ring-pale)}
+.ptwrap, .problems{--ring: var(--ring-tape)}
+dialog.popover, .note.popover{--ring: var(--link)}
+.ptdialog:is(:focus-visible,.is-fv){outline: 3px solid var(--ring); outline-offset: -3px}
 code, pre, .mono{font-family: var(--cell-font)}
 .hint{color: var(--muted); font-weight: 400}
 .visually-hidden, .plbl{position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap}
-button{--key: var(--metal); font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase; padding: .45rem .9rem; cursor: pointer; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); background: var(--key); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised)}
+button{--key: var(--metal); font: var(--type-key); letter-spacing: var(--track-key); text-transform: uppercase; padding: .45rem .9rem; cursor: pointer; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); background: var(--key); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised)}
 button:is(:active,.is-active), button[aria-pressed=true], &:has(#vins.is-open) .open-vins{--key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed)}
 input[type=text], input[type=search]{font: inherit; padding: .35rem .5rem; box-sizing: border-box; color: var(--fg); background: var(--card-bg); border: 1px solid var(--steel); border-radius: 2px; box-shadow: inset 0 2px 3px rgb(0 0 0 / .18)}
 label{font-weight: 600}
@@ -51,7 +55,7 @@ dl.snippets dd{margin: 0; min-width: 0}
 dl.snippets .copyable{margin: 0}
 table{border-collapse: collapse; width: 100%}
 th, td{text-align: left; vertical-align: top; padding: .3rem .75rem .3rem 0; border-bottom: 1px solid var(--line)}
-thead th{font: 900 11px var(--label-font); letter-spacing: .08em; text-transform: uppercase; border-bottom: 3px solid var(--steel)}
+thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform: uppercase; border-bottom: 3px solid var(--steel)}
 pre{margin: 0; padding: .5rem .75rem; border: 1px solid var(--line); border-radius: 2px; overflow-x: auto; font-size: 13px; background: color-mix(in srgb, var(--fg) 6%, var(--card-bg)); box-shadow: inset 0 2px 3px rgb(0 0 0 / .18)}
 pre.wrap{white-space: pre-wrap; overflow-wrap: anywhere; max-height: 16rem; overflow-y: auto}
 .copyable{display: flex; gap: .5rem; align-items: flex-start; margin: .25rem 0}
@@ -82,91 +86,98 @@ details.more{margin: .75rem 0}
 .stage{max-width: 62rem; margin-inline: auto}
 .cards{display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); padding: 0 16px}
 .card{position: relative; isolation: isolate; margin: 0 4px; padding: 28px .6rem .5rem; min-width: 0; overflow-wrap: anywhere; color: var(--on-manila); filter: drop-shadow(0 4px 5px rgb(8 7 15 / .28))}
-.card::before, .cand-in::before{content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(circle at 50% 14px, transparent 4px, var(--manila-patch) 4.5px 10px, transparent 10.5px), var(--manila); clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%, 0 16px); mask-image: radial-gradient(circle at 50% 14px, transparent 3.5px, #000 4px)}
+.card::before{content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(circle at 50% 14px, transparent 4px, var(--manila-patch) 4.5px 10px, transparent 10.5px), var(--manila); clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%, 0 16px); mask-image: radial-gradient(circle at 50% 14px, transparent 3.5px, #000 4px)}
 .card > h2{margin: 0 -.6rem .35rem; padding: .25rem .6rem; font: 900 11px/1.3 var(--label-font); letter-spacing: .06em; text-transform: uppercase; color: #fff; display: flex; justify-content: space-between; gap: .5rem; background: var(--cm)}
-.card > h2 .pos{font-weight: 400; opacity: .9}
-.card .big{margin: 0; font: 700 1.5rem/1.2 var(--cell-font)}
+.card > h2 .pos{font-weight: 400}
+.card .big{margin: 0; font: var(--type-display)}
 .card.g-check .big{font: 900 1rem/1.25 var(--label-font)}
 .card.bad{--cm: var(--manila-bad)}
 .card.bad .big{color: var(--manila-bad)}
-.card .how{margin-top: .3rem; padding: .25rem .5rem; font: 700 10px var(--cell-font); letter-spacing: .08em; color: var(--on-tape); text-shadow: -1px -1px 0 rgb(8 7 15 / .5), 1px 1px 0 rgb(255 255 255 / .4), 0 0 3px rgb(255 255 255 / .55); background: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .16) 2px 3px), linear-gradient(color-mix(in srgb, var(--cm) 86%, #fff), var(--cm)); border: 1px solid color-mix(in srgb, var(--cm) 60%, #000); border-top-color: color-mix(in srgb, var(--cm) 68%, #fff); border-radius: 2px; box-shadow: var(--lift-raised)}
+.card .how{min-height: 24px; margin-top: .3rem; padding: .25rem .5rem; font: var(--type-micro); letter-spacing: var(--track-micro); color: var(--on-tape); text-shadow: -1px -1px 0 rgb(8 7 15 / .5), 1px 1px 0 rgb(255 255 255 / .4), 0 0 3px rgb(255 255 255 / .55); background: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .16) 2px 3px), linear-gradient(color-mix(in srgb, var(--cm) 86%, #fff), var(--cm)); border: 1px solid color-mix(in srgb, var(--cm) 60%, #000); border-top-color: color-mix(in srgb, var(--cm) 68%, #fff); border-radius: 2px; box-shadow: var(--lift-raised)}
 .card .how:is(:active,.is-active){transform: translateY(2px); box-shadow: var(--pressed); background: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .16) 2px 3px), linear-gradient(color-mix(in srgb, var(--cm) 72%, #000), color-mix(in srgb, var(--cm) 84%, #000))}
 .card dialog{overflow-wrap: normal}
 table.sum{width: auto; font-size: 13px}
 table.sum th, table.sum td{white-space: nowrap}
 table.sum td{text-align: center; padding: .2rem .45rem}
 table.sum .skip{color: var(--muted)}
-.problems{margin: .75rem 20px 0; color: var(--bad)}
-.problems p{margin: .2rem 0}
-.aka{position: relative; z-index: 3; margin: 0}
-.aka:has(.nametags:is(:focus-visible,.is-fv)){outline: 3px solid var(--link); outline-offset: 2px}
-.nametags{list-style: none; display: flex; align-items: stretch; gap: 10px; margin: 0; padding: 36px 4px 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding-inline: 4px}
-.name{flex: none; scroll-snap-align: start; box-sizing: border-box; min-width: 11rem; max-width: min(40rem, 72vw); margin: 0; padding-bottom: .6rem}
-.nametags:is(:focus-visible,.is-fv){outline: 0}
-.nrows{display: grid; grid-template-rows: repeat(2, auto); grid-auto-flow: column; grid-auto-columns: max-content; justify-content: start; align-content: start; gap: 0 1.4rem}}
-.vp{@supports (animation-timeline: scroll()){
-.nametags, .cands{mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline)}}}
-.vp{
-.fitstrip ~ .aka .name::after{content: ""; position: absolute; left: calc(50% - 1px); top: -36px; width: 2px; height: 50px; background: var(--steel); pointer-events: none}
-.nrow{position: relative}
-.name .how{position: absolute; inset: 0; width: 100%; padding: 0; background: none; border: 0; box-shadow: none; cursor: pointer}
-.name .how:is(:hover,.is-hover), .name .how:is(:focus-visible,.is-fv){background: rgb(0 0 0 / .07)}
-.name .nvoc{margin: -.2rem -.6rem .45rem; padding: .25rem .6rem; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border: 0; border-block: 1px solid var(--tape-edge)}
-.nw{width: fit-content; max-width: 100%; margin: 0 0 .3rem; font: 700 .95rem/1.25 var(--cell-font); letter-spacing: .04em; border-bottom: 3px solid var(--cm)}
-.nrow{display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; margin: 0 0 .3rem}
-.nrow .nw{margin: 0}
-.nrow .g-year{font-weight: 400; font-size: .85rem}
-.seg{position: relative; align-self: stretch; display: flex; align-items: center; justify-content: center; padding: .35rem .6rem; text-align: center; min-width: 0}
-.seg .w{font: 900 1.05rem/1.2 var(--cell-font); letter-spacing: .08em; text-shadow: var(--tape-emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere}
-.seg::after{content: ""; position: absolute; left: calc(50% - 2.5px); top: calc(-1px - var(--lead) - var(--prev)); height: calc(var(--lead) + var(--prev) + 1px); border-left: 5px solid var(--c); filter: var(--stripe-lift)}
-.note.popover{box-sizing: border-box; max-width: min(30rem, calc(var(--vw) - 2rem)); padding: .75rem 1rem; border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .4)}
-.fit{position: relative; isolation: isolate; display: flow-root; margin: 0 16px}
-.fitstrip{--lead: 30px; --prev: 0px; --stamp-h: 1.5rem; display: grid; grid-template-columns: repeat(2, minmax(0, 6.6rem)) minmax(0, 1fr); align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck)}
-.fitstrip .stamp{align-self: stretch; display: flex; align-items: center; min-width: 0; margin: 0; padding: 0 .5rem 0 .7rem; border-right: 1px solid rgb(255 255 255 / .18); font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss)}
-.fitstrip:has(.g-wmi){grid-template-columns: repeat(3, minmax(0, 6.6rem)) minmax(0, 1fr)}
+.problems{display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; align-content: center; gap: 0 var(--s2); box-sizing: border-box; min-height: 2.25rem; margin: var(--s4) 0 0; padding: var(--s1) var(--inset); font: var(--type-value-b); color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck)}
+.problems p{grid-column: 2; margin: 0}
+.problems svg{grid-row: 1 / span 9; align-self: start; width: 14px; height: 14px; margin-top: 2px; fill: none; stroke: #ff8a8a; stroke-width: 2.2}
+.fit, .part{position: relative; isolation: isolate; display: flow-root; margin: 0; container-type: inline-size; --rail: 20px; --end: 20px; --m: calc((100cqw - var(--rail) - var(--end) + 8px) / 6); --lead: 28px; --trunk: var(--c-vds); --num: calc(2 * var(--m) - 8px - var(--lead)); --strip: calc(var(--m) - 8px)}
+.part{--trunk: var(--c-serial)}
+.fitstrip .stamp, .vfacts dt, .vc small, .ptfield .plab, :is(.ptfield, .ptype) .n, .name .nvoc, .ink .k, .mk, .stk, .stk .sc small, .numtape .side, .stock-kind .bar, .stock-none, .vnames .voc{font: var(--type-micro); letter-spacing: var(--track-micro); text-transform: uppercase}
+.receipt, .print :is(th, td), .stock-kind .kind, .says, .vnames, .nrow .g-year, .name .none{font: var(--type-value); letter-spacing: normal; text-transform: none}
+.opts, .nw, .receipt a, .print .note strong, .name .info, .mk b, .vfacts dd, .vc b, .numtape .of{font: var(--type-value-b); letter-spacing: normal; text-transform: none}
+.seg .w, .ptfield .nm, .ptclear, .veh .numtape, .nonum-tape{font: var(--type-head); letter-spacing: var(--track-tape); text-transform: none}
+.fitstrip{--drop: 30px; --stamp-h: 1.5rem; display: grid; grid-template-columns: repeat(2, var(--wc)) minmax(0, 1fr); align-items: center; margin-top: var(--drop); min-height: 2.9rem; color: var(--on-tape); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck)}
+.fitstrip:has(.g-wmi){grid-template-columns: repeat(3, var(--wc)) minmax(0, 1fr)}
+.fitstrip .stamp{grid-row: 1; grid-column: 1 / -1; display: flex; align-items: center; box-sizing: border-box; min-width: 0; height: var(--stamp-h); margin: 0; padding: 0 var(--inset); border-bottom: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss)}
 .fitstrip .g-wmi{--cm: #ff6b81}
 .fitstrip .g-vds{--cm: #7db4ff}
 .fitstrip .g-year{--cm: #ffb067}
-.fitstrip .seg{grid-row: 2; padding-inline: .3rem}
-.fitstrip .vfacts{grid-row: 2; grid-column: -2}
-.fitstrip .stamp{grid-row: 1; grid-column: 1 / -1; box-sizing: border-box; height: var(--stamp-h); padding-block: 0; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18)}
-.fitstrip .seg::after{top: calc(-1px - var(--lead) - var(--prev) - var(--stamp-h))}
-.vfacts{display: flex; flex-wrap: wrap; align-items: center; gap: 4px 22px; min-width: 0; margin: 0; padding: .45rem .7rem; border-left: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss)}
-.vfacts dt{font-size: 11px; line-height: 1.2; letter-spacing: .04em; text-transform: uppercase; color: #aeb7c0; text-shadow: none}
-.vfacts dd{margin: 0; font: 900 .95rem/1.25 var(--cell-font); letter-spacing: .06em}
+.seg{position: relative; grid-row: 2; align-self: stretch; display: flex; align-items: center; justify-content: center; min-width: 0; padding: .35rem .3rem; text-align: center}
+.seg .w{text-shadow: var(--tape-emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere}
+.seg::after{content: ""; position: absolute; left: calc(50% - 2.5px); top: calc(-1px - var(--drop) - var(--stamp-h)); height: calc(var(--drop) + 1px); border-left: 5px solid var(--c); filter: var(--stripe-lift)}
+.vfacts{position: relative; grid-row: 2; grid-column: -2; align-self: stretch; display: flex; flex-wrap: wrap; align-items: center; align-content: center; gap: 0 var(--s4); min-width: 0; margin: 0; padding: var(--s1) var(--inset); border-left: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss)}
+.vfacts > div{display: flex; align-items: baseline; gap: 6px; min-width: 0}
+.vfacts dt{color: #aeb7c0; text-shadow: none}
+.vfacts dd{margin: 0}
+.vfacts:has(.vchars){padding-right: calc(var(--inset) + 6.6rem + var(--s4))}
+.vfacts > .vchars{position: absolute; right: var(--inset); top: 50%; transform: translateY(-50%)}
 .vchars dd{display: flex; gap: 3px}
 .vc{display: grid; justify-items: center; min-width: 1.15rem}
 .vc b{width: 100%; text-align: center; border-bottom: 3px solid #7db4ff}
-.vc small{font: 400 10px/1.3 var(--cell-font); letter-spacing: 0; color: #aeb7c0; text-shadow: none}
-.ptype{display: inline-flex; align-items: center; gap: 10px; box-sizing: border-box; min-height: 44px; padding: 0 14px; font: 900 14px var(--cell-font); letter-spacing: .06em; text-decoration: none; color: var(--on-metal); text-shadow: var(--emboss); background: var(--alu); border: 1px solid var(--steel); border-top-color: #fff; border-bottom-color: var(--steel-dark); border-radius: 2px; box-shadow: var(--raised)}
-.ptype .n{padding: 1px 7px; border: 1px solid rgb(35 41 48 / .55); border-radius: 9px; font-size: 11px; text-shadow: none}
-.ptype:is(:active,.is-active), .ptype[aria-current]{transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed)}
-.ptype .n{flex: none}
-.ptwrap{position: relative; z-index: 3; margin: 30px 0 0}
-.ptsel{display: grid; grid-template-columns: fit-content(100%) minmax(0, 1fr); gap: 6px; box-sizing: border-box; padding: 5px 6px; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck)}
-.ptkeys{grid-column: 1; display: flex; align-items: stretch; gap: 6px; min-width: min(24rem, 100%); anchor-name: --fit-part, --pick-type}
-.ptfield{--key: var(--alu); flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: .5rem; align-items: center; min-height: 44px; padding: .25rem .6rem; text-align: left; text-transform: none; letter-spacing: 0}
-.ptfield .plab{grid-column: 1 / -1; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase}
-.ptfield .nm{min-width: 0; font: 900 16px/1.2 var(--cell-font); letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
-.ptfield .n{padding: 1px 7px; border: 1px solid rgb(35 41 48 / .55); border-radius: 9px; font: 900 11px var(--cell-font); text-shadow: none}
+.vc small{color: #aeb7c0; text-shadow: none}
+.fit{display: grid; grid-template-columns: auto minmax(0, 1fr)}
+.fit > *{grid-column: 1 / -1}
+.fit > .ptwrap{grid-column: 1; width: calc(2 * var(--m) - 8px); margin: var(--s2) var(--s2) 0 var(--rail)}
+.fit > .aka{margin: 0 var(--end) 0 var(--rail)}
+.fit:has(> .ptwrap) > .aka{grid-column: 2; margin-left: 0}
+.ptwrap{position: relative; display: flex; gap: var(--s1); box-sizing: border-box; height: var(--row); padding: var(--s1); anchor-name: --pick-type; background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck)}
+.ptfield{--key: var(--alu); flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: var(--s2); align-items: center; align-content: center; padding: 0 10px; text-align: left}
+.ptfield .plab{grid-column: 1 / -1}
+.ptfield .nm{min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
+.ptfield .n{padding: 1px 7px; border: 1px solid rgb(35 41 48 / .55); border-radius: 9px; text-shadow: none}
 .ptfield svg{width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round}
 .fit:has(#part-types.is-open) .ptfield{--key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed)}
-.ptrecents{grid-column: 1; min-width: 0; max-height: 44px; overflow: hidden; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0 2px}
-.ptrecents[hidden]{display: none}
-.ptrecents .ptype{min-height: 38px; padding-inline: 10px; font-size: 13px}
-.ptrecents::before{content: "Recent"; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss)}
+.ltag{position: relative; isolation: isolate; --eye: calc(var(--row) / 2); color: var(--on-manila); filter: drop-shadow(0 3px 4px rgb(8 7 15 / .28))}
+.ltag::before{content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(circle at var(--eye-x, 14px) var(--eye), transparent 4px, var(--manila-patch) 4.5px 10px, transparent 10.5px), var(--manila); clip-path: polygon(12px 0, 100% 0, 100% 100%, 12px 100%, 0 calc(100% - 12px), 0 12px); mask-image: radial-gradient(circle at var(--eye-x, 14px) var(--eye), transparent 3.5px, #000 4px)}
+.aka{position: relative; min-width: 0; margin: 0}
+.nametags{--nm: max(var(--m), 10rem); list-style: none; display: flex; align-items: flex-start; gap: var(--s2); margin: 0 calc(-1 * var(--end)) calc(-1 * var(--s2)) 0; padding: var(--s2) var(--end) var(--s2) 0; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: var(--steel) transparent}
+.nametags:is(:focus-visible,.is-fv){outline: 0}}
+.vp{@supports (animation-timeline: scroll()){
+.nametags{mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline)}}}
+.vp{
+.name{flex: none; scroll-snap-align: start; box-sizing: border-box; display: grid; grid-template-columns: var(--lead) calc(var(--nm) - 8px - var(--lead)) auto; min-width: calc(var(--n, 2) * var(--nm) - 8px); height: var(--row); margin: 0}
+.name.c3{--n: 3}
+.fitstrip ~ .aka .name::after{content: ""; position: absolute; left: 13px; top: calc(-1px - var(--s2)); width: 2px; height: calc(var(--s2) + var(--eye) - 2px); background: var(--steel); pointer-events: none}
+.name .nvoc{grid-column: 2; display: flex; flex-wrap: wrap; align-items: center; align-content: center; gap: 0 6px; min-width: 0; margin: 0; padding: var(--s1) var(--inset); overflow-wrap: anywhere; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 3px solid var(--tape-edge)}
+.name .nvoc > span:first-child{min-width: 0}
+.nrows{grid-column: 3; display: grid; grid-template-rows: repeat(2, auto); grid-auto-flow: column; grid-auto-columns: max-content; align-content: center; column-gap: var(--s4); padding: 0 var(--inset)}
+.nrows > .nw{grid-row: 1 / -1; align-self: center; margin-right: calc(var(--s2) - var(--s4))}
+.nrow{position: relative; display: flex; align-items: center; gap: var(--s2); min-height: 24px; margin: 0; white-space: nowrap}
+.nw{width: fit-content; max-width: 100%; margin: 0; border-bottom: 3px solid var(--cm)}
+.name .how{position: absolute; inset: 0; width: 100%; padding: 0; background: none; border: 0; box-shadow: none; cursor: pointer}
+.name .how:is(:hover,.is-hover), .name .how:is(:focus-visible,.is-fv){background: rgb(0 0 0 / .07)}
+.name .how:is(:active,.is-active){transform: none; background: rgb(0 0 0 / .14)}
+.note.popover{box-sizing: border-box; max-width: min(30rem, calc(var(--vw) - 2rem)); padding: .75rem 1rem; border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .4)}}
+.vp{@supports (position-area: bottom){
+.note.popover{inset: auto; margin: 6px 1rem; position-area: bottom span-all; justify-self: anchor-center; position-try-fallbacks: flip-block}}}
+.vp{
+.ptype{display: inline-flex; align-items: center; gap: 10px; box-sizing: border-box; min-height: 44px; padding: 0 14px; font: 900 14px var(--cell-font); letter-spacing: .06em; text-decoration: none; color: var(--on-metal); text-shadow: var(--emboss); background: var(--alu); border: 1px solid var(--steel); border-top-color: #fff; border-bottom-color: var(--steel-dark); border-radius: 2px; box-shadow: var(--raised)}
+.ptype .n{flex: none; padding: 1px 7px; border: 1px solid rgb(35 41 48 / .55); border-radius: 9px; text-shadow: none}
+.ptype:is(:active,.is-active), .ptype[aria-current]{transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed)}
 .ptfind{width: 100%; min-height: 44px}
 .ptdialog .hint{margin: .6rem 0 1rem; font-size: 13px}
 .ptdialog .ptnone{margin: 0 0 1rem; color: var(--muted)}
 .ptgroups{display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem 1.5rem}
 .ptgroups:has(> .ptgroup:only-child:not(:has(.pthead))){grid-template-columns: minmax(0, 1fr)}
 .ptrecent{margin-bottom: 1.1rem}
-.ptgroup[hidden], .ptlist > li[hidden]{display: none}
 .pthead{display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 .5rem; margin: 0 0 .6rem; border-bottom: 3px solid var(--c-vds)}
 .pthead h3{margin: 0; padding: 0 0 3px; border: 0; letter-spacing: .04em; text-transform: none}
 .ptlist{list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0 0 6px}}
 .vp{@supports (anchor-name: --a){
-.fit .ptdialog{position-anchor: --pick-type; inset: auto; top: calc(anchor(bottom) + 6px); left: anchor(left); width: anchor-size(width); max-height: min(30rem, calc(50vh - 3rem)); margin: 0; padding: .75rem; border-radius: 4px; position-try-fallbacks: flip-block}
+.fit .ptdialog{position: absolute; position-anchor: --pick-type; inset: auto; top: calc(anchor(bottom) + var(--s1)); left: anchor(left); width: anchor-size(width); max-height: min(30rem, calc(var(--vh) - var(--row) - 3rem)); margin: 0; padding: .75rem; border-radius: 4px}
 .fit .ptdialog :is(.dialog-head, .hint){display: none}
 .fit .ptdialog .ptrecent{margin-bottom: .75rem}
 .fit .ptdialog .ptf{margin: 0 0 .75rem}
@@ -174,41 +185,44 @@ table.sum .skip{color: var(--muted)}
 .fit .ptlist{flex-direction: column; flex-wrap: nowrap; gap: 6px; padding: 0}
 .fit .ptlist .ptype{display: flex; justify-content: space-between}}}
 .vp{
-.fit{--tag: calc((100% - 2 * 12px - 8px) / 3)}
-.fit{--xm: 3.3rem; --xv: 3.3rem; --xy: 9.9rem}
-.fit:has(.fitstrip .g-wmi){--xv: 9.9rem; --xy: 16.5rem}
-.fitstrip{anchor-name: --fit-strip}}
+:is(.fit, .part, .choice) .blank{display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s4); box-sizing: border-box; min-height: var(--row); margin: 30px 0 0; padding: var(--s2) var(--inset); color: var(--muted); border: 3px dashed var(--faint); border-radius: 2px}
+:is(.fit, .part) > :is(.blank, .error){margin: var(--s2) var(--end) 0 var(--rail)}
+.ptwrap::after, .cand::after, .phead .rows::before, .ptwrap::before, .cand::before{content: ""; position: absolute; z-index: 2; background: var(--trunk); pointer-events: none}
+.ptwrap::after, .cand::after, .phead .rows::before{left: calc(8px - var(--rail)); width: 5px; box-shadow: -1px 0 0 rgb(255 255 255 / .4), 1.5px 0 1px rgb(8 7 15 / .3)}
+.ptwrap::after{left: calc(7px - var(--rail)); top: calc(-1px - var(--s2)); height: calc(var(--s2) + var(--row) / 2 + 2.5px); border-bottom-left-radius: 2.5px}
+.ptwrap::before, .cand::before{left: calc(13px - var(--rail)); height: 5px; top: calc(var(--row) / 2 - 2.5px); box-shadow: 0 -1px 0 rgb(255 255 255 / .4), 0 2px 1px rgb(8 7 15 / .3)}
+.ptwrap::before{z-index: 3; width: calc(var(--rail) - 13px); margin: -1px 0 0 -1px}
+.carry{display: none}
+.fit{--wc: min(8rem, (100cqw - 2px) / 3); --xm: calc(.5 * var(--wc)); --xv: calc(.5 * var(--wc)); --xy: calc(1.5 * var(--wc))}
+.fit:has(.fitstrip .g-wmi){--xv: calc(1.5 * var(--wc)); --xy: calc(2.5 * var(--wc))}}
 .vp-wide{
-.fitstrip, .fitstrip:has(.g-wmi){grid-template-columns: 170fr 170fr 170fr 510fr}
+.fitstrip, .fitstrip:has(.g-wmi){--drop: 8px; --stamp-h: 20px; grid-template-columns: 170fr 170fr 170fr 510fr; min-height: 0; padding-inline: 15px}
+.fitstrip .stamp{margin-inline: -15px; padding-left: calc(var(--rail) + var(--lead) + var(--inset) - 1px)}
 .fitstrip .g-wmi{grid-column: 1}
 .fitstrip .g-vds{grid-column: 2}
-.fitstrip .g-year{grid-column: 3}
-.fit, .fit:has(.fitstrip .g-wmi){--xm: 8.333%; --xv: 25%; --xy: 41.667%}
-.ptsel{display: flex; gap: 12px}
-.ptkeys{flex: none; width: 20rem; min-width: 0; margin-left: calc(16.667% + 2px)}
-.ptrecents{flex: 0 1 auto; padding-left: 12px; border-left: 1px solid rgb(255 255 255 / .18)}}
+.fitstrip .g-year{grid-column: 3}}
+.vp-tab{
+&{--row: 3.5rem; --type-display: 900 1.125rem/1.2 var(--cell-font)}}
 .vp{
 .part-form, .part-answer{--plate-pad: 16px}
-.part{margin: 0 var(--plate-pad)}
-.menu.popover{inset: auto; top: 3.6rem; right: max(1rem, calc((var(--vw) - 62rem) / 2)); margin: 0; box-sizing: border-box; width: min(19rem, calc(var(--vw) - 2rem)); max-height: calc(var(--vh) - 5rem); overflow: auto; padding: .75rem; border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .4)}}
+.menu.popover{inset: auto; top: 3.6rem; right: max(1rem, calc((var(--vw) - 62rem) / 2)); margin: 0; box-sizing: border-box; width: min(19rem, calc(var(--vw) - 2rem)); max-height: calc(var(--vh) - 5rem); overflow: hidden auto; padding: .75rem; border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .4)}}
 .vp{@supports (top: anchor(bottom)){
 .menu.popover{position-anchor: --vins; top: calc(anchor(bottom) + .4rem); right: auto; left: anchor(left); position-try-fallbacks: flip-inline}}}
 .vp{
 ul.examples{list-style: none; padding: 0; margin: 0 0 .6rem; display: grid; gap: .4rem}
 ul.examples[hidden]{display: none}
-ul.examples::before{content: attr(aria-label); font: 900 10px var(--label-font); letter-spacing: .1em; text-transform: uppercase; color: var(--muted)}
+ul.examples::before{content: attr(aria-label); font: 900 11px var(--label-font); letter-spacing: .1em; text-transform: uppercase; color: var(--muted)}
 a.example{--key: var(--metal); display: block; padding: .35rem .8rem .35rem 1.4rem; font: 700 12px var(--cell-font); letter-spacing: .04em; text-decoration: none; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; background: radial-gradient(circle at .7rem 50%, var(--steel-dark) 0 2.5px, #e6ebef 3px 4px, transparent 4.5px), var(--key)}
 a.example.recent, a.example.surprise{font: 900 11px var(--label-font); letter-spacing: .06em; text-transform: uppercase}
 a.example:is(:hover,.is-hover){border-color: var(--link)}
 a.example:is(:active,.is-active){--key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed)}
-button.linkish{border: 0; background: none; box-shadow: none; padding: 0 .25rem; color: var(--link); text-shadow: none; text-decoration: underline; text-transform: none; letter-spacing: 0; font: 13px system-ui, sans-serif}
-button.linkish:is(:active,.is-active){transform: none; box-shadow: none}
-.menu .linkish{display: block; margin: .6rem auto 0}
-#update-now:not(:disabled){animation: lamp 1.6s ease-in-out infinite alternate}
 a.example b{display: block; font: inherit}
-a.example small{display: block; margin-top: 1px; font: 600 10.5px var(--cell-font); letter-spacing: .02em; color: #3a444e; text-transform: none; white-space: normal}
-.menu.popover{overflow-x: hidden}}
-.sheet{--bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint: #a9bccb; --card-bg: #ffffff; --link: #0b4fa8; --bad: #b91c1c; --c-wmi: #c8102e; --c-vds: #0b4fa8; --c-check: #5b2d8e; --c-year: #a34c09; --c-plant: #0f6b46; --c-serial: #3d4650; --on: #ffffff; --label-font: "Arial Black", "Helvetica Neue", system-ui, sans-serif; --cell-font: ui-monospace, monospace; --steel: #6f7b86; --steel-dark: #58626c; --on-metal: #232930; --metal: url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0 / 600px 120px, linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc); --emboss: 0 1px 0 rgb(255 255 255 / .9), 0 -1px 1px rgb(0 0 0 / .45); --lift-stuck: 0 2px 3px rgb(8 7 15 / .32); --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 9px rgb(8 7 15 / .38); --raised: inset 0 1px 0 #fff, var(--lift-raised); --pressed: inset 0 3px 4px rgb(8 7 15 / .4); --alu-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .12) 2px 3px), linear-gradient(#8e99a3, #aab4bd); --alu: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .07) 2px 3px), var(--metal); --tape: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .13) 2px 3px), linear-gradient(#30363d, #171a1e); --tape-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .2) 2px 3px), linear-gradient(#0c0e10, #1d2125); --tape-edge: #050607; --tape-lit: #69727c; --on-tape: #f6f8fa; --tape-emboss: -1px -1px 0 rgb(8 7 15 / .67), 1px 1px 0 rgb(255 255 255 / .33), 0 2px 2px rgb(8 7 15 / .53); --stripe-lift: drop-shadow(-1px -1px 0 rgb(255 255 255 / .4)) drop-shadow(1.5px 2px 1px rgb(8 7 15 / .3)); --manila: url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f); --on-manila: #2b2418; --manila-muted: #5c4c2e; --manila-patch: #c39a5c; --manila-bad: #a01414; --thermal: #f6f4ee; --on-thermal: #232229; --thermal-muted: #62606b; --lamp: #ffb300; --gutter: 1rem; font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 1rem var(--gutter) 3rem; color: var(--fg); background: var(--bg);--bg: #16222d; --fg: #eef2f5; --muted: #a9b6c2; --line: #45566a; --faint: #3a4a5c; --card-bg: #1f2d3a; --link: #8ec5ff; --bad: #ff8a8a; --c-wmi: #ff6b81; --c-vds: #7db4ff; --c-check: #c9a2ff; --c-year: #ffb067; --c-plant: #6fdcab; --c-serial: #b8c4cf; --on: #14181d; --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 10px rgb(0 0 0 / .7);}
+a.example small{display: block; margin-top: 1px; font: 600 11px var(--cell-font); letter-spacing: .02em; color: #3a444e; text-transform: none; white-space: normal}
+button.linkish{min-height: 24px; margin-block: -4px; border: 0; background: none; box-shadow: none; padding: 0 .25rem; color: var(--link); text-shadow: none; text-decoration: underline; text-transform: none; letter-spacing: 0; font: 13px system-ui, sans-serif}
+button.linkish:is(:active,.is-active){transform: none; box-shadow: none}
+.menu .linkish{display: block; margin: calc(.6rem - 4px) auto -4px}
+#update-now:not(:disabled){animation: lamp 1.6s ease-in-out infinite alternate}}
+.sheet{--bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint: #a9bccb; --card-bg: #ffffff; --link: #0b4fa8; --bad: #b91c1c; --c-wmi: #c8102e; --c-vds: #0b4fa8; --c-check: #5b2d8e; --c-year: #a34c09; --c-plant: #0f6b46; --c-serial: #3d4650; --on: #ffffff; --label-font: "Arial Black", "Helvetica Neue", system-ui, sans-serif; --cell-font: ui-monospace, Menlo, "Cascadia Mono", Consolas, "Roboto Mono", "DejaVu Sans Mono", "Liberation Mono", "Noto Sans Mono", "Droid Sans Mono", monospace; --steel: #6f7b86; --steel-dark: #58626c; --on-metal: #232930; --metal: url(/_blob/9d26d515fa68a38e6638bb4a880cacf5) 0 0 / 600px 120px, linear-gradient(#eef1f4, #b4bec7 55%, #cdd5dc); --emboss: 0 1px 0 rgb(255 255 255 / .9), 0 -1px 1px rgb(0 0 0 / .45); --lift-stuck: 0 2px 3px rgb(8 7 15 / .32); --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 9px rgb(8 7 15 / .38); --raised: inset 0 1px 0 #fff, var(--lift-raised); --pressed: inset 0 3px 4px rgb(8 7 15 / .4); --alu-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .12) 2px 3px), linear-gradient(#8e99a3, #aab4bd); --alu: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .07) 2px 3px), var(--metal); --tape: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .13) 2px 3px), linear-gradient(#30363d, #171a1e); --tape-in: repeating-linear-gradient(0deg, transparent 0 2px, rgb(8 7 15 / .2) 2px 3px), linear-gradient(#0c0e10, #1d2125); --tape-edge: #050607; --tape-lit: #69727c; --on-tape: #f6f8fa; --tape-emboss: -1px -1px 0 rgb(8 7 15 / .67), 1px 1px 0 rgb(255 255 255 / .33), 0 2px 2px rgb(8 7 15 / .53); --stripe-lift: drop-shadow(-1px -1px 0 rgb(255 255 255 / .4)) drop-shadow(1.5px 2px 1px rgb(8 7 15 / .3)); --manila: url(/_blob/8df67eb7edb3679ce1a61d297a1fcd76) 0 0 / 200px 200px, linear-gradient(#efdcae, #e2c88f); --on-manila: #2b2418; --manila-muted: #5c4c2e; --manila-patch: #c39a5c; --manila-bad: #a01414; --thermal: #f6f4ee; --on-thermal: #232229; --thermal-muted: #62606b; --lamp: #ffb300; --ring: var(--link); --ring-pale: #0b4fa8; --ring-tape: #8ec5ff; --gutter: 1rem; --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --inset: 12px; --row: 3rem; --type-micro: 700 max(11px, .6875rem)/1.2 var(--cell-font); --type-value: 400 .8125rem/1.125rem var(--cell-font); --type-value-b: 700 .8125rem/1.125rem var(--cell-font); --type-fine: 400 .75rem/1.125rem var(--cell-font); --type-head: 900 1rem/1.125 var(--cell-font); --type-display: 900 1.25rem/1.2 var(--cell-font); --type-key: 900 max(11px, .6875rem) var(--label-font); --track-micro: .04em; --track-tape: .04em; --track-key: .08em; font: .9375rem/1.5 system-ui, sans-serif; margin: 0; padding: 1rem var(--gutter) 3rem; color: var(--fg); background: var(--bg);--bg: #16222d; --fg: #eef2f5; --muted: #a9b6c2; --line: #45566a; --faint: #3a4a5c; --card-bg: #1f2d3a; --link: #8ec5ff; --bad: #ff8a8a; --c-wmi: #ff6b81; --c-vds: #7db4ff; --c-check: #c9a2ff; --c-year: #ffb067; --c-plant: #6fdcab; --c-serial: #b8c4cf; --on: #14181d; --lift-raised: 0 3px 0 var(--steel-dark), 0 7px 10px rgb(0 0 0 / .7);--row: 3.5rem; --type-display: 900 1.125rem/1.2 var(--cell-font);}
 .sheet{box-sizing:border-box;margin:0;padding:40px;display:flex;flex-direction:column;gap:26px}
 .sheet .sh-h1{margin:0;font:900 21px/1.2 var(--label-font);letter-spacing:.04em;text-transform:uppercase;border:0;padding:0}
 .sheet .sh-intro{margin:6px 0 0;color:var(--muted);max-width:820px}
@@ -220,12 +234,13 @@ a.example small{display: block; margin-top: 1px; font: 600 10.5px var(--cell-fon
 .sheet .vp.pad{padding:0 var(--gutter)}
 .sheet .vp header,.sheet .vp main{margin-bottom:0}
 .sheet .vp .popover.is-open{display:block !important;position:relative !important;inset:auto !important;margin:0 !important;max-height:none !important;overflow:visible !important}
-/* The part type picker's list hangs from the picker, over what follows it. */
-.sheet .vp #fit .ptdialog.is-open{position:absolute !important;z-index:5;width:min(24rem,calc(100% - 2 * var(--gutter))) !important;margin-top:6px !important}
-.sheet .vp .name .note.is-open{position:absolute !important;top:calc(100% + 10px) !important;left:0 !important;width:26rem;z-index:2}
+/* The part type picker's list lies over what follows it; a frame that
+   opens it says where it hangs (frames.mjs, LIST). */
+.sheet .vp #fit .ptdialog.is-open{position:absolute !important;z-index:5}
+.sheet .vp .name .note.is-open{position:absolute !important;top:calc(100% + 10px) !important;left:0 !important;width:26rem;z-index:2}.sheet .vp .nametags:has(.note.is-open){overflow:visible !important;mask-image:none !important}.sheet .vp #fit .ptdialog.is-open{top:calc(anchor(bottom) + var(--s1)) !important;left:anchor(left) !important;max-height:30rem !important;overflow:auto !important}
 </style>
 </helmet>
-<div class="root sheet" data-scheme="dark" style="width: 1280px; height: 5010px; color: var(--fg); background: var(--bg)">
+<div class="root sheet" data-scheme="dark" style="width: 1280px; height: 4790px; color: var(--fg); background: var(--bg)">
 <div><h1 class="sh-h1">Dialogs, forms and inputs</h1><p class="sh-intro">Everything behind a button is a popover. A dialog is a panel under a head of metal; a menu hangs from its button; a note has no head.</p></div>
 <h2 class="sh-h2">Dialogs</h2>
 <section>
@@ -338,7 +353,7 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 </section>
 <div class="sh-row">
 <section>
-<p class="sh-cap">Note <span>How a name on a tag was reached, behind its "i".</span></p>
+<p class="sh-cap">Note <span>How a name on a tag was reached, in words. A sure name opens it from the name itself; a doubtful one has an "i" for it.</span></p>
 <div class="vp vp-wide pad" style="width: 760px; --vw: 1280px; padding-bottom: 90px">
 
 <main id="ui-main" class="is-fw">
@@ -356,12 +371,12 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 </dl>
 </div>
 <section class="aka done" id="aka" aria-labelledby="aka-h">
-<h2 id="aka-h" class="visually-hidden">Also known as</h2>
+<h3 id="aka-h" class="visually-hidden">Also known as</h3>
 <ol class="nametags" aria-label="Also known as" tabindex="0">
-<li class="card done name">
-<h3 class="nvoc">demo-vehicles</h3>
-<p class="nw g-wmi">Ford</p>
-<div class="nrows"><p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="how" aria-label="How Ford F150 was reached" type="button"></button></p>
+<li class="ltag name c3">
+<h4 class="nvoc"><span>demo-vehicles</span></h4>
+<div class="nrows"><p class="nw g-wmi">Ford</p>
+<p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">F150</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="how" aria-label="How Ford F150 was reached" type="button"></button></p>
 <div class="note is-open popover" id="aka-1">Matched through vPIC model 1801 (F-150): demo: vPIC spells it F-150.</div>
 </div></li>
 </ol>
@@ -530,7 +545,7 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 <p id="vocab-files-hint" class="hint">Kept in this browser · same name replaces · a catalog alone compiles here · no personal data in stock</p>
 </div>
 <div class="offer demo">
-<button id="load-demo" data-demo="{&quot;files&quot;:[{&quot;name&quot;:&quot;demo-catalog&quot;,&quot;file&quot;:&quot;demo-catalog.jsonl&quot;,&quot;kind&quot;:&quot;catalog&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/e65ba8664ef7dcef854cd29e952ef345e6c4a552160a02bb8746ba783b5f4079/demo-catalog.jsonl&quot;},{&quot;name&quot;:&quot;demo-classics&quot;,&quot;file&quot;:&quot;demo-classics.jsonl&quot;,&quot;kind&quot;:&quot;extension-set&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/b75f776e4ede65f61375f37906d6a60a0726b38c25dfb65cd6f6c1cb29fcee7f/demo-classics.jsonl&quot;},{&quot;name&quot;:&quot;demo-part-codes&quot;,&quot;file&quot;:&quot;demo-part-codes.jsonl&quot;,&quot;kind&quot;:&quot;vocabulary&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/c62294a6a36622503671551fe135163b068ffdc693bd3c7b48c539bb1b408c9e/demo-part-codes.jsonl&quot;},{&quot;name&quot;:&quot;demo-part-types&quot;,&quot;file&quot;:&quot;demo-part-types.jsonl&quot;,&quot;kind&quot;:&quot;spine&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/eb39ef39d09ea8d73fea9bd94c26a3d9024be90592f083d70ceaf6dab86d1d58/demo-part-types.jsonl&quot;},{&quot;name&quot;:&quot;demo-shelf&quot;,&quot;file&quot;:&quot;demo-shelf.jsonl&quot;,&quot;kind&quot;:&quot;stock&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/5b6c41e794662b2b02fdf251e6ff3ec37d0c26f77cb27681035f86b71eb3a5c4/demo-shelf.jsonl&quot;},{&quot;name&quot;:&quot;demo-vehicles&quot;,&quot;file&quot;:&quot;demo-vehicles.jsonl&quot;,&quot;kind&quot;:&quot;vocabulary&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/ae4bc8b7d1760ff631f835f82cfa74447a08850e5b5c8a557d1542dbe66e4aaf/demo-vehicles.jsonl&quot;},{&quot;name&quot;:&quot;demo-yard-stock&quot;,&quot;file&quot;:&quot;demo-yard-stock.jsonl&quot;,&quot;kind&quot;:&quot;stock&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/ce07c57f8b7a76a719d0c71669921776763f226694d8eec5c58ee06c6d3db792/demo-yard-stock.jsonl&quot;}],&quot;remove&quot;:[]}" aria-describedby="load-demo-hint" type="button">Load demo</button>
+<button id="load-demo" data-demo="{&quot;files&quot;:[{&quot;name&quot;:&quot;demo-catalog&quot;,&quot;file&quot;:&quot;demo-catalog.jsonl&quot;,&quot;kind&quot;:&quot;catalog&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/e65ba8664ef7dcef854cd29e952ef345e6c4a552160a02bb8746ba783b5f4079/demo-catalog.jsonl&quot;},{&quot;name&quot;:&quot;demo-classics&quot;,&quot;file&quot;:&quot;demo-classics.jsonl&quot;,&quot;kind&quot;:&quot;extension-set&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/b75f776e4ede65f61375f37906d6a60a0726b38c25dfb65cd6f6c1cb29fcee7f/demo-classics.jsonl&quot;},{&quot;name&quot;:&quot;demo-part-codes&quot;,&quot;file&quot;:&quot;demo-part-codes.jsonl&quot;,&quot;kind&quot;:&quot;vocabulary&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/c62294a6a36622503671551fe135163b068ffdc693bd3c7b48c539bb1b408c9e/demo-part-codes.jsonl&quot;},{&quot;name&quot;:&quot;demo-part-types&quot;,&quot;file&quot;:&quot;demo-part-types.jsonl&quot;,&quot;kind&quot;:&quot;spine&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/eb39ef39d09ea8d73fea9bd94c26a3d9024be90592f083d70ceaf6dab86d1d58/demo-part-types.jsonl&quot;},{&quot;name&quot;:&quot;demo-shelf&quot;,&quot;file&quot;:&quot;demo-shelf.jsonl&quot;,&quot;kind&quot;:&quot;stock&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/27df771cfadafd05f3b1d377fc213796a9fde1c253c8dde8a28198c81ff4e49c/demo-shelf.jsonl&quot;},{&quot;name&quot;:&quot;demo-vehicles&quot;,&quot;file&quot;:&quot;demo-vehicles.jsonl&quot;,&quot;kind&quot;:&quot;vocabulary&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/ae4bc8b7d1760ff631f835f82cfa74447a08850e5b5c8a557d1542dbe66e4aaf/demo-vehicles.jsonl&quot;},{&quot;name&quot;:&quot;demo-yard-stock&quot;,&quot;file&quot;:&quot;demo-yard-stock.jsonl&quot;,&quot;kind&quot;:&quot;stock&quot;,&quot;url&quot;:&quot;/ui/r/%28devel%29/2026_11/blake3:dd565ff9a1878af2366b1d5e8e26efc1684cb969ceb23abd7bc274373006af19/vocab/b82f55e8b03d62a601dd8b156d211155e8375cd0fc45410272859490085b5d71/demo-yard-stock.jsonl&quot;}],&quot;remove&quot;:[]}" aria-describedby="load-demo-hint" type="button">Load demo</button>
 <p id="load-demo-hint" class="hint">2026.11-demo · 17 kB · invented data</p>
 </div>
 </div>
@@ -558,7 +573,7 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 </section>
 <h2 class="sh-h2">Forms and inputs</h2>
 <section>
-<p class="sh-cap">Picker and Recent <span>The picker asks for a part type and counts the vehicle's. Up to three opened recently sit beside it on its tape.</span></p>
+<p class="sh-cap">Picker <span>One key of the second tape on a short piece of label tape. It asks for a part type and counts the vehicle's.</span></p>
 <div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px">
 
 <main id="ui-main" class="is-fw">
@@ -576,14 +591,19 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 <div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>B</b><small>4</small></span><span class="vc"><b>1</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>H</b><small>7</small></span><span class="vc"><b>K</b><small>8</small></span></dd></div>
 </dl>
 </div>
-<div class="ptwrap live" data-spine="demo-part-types">
-<div class="ptsel">
-<div class="ptkeys">
-<button id="pick-type" class="ptfield" type="button"><span class="plab">Part type</span><span class="nm">Choose a part type</span><span class="n">6<span class="visually-hidden"> part types</span></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"></path></svg></button>
+<div class="ptwrap" data-spine="demo-part-types">
+<button id="pick-type" class="ptfield" type="button"><span class="plab">Part type</span><span class="nm">Choose a part type</span><span class="n">6<span class="visually-hidden"> part types</span></span><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 6l5 5 5-5"></path></svg></button>
 </div>
-<ul class="ptrecents" aria-label="Opened recently"><li data-part="headlamp"><a class="ptype swap" href="#"><span class="nm">Headlamp Assembly</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li data-part="starter"><a class="ptype swap" href="#"><span class="nm">Starter Motor</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li></ul>
-</div>
-</div>
+<section class="aka done" id="aka" aria-labelledby="aka-h">
+<h3 id="aka-h" class="visually-hidden">Also known as</h3>
+<ol class="nametags" aria-label="Also known as" tabindex="0">
+<li class="ltag name c3">
+<h4 class="nvoc"><span>demo-vehicles</span></h4>
+<div class="nrows"><p class="nw g-wmi">Toyota</p>
+<p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">Camry</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="how" aria-label="How Toyota Camry was reached" type="button"></button></p>
+</div></li>
+</ol>
+</section>
 </section>
 </div>
 </main>
@@ -591,12 +611,14 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 </div>
 </section>
 <section>
-<p class="sh-cap">The picker's list <span>A recessed filter, then each part type as a row of the second tape with its count at the far end.</span></p>
-<div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px; padding-bottom: 560px">
+<p class="sh-cap">The picker's list <span>The key is pressed while its list is open. A recessed filter, then the part types opened recently, with Clear recent, then each part type as a row of the second tape with its count at the far end.</span></p>
+<div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px; padding-bottom: 440px">
 
 <main id="ui-main" class="is-fw">
 <div id="answer" class="stage" data-vin="4T1B11HK7JU512345" data-label="2018 TOYOTA Camry" data-complete="" data-done="wmi vds check year plant serial ">
 <section class="fit" id="fit" aria-labelledby="fit-h">
+<h2 id="fit-h" class="visually-hidden">Parts that fit</h2>
+<span class="carry" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></span>
 <div class="fitstrip">
 <p class="stamp">This vehicle · demo-catalog</p>
 <span class="seg g-wmi"><span class="w">Toyota</span></span>
@@ -609,14 +631,19 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 <div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>B</b><small>4</small></span><span class="vc"><b>1</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>H</b><small>7</small></span><span class="vc"><b>K</b><small>8</small></span></dd></div>
 </dl>
 </div>
-<div class="ptwrap live" data-spine="demo-part-types">
-<div class="ptsel">
-<div class="ptkeys">
-<button id="pick-type" class="ptfield" type="button"><span class="plab">Part type</span><span class="nm">Choose a part type</span><span class="n">6<span class="visually-hidden"> part types</span></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 6l5 5 5-5"></path></svg></button>
+<div class="ptwrap" data-spine="demo-part-types">
+<button id="pick-type" class="ptfield" type="button"><span class="plab">Part type</span><span class="nm">Choose a part type</span><span class="n">6<span class="visually-hidden"> part types</span></span><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 6l5 5 5-5"></path></svg></button>
 </div>
-<ul class="ptrecents" aria-label="Opened recently" hidden=""></ul>
-</div>
-</div>
+<section class="aka done" id="aka" aria-labelledby="aka-h">
+<h3 id="aka-h" class="visually-hidden">Also known as</h3>
+<ol class="nametags" aria-label="Also known as" tabindex="0">
+<li class="ltag name c3">
+<h4 class="nvoc"><span>demo-vehicles</span></h4>
+<div class="nrows"><p class="nw g-wmi">Toyota</p>
+<p class="nrow"><span class="nw g-vds" title="From the vehicle, positions 4–8">Camry</span><span class="nw g-year" title="The years this name holds for">any year</span><button class="how" aria-label="How Toyota Camry was reached" type="button"></button></p>
+</div></li>
+</ol>
+</section>
 <dialog id="part-types" class="ptdialog is-open popover" aria-labelledby="part-types-h" open="">
 <div class="dialog-head">
 <h2 id="part-types-h">Part types</h2>
@@ -625,9 +652,9 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 <p class="ptf"><label class="visually-hidden" for="ptf-dialog">Filter part types</label><input type="search" id="ptf-dialog" class="ptfind" placeholder="Filter part types" aria-controls="ptgroups" value=""></p>
 <p class="hint">2018 Toyota Camry in demo-catalog · grouped by demo-part-codes</p>
 <p class="ptnone" hidden=""></p>
-<section class="ptgroup ptrecent" aria-labelledby="ptrecent-h" hidden="">
+<section class="ptgroup ptrecent" aria-labelledby="ptrecent-h">
 <div class="pthead"><h3 id="ptrecent-h">Opened recently</h3><button class="linkish clear-parts" type="button">Clear recent</button></div>
-<ul class="ptlist"></ul>
+<ul class="ptlist"><li data-part="headlamp"><a class="ptype swap" href="#"><span class="nm">Headlamp Assembly</span> <span class="n">2<span class="visually-hidden"> candidates</span></span></a></li><li data-part="starter"><a class="ptype swap" href="#"><span class="nm">Starter Motor</span> <span class="n">1<span class="visually-hidden"> candidate</span></span></a></li></ul>
 </section>
 <div class="ptgroups" id="ptgroups">
 <section class="ptgroup" aria-labelledby="ptg-0">
@@ -658,6 +685,7 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 </section>
 </div>
 </dialog>
+<p class="blank"><span>Choose a part type to see what fits this vehicle.</span></p>
 </section>
 </div>
 </main>
@@ -665,7 +693,7 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 </div>
 </section>
 <section>
-<p class="sh-cap">Errors <span>Error-colour text on the tag and under the names.</span></p>
+<p class="sh-cap">Errors <span>Error-colour text on the tag, and the decoder's words for the problem on a strip of label tape under the answer.</span></p>
 <div class="vp vp-wide pad" style="width: 1040px; --vw: 1280px">
 
 <main id="ui-main" class="is-fw">
@@ -679,7 +707,7 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 </section>
 </div>
 </div>
-<div class="problems" role="status">
+<div class="problems" role="status"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"></path></svg>
 <p>1 - Check Digit (9th position) does not calculate properly</p>
 </div>
 </div>
@@ -689,7 +717,7 @@ scoop install nitrovin</pre><button class="copy" aria-label="Copy the Scoop inst
 </section>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":5010}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":4790}}'>
 class Component extends DCLogic {
 renderVals() {
 return {};

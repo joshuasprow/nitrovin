@@ -551,6 +551,12 @@ func formJSOn(t *testing.T, path, base string, log *requestLog) {
 	tb.wait("#mcp-local + button.copy")
 	tb.requests("/", false, "/")
 	tb.audit("/")
+	// Laid over the cells, the plate answers as it is typed: the key that
+	// sends it without a script is not drawn, so the Tab key stops on
+	// nothing a visitor cannot see.
+	if shown := eval[string](tb, `getComputedStyle(document.querySelector("#vin-form .decode")).display`); shown != "none" {
+		t.Errorf("/: with a script the Decode key is drawn %q; want it not drawn, and so out of the Tab order", shown)
+	}
 	// A page that reloads loses this.
 	eval[bool](tb, `window.stayed = true`)
 

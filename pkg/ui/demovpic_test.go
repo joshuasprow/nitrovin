@@ -162,9 +162,10 @@ func TestPageDemoVPIC(t *testing.T) {
 		}
 	}
 
-	// Part-number mode: the vehicles table names each vehicle as VIN mode
+	// Part-number mode: the vehicles' rows name each vehicle as VIN mode
 	// does, by its vPIC reference and the data month's name, or by its
-	// extension and the set's name; no vocabulary renames them.
+	// extension and the set's name; no vocabulary renames them, and no
+	// row has a line of names.
 	for _, c := range []struct {
 		target string
 		rows   []string
@@ -183,8 +184,8 @@ func TestPageDemoVPIC(t *testing.T) {
 		if got := vehicleRows(s); !slices.Equal(got, c.rows) {
 			t.Errorf("%s: vehicles %q; want %q\n%s", c.target, got, c.rows, s)
 		}
-		if !strings.Contains(s, `<thead><tr><th scope="col">Vehicle <span class="hint">as demo-vpic-catalog names it</span></th><th scope="col">Years</th><th scope="col">Options</th></tr></thead>`) {
-			t.Errorf("%s: its vehicles' head names other columns\n%s", c.target, s)
+		if !strings.Contains(s, ` fits, as demo-vpic-catalog names them">`) || strings.Contains(s, `class="vnames"`) {
+			t.Errorf("%s: its vehicles are not named as the catalog's, or have a line of other names\n%s", c.target, s)
 		}
 	}
 }

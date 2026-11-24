@@ -55,7 +55,8 @@ answer that is the same on every surface.
 - A deployer runs `nitrovin serve` with its own vocabularies, catalog and
   stock connector.
 - The browser surface is one page, `GET /` (`pkg/ui`): the VIN's diagram
-  (ADR 0027). It takes a VIN and nothing else.
+  (ADR 0027). It takes a VIN, or a part type and a part number, the
+  plate's second mode.
 - A visitor loads their own vocabulary files, EPA's vocabulary, or the demo
   set, each in one click.
 - Fitment drills down in place on that page, and the open state is in the URL.

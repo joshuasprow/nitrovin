@@ -31,15 +31,28 @@ func partSection(t *testing.T, h *Handler, target string) string {
 	return sectionOf(t, h, target, `<section class="part"`)
 }
 
-var vehicleRowRE = regexp.MustCompile(`<tr><th scope="row">([^<]*)</th><td class="yrs">([^<]*)</td><td class="opts">([^<]*)</td>(?:<td class="names">(.*?)</td>)?</tr>`)
+var (
+	vehicleRowRE   = regexp.MustCompile(`<li class="cand veh"><div class="ltag line">\n<h3 class="numtape"><span class="num">([^<]*)</span>(?: <span class="of"><span class="yrs">([^<]*)</span></span>)?</h3>\n<div class="ink">(?:<p class="opts">([^<]*)</p>\n)?(?:<p class="vnames">(.*?)</p>\n)?</div>`)
+	vehicleNamesRE = regexp.MustCompile(`<span class="voc">([^<]*)</span>((?: <span class="nw g-vds">[^<]*</span>)*)`)
+	vehicleNameRE  = regexp.MustCompile(`<span class="nw g-vds">([^<]*)</span>`)
+)
 
-// vehicleRows are a part's vehicles as its table lists them, a row each,
-// "name | years | options | names", its names each "vocabulary name".
+// vehicleRows are a part's vehicles as its rows list them, a row each,
+// "name | years | options | names", its names each "vocabulary name",
+// and "No name" where the vocabularies loaded have none.
 func vehicleRows(s string) []string {
 	var out []string
 	for _, m := range vehicleRowRE.FindAllStringSubmatch(s, -1) {
-		names := html.UnescapeString(strings.TrimSpace(tagRE.ReplaceAllString(strings.ReplaceAll(m[4], "</span></span>", "; "), "")))
-		out = append(out, strings.Join([]string{html.UnescapeString(m[1]), html.UnescapeString(m[2]), html.UnescapeString(m[3]), strings.TrimSuffix(names, ";")}, " | "))
+		var names []string
+		for _, v := range vehicleNamesRE.FindAllStringSubmatch(m[4], -1) {
+			if v[2] == "" {
+				names = append(names, v[1])
+			}
+			for _, n := range vehicleNameRE.FindAllStringSubmatch(v[2], -1) {
+				names = append(names, v[1]+" "+n[1])
+			}
+		}
+		out = append(out, html.UnescapeString(strings.Join([]string{m[1], m[2], m[3], strings.Join(names, "; ")}, " | ")))
 	}
 	return out
 }
@@ -127,10 +140,11 @@ func TestPagePartMode(t *testing.T) {
 		t.Errorf("the part types dialog in part-number mode:\n%s", s)
 	}
 
-	// A part: the plate holds its type and number; its tag, its number
-	// and type on its tape and how many vehicles it fits, ends in its
-	// stock strip; its vehicles are a table, each named as the catalog
-	// and the vocabularies loaded name it, its options verbatim; and one
+	// A part: the plate holds its type and number; its tag, whose heading
+	// is its number and type on its tape, says how many vehicles it fits
+	// and ends in its stock strip; its vehicles are a list, each a row
+	// whose heading names it as the catalog does, with its years, its
+	// options verbatim and its names in the vocabularies loaded; and one
 	// line runs from the number's bracket to its eyelet.
 	status, _, body = response(t, h, "GET", alternator+"DEMO-4001", nil)
 	s = partSection(t, h, alternator+"DEMO-4001")
@@ -140,7 +154,7 @@ func TestPagePartMode(t *testing.T) {
 		`<input type="hidden" name="from.fitment.type" value="alternator">`,
 		`<input type="text" id="from-number" name="from.fitment.number" value="DEMO-4001"`,
 		`<div class="punder" aria-hidden="true"><span class="brk g-serial done"></span></div>`,
-		`<path class="g-serial wide" d="M680 0V18H170V36" vector-effect="non-scaling-stroke"/>`,
+		`<span class="pleader" aria-hidden="true"></span>`,
 		`id="copy-url" data-copy="this page's URL">http://example.com/?from.fitment.type=alternator&amp;from.fitment.number=DEMO-4001</pre>`,
 		`<pre tabindex="0" id="part-json" data-copy="the part&#39;s JSON">{`,
 	} {
@@ -149,10 +163,10 @@ func TestPagePartMode(t *testing.T) {
 		}
 	}
 	for _, want := range []string{
-		`<p class="numtape"><b class="num">DEMO-4001</b> <span class="ptn">Alternator</span></p>`,
-		`<div><dt>Fits</dt><dd>2 vehicles in demo-catalog</dd></div>`,
-		`<a class="stk swap" id="stk-part" href="/?from.fitment.type=alternator&amp;from.fitment.number=DEMO-4001&amp;fitment.number=DEMO-4001" aria-expanded="false"><span>Stock · 1 shelf · 2 yard`,
-		`<thead><tr><th scope="col">Vehicle <span class="hint">as demo-catalog names it</span></th><th scope="col">Years</th><th scope="col">Options</th><th scope="col">Also known as</th></tr></thead>`,
+		`<h2 class="numtape" id="part-h"><span class="num">DEMO-4001</span> <span class="of"><span class="ptn">Alternator</span></span></h2>`,
+		`<p class="opts"><span class="k">Fits</span> 2 vehicles in demo-catalog</p>`,
+		`<a class="stk swap" id="stk-part" href="/?from.fitment.type=alternator&amp;from.fitment.number=DEMO-4001&amp;fitment.number=DEMO-4001" aria-expanded="false"><span class="visually-hidden">Stock · 1 shelf · 2 yard, DEMO-4001</span>`,
+		`<ol class="cands vehs" aria-label="The vehicles DEMO-4001 fits, as demo-catalog names them">`,
 	} {
 		if !strings.Contains(s, want) {
 			t.Errorf("DEMO-4001 lacks %s\n%s", want, s)
@@ -172,8 +186,7 @@ func TestPagePartMode(t *testing.T) {
 	// again, they close.
 	s = partSection(t, h, alternator+"DEMO-4001&fitment.number=DEMO-4001")
 	if !strings.Contains(s, `<a class="stk swap" id="stk-part" href="/?from.fitment.type=alternator&amp;from.fitment.number=DEMO-4001" aria-expanded="true" aria-controls="stock-rows">`) ||
-		!strings.Contains(s, `<div class="prows" id="stock-rows">`+"\n"+`<div class="receipt">`+"\n"+`<p class="receipt-head" aria-hidden="true"><span>Stock of</span> DEMO-4001</p>`) ||
-		!strings.Contains(s, `aria-label="Stock of DEMO-4001"`) ||
+		!strings.Contains(s, `<div class="rows" id="stock-rows">`+"\n"+`<div class="receipt" id="stock-region" role="region" aria-label="Stock of DEMO-4001" tabindex="-1">`) ||
 		strings.Count(s, `<th scope="row" class="id">`) != 3 || !strings.Contains(s, "DEMO-S-06") || !strings.Contains(s, "DEMO-Y-05") || !strings.Contains(s, "DEMO-Y-06") {
 		t.Errorf("DEMO-4001's stock open: want its shelf row and its two yard vehicles under its tag\n%s", s)
 	}
@@ -182,10 +195,10 @@ func TestPagePartMode(t *testing.T) {
 	// asked for, and the catalog's note on the retirement.
 	s = partSection(t, h, alternator+"DEMO-0901")
 	for _, want := range []string{
-		`<p class="numtape"><b class="num">DEMO-1001</b> <span class="ptn">Alternator</span></p>`,
-		`<p class="marks"><span class="mk replaces">Replaces DEMO-0901</span></p>`,
-		`<div><dt>Note</dt><dd>demo: 200 A</dd></div>`,
-		`<div><dt>Retirement</dt><dd>demo: DEMO-1 → DEMO-2</dd></div>`,
+		`<h2 class="numtape" id="part-h"><span class="num">DEMO-1001</span> <span class="of"><span class="ptn">Alternator</span></span></h2>`,
+		`<span class="mk replaces">Replaces <b>DEMO-0901</b></span>`,
+		`<span class="nt"><span class="k">Note</span> demo: 200 A</span>`,
+		`<span class="nt"><span class="k">Retirement</span> demo: DEMO-1 → DEMO-2</span>`,
 	} {
 		if !strings.Contains(s, want) {
 			t.Errorf("DEMO-0901 lacks %s\n%s", want, s)
@@ -196,15 +209,15 @@ func TestPagePartMode(t *testing.T) {
 	}
 
 	// A sided part asked for with no side: a link to each side; one
-	// followed is its tag, its side a row.
+	// followed is its tag, its side on its tape.
 	s = partSection(t, h, "/?from.fitment.type=headlamp&from.fitment.number=DEMO-1501")
 	if !strings.Contains(s, `<p class="blank"><span>demo-catalog has Headlamp Assembly DEMO-1501 on more than one side.</span><a class="swap" href="/?from.fitment.type=headlamp&amp;from.fitment.number=DEMO-1501&amp;from.fitment.side=left">The left one</a><a class="swap" href="/?from.fitment.type=headlamp&amp;from.fitment.number=DEMO-1501&amp;from.fitment.side=right">The right one</a></p>`) {
 		t.Errorf("DEMO-1501 with no side:\n%s", s)
 	}
-	if s := partSection(t, h, "/?from.fitment.type=headlamp&from.fitment.number=DEMO-1501&from.fitment.side=left"); !strings.Contains(s, `<div><dt>Side</dt><dd>left</dd></div>`) {
+	if s := partSection(t, h, "/?from.fitment.type=headlamp&from.fitment.number=DEMO-1501&from.fitment.side=left"); !strings.Contains(s, `<span class="ptn">Headlamp Assembly</span> <span class="side">left</span>`) {
 		t.Errorf("DEMO-1501 on the left:\n%s", s)
 	}
-	if s := partSection(t, h, "/?from.fitment.type=fog-lamp&from.fitment.number=DEMO-1401"); !strings.Contains(s, `<div><dt>Side</dt><dd>both</dd></div>`) {
+	if s := partSection(t, h, "/?from.fitment.type=fog-lamp&from.fitment.number=DEMO-1401"); !strings.Contains(s, `<span class="ptn">Fog Lamp</span> <span class="side">both</span>`) {
 		t.Errorf("DEMO-1401, one side, asked with none:\n%s", s)
 	}
 
@@ -236,7 +249,7 @@ func TestPagePartMode(t *testing.T) {
 		{empty, "/?from.fitment.type=engine&from.fitment.number=EN-0000", `<p class="blank"><span>partmode-catalog has Engine EN-0000, and lists no vehicle for it.</span></p>`},
 	} {
 		s := partSection(t, c.h, c.target)
-		if !strings.Contains(s, c.want) || strings.Contains(s, `class="ptag"`) {
+		if !strings.Contains(s, c.want) || strings.Contains(s, `class="ltag line ptag"`) {
 			t.Errorf("%s: lacks %s, or has a tag\n%s", c.target, c.want, s)
 		}
 		if _, _, body := response(t, c.h, "GET", c.target, htmx); strings.Contains(body, `class="pleader"`) {
@@ -284,7 +297,7 @@ func TestPagePartMode(t *testing.T) {
 
 	// A side the fit request does not know is refused in its words.
 	status, _, body = response(t, h, "GET", alternator+"DEMO-4001&from.fitment.side=up", htmx)
-	if status != http.StatusBadRequest || !strings.Contains(body, `<p class="error" role="alert">`) || strings.Contains(body, `class="ptag"`) {
+	if status != http.StatusBadRequest || !strings.Contains(body, `<p class="error" role="alert">`) || strings.Contains(body, `class="ltag line ptag"`) {
 		t.Errorf("a side that is none: %d\n%s", status, body)
 	}
 
@@ -295,7 +308,7 @@ func TestPagePartMode(t *testing.T) {
 	sided.vehicles = 1
 	s = partSection(t, sided, "/?from.fitment.type=mirror&from.fitment.number=MR-3001")
 	next = regexp.MustCompile(`<p class="more-cands">This page shows 1 of 2 vehicles. <a class="swap" href="([^"]*)">Next page</a></p>`).FindStringSubmatch(s)
-	if got := vehicleRows(s); next == nil || len(got) != 1 || !strings.Contains(next[1], "from.fitment.side=left") || !strings.Contains(s, `<div><dt>Side</dt><dd>left</dd></div>`) ||
+	if got := vehicleRows(s); next == nil || len(got) != 1 || !strings.Contains(next[1], "from.fitment.side=left") || !strings.Contains(s, `<span class="side">left</span>`) ||
 		!regexp.MustCompile(`<a class="stk swap" id="stk-part" href="[^"]*from\.fitment\.side=left`).MatchString(s) {
 		t.Fatalf("MR-3001, its side found: %q, next %q\n%s", got, next, s)
 	}
@@ -306,7 +319,7 @@ func TestPagePartMode(t *testing.T) {
 	// A vPIC catalog's vehicle is named as VIN mode names one: its vPIC
 	// reference and the data month's name for it.
 	vpic := pagesOver(t, stripPath("strip-parts"), stripPath("strip-catalog"))
-	if s := partSection(t, vpic, "/?from.fitment.type=alternator&from.fitment.number=ST-1001"); !strings.Contains(s, `<tr><th scope="row">vPIC model 1801 (F-150)</th><td class="yrs">2015–2017</td>`) {
+	if s := partSection(t, vpic, "/?from.fitment.type=alternator&from.fitment.number=ST-1001"); !strings.Contains(s, `<h3 class="numtape"><span class="num">vPIC model 1801 (F-150)</span> <span class="of"><span class="yrs">2015–2017</span></span></h3>`) {
 		t.Errorf("a vPIC catalog's vehicle:\n%s", s)
 	}
 }
@@ -378,7 +391,7 @@ func TestLibraryPartMode(t *testing.T) {
 	browser = NewInBrowser(l, BrowserConfig{}, log.New(io.Discard, "", 0))
 	const found = "/?from.fitment.type=alternator&from.fitment.number=DEMO-4001"
 	s.gets = nil
-	if want, got := partSection(t, srv, found), partSection(t, browser, found); got != want || !strings.Contains(got, `class="ptag"`) {
+	if want, got := partSection(t, srv, found), partSection(t, browser, found); got != want || !strings.Contains(got, `class="ltag line ptag"`) {
 		t.Errorf("%s in a browser holding fleet, the server's catalog:\n%s\nwant the server's\n%s", found, got, want)
 	}
 	if slices.ContainsFunc(s.gets, func(g string) bool { return strings.Contains(g, "to=fleet") }) {
