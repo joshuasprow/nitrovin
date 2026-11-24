@@ -374,10 +374,13 @@ func TestPageStock(t *testing.T) {
 
 	// The shelf rows with no number: once, after the candidates, under a
 	// strip naming the part type and the vehicle in their own case, their
-	// count and as-of dates.
+	// count and as-of dates. The strip's heading takes the focus when
+	// "Show all" has brought every row, and not the section: a section
+	// that could be focused only by a script would keep the Tab key out of
+	// its rows where the page's order is drawn (reading-flow).
 	s = fitSection(t, fixture, "/?from.vin=1D7RV1GT5AS123456&part.id=mirror")
-	at := strings.Index(s, `<div class="nonum" id="stock-nonum" tabindex="-1">`)
-	if at < 0 || at < strings.LastIndex(s, "</ol>") || !strings.Contains(s, `<h3 class="nonum-tape">On the shelf with no number · Door Mirror · 2010 Dodge Ram 1500</h3>`) ||
+	at := strings.Index(s, `<div class="nonum">`)
+	if at < 0 || at < strings.LastIndex(s, "</ol>") || !strings.Contains(s, `<h3 class="nonum-tape" id="stock-nonum" tabindex="-1">On the shelf with no number · Door Mirror · 2010 Dodge Ram 1500</h3>`) ||
 		!strings.Contains(plain(s[at:]), "On the shelf · 2 shelf-annex as of 2026-10-30 · shelf-more as of 2026-11-02 · shelf-orphans as of 2026-11-01 · shelf-stock as of 2026-11-01T08:00:00Z") {
 		t.Fatalf("the mirrors' rows with no number:\n%s", s)
 	}

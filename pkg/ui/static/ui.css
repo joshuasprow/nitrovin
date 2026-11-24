@@ -496,7 +496,7 @@ table.sum .skip { color: var(--muted); }
 .fit > * { grid-column: 1 / -1; }
 .fit > .ptwrap { grid-column: 1; width: calc(2 * var(--m) - 8px); margin: var(--s2) var(--s2) 0 var(--rail); }
 .fit > .aka { margin: 0 var(--end) 0 var(--rail); }
-.fit > .ptwrap + .aka { grid-column: 2; margin-left: 0; }
+.fit:has(> .ptwrap) > .aka { grid-column: 2; margin-left: 0; }
 .fit:not(:has(.fitstrip)) > .aka { margin-top: 22px; }
 
 /* The picker (#366): one key of the second tape on a short piece of
@@ -746,7 +746,7 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
    taller for it. */
 .more-rows a, .more-cands a, :is(.fit, .part, .choice) .blank a { display: inline-block; padding-block: 3px; margin-block: -3px; }
 .receipt ::selection { color: var(--thermal); background: var(--on-thermal); }
-.receipt:focus-visible, .nonum:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
+.receipt:focus-visible, .nonum-tape:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
 .stock-kind + .stock-kind { margin-top: var(--s4); }
 .stock-kind .kind { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 var(--s3); margin: 0 0 var(--s1); }
 .stock-kind .bar { padding: 0 var(--s2); color: var(--thermal); background: var(--on-thermal); }
@@ -1094,23 +1094,25 @@ button.linkish:active { transform: none; box-shadow: none; }
      first tag takes a stub of the trunk in its eyelet, as a candidate
      does, and each tag after it is wired to the one before. The stub's
      first piece is the row's own and stays; the rest is the tag's, and
-     scrolls with it. That order is drawn, not written: the markup
-     keeps the names after the picker, and a browser that knows
-     reading-flow takes the focus down the page as drawn. A row is two
+     scrolls with it. That order is drawn here, whatever the markup's:
+     the page writes the names after the picker, and plate.js moves
+     them to where they are drawn, so the Tab key and a screen reader
+     go down the page as it reads. Without the script a browser that
+     knows reading-flow still takes the focus that way. A row is two
      lines: its number over its years, beside its stock strip, a row
      high, then its ink. */
   .fit { grid-template-columns: minmax(0, 1fr); reading-flow: grid-order; }
   .fit > .ptwrap { width: auto; margin-right: 0; }
-  .fit > .ptwrap + .aka { grid-column: 1; order: 1; margin-left: var(--rail); }
+  .fit:has(> .ptwrap) > .aka { grid-column: 1; order: 1; margin-left: var(--rail); }
   .fit:has(.ptwrap) > :is(.nonum, .more-cands) { order: 2; }
-  .fit:has(.ptwrap + .aka.done) .ptwrap::after { height: auto; bottom: calc(-2px - var(--s2)); border-radius: 0; }
-  .fit:has(.ptwrap + .aka.done) .cand:last-child::after { height: auto; bottom: 0; border-radius: 0; }
-  .fit:has(.ptwrap + .aka.done) > .blank { position: relative; }
-  .fit:has(.ptwrap + .aka.done) > .blank::before, .ptwrap + .aka.done::before, .ptwrap + .aka.done::after { content: ""; position: absolute; z-index: 2; background: var(--trunk); pointer-events: none; }
-  .fit:has(.ptwrap + .aka.done) > .blank::before, .ptwrap + .aka.done::before { width: 5px; box-shadow: -1px 0 0 rgb(255 255 255 / .4), 1.5px 0 1px rgb(8 7 15 / .3); }
-  .fit:has(.ptwrap + .aka.done) > .blank::before { left: calc(5px - var(--rail)); top: -3px; bottom: -3px; }
-  .ptwrap + .aka.done::before { left: calc(8px - var(--rail)); top: 0; height: calc(var(--s2) + var(--row) / 2 + 2.5px); border-bottom-left-radius: 2.5px; }
-  .ptwrap + .aka.done::after { left: calc(13px - var(--rail)); top: calc(var(--s2) + var(--row) / 2 - 2.5px); width: calc(var(--rail) - 13px); height: 5px; box-shadow: 0 -1px 0 rgb(255 255 255 / .4), 0 2px 1px rgb(8 7 15 / .3); }
+  .fit:has(> .ptwrap):has(> .aka.done) .ptwrap::after { height: auto; bottom: calc(-2px - var(--s2)); border-radius: 0; }
+  .fit:has(> .ptwrap):has(> .aka.done) .cand:last-child::after { height: auto; bottom: 0; border-radius: 0; }
+  .fit:has(> .ptwrap):has(> .aka.done) > .blank { position: relative; }
+  .fit:has(> .ptwrap):has(> .aka.done) > .blank::before, .fit:has(> .ptwrap) > .aka.done::before, .fit:has(> .ptwrap) > .aka.done::after { content: ""; position: absolute; z-index: 2; background: var(--trunk); pointer-events: none; }
+  .fit:has(> .ptwrap):has(> .aka.done) > .blank::before, .fit:has(> .ptwrap) > .aka.done::before { width: 5px; box-shadow: -1px 0 0 rgb(255 255 255 / .4), 1.5px 0 1px rgb(8 7 15 / .3); }
+  .fit:has(> .ptwrap):has(> .aka.done) > .blank::before { left: calc(5px - var(--rail)); top: -3px; bottom: -3px; }
+  .fit:has(> .ptwrap) > .aka.done::before { left: calc(8px - var(--rail)); top: 0; height: calc(var(--s2) + var(--row) / 2 + 2.5px); border-bottom-left-radius: 2.5px; }
+  .fit:has(> .ptwrap) > .aka.done::after { left: calc(13px - var(--rail)); top: calc(var(--s2) + var(--row) / 2 - 2.5px); width: calc(var(--rail) - 13px); height: 5px; box-shadow: 0 -1px 0 rgb(255 255 255 / .4), 0 2px 1px rgb(8 7 15 / .3); }
   .fitstrip ~ .aka .name::after { left: calc(-1 * var(--s2)); top: calc(var(--eye) - 1px); width: calc(var(--s2) + 11px); height: 2px; }
   .fitstrip ~ .aka .name:first-child::after { left: 0; top: calc(var(--eye) - 2.5px); width: 11px; height: 5px; background: var(--trunk); border-radius: 0 2.5px 2.5px 0; box-shadow: 0 -1px 0 rgb(255 255 255 / .4), 0 2px 1px rgb(8 7 15 / .3); }
   .line { grid-template-columns: var(--lead) minmax(0, 1fr) var(--strip); grid-template-rows: minmax(var(--row), auto); }

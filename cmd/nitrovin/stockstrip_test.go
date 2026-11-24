@@ -1,11 +1,15 @@
 package main
 
 import (
+	"context"
 	"math"
 	"net/http/httptest"
 	"os"
+	"slices"
+	"strings"
 	"testing"
 
+	"github.com/chromedp/cdproto/input"
 	"github.com/chromedp/chromedp"
 )
 
@@ -23,9 +27,10 @@ var moreStockFixture = abs("../../testdata/vocab/stock/more")
 // cards stands on the cards' columns, and one trunk runs from the
 // vehicle's block to the last candidate, the picker and each candidate
 // tied to it. On the fitment fixture, a rotor with more rows than the
-// page shows: "Show all" loads every row, in place where scripts run. axe
-// audits each state. CI (CI set) needs the browser; a machine without
-// one skips.
+// page shows: "Show all" loads every row, in place where scripts run; and
+// on a phone the Tab key goes down the mirrors' page as it is drawn, into
+// the rows with no number. axe audits each state. CI (CI set) needs the
+// browser; a machine without one skips.
 func TestStockStrip(t *testing.T) {
 	path := chromePath()
 	if path == "" {
@@ -45,6 +50,7 @@ func TestStockStrip(t *testing.T) {
 		first       = alternators + "&fitment.number=DEMO-1001"
 		second      = alternators + "&fitment.number=DEMO-1002"
 		rotor       = "/?from.vin=1D7RV1GT5AS123456&part.id=brake-rotor-front&fitment.number=BR-2001"
+		mirrors     = "/?from.vin=1D7RV1GT5AS123456&part.id=mirror"
 	)
 	for _, js := range []bool{false, true} {
 		name := map[bool]string{false: "js-off", true: "js-on"}[js]
@@ -145,6 +151,16 @@ func TestStockStrip(t *testing.T) {
 			} else if phone[3] <= 0 || phone[4] <= 0 || phone[5] <= 0 || math.Abs(phone[6]) > 1 || phone[7] > 0 || phone[8] != 0 {
 				t.Errorf("390 wide: the print holds %v px more than it shows, its location %v px in; scrolled %v, the location is %v px in, the page %v px wider than the window and scrolled %v; want the print to scroll sideways by itself, its location kept in sight", phone[3], phone[4], phone[5], phone[6], phone[7], phone[8])
 			}
+			// The names are drawn under the candidates there. Where
+			// scripts run they stand there in the document too, so every
+			// browser's Tab key and a screen reader meet them where they
+			// are drawn; without scripts the markup's order stands.
+			under := `!!(document.querySelector(".cands").compareDocumentPosition(document.getElementById("aka")) & Node.DOCUMENT_POSITION_FOLLOWING)`
+			if js {
+				tb.until("390 wide: the names after the candidates in the document", under)
+			} else if measure[bool](tb, under) {
+				t.Error("390 wide, no script: the names are after the candidates in the document; want the markup's order")
+			}
 			// The vehicle's line is carried from the names, which scroll,
 			// to the strip of parts, which does not: under the row it
 			// comes down where the row left it, wherever the row is.
@@ -166,7 +182,10 @@ func TestStockStrip(t *testing.T) {
 				}
 			}
 			tb.audit(name + ", 390 wide")
+			// Wide again, the names are beside the picker, and after it
+			// in the document.
 			tb.window(1280, 900)
+			tb.until("1280 wide: the names after the picker in the document", `document.querySelector("#fit > .ptwrap").nextElementSibling.id === "aka"`)
 
 			// Wide, each line into the vehicle's block is one piece: it
 			// starts where the stepped line under the cards ends, and ends
@@ -260,6 +279,55 @@ func TestStockStrip(t *testing.T) {
 				t.Errorf("Show all loaded another document, or left the focus on %s", eval[string](rb, `document.activeElement.outerHTML`))
 			}
 			rb.audit(name + ", BR-2001, every row")
+
+			// A phone, the mirrors and their shelf rows with no number.
+			// The Tab key goes down the page as it is drawn: the picker,
+			// the candidates, the names, then the rows with no number,
+			// whose print it stops on. The markup's order does that where
+			// scripts run; without them, a browser that knows reading-flow.
+			rb.window(390, 844)
+			rb.do(chromedp.Navigate(ramSrv.URL + mirrors))
+			rb.wait(`#stock-nonum`)
+			if js {
+				rb.wait("#vin-form.live")
+			}
+			want := "picker, candidates, names, no number"
+			if !js && !measure[bool](rb, `CSS.supports("reading-flow: grid-order")`) {
+				want = "picker, names, candidates, no number"
+			}
+			if got := strings.Join(slices.Compact(rb.tabStops("#pick-type", 40)), ", "); got != want {
+				t.Errorf("390 wide, the mirrors: the Tab key goes through %s; want %s", got, want)
+			}
 		})
 	}
+}
+
+// tabStops presses Tab from the element at sel, up to n times, until the
+// focus leaves the parts that fit, and returns where each stop was: the
+// picker, the candidates, the names or the rows with no number.
+func (tb *tab) tabStops(sel string, n int) []string {
+	tb.t.Helper()
+	tb.do(chromedp.Focus(chromedp.CSS(sel)))
+	var stops []string
+	for range n {
+		tb.call(func(ctx context.Context) error {
+			key := input.DispatchKeyEventParams{Type: input.DispatchKeyEventTypeKeyDown, Key: "Tab", Code: "Tab", WindowsVirtualKeyCode: 9}
+			if _, err := chromedp.Call(ctx, input.DispatchKeyEvent, key); err != nil {
+				return err
+			}
+			key.Type = input.DispatchKeyEventTypeKeyUp
+			_, err := chromedp.Call(ctx, input.DispatchKeyEvent, key)
+			return err
+		})
+		at := measure[string](tb, `(() => {
+			const on = document.activeElement;
+			for (const [name, sel] of [["names", "#aka"], ["no number", ".nonum"], ["candidates", ".cands"], ["picker", "#fit"]]) if (on.closest(sel)) return name;
+			return "";
+		})()`)
+		if at == "" {
+			break
+		}
+		stops = append(stops, at)
+	}
+	return stops
 }

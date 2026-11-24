@@ -261,7 +261,11 @@ the open one's rows are a print under its tag, in its list item
 edge and runs down the gutter beside the first column, the picker and
 every candidate tied to it by a stub; the stylesheet draws it a piece an
 item. The shelf rows with no number follow the candidates, under a
-strip of label tape of their own. Where there is nothing to list, the
+strip of label tape of their own, whose heading takes the focus when
+"Show all" has brought every row (the heading, since a child of this
+section that only a script can focus keeps the Tab key out of what it
+holds where the page's order is drawn: reading-flow, ui.css). Where
+there is nothing to list, the
 part types' place is a blank strip with a sentence, and the Vocabularies
 dialog's button or a link on. Every link here is the page's own, which
 plate.js swaps in place (swap). */}}
@@ -299,8 +303,8 @@ plate.js swaps in place (swap). */}}
 </div>
 {{end}}</li>
 {{end}}</ol>
-{{end}}{{with .NoNumber}}<div class="nonum" id="stock-nonum" tabindex="-1">
-<h3 class="nonum-tape">{{$.NoNumberName}}</h3>
+{{end}}{{with .NoNumber}}<div class="nonum">
+<h3 class="nonum-tape" id="stock-nonum" tabindex="-1">{{$.NoNumberName}}</h3>
 <div class="receipt">
 {{template "stock-kind" .}}
 </div>

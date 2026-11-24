@@ -23,6 +23,9 @@
 //   offered as chips in the examples' place;
 // - the part types a page pressed are kept too, and lead the picker's
 //   list, which the visitor can filter as they type (strip);
+// - on a phone the vehicle's names stand in the document where they are
+//   drawn, under the candidates, so the Tab key and a screen reader go
+//   down the page as it reads (seat);
 // - the plate's switch (page.html's modes), two links, swaps in the other
 //   mode's plate and answer in place, a history entry of its own; in
 //   part-number mode the page asks as the number is typed, as it does for
@@ -98,9 +101,7 @@
     for (const key of done(answer)) {
       if (!before.has(key)) answer.querySelectorAll('.g-' + key).forEach((el) => el.classList.add('fresh'));
     }
-    if (!before.has('aka') && answer.querySelector('#aka.done') && !old.querySelector('#aka.done')) {
-      answer.querySelector('#aka').classList.add('fresh');
-    }
+    seat();
     const dev = document.getElementById('dev');
     const next = doc.getElementById('dev');
     if (dev && next && !dev.querySelector(':popover-open')) dev.replaceWith(next);
@@ -476,6 +477,27 @@
     const by = Math.min(over, room);
     if (by > 0) window.scrollBy({ top: by, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   };
+  // The vehicle's names are written after the picker, where a wide page
+  // draws them. A phone draws them last on the trunk, under the
+  // candidates (ui.css, under 34rem), and only a browser that knows
+  // reading-flow follows a drawn order. So seat moves them to where they
+  // are drawn: before the rows with no number and "Next page" on a phone,
+  // after the picker on anything wider. What had the focus in them keeps
+  // it. Without this script the markup's order stands.
+  const phone = matchMedia('(max-width: 34rem)');
+  const seat = () => {
+    const fit = document.getElementById('fit');
+    const aka = document.getElementById('aka');
+    const picker = fit && fit.querySelector(':scope > .ptwrap');
+    if (!picker || !aka || aka.parentElement !== fit) return;
+    const next = phone.matches ? fit.querySelector(':scope > .nonum, :scope > .more-cands') : picker.nextElementSibling;
+    if (next === aka || (phone.matches && aka.nextElementSibling === next)) return;
+    const held = aka.contains(document.activeElement) ? document.activeElement : null;
+    fit.insertBefore(aka, next);
+    if (held) held.focus({ preventScroll: true });
+  };
+  phone.addEventListener('change', seat);
+
   // The picker's list opens downward, on the page (ui.css): where the
   // window ends before it does, the page scrolls to it, the picker still
   // in sight above it. The toggle event does not bubble.
@@ -775,3 +797,4 @@
     if (e.detail.target && e.detail.target.id === 'ui-main') init();
   });
 })();
+    seat();
