@@ -312,16 +312,50 @@ func TestPageStock(t *testing.T) {
 
 	// A yard that does not answer, a connector this build cannot reach:
 	// the strip says so, never a 0, and still opens, its column saying
-	// why.
-	down := stockPages(demoStockWith(t, []string{filepath.Join("..", "..", "testdata", "vocab", "stock", "live", "yard-stock.jsonl")}, "demo-shelf"), &asked)
+	// why. The print states no count for it, a dash read out as
+	// "unavailable", and no "None."; the shelf, which answered with no
+	// row, keeps its 0 and its "None.".
+	const unreached = "this build reads stock files only: a connector needs the nitrovin binary"
+	const noCount = ` · <span aria-hidden="true">—</span><span class="visually-hidden">unavailable</span></span> <span class="asof">unavailable: ` + unreached + `</span></p>` + "\n" + `</section>`
+	const zero = ` · 0</span> <span class="asof">as of 2026-11-12</span></p>` + "\n" + `<p class="stock-none">None.</p>`
+	live := func(name string) []string {
+		return []string{filepath.Join("..", "..", "testdata", "vocab", "stock", "live", name)}
+	}
+	down := stockPages(demoStockWith(t, live("yard-stock.jsonl"), "demo-shelf"), &asked)
 	s = fitSection(t, down, alternators)
 	want = []string{"DEMO-1001 link: Stock · 2 shelf · yard unavailable", "DEMO-1002 link: Stock · 0 shelf · yard unavailable", "DEMO-1003 link: Stock · 0 shelf · yard unavailable"}
 	if got := strips(s); !slices.Equal(got, want) {
 		t.Errorf("the alternators, a yard down: %q; want %q\n%s", got, want, s)
 	}
+	const partOpen = "/?from.fitment.type=alternator&from.fitment.number=DEMO-1002&fitment.number=DEMO-1002"
+	for _, tc := range []struct{ name, section string }{
+		{"DEMO-1002 open, a yard down", fitSection(t, down, alternators+"&fitment.number=DEMO-1002")},
+		{"DEMO-1002 in part-number mode, a yard down", partSection(t, down, partOpen)},
+	} {
+		s := tc.section
+		if !strings.Contains(s, `<span class="bar">On the shelf`+zero) || !strings.Contains(s, `<span class="bar">In the yard`+noCount) || strings.Count(s, `class="stock-none"`) != 1 {
+			t.Errorf("%s: want the shelf's 0 and \"None.\", and the yard's dash with neither\n%s", tc.name, s)
+		}
+	}
 	if got := openRows(fitSection(t, down, alternators+"&fitment.number=DEMO-1002")); len(got) != 3 ||
-		got[2][0] != "In the yard · 0 unavailable: this build reads stock files only: a connector needs the nitrovin binary" || len(got[2]) != 1 {
+		got[2][0] != "In the yard · — unavailable unavailable: "+unreached || len(got[2]) != 1 {
 		t.Errorf("DEMO-1002 open, a yard down: %q", got)
+	}
+	// The shelf down, a connector under the demo catalog: the same, and
+	// the yard's count stands.
+	liveShelf := filepath.Join(t.TempDir(), "live-shelf.jsonl")
+	if err := os.WriteFile(liveShelf, []byte(`{"format":1,"kind":"stock","name":"live-shelf","version":"2026.11-demo","source":"shelf","catalog":"demo-catalog","connector":{"postgres":{"relation":"stock.shelf_stock","dsn_env":"NITROVIN_STOCK_DSN"}}}`+"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	shelfDown := stockPages(demoStockWith(t, []string{liveShelf}, "demo-yard-stock"), &asked)
+	for _, tc := range []struct{ name, section string }{
+		{"DEMO-1002 open, a shelf down", fitSection(t, shelfDown, alternators+"&fitment.number=DEMO-1002")},
+		{"DEMO-1002 in part-number mode, a shelf down", partSection(t, shelfDown, partOpen)},
+	} {
+		s := tc.section
+		if !strings.Contains(s, `<span class="bar">On the shelf`+noCount) || !strings.Contains(s, `<span class="bar">In the yard · 2</span>`) || strings.Contains(s, `class="stock-none"`) {
+			t.Errorf("%s: want the shelf's dash, no \"None.\", and the yard's 2\n%s", tc.name, s)
+		}
 	}
 
 	// No stock loaded: every strip says so and opens the Vocabularies

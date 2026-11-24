@@ -193,7 +193,7 @@ func newStockStrip(c contract.FitCandidate, kinds []string) stockStrip {
 			continue
 		}
 		down := slices.ContainsFunc(l.Sources, func(s contract.StockSource) bool { return s.Status == contract.StockUnavailable })
-		if len(l.Sources) > 0 && !slices.ContainsFunc(l.Sources, func(s contract.StockSource) bool { return s.Status != contract.StockUnavailable }) {
+		if listDown(l) {
 			words = append(words, kind+" unavailable")
 			s.Counts = append(s.Counts, stockCount{N: "–", Kind: kind, Down: true})
 		} else {
@@ -208,6 +208,12 @@ func newStockStrip(c contract.FitCandidate, kinds []string) stockStrip {
 	}
 	s.Kind, s.Text = "counts", strings.Join(words, " · ")
 	return s
+}
+
+// listDown says l has sources and none of them answered: what it holds
+// is not known, which is not a 0.
+func listDown(l *contract.StockList) bool {
+	return len(l.Sources) > 0 && !slices.ContainsFunc(l.Sources, func(s contract.StockSource) bool { return s.Status != contract.StockUnavailable })
 }
 
 // candidateList is c's stock list of kind, nil when it was not asked for.
@@ -225,14 +231,17 @@ type stockPanel struct {
 	Columns []stockColumn
 }
 
-// stockColumn is one kind's print: its heading, with the count, and its
-// sources' as-of dates; its columns after the id and the location
+// stockColumn is one kind's print: its heading, before the count, and
+// its sources' as-of dates; its columns after the id and the location
 // (Heads); the rows shown; and, when there are more, how many of them
 // are shown (Shown of Total) and the page showing all, whose link leaves
 // the focus on the element Focus names. Level is its heading's: one
-// under what the print is of, a candidate's number or a part's.
+// under what the print is of, a candidate's number or a part's. Down
+// says none of its sources answered: the print states no count, a dash
+// in its place, and no "None.".
 type stockColumn struct {
 	ID, Heading, AsOf string
+	Down              bool
 	Level             int
 	// Heads are the fields the headers of its rows' sources declare,
 	// each once, in the headers' order and the rows': none where no
@@ -290,7 +299,7 @@ var stockHeadings = map[string]string{contract.StockShelf: "On the shelf", contr
 // fields each source's header declares, by source name, vin the VIN on
 // the plate, and more the page with every row, "" when all are shown.
 func newStockColumn(kind string, l *contract.StockList, declared map[string][]string, vin, more string) stockColumn {
-	col := stockColumn{ID: "stock-" + kind, Heading: stockHeadings[kind] + " · " + strconv.Itoa(l.Total), AsOf: sourcesText(l.Sources), Level: 4,
+	col := stockColumn{ID: "stock-" + kind, Heading: stockHeadings[kind], AsOf: sourcesText(l.Sources), Down: listDown(l), Level: 4,
 		Shown: len(l.Rows), Total: l.Total, Focus: "stock-region"}
 	for _, r := range l.Rows {
 		for _, name := range declared[r.Source] {

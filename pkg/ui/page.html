@@ -341,22 +341,24 @@ all" has brought every row. */}}
 {{- end}}
 
 {{/* stock-kind is one kind of stock on a print: its name and count on a
-reversed bar with its sources' dates, or why one did not answer, a
+reversed bar (a dash for the count where none of its sources answered,
+Down, read out as "unavailable") with its sources' dates, or why one did
+not answer, a
 heading one level under what the print is of (Level); its rows in
 columns: the id, the location, then a column for each field its sources'
 headers declare (Heads), under the field's name. What a row has beyond
 those is under it in fainter print, a name and its value each, wrapping;
 a list or an object there is its JSON, cut to one line. Under those are
 the row's notes: the retired number a shelf row is tagged with, and
-"This VIN" on the yard's vehicle the VIN on the plate is. A kind with no
-row says "None."; one with more rows than it shows says how many, with
-the page showing all. The table is in a group of its own (.pscroll),
+"This VIN" on the yard's vehicle the VIN on the plate is. A kind that
+answered with no row says "None."; one with more rows than it shows says
+how many, with the page showing all. The table is in a group of its own (.pscroll),
 named by the kind's heading, which scrolls sideways where the paper is
 narrower than the columns, a phone's, and takes focus, so a keyboard
 scrolls it. */}}
 {{define "stock-kind" -}}
 <section class="stock-kind" aria-labelledby="{{.ID}}-h">
-<p class="kind" id="{{.ID}}-h" role="heading" aria-level="{{.Level}}"><span class="bar">{{.Heading}}</span>{{with .AsOf}} <span class="asof">{{.}}</span>{{end}}</p>
+<p class="kind" id="{{.ID}}-h" role="heading" aria-level="{{.Level}}"><span class="bar">{{.Heading}} · {{if .Down}}<span aria-hidden="true">—</span><span class="visually-hidden">unavailable</span>{{else}}{{.Total}}{{end}}</span>{{with .AsOf}} <span class="asof">{{.}}</span>{{end}}</p>
 {{if .Rows}}<div class="pscroll" role="group" aria-labelledby="{{.ID}}-h" tabindex="0"><table class="print{{if not .Heads}} bare{{end}}">
 <thead><tr><th scope="col" class="id"><span class="visually-hidden">Id</span></th><th scope="col" class="loc"><span class="visually-hidden">Location</span></th>{{range .Heads}}<th scope="col">{{.}}</th>{{else}}<td></td>{{end}}</tr></thead>
 {{range .Rows}}<tbody>
@@ -364,7 +366,7 @@ scrolls it. */}}
 {{if .Rest}}<tr class="rest"><td colspan="{{$.Span}}">{{with .Folded}}<dl class="fold">{{range .}}<div{{if .JSON}} class="json"{{else if .Long}} class="long"{{end}}><dt>{{.Name}}</dt> <dd>{{if .Long}}<details><summary>{{.Value}}</summary></details>{{else}}{{.Value}}{{end}}</dd></div> {{end}}</dl>{{end}}{{with .Retired}}<p class="note">Tagged with a retired number, {{.}}</p>{{end}}{{if .ThisVIN}}<p class="note"><strong>This VIN</strong>: the vehicle being looked up</p>{{end}}</td></tr>
 {{end}}</tbody>
 {{end}}</table></div>
-{{else}}<p class="stock-none">None.</p>
+{{else if not .Down}}<p class="stock-none">None.</p>
 {{end}}{{with .More}}<p class="more-rows">The first {{$.Shown}} of {{$.Total}}. <a class="swap" href="{{.}}" data-focus="{{$.Focus}}">Show all</a></p>
 {{end}}</section>
 {{- end}}
