@@ -151,8 +151,10 @@ func (s *decoderServer) Post(path string, body []byte) (int, []byte, error) {
 	return p.Status, b, nil
 }
 
-// serve has s serve data as its file name, a catalog naming its vehicle
-// vocabulary and a stock file what it holds, as /v1/info does.
+// serve has s serve data as its file name, a catalog naming its spine,
+// its vehicle vocabulary and its filed-under vocabulary, and a stock
+// file what it holds, as /v1/info does. A Library sees of them what
+// /sw.js carries (openWith).
 func (s *decoderServer) serve(t *testing.T, name string, data []byte) {
 	t.Helper()
 	f, err := vocab.Read(name+".jsonl", bytes.NewReader(data))
@@ -161,7 +163,7 @@ func (s *decoderServer) serve(t *testing.T, name string, data []byte) {
 	}
 	v := contract.VocabularyFile{Name: name, Kind: string(f.Kind), Blake3: hex.EncodeToString(f.Hash[:])}
 	if c := f.Catalog(); c != nil {
-		v.Spine, v.Vehicles = c.Info().Spine, c.Info().Vehicles
+		v.Spine, v.Vehicles, v.FiledUnder = c.Info().Spine, c.Info().Vehicles, c.Info().FiledUnder
 	}
 	if f.Kind == vocab.KindStock {
 		v.StockCounts = &contract.StockCounts{Source: string(f.Holds)}
@@ -276,7 +278,7 @@ func TestLibraryCatalogFit(t *testing.T) {
 // openWith opens a Library on s, as open does on a fakeServer.
 func openWith(t *testing.T, s *decoderServer, d Disk) *Library {
 	t.Helper()
-	l, err := OpenLibrary(s.info, s, d)
+	l, err := OpenLibrary(browserConfig(t, s.info).Info, s, d)
 	if err != nil {
 		t.Fatal(err)
 	}

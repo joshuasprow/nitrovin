@@ -369,9 +369,30 @@ func server(t *testing.T, names ...string) *fakeServer {
 	return s
 }
 
+// browserConfig is what a server reporting info gives its worker: the
+// real /sw.js rendered, its config cut out and read back
+// (ReadWorkerConfig), as cmd/nitrovin-sw's entry point reads it. A test's
+// Library opens on its Info, so a test sees of the server's files only
+// what a worker does.
+func browserConfig(t *testing.T, info contract.Info) BrowserConfig {
+	t.Helper()
+	h := New(backend{info: info}, log.New(io.Discard, "", 0)).WithWorker(Worker{Module: []byte("\x00asm"), Exec: []byte("// go")})
+	status, _, body := response(t, h, "GET", swPath, nil)
+	_, rest, found := strings.Cut(body, "self.nitrovinConfig = ")
+	config, _, ended := strings.Cut(rest, ";\n")
+	if status != http.StatusOK || !found || !ended {
+		t.Fatalf("/sw.js: %d\n%s", status, body)
+	}
+	c, err := ReadWorkerConfig([]byte(config))
+	if err != nil {
+		t.Fatalf("reading the worker's config: %v\n%s", err, config)
+	}
+	return c
+}
+
 func open(t *testing.T, s *fakeServer, d Disk) *Library {
 	t.Helper()
-	l, err := OpenLibrary(s.info, s, d)
+	l, err := OpenLibrary(browserConfig(t, s.info).Info, s, d)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -761,28 +782,39 @@ func TestServiceWorker(t *testing.T) {
 			t.Errorf("/sw.js lacks %s:\n%s", want, body)
 		}
 	}
+	// With no catalog and no stock on the server, the config is these
+	// bytes: what it says of a catalog costs such a server nothing.
+	if want := `self.nitrovinConfig = {"assets":"` + testAssets + `","release":"` + Release(testInfo) + `","decoder_version":"` + testInfo.DecoderVersion + `","data_month":"2026_10","artifact_hash":"blake3:00ff",` +
+		`"files":[{"name":"fleet","kind":"","version":"","blake3":"ab12","url":"` + testAssets + `/vocab/ab12/fleet.jsonl"},{"name":"broken","kind":"","version":"","blake3":"cd34","url":"` + testAssets + `/vocab/cd34/broken.jsonl"}],` +
+		`"data_release":"https://github.com/joshuasprow/nitrovin-data/releases?q=202610"};` + "\n"; !strings.Contains(body, want) {
+		t.Errorf("/sw.js with no catalog:\n%s\nwant the config\n%s", body, want)
+	}
 	// A server's catalog stays on the server: a licensed catalog is never
-	// published, and the worker learns only that there is one, so the
-	// browser compiles none (ADR 0023). Its stock is never published
-	// either: the worker learns each source's name and kind, which the
-	// page's fit asks the server for (#323).
+	// published, and the worker learns that there is one, so the browser
+	// compiles none (ADR 0023), and what the pages read of it: its spine,
+	// its vehicle vocabulary and its filed-under vocabulary (#393). Its
+	// stock is never published either: the worker learns each source's
+	// name and kind, which the page's fit asks the server for (#323).
 	withCatalog := testInfo
-	catalog := contract.VocabularyFile{Name: "parts-catalog", Kind: "catalog", Version: "1", Blake3: "cd34"}
+	catalog := contract.VocabularyFile{Name: "parts-catalog", Kind: "catalog", Version: "1", Blake3: "cd34", Spine: "part-types", Vehicles: "fleet", FiledUnder: "part-codes"}
 	yard := contract.VocabularyFile{Name: "yard-stock", Kind: "stock", Version: "2", Blake3: "ef56", StockCounts: &contract.StockCounts{Source: "yard", Rows: new(4)}}
 	withCatalog.Vocabularies = append(slices.Clone(testInfo.Vocabularies), catalog, yard)
 	hc := New(backend{info: withCatalog}, log.New(io.Discard, "", 0)).WithWorker(Worker{Module: []byte("\x00asm"), Exec: []byte("// go")})
 	_, _, body = response(t, hc, "GET", "/sw.js", nil)
-	if !strings.Contains(body, `"name":"fleet"`) || !strings.Contains(body, `"catalog":{"name":"parts-catalog","kind":"catalog","version":"1","blake3":"cd34"}`) || strings.Contains(body, "parts-catalog.jsonl") ||
-		!strings.Contains(body, `"stock":[{"name":"yard-stock","kind":"stock","version":"2","blake3":"ef56","holds":"yard"}]`) || strings.Contains(body, "yard-stock.jsonl") {
+	if !strings.Contains(body, `"name":"fleet"`) || strings.Contains(body, "parts-catalog.jsonl") || strings.Contains(body, "yard-stock.jsonl") {
 		t.Errorf("/sw.js with a server's catalog and stock:\n%s", body)
 	}
-	config, _, _ := strings.Cut(strings.TrimPrefix(body[strings.Index(body, "self.nitrovinConfig = "):], "self.nitrovinConfig = "), ";\n")
-	if c, err := ReadWorkerConfig([]byte(config)); err != nil || !slices.ContainsFunc(c.Info.Vocabularies, func(v contract.VocabularyFile) bool {
-		return v.Name == catalog.Name && v.Kind == catalog.Kind && v.Version == catalog.Version && v.Blake3 == catalog.Blake3
-	}) || !slices.ContainsFunc(c.Info.Vocabularies, func(v contract.VocabularyFile) bool {
-		return v.Name == yard.Name && v.Kind == yard.Kind && v.StockCounts != nil && v.Source == "yard"
+	read := browserConfig(t, withCatalog).Info.Vocabularies
+	if i := slices.IndexFunc(read, func(v contract.VocabularyFile) bool { return v.Kind == catalog.Kind }); i < 0 {
+		t.Errorf("the worker's config with a server's catalog names none: %+v", read)
+	} else if got := read[i]; got.Name != catalog.Name || got.Version != catalog.Version || got.Blake3 != catalog.Blake3 ||
+		got.Spine != catalog.Spine || got.Vehicles != catalog.Vehicles || got.FiledUnder != catalog.FiledUnder {
+		t.Errorf("the server's catalog, read back: %+v; want %+v", got, catalog)
+	}
+	if !slices.ContainsFunc(read, func(v contract.VocabularyFile) bool {
+		return v.Name == yard.Name && v.Kind == yard.Kind && v.Version == yard.Version && v.Blake3 == yard.Blake3 && v.StockCounts != nil && v.Source == "yard"
 	}) {
-		t.Errorf("the worker's config with a server's catalog and stock: %v, %+v", err, c.Info.Vocabularies)
+		t.Errorf("the worker's config with a server's stock: %+v", read)
 	}
 	if status, _, body := response(t, hc, "GET", FilePath(withCatalog, catalog), nil); status != 404 || !strings.Contains(body, "publishes no catalog") {
 		t.Errorf("the server's catalog's URL: %d\n%s", status, body)

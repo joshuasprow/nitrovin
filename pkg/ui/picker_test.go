@@ -200,3 +200,47 @@ func TestPartTypePicker(t *testing.T) {
 		t.Errorf("filed under part-codes, the dialog does not say so\n%s", s)
 	}
 }
+
+// TestLibraryPickerHeadings: with the server holding the catalog, the
+// browser's picker lists the part types under the headings the server's
+// page does (#393): those of the catalog's filed-under vocabulary, though
+// another part vocabulary on its spine was loaded first; in VIN mode and
+// in part-number mode.
+func TestLibraryPickerHeadings(t *testing.T) {
+	d := embedded(t)
+	paths := []string{fitmentPath("part-types"), partVocabulary(t, "first-groups", "part-types", "brake-rotor-front", "engine", "mirror")}
+	for _, n := range []string{"part-codes", "catalog-models", "catalog"} {
+		paths = append(paths, fitmentPath(n))
+	}
+	files, err := vocab.Open(paths...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := newDecoderServer(t, d)
+	for i, f := range files {
+		s.serve(t, f.Name, mustRead(t, paths[i]))
+	}
+	if s.fits, err = nitrovin.NewTranslator(d, files...); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(s.fits.Close)
+	srv := New(served{s.fits}, log.New(io.Discard, "", 0))
+	browser := NewInBrowser(openWith(t, s, newDisk()), BrowserConfig{}, log.New(io.Discard, "", 0))
+
+	groups := []string{"ENG: Engine", "FRT: Brake Rotor, Front", "MIR: Door Mirror", "ROT: Brake Rotor, Front"}
+	for _, c := range []struct {
+		target  string
+		section func(*testing.T, *Handler, string) string
+	}{
+		{"/?from.vin=1D7RV1GT5AS123456", fitSection},
+		{"/?from.fitment.number=", partSection},
+	} {
+		want, got := dialogOf(c.section(t, srv, c.target)), dialogOf(c.section(t, browser, c.target))
+		if c.target == "/?from.vin=1D7RV1GT5AS123456" && !slices.Equal(want, groups) {
+			t.Errorf("%s on the server, the dialog:\n%s\nwant\n%s", c.target, strings.Join(want, "\n"), strings.Join(groups, "\n"))
+		}
+		if len(want) == 0 || !slices.Equal(got, want) {
+			t.Errorf("%s in the browser, the dialog:\n%s\nwant the server's\n%s", c.target, strings.Join(got, "\n"), strings.Join(want, "\n"))
+		}
+	}
+}
