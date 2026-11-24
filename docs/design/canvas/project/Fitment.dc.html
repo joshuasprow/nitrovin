@@ -33,6 +33,7 @@ a:is(:focus-visible,.is-fv), button:is(:focus-visible,.is-fv), summary:is(:focus
 .card, .ltag, .stock-kind, .ptpick{--ring: var(--ring-pale)}
 .ptwrap, .problems{--ring: var(--ring-tape)}
 dialog.popover, .note.popover{--ring: var(--link)}
+.ptdialog:is(:focus-visible,.is-fv){outline: 3px solid var(--ring); outline-offset: -3px}
 .hint{color: var(--muted); font-weight: 400}
 .visually-hidden, .plbl{position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap}
 button{--key: var(--metal); font: var(--type-key); letter-spacing: var(--track-key); text-transform: uppercase; padding: .45rem .9rem; cursor: pointer; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8); background: var(--key); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised)}
@@ -233,7 +234,7 @@ thead th{font: var(--type-key); letter-spacing: var(--track-key); text-transform
 .vn{display: inline-block; max-width: 100%; margin-right: var(--s3)}
 .vnames .voc{white-space: nowrap; color: var(--manila-muted)}
 .vnames .nw{display: inline; border-bottom-width: 2px}
-button.linkish{border: 0; background: none; box-shadow: none; padding: 0 .25rem; color: var(--link); text-shadow: none; text-decoration: underline; text-transform: none; letter-spacing: 0; font: 13px system-ui, sans-serif}
+button.linkish{min-height: 24px; margin-block: -4px; border: 0; background: none; box-shadow: none; padding: 0 .25rem; color: var(--link); text-shadow: none; text-decoration: underline; text-transform: none; letter-spacing: 0; font: 13px system-ui, sans-serif}
 button.linkish:is(:active,.is-active){transform: none; box-shadow: none}
 #update-now:not(:disabled){animation: lamp 1.6s ease-in-out infinite alternate}}
 :is(.vp-tab,.vp-phone){
