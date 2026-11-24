@@ -654,7 +654,7 @@ table.sum .skip { color: var(--muted); }
    vehicles it fits are the same rows (part-number mode, below). */
 .cands { list-style: none; margin: 0 var(--end) 0 var(--rail); padding: 0; }
 .cand { position: relative; margin-top: var(--s2); }
-.line { z-index: 1; display: grid; grid-template-columns: var(--lead) var(--num) minmax(0, 1fr) var(--strip); min-height: var(--row); overflow-wrap: anywhere; }
+.line { --sc: var(--strip); z-index: 1; display: grid; grid-template-columns: var(--lead) var(--num) minmax(0, 1fr) var(--sc); min-height: var(--row); overflow-wrap: anywhere; }
 .numtape { grid-column: 2; display: flex; align-items: center; justify-content: space-between; gap: var(--s2); min-width: 0; margin: 0; padding: var(--s1) var(--inset); color: var(--on-tape); text-shadow: var(--tape-emboss);
   background: var(--tape); border: 0; border-top: 1px solid var(--tape-lit); border-bottom: 3px solid var(--tape-edge); }
 .numtape .num { min-width: 0; }
@@ -703,6 +703,15 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
    last row's; on a phone, the names' row's. It is drawn a piece an item,
    each piece from the gap above its item to its foot, the last to its
    stub, so the pieces meet and nothing is measured or anchored: every
+/* A kind none of whose sources answered says so on a line under its
+   name, and its strip's column (--sc) is as wide as that asks: the one
+   state in which a strip is wider than its module. Its cell is a line
+   taller than the others, so the cells stand on their counts' line,
+   together in the strip's middle. */
+.stk .sc .down { display: block; }
+.line:has(.sc .down) { --sc: minmax(var(--strip), max-content); }
+.stk:has(.down) { flex-wrap: wrap; align-content: center; align-items: baseline; }
+.stk:has(.down) svg { align-self: center; }
    browser draws it. The first piece is the picker's tape's own, from
    the block down to its stub. A piece is lit and shaded along its sides
    alone, so no seam shows where two meet; a stub, along its top and
@@ -913,7 +922,8 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
 .part > :is(.blank, .error) { margin-top: var(--s4); }
 .phead .rows { margin-left: calc(var(--rail) + var(--lead)); }
 .phead .rows::before { left: calc(8px - var(--rail) - var(--lead)); top: 0; bottom: calc(-1 * var(--s2)); }
-.ptag { --eye-x: calc(var(--rail) + 14px); grid-template-columns: calc(var(--rail) + var(--lead)) var(--num) minmax(0, 1fr) calc(var(--strip) + var(--end)); }
+.ptag { --sc: calc(var(--strip) + var(--end)); --eye-x: calc(var(--rail) + 14px); grid-template-columns: calc(var(--rail) + var(--lead)) var(--num) minmax(0, 1fr) var(--sc); }
+.ptag:has(.sc .down) { --sc: minmax(calc(var(--strip) + var(--end)), max-content); }
 .vehs > .cand:first-child::after { top: calc(-1 * var(--s2)); }
 .veh .line { grid-template-columns: var(--lead) var(--num) minmax(0, 1fr); }
 .vnames { margin: 0; }
@@ -1115,9 +1125,9 @@ button.linkish:active { transform: none; box-shadow: none; }
   .fit:has(> .ptwrap) > .aka.done::after { left: calc(13px - var(--rail)); top: calc(var(--s2) + var(--row) / 2 - 2.5px); width: calc(var(--rail) - 13px); height: 5px; box-shadow: 0 -1px 0 rgb(255 255 255 / .4), 0 2px 1px rgb(8 7 15 / .3); }
   .fitstrip ~ .aka .name::after { left: calc(-1 * var(--s2)); top: calc(var(--eye) - 1px); width: calc(var(--s2) + 11px); height: 2px; }
   .fitstrip ~ .aka .name:first-child::after { left: 0; top: calc(var(--eye) - 2.5px); width: 11px; height: 5px; background: var(--trunk); border-radius: 0 2.5px 2.5px 0; box-shadow: 0 -1px 0 rgb(255 255 255 / .4), 0 2px 1px rgb(8 7 15 / .3); }
-  .line { grid-template-columns: var(--lead) minmax(0, 1fr) var(--strip); grid-template-rows: minmax(var(--row), auto); }
+  .line { grid-template-columns: var(--lead) minmax(0, 1fr) var(--sc); grid-template-rows: minmax(var(--row), auto); }
   .veh .line { grid-template-columns: var(--lead) minmax(0, 1fr); }
-  .ptag { grid-template-columns: calc(var(--rail) + var(--lead)) minmax(0, 1fr) var(--strip); }
+  .ptag { grid-template-columns: calc(var(--rail) + var(--lead)) minmax(0, 1fr) var(--sc); }
   .ink { grid-column: 2 / -1; grid-row: 2; padding-inline: var(--inset); }
   .veh .numtape { grid-column: 2 / -1; }
   .stk { grid-column: 3; }

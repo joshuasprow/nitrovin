@@ -319,10 +319,11 @@ plate.js swaps in place (swap). */}}
 rows open, its chevron down, or, open, pushed in, its chevron up, a link
 that closes them; a kind of stock a cell, its count large over its name,
 the whole said once for a screen reader. With stock loaded and none for
+and under the name "unavailable" where none of its sources answered,
 the candidate it is muted words beside a dashed rule, and presses
 nothing; with none loaded it opens the Vocabularies dialog. */}}
 {{define "stock-strip" -}}
-{{if eq .Kind "counts"}}<a class="stk swap" id="{{.ID}}" href="{{.Href}}" aria-expanded="{{.Open}}"{{if .Open}} aria-controls="stock-rows"{{end}}><span class="visually-hidden">{{.Text}}, {{.Number}}</span>{{range .Counts}}<span class="sc" aria-hidden="true"><b>{{.N}}</b><small>{{.Kind}}{{if .Down}} unavailable{{end}}</small></span>{{end}}<svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="{{if .Open}}M2 10l5-5 5 5{{else}}M2 4l5 5 5-5{{end}}"/></svg></a>
+{{if eq .Kind "counts"}}<a class="stk swap" id="{{.ID}}" href="{{.Href}}" aria-expanded="{{.Open}}"{{if .Open}} aria-controls="stock-rows"{{end}}><span class="visually-hidden">{{.Text}}, {{.Number}}</span>{{range .Counts}}<span class="sc" aria-hidden="true"><b>{{.N}}</b><small>{{.Kind}}{{if .Down}} <span class="down">unavailable</span>{{end}}</small></span>{{end}}<svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="{{if .Open}}M2 10l5-5 5 5{{else}}M2 4l5 5 5-5{{end}}"/></svg></a>
 {{- else if eq .Kind "none"}}<p class="stk none">{{.Text}}</p>
 {{- else}}<button type="button" class="stk" popovertarget="vocabularies"><span>{{.Text}}</span> <u>Add stock</u></button>
 {{- end}}
