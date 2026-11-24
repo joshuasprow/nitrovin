@@ -352,7 +352,10 @@ form.filter .field { display: grid; gap: .25rem; }
 .card dl { gap: .2rem; }
 .card dt { font-size: 11px; line-height: 1.2; color: var(--manila-muted); text-transform: uppercase; letter-spacing: .04em; }
 .card dd { margin: 0; font-weight: 600; }
-.card .big { margin: 0; font: 700 1.5rem/1.2 var(--cell-font); }
+/* A card's one large value, the serial or the model year, is the
+   display role, a part number's size: nothing under the plate is
+   larger. It is ink on manila, so it is not tracked. */
+.card .big { margin: 0; font: var(--type-display); }
 .card.g-check .big { font: 900 1rem/1.25 var(--label-font); }
 .card.bad { --cm: var(--manila-bad); }
 .card.bad .big { color: var(--manila-bad); }
@@ -412,8 +415,8 @@ table.sum .skip { color: var(--muted); }
      head     what a strip of tape is headed with, and on a print the
               location, which is walked to: 16px.
      display  what was asked for and how many there are: a part's number
-              and its stock counts, 20px. Nothing under the cards is
-              larger.
+              and its stock counts, 20px. Nothing under the plate is
+              larger: a card's one large value takes it too.
      key      what is struck or stamped in the label face: a key's word
               (button, above) and a mark's stamp, set solid so that its
               box is a value's line high.

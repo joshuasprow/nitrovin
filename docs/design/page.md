@@ -221,7 +221,7 @@ would turn a file's undeclared fields from one line into two.
 | Row value | `--type-value`, `--type-value-b` | What a row says: a print's cells and its columns' names, a note, a name's years. Bold (`-b`) where it leads its row or sits on tape: option text, a name, the block's details, a row's years | 13 px | 400, and 700 | 18 px | None | As written |
 | Fine print | `--type-fine` | What a stock row carries beyond its declared fields, folded under it | 12 px | 400 | 18 px | None | As written |
 | Head | `--type-head` | What a strip of tape is headed with: the block's make, model and year, a vehicle's name on its row, the pressed part type, the tape over the rows with no number. On a print, the location, which is walked to | 16 px | 900 | 18 px | `--track-tape`, .04 em, on tape; none in ink | As written |
-| Display | `--type-display` | What was asked for and how many there are: a part's number and its stock counts | 20 px | 900 | 24 px | `--track-tape` | As written |
+| Display | `--type-display` | What was asked for and how many there are: a part's number and its stock counts. On a card, its one large value: the serial, the model year | 20 px | 900 | 24 px | `--track-tape` on tape; none in ink | As written |
 | Key | `--type-key` | What is struck or stamped: a key's word, a table's header, a mark's stamp | 11 px | 900 | The face's own; 12 px in a stamp | `--track-key`, .08 em | Upper |
 
 All but the key are the monospace, and the key is the label face.
@@ -229,13 +229,18 @@ All but the key are the monospace, and the key is the label face.
 - **The hierarchy is the sizes**, largest first: a part's number and its
   stock counts; then a print's location and the block's words; then a
   row's values; then the labels. Each step is about a fifth larger than
-  the one under it: 11, 13, 16 and 20 px. Nothing under the cards is
-  larger than a part's number. The fine print is no step of it: colour
+  the one under it: 11, 13, 16 and 20 px. Nothing under the plate is
+  larger than a part's number: a card's large value, the serial or the
+  model year, is its size. The fine print is no step of it: colour
   and its indent set it under its row.
+  *Ruled, 2026-11-24: a card's large value dropped from 24 px to the
+  display role, so that nothing under the plate is larger than a part's
+  number.*
 - **Tracking and weight follow the ground.** A head and a display are
   raised white on label tape or struck in the second tape, where letters
-  fill in, so they are tracked. The location is a head in ink, and is
-  not. A value is never tracked, and on tape it is always bold.
+  fill in, so they are tracked. The location is a head in ink and a
+  card's large value a display in ink, and neither is. A value is never
+  tracked, and on tape it is always bold.
 - **A stamp holds data in the data's face.** "Replaces" is stamped in the
   label face; the number after it is a bold row value, in its own case.
 - **Sizes are in rem**, so a visitor's font setting scales them, and
@@ -248,12 +253,14 @@ All but the key are the monospace, and the key is the label face.
   bold value on a row's tape is 12 px. They wait for the pass on those
   widths (rule 5).
 - **Off the scale, and in px:** the plate, whose characters follow its
-  width through container units; the six cards, whose large values are
-  24 px, larger than the display, and whose rows are the body face; the
-  header, the foot and the dialogs. They take a role's token only where
-  they already had its values: a key (`button`), a table's header, the
-  foot's release and a count in the picker's list. A card's "Show the
-  sum" takes the micro label, which raised it from 10 px.
+  width through container units; the six cards, whose rows are the body
+  face and whose check digit's verdict is the label face at 16 px; the
+  header, the foot and the dialogs. They take a role's token where they
+  already had its values: a key (`button`), a table's header, the
+  foot's release and a count in the picker's list. Two places on a card
+  take one by decision: its large value takes the display (the ruling
+  above), and its "Show the sum" takes the micro label, which raised it
+  from 10 px.
 
 Everything under the six cards is set on one module and a few lengths, so
 that its parts line up down the page.
@@ -647,7 +654,7 @@ that it is narrow.
 
 - The band reads the group's title and its positions ("Vehicle 4–8").
 - The body is either label and value rows, or one large value in the monospace
-  face. A row is its label, small, with its value under it, both at the
+  face, the display role (Tokens, above). A row is its label, small, with its value under it, both at the
   card's leading edge, so every row reads alike whatever its value's length. The check digit's card opens its arithmetic in a dialog.
   The year's card shows the year, then the codes around its own as one run of
   small text with its own in bold.
