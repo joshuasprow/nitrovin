@@ -196,7 +196,7 @@ func TestPagePartMode(t *testing.T) {
 	s = partSection(t, h, alternator+"DEMO-0901")
 	for _, want := range []string{
 		`<h2 class="numtape" id="part-h"><span class="num">DEMO-1001</span> <span class="of"><span class="ptn">Alternator</span></span></h2>`,
-		`<span class="mk replaces">Replaces DEMO-0901</span>`,
+		`<span class="mk replaces">Replaces <b>DEMO-0901</b></span>`,
 		`<span class="nt"><span class="k">Note</span> demo: 200 A</span>`,
 		`<span class="nt"><span class="k">Retirement</span> demo: DEMO-1 → DEMO-2</span>`,
 	} {

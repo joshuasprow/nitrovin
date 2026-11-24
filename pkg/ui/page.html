@@ -90,7 +90,7 @@ part type on the plate, which plate.js keeps as a recent part type. */}}
 <div class="ltag line ptag">
 <h2 class="numtape" id="part-h"><span class="num">{{.Number}}</span> <span class="of"><span class="ptn">{{.TypeName}}</span>{{with .Side}} <span class="side">{{.}}</span>{{end}}</span></h2>
 <div class="ink"><p class="opts"><span class="k">Fits</span> {{.Fits}}</p>
-{{if or .Replaces .Note .RetiredNote}}<p class="says">{{with .Replaces}}<span class="mk replaces">Replaces {{.}}</span> {{end}}{{with .Note}}<span class="nt"><span class="k">Note</span> {{.}}</span> {{end}}{{with .RetiredNote}}<span class="nt"><span class="k">Retirement</span> {{.}}</span>{{end}}</p>
+{{if or .Replaces .Note .RetiredNote}}<p class="says">{{with .Replaces}}<span class="mk replaces">Replaces <b>{{.}}</b></span> {{end}}{{with .Note}}<span class="nt"><span class="k">Note</span> {{.}}</span> {{end}}{{with .RetiredNote}}<span class="nt"><span class="k">Retirement</span> {{.}}</span>{{end}}</p>
 {{end}}</div>
 {{template "stock-strip" .Strip}}
 </div>
