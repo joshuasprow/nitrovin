@@ -146,6 +146,10 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
 .card, .ltag, .stock-kind, .ptpick { --ring: var(--ring-pale); }
 .ptwrap, .problems { --ring: var(--ring-tape); }
 dialog[popover], .note[popover] { --ring: var(--link); }
+/* Under a finger the part types list opens with the focus on itself
+   (plate.js): from a keyboard there its ring is the page's, drawn inside
+   its edge, on its own panel. */
+.ptdialog:focus-visible { outline: 3px solid var(--ring); outline-offset: -3px; }
 code, pre, .mono { font-family: var(--cell-font); }
 .hint { color: var(--muted); font-weight: 400; }
 .visually-hidden, .plbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

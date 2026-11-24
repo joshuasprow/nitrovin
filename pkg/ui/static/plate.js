@@ -504,6 +504,18 @@
   document.addEventListener('toggle', (e) => {
     if (e.newState === 'open' && e.target.matches && e.target.matches('#fit .ptdialog')) reveal(e.target, document.querySelector('#fit .ptwrap'));
   }, true);
+  // Under a finger the list and the dialog open with the focus on
+  // themselves, not in the filter, so a phone raises no keyboard over
+  // them; a tap on the filter focuses it. A dialog with autofocus takes
+  // the focus its first field would. Asked as each opens: a pointer can
+  // be plugged in.
+  const finger = matchMedia('(pointer: coarse)');
+  document.addEventListener('beforetoggle', (e) => {
+    if (e.newState !== 'open' || !e.target.matches || !e.target.matches('.ptdialog')) return;
+    e.target.toggleAttribute('autofocus', finger.matches);
+    if (finger.matches) e.target.tabIndex = -1;
+    else e.target.removeAttribute('tabindex');
+  }, true);
 
   document.addEventListener('click', (e) => {
     const a = e.target.closest && e.target.closest('#answer a.swap');
@@ -752,8 +764,9 @@
     chips();
     strip(document.getElementById('answer'));
     // The button's section is gone with what it listed: the focus stays
-    // in the dialog, on its filter.
-    const find = e.target.closest('.ptdialog')?.querySelector('.ptfind');
+    // in the dialog, on its filter, or under a finger on the dialog.
+    const dialog = e.target.closest('.ptdialog');
+    const find = dialog && (finger.matches ? dialog : dialog.querySelector('.ptfind'));
     if (find) find.focus();
   });
 
