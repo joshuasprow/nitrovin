@@ -77,13 +77,17 @@ type VocabularyFile struct {
 	*StockCounts
 }
 
-// StockCounts describe a stock source (ADR 0019): what it holds and its
-// catalog when a shelf; for a stock file, its time and how many rows it
-// has; for a connector (ADR 0020), how it is read, its relation and its
-// status as its latest connection found it. Never a DSN, host or user.
+// StockCounts describe a stock source (ADR 0019): what it holds, its
+// catalog when a shelf, and the order its header declares of its rows'
+// fields; for a stock file, its time and how many rows it has; for a
+// connector (ADR 0020), how it is read, its relation and its status as
+// its latest connection found it. Never a DSN, host or user.
 type StockCounts struct {
 	Source  string `json:"source"`
 	Catalog string `json:"catalog,omitempty"`
+	// Fields are the names its header declares, in the order every
+	// row's fields are answered in; absent when it declares none.
+	Fields []string `json:"fields,omitempty"`
 	// AsOf and Rows are a stock file's, absent for a connector, whose
 	// rows and their times are read at request time.
 	AsOf string `json:"as_of,omitempty"`

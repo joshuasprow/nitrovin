@@ -40,10 +40,10 @@ type FitRequest struct {
 	// every row. It takes Stock.
 	Location []string
 	// StockFields keeps, of every stock row's fields in the answer, only
-	// those named (ADR 0019): nil keeps every field, and a non-nil empty
-	// list none. A name no row has is no error. It cuts only fields: a
-	// row's identity, how it matched and what it names stay. It takes
-	// Stock.
+	// those named (ADR 0019), in the order the row has them: nil keeps
+	// every field, and a non-nil empty list none. A name no row has is no
+	// error. It cuts only fields: a row's identity, how it matched and
+	// what it names stay. It takes Stock.
 	StockFields []string
 	// Limit is the page size, 1 to MaxListLimit; 0 means DefaultListLimit.
 	Limit int

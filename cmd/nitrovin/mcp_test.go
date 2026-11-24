@@ -149,6 +149,8 @@ type mcpCall struct {
 	// conditions is, for one of fitConditions, what the answer's
 	// applications must read.
 	conditions []string
+	// holds is what an answer's structuredContent must hold, as written.
+	holds []string
 }
 
 // knownTool reports whether name is one of mcp-tools.json's tools.
@@ -416,14 +418,15 @@ func translating(t *testing.T, d *nitrovin.Decoder, files ...*vocab.File) loaded
 // fitConditions with what each application confirmed;
 // translate answers a VIN and an entry, list gives the catalog and pages a
 // listing end to end, each as the Translator answers in-process; a request
-// the loaded files refuse is an isError Problem.
+// the loaded files refuse is an isError Problem. A stock source's declared
+// field order (#390) is in its fits' bytes.
 func TestMCPVocabSession(t *testing.T) {
 	fixtureData(t)
 	dec, err := nitrovin.Embedded()
 	if err != nil {
 		t.Fatal(err)
 	}
-	files, err := vocab.Open(fixture, fitmentFixture, stockFixture)
+	files, err := vocab.Open(fixture, fitmentFixture, stockFixture, orderStockFixture)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -457,6 +460,8 @@ func TestMCPVocabSession(t *testing.T) {
 		{tool: "fit", args: `{"from":"` + ram2010 + `","related":true,"now":"` + now + `"}`},
 		{tool: "fit", args: `{"from":"` + ram2010 + `","part":{"vocabulary":"part-codes","entry":{"code":"ROT"}},"stock":["shelf","yard"],"now":"` + now + `"}`},
 		{tool: "fit", args: `{"from":{"fitment":{"type":"brake-rotor-front","number":"BR-1999"}},"stock":["shelf","yard"],"location":["north","east"],"limit":1,"now":"` + now + `"}`},
+		{tool: "fit", args: strings.TrimSuffix(orderFit, "}") + `,"now":"` + now + `"}`, holds: orderedFields},
+		{tool: "fit", args: strings.TrimSuffix(orderCut, "}") + `,"now":"` + now + `"}`, holds: orderedCut},
 		{tool: "list", args: `{"of":"parts-catalog","where":{"type":"mirror"}}`},
 		{tool: "stocked", args: `{}`},
 		{tool: "stocked", args: `{"location":["north"],"limit":1}`},
@@ -466,7 +471,7 @@ func TestMCPVocabSession(t *testing.T) {
 	for _, c := range fitConditions {
 		calls = append(calls, mcpCall{tool: "fit", args: strings.TrimSuffix(c.item, "}") + `,"now":"` + now + `"}`, conditions: c.want})
 	}
-	runSessions(t, d, "", fixture+string(os.PathListSeparator)+fitmentFixture+string(os.PathListSeparator)+stockFixture, calls)
+	runSessions(t, d, "", strings.Join([]string{fixture, fitmentFixture, stockFixture, orderStockFixture}, string(os.PathListSeparator)), calls)
 }
 
 // runSessions runs the scripted session twice with a 2026-07-28 client and
@@ -637,6 +642,9 @@ func checkCall(t *testing.T, d loaded, c mcpCall, resp message, outputs map[stri
 		}
 		if c.conditions != nil {
 			checkConditions(t, "fit "+c.args, res.StructuredContent, c.conditions)
+		}
+		if c.holds != nil {
+			holds(t, "fit "+c.args, res.StructuredContent, c.holds)
 		}
 		return
 	}

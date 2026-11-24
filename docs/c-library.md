@@ -113,10 +113,12 @@ answers `{"fit": {"status": "found", "candidates": […], …}}`; on a handle
 without a catalog, `{"fit": {"status": "no-catalog", …}}`. Stock files load
 the same way (the synthetic shelf and yard are `testdata/vocab/stock`): a
 fit with `"stock": ["shelf", "yard"]` gives each candidate its `shelf` and
-`yard` lists. The library reads stock files only, never a database: a
-connector's file ([Connectors](vocabularies.md#connectors)) loads, and
-answers each of its lists `unavailable`, `this build reads stock files
-only: a connector needs the nitrovin binary`.
+`yard` lists, each row's `fields` in the order its source's header
+declares ([Stock](vocabularies.md#stock)): a host that reads a reply
+into an ordered map keeps it. The library reads stock files only, never a
+database: a connector's file ([Connectors](vocabularies.md#connectors))
+loads, and answers each of its lists `unavailable`, `this build reads
+stock files only: a connector needs the nitrovin binary`.
 
 ## The rules
 
@@ -159,11 +161,13 @@ arm64. On each, 42 requests (decodes, and a fit with no catalog) must give byte 
 handle must not disturb the first
 ([#44](https://github.com/joshuasprow/nitrovin/issues/44)). Then a handle
 from `nitrovin_open_vocab` with `testdata/vocab`, the synthetic catalog
-in `testdata/vocab/fitment` and its stock in `testdata/vocab/stock` must
-give the replies `nitrovin --vocab testdata/vocab --vocab
-testdata/vocab/fitment --vocab testdata/vocab/stock stdio` gives to
-decodes, translations, lists, fits (with stock among them) and refused
-lines, in order and from 8 threads
+in `testdata/vocab/fitment` and its stock in `testdata/vocab/stock` and
+`testdata/vocab/stock/order` must give the replies `nitrovin --vocab
+testdata/vocab --vocab testdata/vocab/fitment --vocab testdata/vocab/stock
+--vocab testdata/vocab/stock/order stdio` gives to decodes, translations,
+lists, fits (with stock among them) and refused lines, in order and from 8
+threads, and a stock row's `fields` in the order its header declares
 ([#138](https://github.com/joshuasprow/nitrovin/issues/138),
 [#241](https://github.com/joshuasprow/nitrovin/issues/241),
-[#243](https://github.com/joshuasprow/nitrovin/issues/243)).
+[#243](https://github.com/joshuasprow/nitrovin/issues/243),
+[#390](https://github.com/joshuasprow/nitrovin/issues/390)).

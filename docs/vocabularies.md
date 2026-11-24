@@ -558,6 +558,53 @@ A shelf's catalog may be compiled (above): it answers stock, retired
 numbers and orphans as its JSON Lines source, and `vocab check` on the
 compiled file with the stock files finds the same drift.
 
+**The order of a row's fields.** A row's `fields` are answered in the
+order its source has them: a stock file's as each line writes them. A
+header may declare the order instead
+([ADR 0019](adr/0019-what-stock-says.md#amendment-2026-11-23-a-header-declares-its-rows-field-order)),
+with `fields`, an array of distinct, non-empty field names:
+
+```json
+{"format":1,"kind":"stock","name":"shelf-order","version":"2026.11.01","source":"shelf","as_of":"2026-11-03","catalog":"parts-catalog","fields":["stock_number","condition","price","warranty"]}
+```
+
+Every row's fields then come with the names declared first, in the
+header's order, for those the row has, then the row's other fields in the
+line's order. It orders and never cuts: a name no row has (`warranty`,
+here) is no fault and no drift, as two rows of one source need not share
+their fields; `stock_fields` still cuts, and what it keeps is in this
+order. A value is still verbatim: a member moves as the bytes the line
+wrote, so `1850.00` stays `1850.00`, and only an object's own names are
+ordered, never what a yard row nests under one. Without `fields`, or with
+`[]`, every answer is what it was. `/v1/info` reports the declared order
+beside the source's `source` and `catalog`. `testdata/vocab/stock/order`
+is a shelf and a yard whose lines are written out of the order their
+headers declare:
+
+```sh
+echo '{"from":{"fitment":{"type":"engine","number":"EN-57"}},"stock":["shelf","yard"]}' |
+  nitrovin --vocab testdata/vocab/fitment --vocab testdata/vocab/stock/order fit - |
+  jq -c '.shelf.rows[], .yard.rows[] | {id, fields: (.fields | keys_unsorted)}'
+nitrovin --vocab testdata/vocab/fitment --vocab testdata/vocab/stock/order info |
+  jq -c '.vocabularies[] | select(.kind == "stock") | {name, source, fields}'
+```
+
+```json
+{"id":"R-1","fields":["stock_number","condition","price","tag","miles","status"]}
+{"id":"R-2","fields":["stock_number","price","comments"]}
+{"id":"R-3","fields":["tag","miles"]}
+{"id":"R-4","fields":["stock_number","condition","price","tag"]}
+{"id":"V-1","fields":["stock_number","row","photos","color","added"]}
+{"id":"V-2","fields":["color","keys"]}
+{"name":"shelf-order","source":"shelf","fields":["stock_number","condition","price","warranty"]}
+{"name":"yard-order","source":"yard","fields":["stock_number","row","photos"]}
+```
+
+`R-1`'s line writes `tag` first and its stock number last; `R-3` has none
+of the names and stays as written. In Go, the order is the stock file's
+`vocab.File.Fields`, and a `stock.Source` returns each row's `Fields` in
+it: `vocab.AppendStockFields` orders one row's.
+
 A shelf whose catalog is not loaded, a row in neither form, a duplicate
 id, a part the catalog's spine lacks, and a vehicle its vehicle
 vocabulary has no entry for are faults. `serve` publishes no stock; a
@@ -596,6 +643,22 @@ synthetic source:
 A connector's header has no `as_of` and no `release`: its rows carry
 their own. Any line after the header, and any other member (a DSN among
 them), is a fault.
+
+It may declare `fields`, the order of its rows' fields (**The order of a
+row's fields**, above), beside `connector`, not inside it. A connector
+needs it where a stock file does not: a file's author writes each line in
+the order wanted, and a connector's `fields` column is read as `jsonb`,
+which stores an object's keys by length and then by bytes. A row written
+stock number first arrives as `tag`, `kind`, `miles`, `price`, `status`,
+its stock number last, and no view can change that:
+
+```json
+{"format":1,"kind":"stock","name":"shelf-stock","version":"2026.11.01","source":"shelf","catalog":"parts-catalog","fields":["stock_number","condition","price"],"connector":{"postgres":{"relation":"stock.shelf_stock","dsn_env":"NITROVIN_STOCK_DSN"}}}
+```
+
+Each row is put in that order as it is read, every member as `jsonb`'s
+text writes it, and the names the header leaves out follow in `jsonb`'s
+order.
 
 **The relation's columns.** nitrovin dictates column names, never SQL: a
 view renames a system's own columns. Each is read in one of a few types:

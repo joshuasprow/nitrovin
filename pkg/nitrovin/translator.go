@@ -144,7 +144,7 @@ func NewTranslatorWith(d *Decoder, c TranslatorConfig, files ...*vocab.File) (*T
 			}
 			if f.Kind == vocab.KindStock {
 				v.Release = f.Release
-				v.StockCounts = &contract.StockCounts{Source: string(f.Holds), Catalog: f.StockCatalog, AsOf: f.AsOf}
+				v.StockCounts = &contract.StockCounts{Source: string(f.Holds), Catalog: f.StockCatalog, Fields: f.Fields, AsOf: f.AsOf}
 				if f.Connector != nil {
 					v.StockCounts.Connector, v.StockCounts.Relation = vocab.ConnectorPostgres, f.Connector.Relation
 				} else {

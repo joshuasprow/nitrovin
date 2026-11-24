@@ -856,7 +856,11 @@ func fitCases(t *testing.T, svc decodeService) []apiCase {
 	examples := append(slices.Clone(fitExamples),
 		// stock_fields, beside the documented examples (#371).
 		struct{ query, item string }{"from.fitment.type=brake-rotor-front&from.fitment.number=BR-1999&stock=shelf&stock=yard&stock_fields=stock_number&stock_fields=row",
-			`{"from":{"fitment":{"type":"brake-rotor-front","number":"BR-1999"}},"stock":["shelf","yard"],"stock_fields":["stock_number","row"]}`})
+			`{"from":{"fitment":{"type":"brake-rotor-front","number":"BR-1999"}},"stock":["shelf","yard"],"stock_fields":["stock_number","row"]}`},
+		// A declared field order, whole and cut (#390).
+		struct{ query, item string }{orderFitQuery, orderFit},
+		struct{ query, item string }{orderCutQuery, orderCut})
+	ordered := map[string][]string{orderFit: orderedFields, orderCut: orderedCut}
 	conditions := map[string][]string{}
 	for _, c := range fitConditions {
 		examples = append(examples, struct{ query, item string }{c.query, c.item})
@@ -875,7 +879,13 @@ func fitCases(t *testing.T, svc decodeService) []apiCase {
 			// the decode confirmed, and what it could not check.
 			checkConditions(t, "/v1/fit?"+c.query, want, w)
 		}
-		cases = append(cases, apiCase{op: opFitOne, method: "GET", target: "/v1/fit?" + c.query + "&now=" + now, status: 200, want: want})
+		get := apiCase{op: opFitOne, method: "GET", target: "/v1/fit?" + c.query + "&now=" + now, status: 200, want: want}
+		if w, ok := ordered[c.item]; ok {
+			// The server's own bytes, read: the fields in the order
+			// their source's header declares.
+			get.check = func(t *testing.T, body []byte) { holds(t, get.name(), body, w) }
+		}
+		cases = append(cases, get)
 		items = append(items, item)
 		answers = append(answers, string(bytes.TrimSuffix(want, []byte("\n"))))
 	}
@@ -888,7 +898,12 @@ func fitCases(t *testing.T, svc decodeService) []apiCase {
 		t.Fatal(err)
 	}
 	once, err := svc.FitBatchRows(context.Background(), reqs)
-	cases = append(cases, apiCase{op: opFitBatch, method: "POST", target: "/v1/fit?stock_rows=once", body: batch, status: 200, want: wantBody(t, once, err)})
+	// Its rows are as each fit holds them: in their source's declared
+	// order, cut or whole.
+	cases = append(cases, apiCase{op: opFitBatch, method: "POST", target: "/v1/fit?stock_rows=once", body: batch, status: 200, want: wantBody(t, once, err),
+		check: func(t *testing.T, body []byte) {
+			holds(t, "POST /v1/fit?stock_rows=once", body, slices.Concat(orderedFields, orderedCut))
+		}})
 	for _, c := range fitRefusals {
 		req, err := contract.ParseFitRequest([]byte(c.item))
 		if err != nil {
@@ -1079,19 +1094,20 @@ func (s *serving) stop(t *testing.T) {
 
 // TestServeContract: the built binary, with testdata/vocab loaded, answers
 // every route and status of openapi.yaml as it declares, the 500s answered
-// by the API on faulty.
+// by the API on faulty. A stock source's declared field order (#390) is in
+// the bytes of its fits and of /v1/info.
 func TestServeContract(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("stops the server with SIGINT")
 	}
 	path, d := artifact(t)
-	files, err := vocab.Open(fixture, fitmentFixture, stockFixture)
+	files, err := vocab.Open(fixture, fitmentFixture, stockFixture, orderStockFixture)
 	if err != nil {
 		t.Fatal(err)
 	}
 	svc := translating(t, d, files...)
 	s := loadSpec(t)
-	srv := startServe(t, []string{"NITROVIN_DATA=" + path}, "--vocab", fixture, "--vocab", fitmentFixture, "--vocab", stockFixture, "--addr", "127.0.0.1:0")
+	srv := startServe(t, []string{"NITROVIN_DATA=" + path}, "--vocab", fixture, "--vocab", fitmentFixture, "--vocab", stockFixture, "--vocab", orderStockFixture, "--addr", "127.0.0.1:0")
 	base := "http://127.0.0.1:" + srv.port
 
 	covered := map[string]bool{}
@@ -1099,6 +1115,9 @@ func TestServeContract(t *testing.T) {
 		s.run(t, client, base, c)
 		covered[fmt.Sprintf("%s %d", c.op, c.status)] = true
 	}
+	s.run(t, client, base, apiCase{op: opInfo, method: "GET", target: "/v1/info", status: 200, check: func(t *testing.T, body []byte) {
+		holds(t, "GET /v1/info", body, orderedInfo)
+	}})
 	faults := faultyServer(t, "")
 	for _, c := range faultCases() {
 		s.run(t, client, faults, c)

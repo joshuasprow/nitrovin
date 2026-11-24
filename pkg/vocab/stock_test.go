@@ -1,6 +1,7 @@
 package vocab
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
@@ -104,6 +105,12 @@ func TestStockFaults(t *testing.T) {
 		{"vehicle not in vocabulary", shelf + "\n" + `{"id":"1","location":"a","part":{"spine":"part-types","id":"mirror"},"vehicle":{"make":"Dodge","model":"Ram 9999"},"year":2010}`, `:2: /vehicle: vocabulary "catalog-models" has no entry {"make":"Dodge","model":"Ram 9999"}, so the row could never match`},
 		{"yard vehicle not in vocabulary", `{"format":1,"kind":"stock","name":"y","version":"1","source":"yard","as_of":"2026-11-01"}` + "\n" + `{"id":"1","location":"a","vehicle":{"make":"Dodge","model":"Ram 9999"},"year":2010}`, `:2: /vehicle: vocabulary "catalog-models" has no entry`},
 		{"name taken", strings.Replace(shelf, `"name":"s"`, `"name":"parts-catalog"`, 1), `:1: /name: "parts-catalog" is also the name of`},
+		{"fields not an array", shelf[:len(shelf)-1] + `,"fields":"stock_number"}`, `:1: /fields: must be an array of strings`},
+		{"fields null", yard[:len(yard)-1] + `,"fields":null}`, `:1: /fields: must be an array of strings`},
+		{"a field not a string", shelf[:len(shelf)-1] + `,"fields":["stock_number",7]}`, `:1: /fields/1: must be a string`},
+		{"a field empty", yard[:len(yard)-1] + `,"fields":["stock_number",""]}`, `:1: /fields/1: must not be empty`},
+		{"a field twice", shelf[:len(shelf)-1] + `,"fields":["price","tag","price"]}`, `:1: /fields/2: duplicate field "price"`},
+		{"a field twice, one escaped", shelf[:len(shelf)-1] + `,"fields":["price","pri\u0063e"]}`, `:1: /fields/1: duplicate field "price"`},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			dir := t.TempDir()
@@ -166,6 +173,8 @@ func TestStockConnector(t *testing.T) {
 		{"connections", shelfHead + `"connector":{"postgres":{"relation":"s","dsn_env":"DSN","max_connections":1.5}}}`, `:1: /connector/postgres/max_connections: must be an integer from 1 to`},
 		{"yard release relation", yardHead + `"connector":{"postgres":{"relation":"y","release_relation":"r","dsn_env":"DSN"}}}`, `:1: /connector/postgres/release_relation: a yard source names no catalog release`},
 		{"shelf catalog still loaded", strings.Replace(shelfHead, "parts-catalog", "other-catalog", 1) + pg + "}", `:1: /catalog: catalog "other-catalog" is not loaded`},
+		{"fields", shelfHead + `"fields":["price","price"],` + pg + "}", `:1: /fields/1: duplicate field "price"`},
+		{"fields in the connector", shelfHead + `"connector":{"postgres":{"relation":"s","dsn_env":"DSN","fields":["price"]}}}`, `:1: /connector/postgres: unknown field "fields"`},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			dir := t.TempDir()
@@ -177,6 +186,19 @@ func TestStockConnector(t *testing.T) {
 				t.Errorf("got %v\nwant a fault with %q", err, tc.want)
 			}
 		})
+	}
+
+	// A connector's header declares its rows' field order as a file's does.
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "stock.jsonl"), []byte(yardHead+`"fields":["stock_number","row"],`+pg+"}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	files, err = Open(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if f := files[0]; f.Connector == nil || !slices.Equal(f.Fields, []string{"stock_number", "row"}) {
+		t.Errorf("a connector's header with fields: connector %+v, fields %q", f.Connector, f.Fields)
 	}
 }
 
@@ -223,5 +245,161 @@ func TestStockDrift(t *testing.T) {
 	}
 	if !slices.Equal(got, want) {
 		t.Errorf("drift\n%q\nwant\n%q", got, want)
+	}
+}
+
+// TestStockFieldOrder: a header's fields order every row's fields (#390):
+// the names it declares first, in its order, for those the row has, then
+// the row's others in the line's order, each member, and what the line
+// writes between members, byte for byte. A row with none of the names, or
+// already in that order, is its line's bytes; so is every row under a
+// header that declares none, or an empty list. A name no row has is no
+// fault and no drift.
+func TestStockFieldOrder(t *testing.T) {
+	const declared = `["stock_number","condition","price","warranty"]`
+	const photos = `[{"url":"a.jpg","w":1600,"h":1200},{"z":{"b":[1,{"y":null,"a":"}, \"{"}],"a":2.50}}]`
+	cases := []struct{ name, fields, want string }{
+		{"declared, then the rest", `{"tag":"T-9","miles":61250,"price":1850.00,"status":"on shelf","condition":"A","stock_number":"E500"}`,
+			`{"stock_number":"E500","condition":"A","price":1850.00,"tag":"T-9","miles":61250,"status":"on shelf"}`},
+		{"a name the row lacks", `{"comments":"sold \"as is\"","price":9.5e2,"stock_number":"E501"}`,
+			`{"stock_number":"E501","price":9.5e2,"comments":"sold \"as is\""}`},
+		{"none of the names", `{"tag":"T-11","miles":null}`, `{"tag":"T-11","miles":null}`},
+		{"already in order", `{"stock_number":"E503","condition":"B","price":1200,"tag":"T-12"}`, `{"stock_number":"E503","condition":"B","price":1200,"tag":"T-12"}`},
+		{"one name, last", `{"tag":"T-1","keys":true,"price":-0.50}`, `{"price":-0.50,"tag":"T-1","keys":true}`},
+		{"nested JSON", `{"photos":` + photos + `,"row":"K","price":1e3,"stock_number":"V900"}`,
+			`{"stock_number":"V900","price":1e3,"photos":` + photos + `,"row":"K"}`},
+		{"white space", "{ \"tag\" : \"T-9\" ,\t\"price\" : 12 , \"stock_number\" : \"E9\" }", "{ \"stock_number\" : \"E9\" ,\t\"price\" : 12 , \"tag\" : \"T-9\" }"},
+		{"an escaped key", `{"tag":"T-9","pri\u0063e":12}`, `{"pri\u0063e":12,"tag":"T-9"}`},
+		{"a key twice", `{"price":1,"tag":"T-9","price":2,"stock_number":"E9"}`, `{"stock_number":"E9","price":1,"price":2,"tag":"T-9"}`},
+		{"no fields", `{}`, `{}`},
+	}
+	dir := t.TempDir()
+	for _, h := range []struct{ name, fields string }{{"declared", `,"fields":` + declared}, {"none", ""}, {"empty", `,"fields":[]`}} {
+		var b strings.Builder
+		b.WriteString(`{"format":1,"kind":"stock","name":"` + h.name + `","version":"1","source":"yard","as_of":"2026-11-01"` + h.fields + "}\n")
+		for i, tc := range cases {
+			fmt.Fprintf(&b, `{"id":"%d","location":"a","vin":"X","fields":%s}`+"\n", i, tc.fields)
+		}
+		if err := os.WriteFile(filepath.Join(dir, h.name+".jsonl"), []byte(b.String()), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	files, err := Open(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ordered, none, empty := fileNamed(files, "declared"), fileNamed(files, "none"), fileNamed(files, "empty")
+	if want := []string{"stock_number", "condition", "price", "warranty"}; !slices.Equal(ordered.Fields, want) || none.Fields != nil || len(empty.Fields) != 0 {
+		t.Errorf("declared orders %q, %q, %q; want %q and none twice", ordered.Fields, none.Fields, empty.Fields, want)
+	}
+	for i, tc := range cases {
+		if got := string(ordered.Stock[i].Fields); got != tc.want {
+			t.Errorf("%s:\n got %s\nwant %s", tc.name, got, tc.want)
+		}
+		for _, f := range []*File{none, empty} {
+			if got := string(f.Stock[i].Fields); got != tc.fields {
+				t.Errorf("%s, under a header that declares %s:\n got %s\nwant the line's %s", tc.name, f.Name, got, tc.fields)
+			}
+		}
+	}
+	if d := Drift(fixtureMonth{}, files); len(d) != 0 {
+		t.Errorf("drift %v; want none: a name no row has is not drift", d)
+	}
+
+	// The committed fixture, testdata/vocab/stock/order, and the shared
+	// one beside it, which declares no order.
+	files, err = Open("../../testdata/vocab/fitment", "../../testdata/vocab/stock", "../../testdata/vocab/stock/order")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]string{}
+	for _, f := range files {
+		if f.Kind != KindStock {
+			continue
+		}
+		if declares := strings.HasSuffix(f.Name, "-order"); declares != (f.Fields != nil) {
+			t.Errorf("%s declares %q", f.Name, f.Fields)
+		}
+		for _, r := range f.Stock {
+			got[r.ID] = string(r.Fields)
+		}
+	}
+	for id, want := range map[string]string{
+		"R-1": `{"stock_number":"E500","condition":"A","price":1850.00,"tag":"T-9","miles":61250,"status":"on shelf"}`,
+		"R-2": `{"stock_number":"E501","price":9.5e2,"comments":"turns over; sold \"as is\""}`,
+		"R-3": `{"tag":"T-11","miles":null}`,
+		"R-4": `{"stock_number":"E503","condition":"B","price":1200,"tag":"T-12"}`,
+		"V-1": `{"stock_number":"V900","row":"K","photos":[{"url":"v900-front.jpg","w":1600,"h":1200},{"url":"v900-rear.jpg","w":1600,"h":1200}],"color":"grey","added":"2026-10-30"}`,
+		"V-2": `{"color":"black","keys":true}`,
+		"S-1": `{"stock_number":"A100","condition":"A","price":129.5,"comments":null}`,
+		"Y-1": `{"stock_number":"Y100","color":"red","row":"B","photos":["y100-1.jpg","y100-2.jpg"]}`,
+	} {
+		if got[id] != want {
+			t.Errorf("%s:\n got %s\nwant %s", id, got[id], want)
+		}
+	}
+}
+
+// jsonbRow is a shelf row's 11 fields as jsonb's text writes them: its
+// keys by length, then bytes, with a space after each ':' and ','.
+const jsonbRow = `{"tag": "T-9", "kind": "used", "miles": 61250, "price": 1850.00, "status": "on shelf", "comments": "turns over", "warranty": "30 days", "condition": "A", "date_added": "2026-10-30", "core_charge": 75, "stock_number": "E500"}`
+
+// TestAppendStockFields: the order as a connector applies it, to jsonb's
+// text. The result is appended to dst and shares no memory with fields,
+// which a connector reads from its driver's buffer; a row of more fields
+// than are ordered on the stack is ordered alike; and anything that is no
+// object is appended as it is.
+func TestAppendStockFields(t *testing.T) {
+	order := []string{"stock_number", "condition", "price", "warranty"}
+	fields := []byte(jsonbRow)
+	const want = `{"stock_number": "E500", "condition": "A", "price": 1850.00, "warranty": "30 days", "tag": "T-9", "kind": "used", "miles": 61250, "status": "on shelf", "comments": "turns over", "date_added": "2026-10-30", "core_charge": 75}`
+	got := AppendStockFields([]byte("rows:"), fields, order)
+	clear(fields)
+	if string(got) != "rows:"+want {
+		t.Errorf("jsonb's text in order:\n got %s\nwant rows:%s", got, want)
+	}
+	for _, order := range [][]string{nil, {}, {"nope"}, {"tag", "kind", "miles"}} {
+		if got := AppendStockFields(nil, []byte(jsonbRow), order); string(got) != jsonbRow {
+			t.Errorf("under %q, which the row is in the order of:\n got %s\nwant %s", order, got, jsonbRow)
+		}
+	}
+	var wide, wideWant []string
+	for i := range 40 {
+		wide = append(wide, fmt.Sprintf(`"f%02d":%d`, i, i))
+	}
+	wideWant = append([]string{wide[39], wide[20], wide[0]}, wide[1:20]...)
+	wideWant = append(wideWant, wide[21:39]...)
+	if got, want := AppendStockFields(nil, []byte("{"+strings.Join(wide, ",")+"}"), []string{"f39", "f20", "f00"}), "{"+strings.Join(wideWant, ",")+"}"; string(got) != want {
+		t.Errorf("40 fields:\n got %s\nwant %s", got, want)
+	}
+	for _, other := range []string{``, `[1, 2]`, `null`, `"{}"`} {
+		if got := AppendStockFields(nil, []byte(other), order); string(got) != other {
+			t.Errorf("%q, no object: %q", other, got)
+		}
+	}
+}
+
+// BenchmarkAppendStockFields: what a declared order costs a row beside
+// the copy a row without one is made with (#390), on a shelf row of 11
+// fields as jsonb's text writes them: none declared; three declared that
+// the row already leads with; and three declared that jsonb puts fourth,
+// eighth and last, so that every member moves.
+func BenchmarkAppendStockFields(b *testing.B) {
+	for _, bc := range []struct {
+		name  string
+		order []string
+	}{
+		{"none-declared", nil},
+		{"in-order", []string{"tag", "kind", "miles"}},
+		{"reordered", []string{"stock_number", "condition", "price"}},
+	} {
+		b.Run(bc.name, func(b *testing.B) {
+			fields := []byte(jsonbRow)
+			b.ReportAllocs()
+			b.SetBytes(int64(len(fields)))
+			for b.Loop() {
+				_ = AppendStockFields(make([]byte, 0, len(fields)), fields, bc.order)
+			}
+		})
 	}
 }

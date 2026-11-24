@@ -692,7 +692,7 @@ var headerFields = map[Kind][]int{
 	KindExtensionSet: {0, 1, 2, 3, 4},
 	KindVocabulary:   {0, 1, 2, 3, 4, 5, 6, 7, 15},
 	KindCatalog:      {0, 1, 2, 3, 4, 7, 8, 9, 14},
-	KindStock:        {0, 1, 2, 3, 9, 10, 11, 12, 13},
+	KindStock:        {0, 1, 2, 3, 6, 9, 10, 11, 12, 13},
 }
 
 // header reads line 1.
@@ -765,7 +765,7 @@ func (f *File) header(line []byte) error {
 	case KindCatalog:
 		return f.catalogHeader(v[7], v[8], v[9], v[14])
 	case KindStock:
-		return f.stockHeader(v[10], v[11], v[12], v[9], v[13])
+		return f.stockHeader(v[10], v[11], v[12], v[9], v[13], v[6])
 	case KindVocabulary:
 	default:
 		return nil
@@ -778,23 +778,11 @@ func (f *File) header(line []byte) error {
 	if f.Subject != SubjectVehicle && f.Subject != SubjectPart {
 		return errAt("/subject", "unknown subject %q: vehicle or part", subject)
 	}
-	fields, ok := items(v[6], nil)
-	if !ok {
-		return errAt("/fields", "must be an array of strings")
+	if f.Fields, err = fieldNames(v[6]); err != nil {
+		return err
 	}
-	if len(fields) == 0 {
+	if len(f.Fields) == 0 {
 		return errAt("/fields", "must name at least one field")
-	}
-	for i, raw := range fields {
-		ptr := "/fields/" + strconv.Itoa(i)
-		s, err := nonEmptyAt(raw, ptr)
-		if err != nil {
-			return err
-		}
-		if slices.Contains(f.Fields, s) {
-			return errAt(ptr, "duplicate field %q", s)
-		}
-		f.Fields = append(f.Fields, s)
 	}
 	hasSpine := v[7] != nil
 	switch {
@@ -817,6 +805,28 @@ func (f *File) header(line []byte) error {
 		}
 	}
 	return nil
+}
+
+// fieldNames reads raw, a header's fields: an array of distinct,
+// non-empty strings.
+func fieldNames(raw []byte) ([]string, error) {
+	fields, ok := items(raw, nil)
+	if !ok {
+		return nil, errAt("/fields", "must be an array of strings")
+	}
+	var names []string
+	for i, raw := range fields {
+		ptr := "/fields/" + strconv.Itoa(i)
+		s, err := nonEmptyAt(raw, ptr)
+		if err != nil {
+			return nil, err
+		}
+		if slices.Contains(names, s) {
+			return nil, errAt(ptr, "duplicate field %q", s)
+		}
+		names = append(names, s)
+	}
+	return names, nil
 }
 
 // entryNames are a vocabulary line's fields.

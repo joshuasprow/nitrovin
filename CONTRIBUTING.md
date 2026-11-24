@@ -393,6 +393,24 @@ through `Open`, `TestCompileAcrossBatches` and `TestCompileAcrossRuns`
 compile in tiny batches and sort runs to the same bytes, and
 `FuzzOpenCompiled` feeds the reader damaged files.
 
+`testdata/vocab/stock/order/` is a shelf (`shelf-order`) and a yard
+(`yard-order`) whose headers declare the order of their rows' fields
+([ADR 0019](docs/adr/0019-what-stock-says.md#amendment-2026-11-23-a-header-declares-its-rows-field-order)),
+over lines written out of it: a row with every name a row has, one lacking
+a name, one with none, one already in order, a declared name no row has,
+and a yard row with nested JSON. It is a folder of its own because a
+source loaded
+beside `testdata/vocab/stock` joins every stock list's `sources`, and so
+`pkg/nitrovin/testdata/fit-batch-stock.json`. `go test ./pkg/vocab`
+(`TestStockFieldOrder`, `TestAppendStockFields`) holds the order, and
+every other answer's bytes; `TestFitStockFieldOrder` (`pkg/nitrovin`)
+holds it through `fit`, `stock_fields`, a batch's rows once and `Info`;
+and `TestServeContract`, `TestStdioOps`, `TestMCPVocabSession`,
+`cmd/nitrovin`'s `TestStockFieldOrder` and the C library's
+`vocab-requests.jsonl` load it beside the synthetic stock and read it in
+each surface's own bytes. `TestFieldOrderPostgres` holds a connector to
+it, over `jsonb`'s own order.
+
 `testdata/vocab/stock/live/` reads the same three sources through
 connectors ([ADR 0020](docs/adr/0020-request-time-stock-the-postgres-connector.md)):
 a header each, and `views.sql`, a synthetic parts system's and yard
