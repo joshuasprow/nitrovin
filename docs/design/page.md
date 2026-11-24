@@ -346,6 +346,9 @@ text field laid over them.
   bottom, in `--ring-pale`, the same blue on the metal in both schemes.
   The brackets above and below stand 7 px off the plate, clear of the
   ring.
+  *Ruled, 2026-11-24: in the dark scheme the bar marking the next cell
+  and the touch selection handles take the light scheme's blue, for
+  contrast on the metal.*
 - **The caret among characters** is a 4 px bar in the gap before its cell.
   Under a mouse, the gap a click would pick shows the same bar at 35%.
 - **A selected cell** is inked: `#16202b`, white character, ringed 3 px in its
@@ -647,8 +650,10 @@ control; the paper is the print (`.receipt` in the stylesheet).
 - **A kind of stock:** its name and count reversed, a micro label,
   `--thermal` on a small bar of `--on-thermal`, and on the bar's line, at
   the right, its sources' as-of dates, or why one did not answer, each
-  named when there are several. Shelf is over yard, and one kind is
-  printed when one is loaded.
+  named when there are several. A kind none of whose sources answered
+  states no count: a dash stands where the count would, read out as
+  "unavailable". Shelf is over yard, and one kind is printed when one is
+  loaded.
 - **Columns:** a row is a line. Its id is first, then its location in the
   head role, larger and heavier than the row, as it is what is walked to,
   then a column for each field its
@@ -684,7 +689,9 @@ control; the paper is the print (`.receipt` in the stylesheet).
   fainter print and as the page writes it, not in capitals: a shelf row
   tagged with a retired number quotes the number as typed, and the yard's
   vehicle that is the VIN looked up says "This VIN", reversed.
-- **Nothing in a kind** is "None." between asterisks, under its bar and date.
+- **Nothing in a kind** that answered is "None." between asterisks, under
+  its bar and date. A kind that did not answer prints its bar and why,
+  and no "None.": what it holds is not known.
 - **Past ten rows** a kind says how many it prints, under a rule of dashes,
   with "Show all" underlined, in bold.
 - **Foot:** a torn edge of 9 px teeth.
@@ -886,7 +893,11 @@ card's trailing edge, and is a whole number of columns wide.
   pressing outside it or Escape shuts it, and the focus goes back to the
   picker. It opens with the focus in its filter, a search field, whose
   Escape Safari keeps for the field: `plate.js` shuts the list on it, as
-  the other browsers do. It always opens downward, and
+  the other browsers do. Under a coarse pointer, a finger, it opens with
+  the focus on the list itself, as part-number mode's dialog does, so a
+  phone raises no keyboard over it; a tap on the filter focuses it, and
+  clearing the recent part types leaves the focus on the list. It
+  always opens downward, and
   it is laid on the page, not on the window. It moves with the page; a
   page too short for it grows longer; and where the window ends before
   the list does, the page scrolls to it where scripts run, the picker
@@ -1034,8 +1045,9 @@ columns and is at least a row high.
   each.
 - **A card** not typed yet is a 2 px dashed outline (manila tags, above).
 - **A candidate's stock** with none for it is muted words beside a dashed
-  rule at its tag's trailing end, and a kind of stock with none says
-  "None." between asterisks on the print (the parts that fit, above).
+  rule at its tag's trailing end, and a kind of stock that answered with
+  none says "None." between asterisks on the print (the parts that fit,
+  above).
 
 ## Good enough: where the brackets and lines run
 
