@@ -1071,10 +1071,11 @@ one.
 **In a browser**: `serve`'s page at `/` decodes a VIN, as a diagram of
 its six groups, and shows the vehicle's names in every vocabulary loaded
 on vPIC's spine, with JavaScript or without. Its form is a plate that
-takes a VIN and nothing else, so the page's URL is `/?from.vin=…` and
-names no vocabulary: there are no targets to pick, and what is loaded is
-what is shown. The page reads no other parameter: a model year or a
-clock in its URL is ignored, and the translation is the VIN's as of now.
+takes a VIN (or, in its second mode, a part type and a part number), so
+a VIN's page is `/?from.vin=…` and names no vocabulary: there are no
+targets to pick, and what is loaded is what is shown. The page reads no
+model year and no clock: either in its URL is ignored, and the
+translation is the VIN's as of now.
 A refusal is said below the plate. Older links
 (`/?vin=…`, `/ui/decode`, `/ui/translate`, `/vocab`,
 `/ui/vocabularies`) redirect to it (`301`) with the VIN they named and
@@ -1088,7 +1089,7 @@ a mapping matched by rule, or
 a qualifier or the model year that was not checked; each part's title
 says which, and a small button on the name opens how it was reached.
 A vocabulary with no name for the vehicle
-keeps a tag that says so. The Developers button in the page's header
+keeps a tag that says so. The Developers button at the page's foot
 shows the answer's JSON, the decode's and the translation's. Back and
 forward ask the server for each page again,
 never a copy the browser kept. The header's Vocabularies button
@@ -1284,7 +1285,7 @@ against, reaches every EPA name mapped to vPIC's Silverado for 2004.
 The **demo set** is a small, invented catalog and the files around it, so
 fitment, stock and translation can be seen without files of your own:
 [`pkg/ui/demo/`](../pkg/ui/demo), every file named `demo-*` directly in it
-(15 kB in all), and a second catalog of the same vehicles in `vpic/`.
+(17 kB in all), and a second catalog of the same vehicles in `vpic/`.
 It is built around popular vPIC models of the pinned data month (a Ford
 F-150, a Chevrolet Silverado 1500, a Ram 1500, a Honda Civic and CR-V, a
 Toyota Camry and RAV4) and two vehicles vPIC lacks. Every number
