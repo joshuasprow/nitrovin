@@ -26,8 +26,8 @@ group colours change between light and dark. The four materials do not.
 
 ## Typography
 
-Tokens, too: two system typefaces, a label face for what is stamped and a
-monospace for data, over `system-ui` body text.
+[Type roles](docs/design/page.md#type-roles): a label face for what is
+stamped, a monospace for data, `system-ui` for prose.
 
 ## Components
 

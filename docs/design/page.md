@@ -182,17 +182,78 @@ light-scheme colour in both schemes, except the year's, which is a shade
 brighter there (`#b3540a`). On label tape it is the dark-scheme colour in both
 schemes.
 
-Two typefaces carry the look, and both are system fonts.
+Three typefaces carry the page, and all are the system's: no font file is
+sent.
 
-- `--label-font` (Arial Black, then Helvetica Neue): everything stamped or
-  printed as a heading. Weight 900, upper case, tracked from `.04em` to
-  `.22em`, mostly 11–13 px.
-- `--cell-font` (`ui-monospace`): everything that is data to read or copy: the
-  VIN's characters, serials, code, and the words on the tape.
+- `--label-font` (Arial Black, then Helvetica Neue): what is stamped or
+  struck: a key's word, a label over the plate, a card's band, a mark's
+  stamp. Weight 900, upper case, tracked.
+- `--cell-font`, the monospace: data, which is what a visitor reads or
+  copies: the VIN's characters, a make, a model, a year, a part number,
+  option text, a stock field, a location, a count. Under the cards a datum
+  is this face on every material, so it is one voice on the vehicle's
+  block, a name tag, a row and a print.
+- `system-ui`: prose. Body text is 15 px (`.9375rem`) on a line of 1.5: a
+  blank strip's sentence, a dialog, a card's rows.
 
-Body text is `system-ui` at 15 px.
-A pass on the type scale is planned. The sizes in this file are the page's
-as built, and are not settled.
+Few browsers know `ui-monospace`, so `--cell-font` names a designed face
+for each system: `ui-monospace` (Safari's, SF Mono), Menlo (macOS),
+Cascadia Mono and Consolas (Windows), Roboto Mono and Droid Sans Mono
+(Android), DejaVu Sans Mono, Liberation Mono and Noto Sans Mono (Linux),
+then `monospace`. No character of them is wider than .62 em, and the
+plate's field spaces its characters by `1ch`, so the 17 cells hold in
+each. Only SF Mono has a weight above bold. In every other face 900 draws
+as 700, so size carries the hierarchy and weight only helps it.
+
+### Type roles
+
+Under the cards, type is six roles. A role fixes face, size, weight,
+line height, tracking and case together. Each is a token on `body`, a
+`font` value, beside a token for its tracking, and every rule under the
+cards takes one: none writes a size, a weight or a tracking of its own.
+Five carry the hierarchy. The sixth, the fine print, is one size under
+the row for one place, the fold of a stock print, where a row's size
+would turn a file's undeclared fields from one line into two.
+
+| Role | Token | What takes it | Size | Weight | Line | Tracking | Case |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Micro label | `--type-micro` | The page's own word for a value, a column or a count: the block's stamp and its labels, "Part type", a vocabulary's name, "Note", "shelf", a kind of stock's bar, a count in a pill, a mark in plain words | 11 px | 700 | 1.2 | `--track-micro`, .04 em | Upper |
+| Row value | `--type-value`, `--type-value-b` | What a row says: a print's cells and its columns' names, a note, a name's years. Bold (`-b`) where it leads its row or sits on tape: option text, a name, the block's details, a row's years | 13 px | 400, and 700 | 18 px | None | As written |
+| Fine print | `--type-fine` | What a stock row carries beyond its declared fields, folded under it | 12 px | 400 | 18 px | None | As written |
+| Head | `--type-head` | What a strip of tape is headed with: the block's make, model and year, a vehicle's name on its row, the pressed part type, the tape over the rows with no number. On a print, the location, which is walked to | 16 px | 900 | 18 px | `--track-tape`, .04 em, on tape; none in ink | As written |
+| Display | `--type-display` | What was asked for and how many there are: a part's number and its stock counts | 20 px | 900 | 24 px | `--track-tape` | As written |
+| Key | `--type-key` | What is struck or stamped: a key's word, a table's header, a mark's stamp | 11 px | 900 | The face's own; 12 px in a stamp | `--track-key`, .08 em | Upper |
+
+All but the key are the monospace, and the key is the label face.
+
+- **The hierarchy is the sizes**, largest first: a part's number and its
+  stock counts; then a print's location and the block's words; then a
+  row's values; then the labels. Each step is about a fifth larger than
+  the one under it: 11, 13, 16 and 20 px. Nothing under the cards is
+  larger than a part's number. The fine print is no step of it: colour
+  and its indent set it under its row.
+- **Tracking and weight follow the ground.** A head and a display are
+  raised white on label tape or struck in the second tape, where letters
+  fill in, so they are tracked. The location is a head in ink, and is
+  not. A value is never tracked, and on tape it is always bold.
+- **A stamp holds data in the data's face.** "Replaces" is stamped in the
+  label face; the number after it is a bold row value, in its own case.
+- **Sizes are in rem**, so a visitor's font setting scales them, and
+  `--row` is in rem with them. A micro label and a key's word are never
+  under 11 px, whatever that setting.
+- **No text on the page is under 11 px.**
+- **Under 64 rem three roles are redefined**, each where a column is too
+  narrow for it, as the page was built: the display is 18 px in every
+  row; the head is 14.4 px on the block, and 12.8 px under 34 rem; the
+  bold value on a row's tape is 12 px. They wait for the pass on those
+  widths (rule 5).
+- **Off the scale, and in px:** the plate, whose characters follow its
+  width through container units; the six cards, whose large values are
+  24 px, larger than the display, and whose rows are the body face; the
+  header, the foot and the dialogs. They take a role's token only where
+  they already had its values: a key (`button`), a table's header, the
+  foot's release and a count in the picker's list. A card's "Show the
+  sum" takes the micro label, which raised it from 10 px.
 
 Everything under the six cards is set on one module and a few lengths, so
 that its parts line up down the page.
@@ -203,7 +264,7 @@ that its parts line up down the page.
 | `--rail`, `--end` | 20 px each; `--end` is 0 under 64 rem | How far the first column's leading edge and the last column's trailing edge are in from the block's. The gutter that `--rail` leaves beside the first column is the trunk's |
 | Spacing `--s1` to `--s5` | 4, 8, 12, 16 and 24 px | The one scale of spaces |
 | Inset `--inset` | 12 px | Text's distance from the edge of its material, on every material |
-| Row `--row` | 48 px | The height of a tag laid long, the picker and a blank strip |
+| Row `--row` | 3 rem, 48 px | The height of a tag laid long, the picker and a blank strip |
 | Lead `--lead` | 28 px | The leading end of a tag laid long, which holds its eyelet. Its content begins after it |
 | `--trunk` | the Vehicle group's `--c`; the Serial group's in part-number mode | The trunk and its stubs |
 | `--gutter` | 1 rem; 0.5 rem under 46 rem | The page's side margin |
@@ -325,7 +386,7 @@ mode is in the URL, and nothing is remembered between visits.
   "vPIC model 1801 (F-150)", where the answer carries the name), with its
   years at the tape's trailing end. In the tag's ink is its option text
   verbatim, over its names in the vehicle vocabularies loaded: a
-  vocabulary's name once, small and muted, before every name it has for
+  vocabulary's name once, a micro label, muted, before every name it has for
   the vehicle, each underlined in the Vehicle group's colour, as a name
   is on its own tag. A vehicle no vocabulary names says "No name". While
   the server holds the catalog, a browser names them in the server's
@@ -424,9 +485,9 @@ a key of metal for a control that names nothing.
 
 - **Body:** `--alu`, the tape's faint ridges over `--metal`, a 1 px `--steel`
   edge with a white top and a `--steel-dark` bottom.
-- **Lettering:** `--on-metal` in the monospace face at 14 px, 16 px on the
-  picker, weight 900, struck as the plate's characters are (`--emboss`),
-  in the name's own case.
+- **Lettering:** `--on-metal` in the monospace face, weight 900, struck as
+  the plate's characters are (`--emboss`), in the name's own case: the
+  head role on the picker, 16 px, and 14 px in its list.
 - **A count** sits after the name in a small pill outlined in `--on-metal`
   at 55%.
 - **Raised and pressed** as every control: `--raised` unpressed; pressed
@@ -435,8 +496,8 @@ a key of metal for a control that names nothing.
 - **At a tag's trailing end** (a candidate's stock strip) it is the tag's
   last column, edge to edge, and casts no shadow off the tag, so it stands
   raised by its edges alone: a white top and 3 px of `--steel-dark` below.
-  A kind of stock is a cell of it: its count at 20 px, as large as the
-  part's number, over the kind's name at 11 px, upper case. A chevron ends
+  A kind of stock is a cell of it: its count in the display role, as large
+  as the part's number, over the kind's name, a micro label. A chevron ends
   it. Pressed (open) it is `--alu-in` under `--pressed`, its lettering
   darker, its bottom edge 1 px, and its chevron turns up.
 - **It carries** the picker's key, each part type in the picker's list and
@@ -503,18 +564,20 @@ control; the paper is the print (`.receipt` in the stylesheet).
   shaded for 15 px where it leaves the tag and faintly down each edge. Its
   `drop-shadow` is on the paper itself, so it follows the torn foot.
 - **Print:** `--on-thermal` (`#232229`), one near-black in the page's
-  monospace face at 13 px on an 18 px line: the system's, since the page
-  ships no font file. `--thermal-muted` (`#62606b`) is the fainter print:
-  a column's name, what is folded, a note. No other colour is printed,
-  and a group's colour never is.
+  monospace face, the row value: 13 px on an 18 px line, the system's,
+  since the page ships no font file. `--thermal-muted` (`#62606b`) is the
+  fainter print: a column's name, what is folded, a note. No other colour
+  is printed, and a group's colour never is.
 - **Width:** the paper runs from its tag's content, after the tag's lead,
   to the tag's trailing end.
-- **A kind of stock:** its name and count reversed, `--thermal` on a small
-  bar of `--on-thermal`, and on the bar's line, at the right, its sources'
-  as-of dates, or why one did not answer, each named when there are
-  several. Shelf is over yard, and one kind is printed when one is loaded.
-- **Columns:** a row is a line. Its id is first, then its location in
-  bold, as it is what is walked to, then a column for each field its
+- **A kind of stock:** its name and count reversed, a micro label,
+  `--thermal` on a small bar of `--on-thermal`, and on the bar's line, at
+  the right, its sources' as-of dates, or why one did not answer, each
+  named when there are several. Shelf is over yard, and one kind is
+  printed when one is loaded.
+- **Columns:** a row is a line. Its id is first, then its location in the
+  head role, larger and heavier than the row, as it is what is walked to,
+  then a column for each field its
   source's header declares (`fields`, ADR 0019's amendment of 2026-11-23),
   in the header's order. A declared column stands under its field's name,
   in the fainter print over a rule of dashes; the id and the location have
@@ -530,8 +593,9 @@ control; the paper is the print (`.receipt` in the stylesheet).
   is never a column's. A field is printed as its file has it, so a file
   that repeats a row's id as a field prints it twice.
 - **The fold:** what a row has beyond its declared fields is under it,
-  indented 24 px, in the fainter print at 12 px and regular weight, so the
-  declared columns and the bold location are the darkest things in a row.
+  indented 24 px, in the fine role: the fainter print, a size under the
+  row, at regular weight, so the declared columns and the location are the
+  darkest things in a row.
   Each is a name, a colon and its value, one after another, wrapping at 80
   characters where the paper is wider. A list or an object is its JSON,
   compact, cut to one line.
@@ -745,7 +809,9 @@ card's trailing edge, and is a whole number of columns wide.
   askew, with a tick, "Checked" and the decoded elements that met the
   catalog's conditions; a dashed stamp with a warning triangle, "Not
   checked" and what could not be; "Match the options yourself" and "No
-  conditions", plain muted words, when nothing was either: the first where
+  conditions", plain words in capitals with no box, when nothing was either:
+  in the tag's ink, as a stamp is, so that they stand apart from the muted
+  label of the note after them; the first where
   the catalog gives option text, which the page cannot read and the reader
   matches against the vehicle; and a solid stamp with an
   arrow, "By redirect" and the part type the catalog lists it under. A model
@@ -952,7 +1018,8 @@ Every other control is plain and small.
   `--link` outline, 2 px off. The plate takes it 3 px off.
 - **Errors:** `--bad` text. A refusal and the page's error slot add a 4 px
   `--bad` rule down the left.
-- **Targets:** a link or a button in a table row is at least 24 px high.
+- **Targets:** a link or a button in a table row is at least 24 px high,
+  and so is a key on a card.
 
 ## Building something new
 
@@ -971,6 +1038,8 @@ Every other control is plain and small.
 - A new list under the vehicle's block is rows down the page, set on the
   cards' columns with the page's inset, spaces and row height (Tokens,
   above).
+- New text under the cards takes a type role (Tokens, above). It writes no
+  size, weight or tracking of its own, and data is the monospace.
 - A fifth material needs a reason, as manila and thermal paper had:
   something the page hangs, sticks, bolts on or prints that the four cannot
   be.
