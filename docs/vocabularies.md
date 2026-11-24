@@ -1299,8 +1299,8 @@ value in it is made up, and says so.
 | `demo-vehicles` | `vocabulary` (vehicle) | the catalog's vehicles, mapped onto vPIC: `F150` is vPIC's `F-150`, `Silverado 1500` its `Silverado` of Series 1500, the Ram 1500 a Dodge to 2012 and a Ram from 2013 |
 | `demo-classics` | `extension-set` | a Studebaker Champion and a Volkswagen Type 2, which vPIC lacks |
 | `demo-catalog` | `catalog` | 46 fitments, release `DEMO-2`: qualified applications, sides, a redirect and a retired number |
-| `demo-shelf` | `stock` (shelf) | numbered parts, one under a retired number and one with none, of release `DEMO-1` |
-| `demo-yard-stock` | `stock` (yard) | whole vehicles, twenty by VIN and two by the catalog's vehicle; five Camrys and four 2017 RAV4s, so the page's "In stock" has an order |
+| `demo-shelf` | `stock` (shelf) | numbered parts, one under a retired number and one with none, of release `DEMO-1`; its header declares `stock_number` and `condition`, the page's columns for a shelf row |
+| `demo-yard-stock` | `stock` (yard) | whole vehicles, twenty by VIN and two by the catalog's vehicle; five Camrys and four 2017 RAV4s, so the page's "In stock" has an order; its header declares `stock_number` and `row` and leaves `color` out, so the page prints two columns and folds the colour under its row |
 | `vpic/demo-vpic-catalog` | `catalog` (`"vehicles": "vpic"`) | the same vehicles and part types as vPIC's own, with no vehicle vocabulary: 46 fitments, release `DEMO-V1`, numbers `DEMO-V…`; applications to vPIC models (the F-150 is model 1801), to a make (every Toyota) and to `demo-classics`' extensions; qualified applications, sides, a redirect and a retired number. A server's alone, in place of `demo-catalog` (below) |
 
 **In a browser**, the Vocabularies dialog of any `serve` with the browser

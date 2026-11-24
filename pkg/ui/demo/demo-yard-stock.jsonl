@@ -1,4 +1,4 @@
-{"format":1,"kind":"stock","name":"demo-yard-stock","version":"2026.11-demo","source":"yard","as_of":"2026-11-12"}
+{"format":1,"kind":"stock","name":"demo-yard-stock","version":"2026.11-demo","source":"yard","as_of":"2026-11-12","fields":["stock_number","row"]}
 {"id":"DEMO-Y-01","location":"demo-north","vin":"1FTEW1EG7FFA12345","fields":{"stock_number":"DEMO-Y-01","color":"demo: white","row":"D-1"}}
 {"id":"DEMO-Y-02","location":"demo-south","vin":"1FTEW1CG3FFA12345","fields":{"stock_number":"DEMO-Y-02","color":"demo: blue","row":"D-1"}}
 {"id":"DEMO-Y-03","location":"demo-north","vin":"1GCVKREC6EZ123456","fields":{"stock_number":"DEMO-Y-03","color":"demo: red","row":"D-2"}}

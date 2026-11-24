@@ -225,11 +225,11 @@ func TestPageStock(t *testing.T) {
 	wantRows := [][]string{
 		{"DEMO-1001"},
 		{"On the shelf · 2 as of 2026-11-12",
-			"DEMO-S-01 | demo-north | stock_number DEMO-S-01 · condition demo: used, grade A",
-			"DEMO-S-02 | demo-south | stock_number DEMO-S-02 · condition demo: used, grade B; tagged with its old number Tagged with a retired number, DEMO-0901"},
+			"DEMO-S-01 | demo-north | stock_number=DEMO-S-01, condition=demo: used, grade A | ",
+			"DEMO-S-02 | demo-south | stock_number=DEMO-S-02, condition=demo: used, grade B; tagged with its old number | Tagged with a retired number, DEMO-0901"},
 		{"In the yard · 2 as of 2026-11-12",
-			"DEMO-Y-01 | demo-north | stock_number DEMO-Y-01 · color demo: white · row D-1 This VIN : the vehicle being looked up",
-			"DEMO-Y-02 | demo-south | stock_number DEMO-Y-02 · color demo: blue · row D-1"},
+			"DEMO-Y-01 | demo-north | stock_number=DEMO-Y-01, row=D-1 | color demo: white This VIN : the vehicle being looked up",
+			"DEMO-Y-02 | demo-south | stock_number=DEMO-Y-02, row=D-1 | color demo: blue"},
 	}
 	if got := openRows(s); !slices.EqualFunc(got, wantRows, slices.Equal) {
 		t.Errorf("DEMO-1001 open: %q; want %q\n%s", got, wantRows, s)
