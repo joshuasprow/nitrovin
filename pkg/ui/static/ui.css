@@ -70,6 +70,13 @@ body { --bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint:
   /* A lamp, the same in both colour schemes: amber, lit, on the one key
      that asks for the visitor: Update now. No group's colour is amber. */
   --lamp: #ffb300;
+  /* The focus ring is the link's blue wherever what it is drawn on
+     changes with the colour scheme: the ground, a dialog's panel
+     (--ring). A material does not change, so a ring drawn on one is
+     fixed, as a group's mark is: the light scheme's blue on metal,
+     manila and thermal paper (--ring-pale), and the dark scheme's on
+     label tape (--ring-tape). */
+  --ring: var(--link); --ring-pale: #0b4fa8; --ring-tape: #8ec5ff;
   /* The page's side margin, which the row of the cards reaches across on
      a narrow page. */
   --gutter: 1rem;
@@ -132,7 +139,13 @@ h2 { font-size: 1.1rem; margin: 1.5rem 0 .5rem; }
 h3 { font: 900 12px var(--label-font); letter-spacing: .08em; text-transform: uppercase; margin: 1.5rem 0 .5rem; padding-bottom: .2rem; border-bottom: 3px solid var(--c-vds); }
 #ui-error:empty { display: none; }
 #ui-error { color: var(--bad); border-left: 4px solid var(--bad); padding-left: .6rem; margin-bottom: 1rem; }
-a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible, pre:focus-visible, .hang:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
+a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible, pre:focus-visible, .hang:focus-visible, .pscroll:focus-visible, .receipt:focus-visible, .nonum-tape:focus-visible, .aka:has(.nametags:focus-visible) { outline: 3px solid var(--ring); outline-offset: 2px; }
+/* A ring takes the colour of what it is drawn on (--ring, body): a
+   control on a tag, on a print or on the plate, and one on label tape. A
+   dialog's panel is the scheme's, wherever its markup is. */
+.card, .ltag, .stock-kind, .ptpick { --ring: var(--ring-pale); }
+.ptwrap, .problems { --ring: var(--ring-tape); }
+dialog[popover], .note[popover] { --ring: var(--link); }
 code, pre, .mono { font-family: var(--cell-font); }
 .hint { color: var(--muted); font-weight: 400; }
 .visually-hidden, .plbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -304,8 +317,8 @@ form.filter .field { display: grid; gap: .25rem; }
    then, and so takes no focus: a key clipped out of sight was a stop of
    the Tab key with nothing to show for it. */
 .live .decode { display: none; }
-.live .plate:focus-within { outline: 3px solid var(--link); outline-offset: 3px; }
-.live .plate:focus-within .cell.next { box-shadow: inset 0 -6px 0 var(--link); }
+.live .plate:focus-within { outline: 3px solid var(--ring); outline-offset: 3px; }
+.live .plate:focus-within .cell.next { box-shadow: inset 0 -6px 0 var(--ring-pale); }
 @keyframes caret { 50% { box-shadow: none; } }
 /* The caret among the characters is a bar in the gap before its cell
    (after the last cell of a whole VIN). A selected cell is inked: dark,
@@ -547,7 +560,6 @@ table.sum .skip { color: var(--muted); }
    than a wide page's, and on a phone the row is the last on the trunk,
    under the candidates (below). */
 .aka { position: relative; min-width: 0; margin: 0; }
-.aka:has(.nametags:focus-visible) { outline: 3px solid var(--link); outline-offset: 2px; }
 .nametags { --nm: max(var(--m), 10rem); list-style: none; display: flex; align-items: flex-start; gap: var(--s2); margin: 0 calc(-1 * var(--end)) calc(-1 * var(--s2)) 0; padding: var(--s2) var(--end) var(--s2) 0;
   overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: var(--steel) transparent; }
 .nametags:focus-visible { outline: 0; }
@@ -706,6 +718,12 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
 /* A kind none of whose sources answered says so on a line under its
    name, and its strip's column (--sc) is as wide as that asks: the one
    state in which a strip is wider than its module. Its cell is a line
+/* The strip is its tag's edge: a ring around it would lie half on the
+   tag and half on the ground. It is drawn inside the strip, on its
+   metal, clear of its ledge; pushed in, the metal is darker, and the
+   ring with it, so it still reads 3:1 on the darkest ridge. */
+.stk:focus-visible { outline-offset: -6px; }
+.stk[aria-expanded=true]:focus-visible { outline-color: color-mix(in srgb, var(--ring-pale) 70%, #000); }
    taller than the others, so the cells stand on their counts' line,
    together in the strip's middle. */
 .stk .sc .down { display: block; }
@@ -755,7 +773,6 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
    taller for it. */
 .more-rows a, .more-cands a, :is(.fit, .part, .choice) .blank a { display: inline-block; padding-block: 3px; margin-block: -3px; }
 .receipt ::selection { color: var(--thermal); background: var(--on-thermal); }
-.receipt:focus-visible, .nonum-tape:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
 .stock-kind + .stock-kind { margin-top: var(--s4); }
 .stock-kind .kind { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 var(--s3); margin: 0 0 var(--s1); }
 .stock-kind .bar { padding: 0 var(--s2); color: var(--thermal); background: var(--on-thermal); }
@@ -774,7 +791,6 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
    container, and 100cqw its width. */
 .pscroll { container-type: inline-size; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: var(--thermal-muted) transparent;
   background: linear-gradient(var(--thermal), var(--thermal)) right / 16px 100% no-repeat local, linear-gradient(to left, rgb(8 7 15 / .26), transparent) right / 12px 100% no-repeat scroll; }
-.pscroll:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
 .print { width: 100%; border-collapse: collapse; }
 .print :is(th, td) { box-sizing: border-box; max-width: 24ch; padding: 0 var(--s3) 0 0; text-align: left; vertical-align: baseline; overflow-wrap: break-word; border: 0; }
 .print tr > :last-child { padding-right: 0; }
@@ -889,6 +905,8 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
 .mode + .mode { margin-left: -1px; border-radius: 0 3px 3px 0; }
 .mode:active, .mode[aria-current] { --key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed); }
 .plabels, .pplate, .punder { display: grid; grid-template-columns: 1fr 2fr; }
+/* The pressed key lies under its neighbour's edge, and its ring would. */
+.mode:focus-visible { position: relative; z-index: 1; }
 .part-form, .part-answer { --plate-pad: 16px; }
 .plabels { padding: 0 var(--plate-pad); margin-bottom: 7px; }
 .plabels .lab, .pfield { margin: 0 6px; min-width: 0; }
@@ -902,7 +920,7 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
   color: var(--on-metal); text-shadow: var(--emboss); background: transparent; border: 0; border-bottom: 4px solid var(--cm); border-radius: 0; box-shadow: none; outline: 0; }
 .pnum { --cm: #3d4650; }
 .pplate .pnum input::placeholder { color: var(--steel-dark); font: 900 clamp(13px, 2.2cqw, 20px) var(--label-font); letter-spacing: .14em; text-transform: uppercase; text-shadow: var(--emboss); }
-.pplate:has(.pnum input:focus-visible) { outline: 3px solid var(--link); outline-offset: 3px; }
+.pplate:has(.pnum input:focus-visible) { outline: 3px solid var(--ring); outline-offset: 3px; }
 .punder { padding: 0 var(--plate-pad); }
 .punder .brk { grid-column: 2; margin-inline: 9px; }
 /* The part's line (.pleader) is two boxes on the plate's grid: from the
@@ -1203,9 +1221,9 @@ button.linkish:active { transform: none; box-shadow: none; }
   .live .cell.hs, .live .cell.he { position: relative; z-index: 1; }
   .live .cell.hs::before, .live .cell.he::after { content: ""; position: absolute; width: 18px; pointer-events: none; }
   .live .cell.hs::before { left: -11px; top: -16px; bottom: 0;
-    background: radial-gradient(circle at 50% 9px, var(--link) 0 8px, transparent 8.5px), linear-gradient(var(--link), var(--link)) 50% 0 / 3px 100% no-repeat; }
+    background: radial-gradient(circle at 50% 9px, var(--ring-pale) 0 8px, transparent 8.5px), linear-gradient(var(--ring-pale), var(--ring-pale)) 50% 0 / 3px 100% no-repeat; }
   .live .cell.he::after { right: -11px; top: 0; bottom: -16px;
-    background: radial-gradient(circle at 50% calc(100% - 9px), var(--link) 0 8px, transparent 8.5px), linear-gradient(var(--link), var(--link)) 50% 0 / 3px 100% no-repeat; }
+    background: radial-gradient(circle at 50% calc(100% - 9px), var(--ring-pale) 0 8px, transparent 8.5px), linear-gradient(var(--ring-pale), var(--ring-pale)) 50% 0 / 3px 100% no-repeat; }
 }
 
 /* A row of the VINs menu is two lines: a vehicle, and under it the part
