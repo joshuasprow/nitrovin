@@ -18,9 +18,12 @@ var moreStockFixture = abs("../../testdata/vocab/stock/more")
 // candidate's rows, a link without JavaScript and an answer swapped in
 // place with it, and pressing another closes the first; the URL carries
 // the open candidate, so a reload draws the same page and Back the one
-// before. At 390 wide the candidates are one row that scrolls
-// sideways, the open one's rows under its tag. On the fitment fixture, a rotor with more rows than the page
-// shows: "Show all" loads every row, in place where scripts run. axe
+// before. The candidates are rows down the page at every width, the open
+// one's rows a print under its tag. On a wide page everything under the
+// cards stands on the cards' columns, and one trunk runs from the
+// vehicle's block to the last candidate, the picker and each candidate
+// tied to it. On the fitment fixture, a rotor with more rows than the
+// page shows: "Show all" loads every row, in place where scripts run. axe
 // audits each state. CI (CI set) needs the browser; a machine without
 // one skips.
 func TestStockStrip(t *testing.T) {
@@ -66,11 +69,11 @@ func TestStockStrip(t *testing.T) {
 			if got := tb.at(); got != first {
 				t.Errorf("DEMO-1001 pressed, the tab is at %s; want %s", got, first)
 			}
-			if cols, rows, notes := tb.count(`#stock-rows .stock-col`), tb.count(`#stock-rows tr`), tb.count(`#stock-rows .note`); cols != 2 || rows != 4 || notes != 2 {
-				t.Errorf("DEMO-1001's rows: %d columns, %d rows, %d notes; want 2, 4 and 2", cols, rows, notes)
+			if kinds, rows, notes := tb.count(`#stock-rows .stock-kind`), tb.count(`#stock-rows tbody`), tb.count(`#stock-rows .note`); kinds != 2 || rows != 4 || notes != 2 {
+				t.Errorf("DEMO-1001's rows: %d kinds of stock, %d rows, %d notes; want 2, 4 and 2", kinds, rows, notes)
 			}
-			if tb.count(`.cand:has(#stk-1) + #stock-rows`) != 1 {
-				t.Error("DEMO-1001's rows are not right after its tag")
+			if tb.count(`.cand:has(#stk-1) > .line + #stock-rows`) != 1 {
+				t.Error("DEMO-1001's rows are not right after its tag, in its list item")
 			}
 			if js && eval[bool](tb, `document.activeElement !== document.getElementById("stk-1")`) {
 				t.Errorf("the pressed strip lost the focus to %s", eval[string](tb, `document.activeElement.outerHTML`))
@@ -96,29 +99,28 @@ func TestStockStrip(t *testing.T) {
 			}
 			demo.take()
 
-			// 390 wide: the candidates are one row that scrolls sideways
-			// from one edge of the window to the other, the open one's
-			// rows under its tag, in its column, shelf over yard, and the
-			// page does not scroll.
+			// 390 wide: the candidates are rows down the page, at one
+			// leading edge, the open one's rows under its tag and no wider
+			// than it, shelf over yard, and the page does not scroll
+			// sideways.
 			tb.window(390, 844)
 			tb.do(chromedp.Navigate(srv.URL + first))
 			tb.wait(`#stock-region`)
 			demo.take()
 			m := measure[[]float64](tb, `(() => {
-				const c = document.querySelector(".cands"), box = c.getBoundingClientRect();
-				const rows = document.getElementById("stock-rows"), tag = rows.previousElementSibling;
-				tag.scrollIntoView({block: "nearest", inline: "start", behavior: "instant"});
-				const t = tag.getBoundingClientRect(), r = rows.getBoundingClientRect();
-				const cols = [...document.getElementById("stock-region").children].map(e => e.getBoundingClientRect());
-				return [c.scrollWidth, c.clientWidth, box.left, box.right, t.left, t.right, t.bottom, r.left, r.right, r.top, cols[0].bottom, cols[1].top, cols[0].left, cols[1].left, document.documentElement.scrollWidth, innerWidth];
+				const lines = [...document.querySelectorAll(".cands > .cand > .line")].map(e => e.getBoundingClientRect());
+				const rows = document.getElementById("stock-rows"), t = rows.previousElementSibling.getBoundingClientRect(), r = rows.getBoundingClientRect();
+				const kinds = [...document.querySelectorAll("#stock-region > .stock-kind")].map(e => e.getBoundingClientRect());
+				return [lines.length, new Set(lines.map(l => Math.round(l.left))).size, Math.min(...lines.slice(1).map((l, i) => l.top - lines[i].bottom)),
+					t.left, t.right, t.bottom, r.left, r.right, r.top, kinds[0].bottom, kinds[1].top, kinds[0].left, kinds[1].left, document.documentElement.scrollWidth, innerWidth];
 			})()`)
-			scrollW, clientW, boxL, boxR, tagL, tagR, tagB, rowsL, rowsR, rowsT := m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8], m[9]
-			shelfB, yardT, shelfL, yardL, pageW, winW := m[10], m[11], m[12], m[13], m[14], m[15]
-			if scrollW <= clientW || boxL > 0 || boxR < winW || pageW > winW {
-				t.Errorf("390 wide: the candidates hold %v in %v, from %v to %v, the page %v in %v; want one row that scrolls, from edge to edge of a page that does not", scrollW, clientW, boxL, boxR, pageW, winW)
+			count, edges, gap, tagL, tagR, tagB, rowsL, rowsR, rowsT := m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8]
+			shelfB, yardT, shelfL, yardL, pageW, winW := m[9], m[10], m[11], m[12], m[13], m[14]
+			if count != 3 || edges != 1 || gap < 0 || pageW > winW {
+				t.Errorf("390 wide: %v candidates at %v leading edges, the nearest two %v apart, the page %v in %v; want three rows down a page that does not scroll sideways", count, edges, gap, pageW, winW)
 			}
-			if math.Abs(rowsL-tagL) > 1 || math.Abs(rowsR-tagR) > 1 || rowsT < tagB || tagR >= winW {
-				t.Errorf("390 wide: the tag from %v to %v, down to %v, its rows from %v to %v, from %v; want the rows under their tag, in its column, and the next tag at the edge", tagL, tagR, tagB, rowsL, rowsR, rowsT)
+			if rowsL < tagL-1 || rowsR > tagR+1 || rowsT < tagB-3 || tagR > winW {
+				t.Errorf("390 wide: the tag from %v to %v, down to %v, its rows from %v to %v, from %v; want the rows under their tag and no wider than it", tagL, tagR, tagB, rowsL, rowsR, rowsT)
 			}
 			if yardT < shelfB || math.Abs(yardL-shelfL) > 1 {
 				t.Errorf("390 wide: the shelf at %v down to %v, the yard at %v from %v; want the shelf over the yard", shelfL, shelfB, yardL, yardT)
@@ -156,43 +158,55 @@ func TestStockStrip(t *testing.T) {
 					return [top - joins.bottom, top + parseFloat(line.height) - strip.top];
 				});
 			})()`)
-			// Under the block, the Vehicle's and the Model year's lines
-			// come straight down from under their words into the picker's
-			// key, and end there: [each line's x past its word's middle,
-			// its bottom past the picker's top, the key's edges past it].
-			drops := measure[[]float64](tb, `(() => {
-				const fit = document.querySelector("#fit").getBoundingClientRect(), key = document.querySelector("#pick-type").getBoundingClientRect(), out = [];
-				for (const [group, pseudo] of [["vds", "::before"], ["year", "::after"]]) {
-					const word = document.querySelector(".fitstrip .seg.g-" + group).getBoundingClientRect(), line = getComputedStyle(document.querySelector("#fit .drops"), pseudo);
-					const x = fit.left + parseFloat(line.left) + 2.5;
-					out.push(x - (word.left + word.right) / 2, fit.bottom - parseFloat(line.bottom) - key.top, x - key.left, key.right - x);
-				}
-				return out;
+			// Under the block, one trunk: it leaves the block's bottom
+			// edge in the gutter beside the first card's column and runs
+			// straight down, a piece an item with no gap between two, past
+			// the open candidate's rows, to the last candidate's stub. The
+			// picker and every candidate are tied to it by a stub, which
+			// starts on the trunk and ends at the picker's tape or in the
+			// candidate's lead, where its eyelet is.
+			trunk := measure[[]float64](tb, `(() => {
+				const piece = (el, pseudo) => { const b = el.getBoundingClientRect(), s = getComputedStyle(el, pseudo), top = b.top + el.clientTop + parseFloat(s.top), left = b.left + el.clientLeft + parseFloat(s.left);
+					return {left, right: left + parseFloat(s.width), top, bottom: top + parseFloat(s.height)}; };
+				const block = document.querySelector(".fitstrip").getBoundingClientRect(), card = document.querySelector(".cards .card").getBoundingClientRect();
+				const tape = document.querySelector(".ptwrap"), cands = [...document.querySelectorAll(".cands > .cand")];
+				const pieces = [piece(document.querySelector(".band"), "::before"), ...cands.map(c => piece(c, "::after"))], stubs = cands.map(c => piece(c, "::before")), key = piece(tape, "::before");
+				const tags = cands.map(c => c.querySelector(".line").getBoundingClientRect()), last = pieces[pieces.length - 1];
+				return [pieces.length, pieces[0].top - block.bottom, Math.max(...pieces.map(p => Math.abs(p.left - pieces[0].left))), pieces[0].left - block.left, card.left - pieces[0].right,
+					Math.max(...pieces.slice(1).map((p, i) => p.top - pieces[i].bottom)), last.bottom - stubs[stubs.length - 1].bottom,
+					Math.max(...stubs.map(s => Math.abs(s.left - pieces[0].right))), Math.min(...stubs.map((s, i) => s.right - tags[i].left)), Math.max(...stubs.map((s, i) => s.right - tags[i].left)),
+					Math.abs(key.left - pieces[0].right), Math.abs(key.right - tape.getBoundingClientRect().left)];
 			})()`)
-			for i := 0; i+3 < len(drops); i += 4 {
-				if math.Abs(drops[i]) > 1.5 || drops[i+1] < -4 || drops[i+1] > 12 || drops[i+2] < 0 || drops[i+3] < 0 {
-					t.Errorf("1280 wide: the line to the picker is %v px off its word's middle, ends %v px past the picker's top, and is %v and %v px inside the key's edges; want it under its word and into the key", drops[i], drops[i+1], drops[i+2], drops[i+3])
-				}
+			if len(trunk) != 12 || trunk[0] != 4 || math.Abs(trunk[1]) > 1 || trunk[2] > 0.5 || trunk[3] <= 0 || trunk[4] <= 0 || trunk[5] > 0.5 || math.Abs(trunk[6]) > 1 {
+				t.Errorf("1280 wide: the trunk is %v [pieces, its top past the block's bottom edge, their spread sideways, in from the block's edge, short of the first card's, the widest gap between two, its end past the last stub]; want four pieces, one line in the gutter from the block to the last candidate's stub", trunk)
+			} else if trunk[7] > 1 || trunk[8] <= 0 || trunk[9] > 28 || trunk[10] > 1 || trunk[11] > 1.5 {
+				t.Errorf("1280 wide: the stubs are %v [off the trunk, the least and the most into their tag, the picker's off the trunk, and short of its tape]; want each from the trunk into its tag's lead, and the picker's to its tape", trunk[7:])
 			}
-			if len(drops) != 8 || eval[int](tb, `document.querySelectorAll("#fit .rails, #fit .risers, #fit .hook").length`) != 0 {
-				t.Errorf("1280 wide: %d measures of the lines to the picker, or a line from the picker to the candidates; want two lines that end at the picker", len(drops))
+			if eval[int](tb, `document.querySelectorAll("#fit .drops, #fit .trunk, #fit .ptrecents").length`) != 0 {
+				t.Error("1280 wide: an element draws a line to the picker, or recent part types are on its tape")
 			}
-			// The picker's tape is as wide as the vehicle's block, and the
-			// candidates are one row hung from it: each tag's wire runs
-			// from the tape's bottom edge to the tag's eyelet.
-			hung := measure[[]float64](tb, `(() => {
-				const tape = document.querySelector(".ptsel").getBoundingClientRect(), block = document.querySelector(".fitstrip").getBoundingClientRect();
-				const tags = [...document.querySelectorAll(".cands > .cand")], tops = new Set(tags.map(t => Math.round(t.getBoundingClientRect().top)));
-				const wires = tags.map(t => { const w = getComputedStyle(t, "::after"), top = t.getBoundingClientRect().top + parseFloat(w.top); return [top - tape.bottom, top + parseFloat(w.height) - t.getBoundingClientRect().top]; });
-				return [tape.width - block.width, tags.length, tops.size, ...wires.flat()];
+			// Everything under the block stands on the cards' columns: the
+			// picker's tape is the first two, a candidate all six, its
+			// number's tape ending with the second and its strip the
+			// sixth; the candidates are a column, and the open one's rows
+			// run from its tag's lead to its trailing edge.
+			cols := measure[[]float64](tb, `(() => {
+				const r = e => e.getBoundingClientRect(), cards = [...document.querySelectorAll(".cards .card")].map(r), tape = r(document.querySelector(".ptwrap"));
+				const lines = [...document.querySelectorAll(".cands > .cand > .line")], spread = (sel, at) => Math.max(...lines.map(l => Math.abs(at(r(sel ? l.querySelector(sel) : l)))));
+				const rows = r(document.querySelector("#stock-rows .receipt")), open = r(document.getElementById("stock-rows").previousElementSibling);
+				return [tape.left - cards[0].left, tape.right - cards[1].right, spread("", b => b.left - cards[0].left), spread("", b => b.right - cards[5].right),
+					spread(".numtape", b => b.right - cards[1].right), spread(".stk", b => b.left - cards[5].left), spread(".stk", b => b.right - cards[5].right),
+					new Set(lines.map(l => Math.round(r(l).top))).size - lines.length, rows.left - open.left, rows.right - open.right];
 			})()`)
-			if len(hung) < 5 || math.Abs(hung[0]) > 1 || hung[2] != 1 {
-				t.Fatalf("1280 wide: the picker's tape is %v px wider than the block, with %v candidates on %v rows; want the block's width and one row", hung[0], hung[1], hung[2])
-			}
-			for i := 3; i+1 < len(hung); i += 2 {
-				if math.Abs(hung[i]) > 3 || hung[i+1] < 8 || hung[i+1] > 20 {
-					t.Errorf("1280 wide: a candidate's wire starts %v px from the tape's bottom edge and ends %v px into its tag; want it from the tape to the eyelet", hung[i], hung[i+1])
+			for i, what := range []string{"the picker's tape from the first card's leading edge", "the picker's tape from the second card's trailing edge", "a candidate from the first card's leading edge",
+				"a candidate from the sixth card's trailing edge", "a number's tape from the second card's trailing edge", "a strip from the sixth card's leading edge", "a strip from the sixth card's trailing edge"} {
+				if len(cols) != 10 || cols[i] > 1 || cols[i] < -1 {
+					t.Errorf("1280 wide: %s is %v px; want it on the column", what, cols)
+					break
 				}
+			}
+			if len(cols) == 10 && (cols[7] != 0 || cols[8] < 20 || cols[8] > 36 || math.Abs(cols[9]) > 1) {
+				t.Errorf("1280 wide: %v candidates share a row, and the open one's rows start %v px in from its tag's leading edge and end %v px from its trailing one; want a column of rows, and the print from the tag's lead to its end", -cols[7], cols[8], cols[9])
 			}
 			if len(lines) != 6 {
 				t.Fatalf("1280 wide: %d measures of the block's lines; want 6, two of each of three", len(lines))
@@ -213,13 +227,13 @@ func TestStockStrip(t *testing.T) {
 				eval[bool](rb, `window.kept = true`)
 			}
 			ram.take()
-			if n := rb.count(`#stock-region .stock-col:first-child tr`); n != 10 {
+			if n := rb.count(`#stock-region .stock-kind:first-child tbody`); n != 10 {
 				t.Errorf("BR-2001's shelf: %d rows; want 10", n)
 			}
 			rb.do(chromedp.Click(chromedp.CSS(`.more-rows a`)))
 			rb.wait(`#answer[data-rows="all"]`)
 			rb.requests(name+", Show all", js, rotor+"&rows=all")
-			if n := rb.count(`#stock-region .stock-col:first-child tr`); n != 15 || rb.count(`.more-rows`) != 0 {
+			if n := rb.count(`#stock-region .stock-kind:first-child tbody`); n != 15 || rb.count(`.more-rows`) != 0 {
 				t.Errorf("BR-2001's shelf, all of it: %d rows, %d Show all; want 15, none", n, rb.count(`.more-rows`))
 			}
 			if js && !eval[bool](rb, `window.kept === true && document.activeElement === document.getElementById("stock-region")`) {

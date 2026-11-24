@@ -16,13 +16,14 @@ import (
 // to a part type and a number, and back; choosing a part type in the
 // dialog fills the plate's field; a number, typed with JavaScript and sent
 // by the plate's Look up without, answers with the part's tag and its
-// vehicles; its stock strip opens its rows; the URL carries the mode and
-// the part, so a reload draws the same page and Back the ones before. One
-// line runs from the number's bracket to the tag's eyelet, ending at both.
-// At 390 wide the switch and the VINs key are the plate's width, the fields stack, the
-// vehicles are one to a row, and the page does not scroll sideways. axe
-// audits each state. CI (CI set) needs the browser; a machine without one
-// skips.
+// vehicles, a row each; its stock strip opens its rows; the URL carries
+// the mode and the part, so a reload draws the same page and Back the
+// ones before. One line runs from the number's bracket into the tag's
+// eyelet, and a trunk from the tag's bottom edge down through the
+// vehicles. At 390 wide the switch and the VINs key are the plate's
+// width, the fields stack, the vehicles follow the tag's rows, and the
+// page does not scroll sideways. axe audits each state. CI (CI set) needs
+// the browser; a machine without one skips.
 func TestPartMode(t *testing.T) {
 	path := chromePath()
 	if path == "" {
@@ -98,31 +99,29 @@ func TestPartMode(t *testing.T) {
 			if got := tb.at(); got != found {
 				t.Errorf("DEMO-4001 typed, the tab is at %s; want %s", got, found)
 			}
-			if n := tb.count(".vehicles tbody tr"); n != 2 || !strings.Contains(tb.html(".ptag"), "2 vehicles in demo-catalog") {
+			if n := tb.count(".vehs > .cand.veh"); n != 2 || !strings.Contains(tb.html(".ptag"), "2 vehicles in demo-catalog") {
 				t.Errorf("DEMO-4001: %d vehicles; want 2\n%s", n, tb.html("#part"))
 			}
 			if js && !eval[bool](tb, `document.activeElement === document.getElementById("from-number")`) {
 				t.Errorf("typing, the focus left the number for %s", eval[string](tb, `document.activeElement.outerHTML`))
 			}
 
-			// One line, from the number's bracket to the tag's eyelet: on a
-			// wide page to the first third's centre, on a narrow one the
-			// first half's.
-			for _, w := range []struct {
-				width int64
-				path  string
-			}{{1280, "wide"}, {768, "mid"}} {
-				tb.window(w.width, 900)
-				ends := measure[[]float64](tb, `(() => {
-					const c = el => { const r = el.getBoundingClientRect(); return [(r.left + r.right) / 2, r.top, r.bottom]; };
-					const line = document.querySelector(".pleader path.`+w.path+`").getBoundingClientRect();
-					const [brk, , brkBottom] = c(document.querySelector(".punder .brk"));
-					const [tag, tagTop] = c(document.querySelector(".ptag"));
-					return [line.left, line.right, line.top, line.bottom, brk, brkBottom, tag, tagTop];
+			// One line, from the number's bracket into the tag's eyelet:
+			// down from the bracket's foot, along, and down into the tag
+			// at its leading end, where its eyelet is. And one trunk from
+			// the tag's bottom edge to the last vehicle's stub.
+			for _, width := range []int64{1280, 768} {
+				tb.window(width, 900)
+				if ends := measure[[]float64](tb, leaderJS); len(ends) != 6 || math.Abs(ends[0]) > 1.5 || math.Abs(ends[1]) > 1.5 || math.Abs(ends[2]) > 1.5 || ends[3] > 0.5 || math.Abs(ends[4]-34) > 1.5 || ends[5] < 12 || ends[5] > 24 {
+					t.Errorf("%d wide, the line is %v [off the bracket's middle, under its foot, its bend past its drop, a gap between the two, into the tag from its leading edge, and from its top]; want it from the bracket's foot into the eyelet, 34 px in and above 24 px down", width, ends)
+				}
+				trunk := measure[[]float64](tb, `(() => {
+					const piece = (el, pseudo) => { const b = el.getBoundingClientRect(), s = getComputedStyle(el, pseudo), top = b.top + parseFloat(s.top); return {top, bottom: top + parseFloat(s.height), left: b.left + parseFloat(s.left)}; };
+					const rows = [...document.querySelectorAll(".vehs > .cand")], pieces = rows.map(c => piece(c, "::after")), tag = document.querySelector(".ptag").getBoundingClientRect();
+					return [pieces[0].top - tag.bottom, Math.max(...pieces.slice(1).map((p, i) => p.top - pieces[i].bottom)), pieces[pieces.length - 1].bottom - piece(rows[rows.length - 1], "::before").bottom, pieces[0].left - tag.left];
 				})()`)
-				near := func(a, b float64) bool { return math.Abs(a-b) < 1.5 }
-				if !near(ends[0], ends[6]) || !near(ends[1], ends[4]) || !near(ends[2], ends[5]) || !near(ends[3], ends[7]) {
-					t.Errorf("%d wide, the line runs %v–%v, %v–%v; want from the bracket's foot (%v, %v) to the tag's top centre (%v, %v)", w.width, ends[0], ends[1], ends[2], ends[3], ends[4], ends[5], ends[6], ends[7])
+				if len(trunk) != 4 || math.Abs(trunk[0]) > 1 || trunk[1] > 0.5 || math.Abs(trunk[2]) > 1 || trunk[3] <= 0 || trunk[3] > 20 {
+					t.Errorf("%d wide, the trunk is %v [past the tag's bottom edge, the gap between its two pieces, past the last vehicle's stub, in from the tag's leading edge]; want one line from the tag to the last vehicle, in the gutter", width, trunk)
 				}
 			}
 			tb.window(1280, 900)
@@ -136,8 +135,8 @@ func TestPartMode(t *testing.T) {
 			if got := tb.at(); got != open {
 				t.Errorf("stock open, the tab is at %s; want %s", got, open)
 			}
-			if rows := tb.count("#stock-region tr"); rows != 3 || tb.count(".pcol > .ptag + #stock-rows") != 1 {
-				t.Errorf("DEMO-4001's stock: %d rows, under its tag %d; want 3, 1", rows, tb.count(".pcol > .ptag + #stock-rows"))
+			if rows := tb.count("#stock-region tbody"); rows != 3 || tb.count(".phead > .ptag + #stock-rows") != 1 {
+				t.Errorf("DEMO-4001's stock: %d rows, under its tag %d; want 3, 1", rows, tb.count(".phead > .ptag + #stock-rows"))
 			}
 			tb.audit(name + ", DEMO-4001's stock")
 
@@ -204,9 +203,9 @@ func TestPartMode(t *testing.T) {
 			log.take()
 
 			// 390 wide: the switch's row, with the VINs key, is the plate's width, the fields stack,
-			// the vehicles are one to a row under the tag, the line runs
-			// straight down to its eyelet, and the page does not scroll
-			// sideways.
+			// the tag's rows are under it and the vehicles under those, one
+			// to a row at one width, the line still runs into the eyelet,
+			// and the page does not scroll sideways.
 			tb.window(390, 844)
 			tb.do(chromedp.Navigate(srv.URL + open))
 			tb.wait("#stock-region")
@@ -214,18 +213,32 @@ func TestPartMode(t *testing.T) {
 			log.take()
 			m := measure[[]float64](tb, `(() => {
 				const r = sel => document.querySelector(sel).getBoundingClientRect();
-				const rows = [...document.querySelectorAll(".vehicles tbody tr")].map(tr => tr.getBoundingClientRect());
-				const line = r(".pleader path.narrow"), tag = r(".ptag"), table = r(".vehicles tbody");
+				const rows = [...document.querySelectorAll(".vehs > .cand > .line")].map(e => e.getBoundingClientRect()), tag = r(".ptag"), print = r("#stock-rows");
 				return [r(".moderow").width - r(".pplate").width, r("#part-type-field").bottom - r(".pnum").top,
-					Math.max(...rows.map(b => Math.abs(b.left - table.left) + Math.abs(b.width - table.width))), rows[1].top - rows[0].bottom,
-					line.left - (tag.left + tag.right) / 2, line.bottom - tag.top, r(".vehicles").top - tag.bottom,
-					document.documentElement.scrollWidth - innerWidth];
+					Math.max(...rows.map(b => Math.abs(b.left - rows[0].left) + Math.abs(b.width - rows[0].width))), rows[1].top - rows[0].bottom,
+					print.top - tag.bottom, rows[0].top - print.bottom, document.documentElement.scrollWidth - innerWidth];
 			})()`)
-			if math.Abs(m[0]) > 1 || m[1] > 0 || m[2] > 1 || m[3] < -1 || math.Abs(m[4]) > 1.5 || math.Abs(m[5]) > 1.5 || m[6] < 0 || m[7] > 0 {
-				t.Errorf("390 wide: the switch's row %v wider than the plate, the type %v over the number, rows %v off the table's width, %v between rows, the line %v from the eyelet and %v from the tag's top, the vehicles %v under the tag, the page %v wider than the window",
-					m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7])
+			if math.Abs(m[0]) > 1 || m[1] > 0 || m[2] > 1 || m[3] < 0 || m[4] < -3 || m[5] < 0 || m[6] > 0 {
+				t.Errorf("390 wide: the switch's row %v wider than the plate, the type %v over the number, the vehicles' rows %v off one width, %v between two, the tag's rows %v under it, the vehicles %v under those, the page %v wider than the window",
+					m[0], m[1], m[2], m[3], m[4], m[5], m[6])
+			}
+			if ends := measure[[]float64](tb, leaderJS); len(ends) != 6 || math.Abs(ends[0]) > 1.5 || math.Abs(ends[4]-34) > 1.5 || ends[5] < 12 || ends[5] > 24 {
+				t.Errorf("390 wide, the line is %v; want it from the bracket's middle into the eyelet", ends)
 			}
 			tb.audit(name + ", 390 wide")
 		})
 	}
 }
+
+// leaderJS measures part-number mode's line, the two boxes .pleader
+// draws: [its drop's middle past the bracket's, its top past the
+// bracket's foot, its bend's trailing end past the drop's, the bend's top
+// past the drop's foot, the bend's leading edge's middle past the tag's
+// leading edge, and its foot past the tag's top].
+const leaderJS = `(() => {
+	const lead = document.querySelector(".pleader"), b = lead.getBoundingClientRect(), drop = getComputedStyle(lead, "::before"), bend = getComputedStyle(lead, "::after");
+	const brk = document.querySelector(".punder .brk").getBoundingClientRect(), tag = document.querySelector(".ptag").getBoundingClientRect();
+	const x = b.left + parseFloat(drop.left) + parseFloat(drop.width) / 2, top = b.top + parseFloat(drop.top), turn = b.top + parseFloat(bend.top);
+	return [x - (brk.left + brk.right) / 2, top - brk.bottom, b.left + parseFloat(bend.left) + parseFloat(bend.width) - (x + parseFloat(drop.width) / 2), turn - (top + parseFloat(drop.height)),
+		b.left + parseFloat(bend.left) + 2.5 - tag.left, turn + parseFloat(bend.height) - tag.top];
+})()`

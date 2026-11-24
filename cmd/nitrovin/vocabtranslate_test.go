@@ -74,7 +74,7 @@ func stacks(tb *tab) []stack {
 		defer tb.scripts(false)
 	}
 	return eval[[]stack](tb, `[...document.querySelectorAll("#aka li.name")].map(tag => {
-		const make = tag.querySelector(":scope > .nw.g-wmi"), rows = [...tag.querySelectorAll(".nrow")];
+		const make = tag.querySelector(".nrows > .nw.g-wmi"), rows = [...tag.querySelectorAll(".nrow")];
 		return {
 			vocabulary: tag.querySelector(".nvoc").firstChild.textContent.trim(),
 			names: rows.map(r => [(r.querySelector(".g-wmi") || make || {textContent: ""}).textContent, r.querySelector(".g-vds").textContent].join(" ").trim()).sort(),
