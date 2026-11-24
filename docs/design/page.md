@@ -47,7 +47,10 @@ Each part has one of two standings.
 - **Motion marks a change: a stamp, a draw and a pop**, each under 0.4 s, and
   none of it under `prefers-reduced-motion`. A typed character stamps in; a
   finished group draws its bracket and line and pops its card. The only
-  motion that loops is the caret's blink on the focused plate, once a second.
+  motion that loops is the caret's blink on the focused plate, once a
+  second; under `prefers-reduced-motion` the caret stands still. What a
+  scroll moves, a row's fade and the lines a narrow page carries, is tied
+  to the scroll and not to a clock, so it stays.
 
 ## Composition rules
 
@@ -168,8 +171,18 @@ says where.
 | Text `--fg` / `--muted` | `#14181d` / `#47515c` | `#eef2f5` / `#a9b6c2` |
 | Panel ground `--card-bg` | `#ffffff` | `#1f2d3a` |
 | Rule `--line`, not-yet `--faint` | `#9fb3c2`, `#a9bccb` | `#45566a`, `#3a4a5c` |
-| Link and focus `--link` | `#0b4fa8` | `#8ec5ff` |
+| Link `--link`, and the focus ring on the ground and a panel, `--ring` | `#0b4fa8` | `#8ec5ff` |
 | Error `--bad` | `#b91c1c` | `#ff8a8a` |
+
+A focus ring is drawn on something, and takes the colour that shows on
+it. On the ground and on a dialog's panel, which change with the scheme,
+it is `--ring`, the link's blue. A material does not change, so a ring
+on one is fixed, as a group's mark is: `--ring-pale`, the light scheme's
+blue (`#0b4fa8`), on metal, manila and thermal paper, and `--ring-tape`,
+the dark scheme's (`#8ec5ff`), on label tape. Each is 3:1 or more
+against what it is on, in both schemes. It was `--link` everywhere, which
+in the dark scheme was pale blue on manila, on thermal paper and on the
+plate, and in the light scheme dark blue on black tape.
 
 Each of the six groups of a VIN has one colour, `--c`. Its label, bracket and
 leader line all use it, and its card prints it as a band.
@@ -328,10 +341,11 @@ text field laid over them.
   by `--emboss`, over a 4 px underline in its group's mark. Its size follows
   the plate's width through container units.
 - **Empty**, the plate reads "Type a VIN" in the label face across its middle.
-- **Focused**, the plate takes the 3 px `--link` outline, 3 px off every side
-  of what is seen, and the next empty cell blinks a 6 px bar of `--link` along
-  its bottom. The brackets above and below stand 7 px off the plate, clear of
-  the ring.
+- **Focused**, the plate takes the 3 px `--ring` outline, 3 px off every side
+  of what is seen, and the next empty cell blinks a 6 px bar along its
+  bottom, in `--ring-pale`, the same blue on the metal in both schemes.
+  The brackets above and below stand 7 px off the plate, clear of the
+  ring.
 - **The caret among characters** is a 4 px bar in the gap before its cell.
   Under a mouse, the gap a click would pick shows the same bar at 35%.
 - **A selected cell** is inked: `#16202b`, white character, ringed 3 px in its
@@ -343,8 +357,8 @@ text field laid over them.
 - **Narrow windows keep the plate.** Under 34 rem the cells wrap to two rows of
   nine, breaking after the check digit, so a cell stays wide enough for a
   finger. Under a coarse pointer the selection handles are the cells' own,
-  and a long press selects the whole VIN, drawn on the cells; the phone
-  draws no handles of its own over them.
+  in `--ring-pale`, and a long press selects the whole VIN, drawn on the
+  cells; the phone draws no handles of its own over them.
 - **A one-cell group's label is wider than its cell** under 64 rem, and
   the three are neighbours. Check ends on its bracket's trailing edge and
   Plant begins on its bracket's leading edge, with Year centred between
@@ -699,7 +713,8 @@ control; the paper is the print (`.receipt` in the stylesheet).
   part's number, and the columns are a table's, the id's and the
   location's named out of sight. The table is in a group named by its
   kind's bar, which is what scrolls, and takes focus, so a keyboard
-  scrolls it.
+  scrolls it: a kind of stock is one stop of the Tab key, whether or not
+  its paper is wide enough for its columns.
 - **It has no head, no barcode and no dot leaders.** It names no part: its
   tag does, and a press keeps the tag in sight (the parts that fit,
   below). So the print no longer breaks rule 3.
@@ -838,7 +853,8 @@ card's trailing edge, and is a whole number of columns wide.
   than a row. A dashed underline is a doubt, and only a name with one has
   the "i", a key of label tape. Every name opens a note that says in
   words how it was reached: a doubtful one from its "i", a sure one from
-  the name itself, which darkens under a pointer. The note hangs from
+  the name itself, which darkens under a pointer and more while it is
+  held, without the travel of a key: it is ink. The note hangs from
   what opened it (dialogs, below). Where tags are out of
   sight past an end of the row, that end fades over 48 px, and the fade
   goes when the row is scrolled to that end; a row that fits has none.
@@ -856,14 +872,21 @@ card's trailing edge, and is a whole number of columns wide.
   first piece, from the trunk to the row's edge, is the row's and stays;
   the rest is the tag's, and scrolls with it under the row's fade. With
   nothing pressed the row is under the blank strip that asks for a
-  choice, and the trunk runs past the strip to it. The markup keeps the
-  names after the picker, and a screen reader meets them there. A
-  browser that knows `reading-flow` takes the Tab key down the page as
-  drawn; another takes it to the names before the candidates.
+  choice, and the trunk runs past the strip to it. The page writes the
+  names after the picker, where a wide page draws them. Where scripts
+  run, `plate.js` moves them in the document to where a phone draws
+  them, before the rows with no number and "Next page", and back when
+  the window widens, so the Tab key and a screen reader go down the page
+  as it reads in every browser. Without scripts a browser that knows
+  `reading-flow` still takes the Tab key that way; another takes it to
+  the names before the candidates, and skips nothing.
 - **The picker's list** is the part types dialog, hung from the picker at
   its width, 4 px under it, over the candidates: it moves none of them.
   It has no head, no line saying what it lists and no backdrop, and
-  pressing outside it or Escape shuts it. It always opens downward, and
+  pressing outside it or Escape shuts it, and the focus goes back to the
+  picker. It opens with the focus in its filter, a search field, whose
+  Escape Safari keeps for the field: `plate.js` shuts the list on it, as
+  the other browsers do. It always opens downward, and
   it is laid on the page, not on the window. It moves with the page; a
   page too short for it grows longer; and where the window ends before
   the list does, the page scrolls to it where scripts run, the picker
@@ -905,7 +928,8 @@ card's trailing edge, and is a whole number of columns wide.
   on a line of its own) over its marks and its note; then its stock
   strip, the last column. A candidate has no group and takes no colour. A
   row is a row high, and grows only where the option text or the note
-  needs another line. Under 64 rem a row is 3.5 rem and a finger's. Its
+  needs another line, or a kind of stock is unavailable (the stock
+  strip, below). Under 64 rem a row is 3.5 rem and a finger's. Its
   side and its years are under its number there, so a number never
   breaks for want of room. The number's tape is two columns and no
   narrower than 9.5 rem, the strip one column and no narrower than
@@ -939,8 +963,16 @@ card's trailing edge, and is a whole number of columns wide.
   it once, in words: "Stock · 2 shelf · 2 yard" and the number. Every
   candidate arrives with its totals from the candidates' one request,
   which asks for the stock loaded beside the catalog. A kind none of
-  whose sources answered reads a dash over "yard unavailable", never 0: a
-  0 is a loaded source with none. With stock loaded and none for the
+  whose sources answered reads a dash over "yard", with "unavailable" on
+  a line under it, never 0: a 0 is a loaded source with none. That cell
+  is wider and a line taller than a count's, so the strip is as wide as
+  it asks, 167 px for one kind and 163 under 64 rem, the one state in
+  which a strip is wider than its column, and the cells stand on their
+  counts' line. It was one line that ran off the tag, and on a narrow
+  page took the window sideways. Under 34 rem the wider strip takes its
+  width from the number's tape: a number of eleven characters keeps one
+  line down to 378 px, and breaks under that. With stock loaded and
+  none for the
   candidate it is "Stock · none", muted ink beside a 2 px dashed rule,
   and presses nothing; with none loaded it is "Stock · not loaded" with
   "Add stock" underlined, and opens the Vocabularies dialog.
@@ -973,7 +1005,10 @@ card's trailing edge, and is a whole number of columns wide.
   and the vehicle in their own case, over the same print, under their
   count and as-of dates. They hang from no tag. Past the candidates' page
   of them, "Show all" is the page with every one (`rows=unnumbered`).
-  They never keep the candidates' "Next page".
+  They never keep the candidates' "Next page". "Show all" leaves the
+  focus on the strip's heading. The section itself takes none: where
+  the page's order is drawn (`reading-flow`), a part of it that only a
+  script can focus keeps the Tab key out of everything in it.
 
 ## Good enough: empty places
 
@@ -1129,11 +1164,17 @@ Every other control is plain and small.
   entries) sits in a panel like a note's: panel ground, a 2 px `--steel` edge,
   4 px corners, on 3 px of `--steel-dark` and a soft shadow.
 - **Focus:** every link, button, summary, field and `pre` takes a 3 px
-  `--link` outline, 2 px off. The plate takes it 3 px off.
+  outline, 2 px off, in the ring's colour for what it is drawn on
+  (Tokens, above). The plate takes it 3 px off. A stock strip is its
+  tag's edge, so its ring is inside it, 6 px in, on its metal and clear
+  of its ledge, as the cards' row's is inside its region under 64 rem.
+  The mode switch's focused key lies over its neighbour, so its ring is
+  whole.
 - **Errors:** `--bad` text. A refusal and the page's error slot add a 4 px
-  `--bad` rule down the left. What the decoder says is wrong with a whole
-  VIN is not an error of the page's: it is on label tape (vinyl tape,
-  above).
+  `--bad` rule down the left. Under the plate a refusal is the last line
+  of the parts that fit, or of a part's answer, on the columns. What the
+  decoder says is wrong with a whole VIN is not an error of the page's:
+  it is on label tape (vinyl tape, above).
 - **Targets:** a link or a button in a table row is at least 24 px high,
   and so is a key on a card, and a link in a sentence under the cards
   ("Show all", "Next page", a blank strip's way on), whose line is no
