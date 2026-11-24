@@ -145,7 +145,6 @@ func TestPartTypePicker(t *testing.T) {
 		`<dialog id="part-types" class="ptdialog" popover aria-labelledby="part-types-h">`,
 		`<p class="hint">2015 F-150 / Ford in strip-catalog · grouped by strip-groups</p>`,
 		// Without a script: no filter, and no recent part types.
-		`<ul class="ptrecents" aria-label="Opened recently" hidden></ul>`,
 		`<p class="ptf" hidden><label class="visually-hidden" for="ptf-dialog">Filter part types</label>`,
 		`<section class="ptgroup ptrecent" aria-labelledby="ptrecent-h" hidden>`,
 	} {
@@ -153,8 +152,10 @@ func TestPartTypePicker(t *testing.T) {
 			t.Errorf("the pickup's part types lack %s\n%s", want, s)
 		}
 	}
-	if strings.Contains(s, "ptclear") || strings.Contains(s, "Seats") || strings.Contains(s, `class="ptypes"`) {
-		t.Errorf("nothing pressed: a key that clears, a heading that holds none, or the strip of part types\n%s", s)
+	// The recent part types are the list's alone: the picker's tape holds
+	// the picker and the key that clears it.
+	if strings.Contains(s, "ptclear") || strings.Contains(s, "Seats") || strings.Contains(s, `class="ptypes"`) || strings.Contains(s, "ptrecents") {
+		t.Errorf("nothing pressed: a key that clears, a heading that holds none, the strip of part types, or recent ones on the tape\n%s", s)
 	}
 
 	// Pressed, a part type is the picker's, with its candidates' count

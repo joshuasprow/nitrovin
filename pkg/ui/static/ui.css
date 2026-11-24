@@ -62,9 +62,12 @@ body { --bg: #dcecf7; --fg: #14181d; --muted: #47515c; --line: #9fb3c2; --faint:
   /* A lamp, the same in both colour schemes: amber, lit, on the one key
      that asks for the visitor: Update now. No group's colour is amber. */
   --lamp: #ffb300;
-  /* The page's side margin, which the region of the cards and the names' row
-     reaches across on a narrow page. */
+  /* The page's side margin, which the row of the cards reaches across on
+     a narrow page. */
   --gutter: 1rem;
+  /* One scale of spaces, one text inset on every material, and one
+     height for a row: a tag laid long, the picker, a blank strip. */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --inset: 12px; --row: 48px;
   font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 1rem var(--gutter) 3rem; color: var(--fg); background: var(--bg); }
 @media (prefers-color-scheme: dark) {
   body { --bg: #16222d; --fg: #eef2f5; --muted: #a9b6c2; --line: #45566a; --faint: #3a4a5c; --card-bg: #1f2d3a; --link: #8ec5ff; --bad: #ff8a8a;
@@ -313,7 +316,7 @@ form.filter .field { display: grid; gap: .25rem; }
    scrolls sideways (below). */
 .cards { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); padding: 0 16px; }
 .card { position: relative; isolation: isolate; margin: 0 4px; padding: 28px .6rem .5rem; min-width: 0; overflow-wrap: anywhere; color: var(--on-manila); filter: drop-shadow(0 4px 5px rgb(8 7 15 / .28)); }
-.card::before, .cand-in::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+.card::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background: radial-gradient(circle at 50% 14px, transparent 4px, var(--manila-patch) 4.5px 10px, transparent 10.5px), var(--manila);
   clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%, 0 16px);
   mask-image: radial-gradient(circle at 50% 14px, transparent 3.5px, #000 4px); }
@@ -358,85 +361,141 @@ table.sum .skip { color: var(--muted); }
 .problems { margin: .75rem 20px 0; color: var(--bad); }
 .problems p { margin: .2rem 0; }
 
-/* "Also known as" (#366): the vehicle's names are manila tags, one a
-   vocabulary, in one row that scrolls sideways under the vehicle's block.
-   A tag is a card's stock. Across it, the vocabulary's name on a strip of
-   label tape, with how many names it holds where it has several. Under
-   that its words with no labels, each over its group's colour, which
-   says what it is: the make over the Maker's, once where every name
-   shares it; then a line a name, the model over the Vehicle's and the
-   years it holds for, lighter, over the Model year's. The words keep
-   their case: a vocabulary's entry is case-exact. A dashed underline is a
-   doubt, and a name's note, behind its "i", a key of label tape as a
-   tag's controls are, says it in words. */
-.aka { position: relative; z-index: 3; margin: 0; }
-.aka:has(.nametags:focus-visible) { outline: 3px solid var(--link); outline-offset: 2px; }
-.nametags { list-style: none; display: flex; align-items: stretch; gap: 10px; margin: 0; padding: 36px 4px 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding-inline: 4px; }
-.name { flex: none; scroll-snap-align: start; box-sizing: border-box; min-width: 11rem; max-width: min(40rem, 72vw); margin: 0; padding-bottom: .6rem; }
-.nametags:focus-visible { outline: 0; }
-.nrows { display: grid; grid-template-rows: repeat(2, auto); grid-auto-flow: column; grid-auto-columns: max-content; justify-content: start; align-content: start; gap: 0 1.4rem; }
-@property --nt-l { syntax: "<length>"; inherits: false; initial-value: 0px; }
-@property --nt-r { syntax: "<length>"; inherits: false; initial-value: 0px; }
-@supports (animation-timeline: scroll()) {
-  .nametags, .cands { mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline); }
-}
-@keyframes nt-fade { 0% { --nt-l: 0px; --nt-r: 48px; } 6% { --nt-l: 48px; --nt-r: 48px; } 94% { --nt-l: 48px; --nt-r: 48px; } 100% { --nt-l: 48px; --nt-r: 0px; } }
-.fitstrip ~ .aka .name::after { content: ""; position: absolute; left: calc(50% - 1px); top: -36px; width: 2px; height: 50px; background: var(--steel); pointer-events: none; }
-.nrow { position: relative; }
-.name .how { position: absolute; inset: 0; width: 100%; padding: 0; background: none; border: 0; box-shadow: none; cursor: pointer; }
-.name .how:hover, .name .how:focus-visible { background: rgb(0 0 0 / .07); }
-.name .nvoc { margin: -.2rem -.6rem .45rem; padding: .25rem .6rem; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border: 0; border-block: 1px solid var(--tape-edge); }
-.name .count::before { content: "· "; }
-.nw { width: fit-content; max-width: 100%; margin: 0 0 .3rem; font: 700 .95rem/1.25 var(--cell-font); letter-spacing: .04em; border-bottom: 3px solid var(--cm); }
-.nw.unsure, .nrow.rule .nw:is(.g-wmi, .g-vds), .name.rule > .nw { border-bottom-style: dashed; }
-.nrow { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; margin: 0 0 .3rem; }
-.nrow .nw { margin: 0; }
-.nrow .g-year { font-weight: 400; font-size: .85rem; }
-.name .none { margin: 0; font-size: 13px; color: var(--manila-muted); }
-.name .info { align-self: center; width: 1.3rem; height: 1.3rem; padding: 0; font: 700 11px/1 var(--cell-font); letter-spacing: 0; text-transform: none; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-radius: 2px; box-shadow: var(--lift-raised); }
-.name .info:active { transform: translateY(2px); background: var(--tape-in); box-shadow: var(--pressed); }
-/* A word on the vehicle's block: raised white over its group's mark, on
-   the line that runs straight down into the tape from its card. No line
-   ends in a bracket but the plate's own. */
-.seg { position: relative; align-self: stretch; display: flex; align-items: center; justify-content: center; padding: .35rem .6rem; text-align: center; min-width: 0; }
-.seg .w { font: 900 1.05rem/1.2 var(--cell-font); letter-spacing: .08em; text-shadow: var(--tape-emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere; }
-.seg::after { content: ""; position: absolute; left: calc(50% - 2.5px); top: calc(-1px - var(--lead) - var(--prev)); height: calc(var(--lead) + var(--prev) + 1px); border-left: 5px solid var(--c); filter: var(--stripe-lift); }
-.note[popover] { box-sizing: border-box; max-width: min(30rem, calc(100vw - 2rem)); padding: .75rem 1rem; border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .4); }
-.note[popover]::backdrop { background: rgb(10 18 26 / .35); }
+/* ---- Under the cards --------------------------------------------------
+   Everything under the cards is set on one module, the cards' column: a
+   sixth of the cards' row (--m, 160px on a wide page; a card is that less
+   the 8px between two). The vehicle's block is the plate's width. What
+   hangs under it starts on the first card's leading edge (--rail in from
+   the block's) and ends on the last card's trailing edge (--end), and is
+   a whole number of columns wide, less those 8px; the gutter beside the
+   first column is the trunk's. The page's one text inset, its scale of
+   spaces and its row height hold here on every material (--inset, --s1
+   to --s5, --row), and a tag's content begins after one lead, which
+   holds its eyelet (--lead). */
+.fit, .part { position: relative; isolation: isolate; display: flow-root; margin: 0; container-type: inline-size;
+  --rail: 20px; --end: 20px; --m: calc((100cqw - var(--rail) - var(--end) + 8px) / 6); --lead: 28px; --trunk: var(--c-vds); }
+.part { --trunk: var(--c-serial); }
 
-/* The parts that fit (page.html's fit). The vehicle's block is one row
-   of label tape: its stamp, the model and the year, each on the line
-   that comes down from its card (.seg, the last 30px, into the tape),
-   then what the decode says of the vehicle (.vfacts, below). Narrow, the
-   stamp and the facts are rows of their own. No line runs to the page's
-   blank strips. */
-.fit { position: relative; isolation: isolate; display: flow-root; margin: 0 16px; }
-.fitstrip { --lead: 30px; --prev: 0px; --stamp-h: 1.5rem; display: grid; grid-template-columns: repeat(2, minmax(0, 6.6rem)) minmax(0, 1fr); align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape);
+/* The vehicle's block (page.html's fit): label tape, stuck on. Its stamp,
+   "This vehicle" and the catalog, is a strip across its top; under it,
+   the catalog's make, its model and the year, each raised white over its
+   group's mark on the line that comes down from its card (.seg, whose
+   line is the last --drop above the block and ends on its top edge), then
+   what the decode says of the vehicle (.vfacts): a small label before
+   each value, in the size and face of a candidate's option text, which
+   they are read against, and the VIN's characters 4 to 8 over the
+   Vehicle group's mark, each with its position under it. No line runs to
+   the page's blank strips. */
+.fitstrip { --drop: 30px; --stamp-h: 1.5rem; display: grid; grid-template-columns: repeat(2, minmax(0, 6.6rem)) minmax(0, 1fr); align-items: center; margin-top: 30px; min-height: 2.9rem; color: var(--on-tape);
   background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck); }
-.fitstrip .stamp { align-self: stretch; display: flex; align-items: center; min-width: 0; margin: 0; padding: 0 .5rem 0 .7rem; border-right: 1px solid rgb(255 255 255 / .18); font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss); }
 .fitstrip:has(.g-wmi) { grid-template-columns: repeat(3, minmax(0, 6.6rem)) minmax(0, 1fr); }
+.fitstrip .stamp { grid-row: 1; grid-column: 1 / -1; display: flex; align-items: center; box-sizing: border-box; min-width: 0; height: var(--stamp-h); margin: 0; padding: 0 var(--inset); border-bottom: 1px solid rgb(255 255 255 / .18); font: 700 11px/1.3 var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--tape-emboss); }
 .fitstrip .g-wmi { --cm: #ff6b81; }
 .fitstrip .g-vds { --cm: #7db4ff; }
 .fitstrip .g-year { --cm: #ffb067; }
-.fitstrip .seg { grid-row: 2; padding-inline: .3rem; }
-.fitstrip .vfacts { grid-row: 2; grid-column: -2; }
-.fitstrip .stamp { grid-row: 1; grid-column: 1 / -1; box-sizing: border-box; height: var(--stamp-h); padding-block: 0; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .18); }
-/* A word is under the stamp's strip, so its line starts that much higher:
-   it ends on the block's top edge and is never over the stamp. */
-.fitstrip .seg::after { top: calc(-1px - var(--lead) - var(--prev) - var(--stamp-h)); }
-/* The block's second row (#366): "This vehicle", the catalog, and what
-   the decode says of the vehicle that a catalog's option text names, for
-   the reader to match a candidate's options against. Raised white on the
-   same tape, a small label over each value. The VIN's characters 4 to 8
-   stand over the Vehicle group's mark, as on the plate, each with its
-   position under it. */
-.vfacts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 22px; min-width: 0; margin: 0; padding: .45rem .7rem; border-left: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss); }
-.vfacts dt { font-size: 11px; line-height: 1.2; letter-spacing: .04em; text-transform: uppercase; color: #aeb7c0; text-shadow: none; }
-.vfacts dd { margin: 0; font: 900 .95rem/1.25 var(--cell-font); letter-spacing: .06em; }
-.vchars dd { display: flex; gap: 3px; }
+.seg { position: relative; grid-row: 2; align-self: stretch; display: flex; align-items: center; justify-content: center; min-width: 0; padding: .35rem .3rem; text-align: center; }
+.seg .w { font: 900 1.05rem/1.2 var(--cell-font); letter-spacing: .08em; text-shadow: var(--tape-emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere; }
+.seg::after { content: ""; position: absolute; left: calc(50% - 2.5px); top: calc(-1px - var(--drop) - var(--stamp-h)); height: calc(var(--drop) + 1px); border-left: 5px solid var(--c); filter: var(--stripe-lift); }
+.vfacts { position: relative; grid-row: 2; grid-column: -2; align-self: stretch; display: flex; flex-wrap: wrap; align-items: center; align-content: center; gap: 0 var(--s4); min-width: 0; margin: 0; padding: var(--s1) var(--inset); border-left: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss); }
+.vfacts > div { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.vfacts dt { font: 11px/16px system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; color: #aeb7c0; text-shadow: none; }
+.vfacts dd { margin: 0; font: 700 13px/16px var(--cell-font); letter-spacing: .03em; }
+/* The characters keep the block's trailing end, beside the details,
+   however many lines those take. */
+.vfacts:has(.vchars) { padding-right: calc(var(--inset) + 6.6rem + var(--s4)); }
+.vfacts > .vchars { position: absolute; right: var(--inset); top: 50%; transform: translateY(-50%); }
+.vchars dd { display: flex; gap: 3px; line-height: 1.2; }
 .vc { display: grid; justify-items: center; min-width: 1.15rem; }
 .vc b { width: 100%; text-align: center; border-bottom: 3px solid #7db4ff; }
-.vc small { font: 400 10px/1.3 var(--cell-font); letter-spacing: 0; color: #aeb7c0; text-shadow: none; }
+.vc small { font: 400 11px/1.2 var(--cell-font); letter-spacing: 0; color: #aeb7c0; text-shadow: none; }
+
+/* The band under the block: the picker, two columns, and beside it the
+   names' row, which reaches the block's trailing edge. */
+.band { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s2); margin: 0 var(--end) 0 var(--rail); }
+.band:has(.ptwrap) { grid-template-columns: calc(2 * var(--m) - 8px) minmax(0, 1fr); }
+.fit:not(:has(.fitstrip)) .band { margin-top: 22px; }
+
+/* The picker (#366): one key of the second tape on a short piece of
+   label tape, tied to the trunk by a stub. It names the pressed part
+   type, or asks for one, with a count in the part types' pill, and opens
+   the part types dialog, which hangs from it (below). The key beside it,
+   of the plate's metal, clears the pressed part type: pressing that one
+   in the list changes nothing. */
+.ptwrap { position: relative; display: flex; gap: var(--s1); box-sizing: border-box; height: var(--row); margin-top: var(--s2); padding: var(--s1); anchor-name: --pick-type;
+  background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck); }
+.ptfield { --key: var(--alu); flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: var(--s2); align-items: center; align-content: center; padding: 0 10px; text-align: left; text-transform: none; letter-spacing: 0; }
+.ptfield .plab { grid-column: 1 / -1; font: 700 11px/1.2 var(--cell-font); letter-spacing: .08em; text-transform: uppercase; }
+.ptfield .nm { min-width: 0; font: 900 16px/1.15 var(--cell-font); letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ptfield .n { padding: 1px 7px; border: 1px solid rgb(35 41 48 / .55); border-radius: 9px; font: 900 11px var(--cell-font); text-shadow: none; }
+.ptfield svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.fit:has(#part-types:popover-open) .ptfield { --key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed); }
+.ptclear { flex: none; display: flex; align-items: center; justify-content: center; min-width: 40px; font: 900 18px/1 var(--cell-font); text-decoration: none; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8);
+  background: var(--metal); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised); }
+.ptclear:active { transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed); }
+
+/* A tag laid long (.ltag): a card's stock with its leading corners
+   clipped and its eyelet at its leading end, in its --lead and --eye
+   down it, where the line it hangs by lands. Every tag under the cards
+   is one: a name's, a candidate's, a part's and a vehicle's. */
+.ltag { position: relative; isolation: isolate; --eye: calc(var(--row) / 2); color: var(--on-manila); filter: drop-shadow(0 3px 4px rgb(8 7 15 / .28)); }
+.ltag::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(circle at var(--eye-x, 14px) var(--eye), transparent 4px, var(--manila-patch) 4.5px 10px, transparent 10.5px), var(--manila);
+  clip-path: polygon(12px 0, 100% 0, 100% 100%, 12px 100%, 0 calc(100% - 12px), 0 12px);
+  mask-image: radial-gradient(circle at var(--eye-x, 14px) var(--eye), transparent 3.5px, #000 4px); }
+
+/* "Also known as" (#366): the vehicle's names are compact tags, one a
+   vocabulary, in one row beside the picker that scrolls by itself and
+   reaches the block's trailing edge, so the next tag shows there. Each
+   hangs from the block's bottom edge by a wire to its eyelet. A tag is a
+   whole number of columns wide (--n, which the page counts: akaRow.Span,
+   .c2 to .c9), and never narrower than its words. Its first column is its
+   eyelet and the vocabulary's name on a strip of label tape, with how
+   many names it holds where it has several. The rest is its words with
+   no labels, each over its group's colour, which says what it is: the
+   make over the Maker's, once where every name shares it; then a line a
+   name, two lines and then a second column, the model over the Vehicle's
+   and the years it holds for, lighter, over the Model year's. The words
+   keep their case: a vocabulary's entry is case-exact. A dashed underline
+   is a doubt, and a name's note, behind its "i", a key of label tape as a
+   tag's controls are, says it in words. Where tags are out of sight past
+   an end of the row, that end fades (a scroll-driven animation; without
+   it the row is cut square). Under 64rem a tag's column is no narrower
+   than a wide page's. */
+.aka { position: relative; min-width: 0; margin: 0; }
+.aka:has(.nametags:focus-visible) { outline: 3px solid var(--link); outline-offset: 2px; }
+.nametags { --nm: max(var(--m), 10rem); list-style: none; display: flex; align-items: flex-start; gap: var(--s2); margin: 0 calc(-1 * var(--end)) calc(-1 * var(--s2)) 0; padding: var(--s2) var(--end) var(--s2) 0;
+  overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: var(--steel) transparent; }
+.nametags:focus-visible { outline: 0; }
+@property --nt-l { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --nt-r { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@supports (animation-timeline: scroll()) {
+  .nametags { mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline); }
+}
+@keyframes nt-fade { 0% { --nt-l: 0px; --nt-r: 48px; } 6% { --nt-l: 48px; --nt-r: 48px; } 94% { --nt-l: 48px; --nt-r: 48px; } 100% { --nt-l: 48px; --nt-r: 0px; } }
+.name { flex: none; scroll-snap-align: start; box-sizing: border-box; display: grid; grid-template-columns: var(--lead) calc(var(--nm) - 8px - var(--lead)) auto; min-width: calc(var(--n, 2) * var(--nm) - 8px); height: var(--row); margin: 0; }
+.name.c3 { --n: 3; } .name.c4 { --n: 4; } .name.c5 { --n: 5; } .name.c6 { --n: 6; } .name.c7 { --n: 7; } .name.c8 { --n: 8; } .name.c9 { --n: 9; }
+.fitstrip ~ .band .name::after { content: ""; position: absolute; left: 13px; top: calc(-1px - var(--s2)); width: 2px; height: calc(var(--s2) + var(--eye) - 2px); background: var(--steel); pointer-events: none; }
+.name .nvoc { grid-column: 2; display: flex; flex-wrap: wrap; align-items: center; align-content: center; gap: 0 6px; min-width: 0; margin: 0; padding: var(--s1) var(--inset); font: 700 11px/1.25 var(--cell-font); letter-spacing: .06em; text-transform: uppercase; overflow-wrap: anywhere; color: var(--on-tape); text-shadow: var(--tape-emboss);
+  background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 3px solid var(--tape-edge); }
+.name .nvoc > span:first-child { min-width: 0; }
+.name .count { padding: 0 5px; border: 1px solid rgb(246 248 250 / .6); border-radius: 8px; letter-spacing: 0; text-shadow: none; }
+.nrows { grid-column: 3; display: grid; grid-template-rows: repeat(2, auto); grid-auto-flow: column; grid-auto-columns: max-content; align-content: center; column-gap: var(--s4); padding: 0 var(--inset); }
+.nrows > .nw { grid-row: 1 / -1; align-self: center; margin-right: calc(var(--s2) - var(--s4)); }
+.nrow { position: relative; display: flex; align-items: center; gap: var(--s2); min-height: 24px; margin: 0; white-space: nowrap; }
+.nw { width: fit-content; max-width: 100%; margin: 0; font: 700 13px/1.25 var(--cell-font); letter-spacing: .03em; border-bottom: 3px solid var(--cm); }
+.nw.unsure, .nrow.rule .nw:is(.g-wmi, .g-vds), .name.rule .nrows > .nw { border-bottom-style: dashed; }
+.nrow .g-year { font-weight: 400; font-size: 12px; }
+.name .how { position: absolute; inset: 0; width: 100%; padding: 0; background: none; border: 0; box-shadow: none; cursor: pointer; }
+.name .how:hover, .name .how:focus-visible { background: rgb(0 0 0 / .07); }
+/* The "i" is drawn 22px high, so two stand on two lines with their
+   ledges clear, and is pressed over the line's whole 24px. */
+.name .info { position: relative; flex: none; width: 24px; height: 22px; padding: 0; font: 700 12px/1 var(--cell-font); letter-spacing: 0; text-transform: none; color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-radius: 2px; box-shadow: 0 2px 0 var(--steel-dark), 0 3px 4px rgb(8 7 15 / .38); }
+.name .info::after { content: ""; position: absolute; inset: -2px -1px; }
+.name .info:active { transform: translateY(2px); background: var(--tape-in); box-shadow: var(--pressed); }
+.name .none { grid-column: 3; align-self: center; max-width: calc(var(--nm) - 2 * var(--inset)); margin: 0; padding: 0 var(--inset); font: 12px/1.35 var(--cell-font); color: var(--manila-muted); }
+.note[popover] { box-sizing: border-box; max-width: min(30rem, calc(100vw - 2rem)); padding: .75rem 1rem; border: 2px solid var(--steel); border-radius: 4px; color: var(--fg); background: var(--card-bg); box-shadow: 0 3px 0 var(--steel-dark), 0 12px 28px rgb(0 0 0 / .4); }
+.note[popover]::backdrop { background: rgb(10 18 26 / .35); }
+
 /* The part types: the second tape, a name that is pressed. Embossing tape
    in the plate's metal (--alu, the metal under the tape's ridges), its
    letters struck as the plate's are, in the monospace face and the name's
@@ -444,37 +503,8 @@ table.sum .skip { color: var(--muted); }
    pressed one flush (aria-current), as a key is. */
 .ptype { display: inline-flex; align-items: center; gap: 10px; box-sizing: border-box; min-height: 44px; padding: 0 14px; font: 900 14px var(--cell-font); letter-spacing: .06em; text-decoration: none; color: var(--on-metal); text-shadow: var(--emboss);
   background: var(--alu); border: 1px solid var(--steel); border-top-color: #fff; border-bottom-color: var(--steel-dark); border-radius: 2px; box-shadow: var(--raised); }
-.ptype .n { padding: 1px 7px; border: 1px solid rgb(35 41 48 / .55); border-radius: 9px; font-size: 11px; text-shadow: none; }
+.ptype .n { flex: none; padding: 1px 7px; border: 1px solid rgb(35 41 48 / .55); border-radius: 9px; font-size: 11px; text-shadow: none; }
 .ptype:active, .ptype[aria-current] { transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed); }
-.ptype .n { flex: none; }
-/* The picker (#366): one key of the second tape on its own piece of label
-   tape, under the strip and no wider than 24rem. It names the pressed
-   part type, or asks for one, with a count in the part types' pill, and
-   opens the part types dialog, which hangs from it (below). The key
-   beside it, of the plate's metal, clears the pressed part type: pressing
-   that one in the list changes nothing. The lines from the block come
-   down into it (--fit-part) and end there. With a script, up to
-   two part types opened recently sit on the same tape, after the word
-   Recent, each a smaller strip of the second tape: beside the keys on a
-   wide page, on a second line under them on a narrow one. The list
-   leads with those opened recently at every width. */
-.ptwrap { position: relative; z-index: 3; margin: 30px 0 0; }
-.ptsel { display: grid; grid-template-columns: fit-content(100%) minmax(0, 1fr); gap: 6px; box-sizing: border-box; padding: 5px 6px;
-  background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 2px; border-radius: 2px; box-shadow: var(--lift-stuck); }
-.ptkeys { grid-column: 1; display: flex; align-items: stretch; gap: 6px; min-width: min(24rem, 100%); anchor-name: --fit-part, --pick-type; }
-.ptfield { --key: var(--alu); flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: .5rem; align-items: center; min-height: 44px; padding: .25rem .6rem; text-align: left; text-transform: none; letter-spacing: 0; }
-.ptfield .plab { grid-column: 1 / -1; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; }
-.ptfield .nm { min-width: 0; font: 900 16px/1.2 var(--cell-font); letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ptfield .n { padding: 1px 7px; border: 1px solid rgb(35 41 48 / .55); border-radius: 9px; font: 900 11px var(--cell-font); text-shadow: none; }
-.ptfield svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-.fit:has(#part-types:popover-open) .ptfield { --key: var(--alu-in); transform: translateY(2px); box-shadow: var(--pressed); }
-.ptclear { flex: none; display: flex; align-items: center; justify-content: center; min-width: 44px; font: 900 18px/1 var(--cell-font); text-decoration: none; color: var(--on-metal); text-shadow: 0 1px 0 rgb(255 255 255 / .8);
-  background: var(--metal); border: 1px solid var(--steel); border-radius: 3px; box-shadow: var(--raised); }
-.ptclear:active { transform: translateY(2px); background: var(--alu-in); box-shadow: var(--pressed); }
-.ptrecents { grid-column: 1; min-width: 0; max-height: 44px; overflow: hidden; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 0 2px; }
-.ptrecents[hidden] { display: none; }
-.ptrecents .ptype { min-height: 38px; padding-inline: 10px; font-size: 13px; }
-.ptrecents::before { content: "Recent"; font: 700 10px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; color: var(--on-tape); text-shadow: var(--tape-emboss); }
 .ptfind { width: 100%; min-height: 44px; }
 /* The part types dialog: the filter, what it lists, the recent part
    types, then every part type under its vocabulary's headings, two
@@ -493,14 +523,16 @@ table.sum .skip { color: var(--muted); }
 /* The picker's list: the same dialog, hung from the picker at its width
    by anchor positioning, over whatever is under it, with no head, no
    line of what it lists and no backdrop, leading with the part types
-   opened recently: one column, each part type a
-   row with its count at the far end. It is never taller than half the
-   window less the picker, so it fits under the picker or, where there
-   is no room, over it (flip-block), and scrolls. Pressing outside it or
-   Escape shuts it. A browser without anchor positioning keeps the
+   opened recently: one column, each part type a row with its count at
+   the far end. It always opens downward, over the candidates, and is
+   laid on the page, not on the window: it moves with the page, and
+   where the window ends before it does the page scrolls to the rest of
+   it (plate.js brings it into the window as it opens). It is never
+   taller than the window less the picker, and scrolls. Pressing outside
+   it or Escape shuts it. A browser without anchor positioning keeps the
    dialog. */
 @supports (anchor-name: --a) {
-  .fit .ptdialog { position-anchor: --pick-type; inset: auto; top: calc(anchor(bottom) + 6px); left: anchor(left); width: anchor-size(width); max-height: min(30rem, calc(50vh - 3rem)); margin: 0; padding: .75rem; border-radius: 4px; position-try-fallbacks: flip-block; }
+  .fit .ptdialog { position: absolute; position-anchor: --pick-type; inset: auto; top: calc(anchor(bottom) + var(--s1)); left: anchor(left); width: anchor-size(width); max-height: min(30rem, calc(100vh - var(--row) - 3rem)); margin: 0; padding: .75rem; border-radius: 4px; }
   .fit .ptdialog::backdrop { background: transparent; }
   .fit .ptdialog :is(.dialog-head, .hint) { display: none; }
   .fit .ptdialog .ptrecent { margin-bottom: .75rem; }
@@ -509,162 +541,173 @@ table.sum .skip { color: var(--muted); }
   .fit .ptlist { flex-direction: column; flex-wrap: nowrap; gap: 6px; padding: 0; }
   .fit .ptlist .ptype { display: flex; justify-content: space-between; }
 }
+
 /* An empty place: the page's blank strip, a dashed outline in the faint
-   colour with its sentence, and in it a key of metal or a link on. */
-:is(.fit, .part, .choice) .blank { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; box-sizing: border-box; min-height: 46px; margin: 30px 0 0; padding: .5rem .75rem; color: var(--muted); border: 3px dashed var(--faint); border-radius: 2px; }
+   colour with its sentence, and in it a key of metal or a link on. Under
+   the cards it is set on the columns, and in the band it is a row high. */
+:is(.fit, .part, .choice) .blank { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s4); box-sizing: border-box; min-height: var(--row); margin: 30px 0 0; padding: var(--s2) var(--inset); color: var(--muted); border: 3px dashed var(--faint); border-radius: 2px; }
+:is(.fit, .part) > .blank, .part > .error { margin: var(--s2) var(--end) 0 var(--rail); }
+.band .blank { margin: var(--s2) 0 0; }
 /* A link naming a VIN and a part number: the choice of each, in the
    names' place under the empty cards, as a blank strip with its links. */
 .choice { margin: 0 16px; }
-@media (width < 64rem) {
-  .choice { margin: 0; }
-}
-.fit .ptwrap ~ .blank { margin-top: 14px; }
-/* The candidates: manila tags as the cards are (.cand-in, its stock its
-   ::before), one row that scrolls sideways at every width, three to a
-   window on a wide page, each hung from the picker's tape.
-   No line runs to them: the lines from the cards end at the picker,
-   which says what they are candidates for.
-   The open candidate's rows are an item of the list after its tag
-   (.rows), so a tag's place in its row counts tags alone (of .cand). */
-.cands { --gap: 12px; anchor-name: --fit-tags; list-style: none; display: grid; grid-template-rows: auto auto; grid-auto-flow: column; grid-auto-columns: var(--tag); gap: 0 var(--gap); margin: 0; padding: 36px 4px 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding-inline: 4px; }
-.fit { --tag: calc((100% - 2 * 12px - 8px) / 3); }
-.cands:focus-visible { outline: 3px solid var(--link); outline-offset: -3px; }
-@media (width < 64rem) {
-  .fit { --tag: min(19.5rem, calc(100% - 2.5rem)); }
-  .cands { margin-right: calc(-1 * var(--gutter)); padding-right: var(--gutter); }
-}
-.cand { position: relative; min-width: 0; grid-row: 1; scroll-snap-align: start; }
-.cand:has(+ .rows) { scroll-initial-target: nearest; }
-/* A candidate hangs from the picker's tape by a wire from its eyelet, as
-   a name's tag hangs from the block. */
-.cand::after { content: ""; position: absolute; left: calc(50% - 1px); top: -36px; width: 2px; height: 50px; background: var(--steel); pointer-events: none; }
-.cand-in { position: relative; isolation: isolate; display: flex; flex-direction: column; box-sizing: border-box; height: 100%; padding: 28px .7rem .8rem; overflow-wrap: anywhere; color: var(--on-manila); filter: drop-shadow(0 4px 5px rgb(8 7 15 / .28)); }
-.numtape { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0 .5rem; margin: 0 -.7rem .6rem; padding: .3rem .7rem; color: var(--on-tape); text-shadow: var(--tape-emboss);
-  background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 3px solid var(--tape-edge); }
-.numtape .num { font: 900 18px var(--cell-font); letter-spacing: .06em; }
-.numtape .yrs { font: 700 12px var(--cell-font); white-space: nowrap; }
-.cand-in dl { display: grid; gap: .35rem; margin: 0; }
-.cand-in dt { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--manila-muted); }
-.cand-in dd { margin: 0; font-weight: 600; line-height: 1.25; }
+
+/* The candidates: rows down the page (.cands), each a tag laid long
+   (.line), tied to the trunk by a stub that runs into its eyelet. A row
+   is one grid on the columns, so its parts scan down the list: the
+   number on label tape with its side and its years, two columns; the
+   option text over the marks and the note in the tag's ink, three; the
+   stock strip, the last. It is --row high and grows only where the
+   option text or the note needs another line. The open candidate's
+   rows are under its tag, in the same list item. A part's tag and the
+   vehicles it fits are the same rows (part-number mode, below). */
+.cands { list-style: none; margin: 0 var(--end) 0 var(--rail); padding: 0; }
+.cand { position: relative; margin-top: var(--s2); }
+.line { z-index: 1; display: grid; grid-template-columns: var(--lead) calc(2 * var(--m) - 8px - var(--lead)) minmax(0, 1fr) calc(var(--m) - 8px); min-height: var(--row); overflow-wrap: anywhere; }
+.numtape { grid-column: 2; display: flex; align-items: center; justify-content: space-between; gap: var(--s2); min-width: 0; margin: 0; padding: var(--s1) var(--inset); font: inherit; letter-spacing: 0; text-transform: none; color: var(--on-tape); text-shadow: var(--tape-emboss);
+  background: var(--tape); border: 0; border-top: 1px solid var(--tape-lit); border-bottom: 3px solid var(--tape-edge); }
+.numtape .num { min-width: 0; font: 900 20px/1.2 var(--cell-font); letter-spacing: .04em; }
+.numtape .of { display: grid; justify-items: end; min-width: 0; font: 700 12px/1.3 var(--cell-font); text-align: right; }
+.numtape :is(.yrs, .side) { white-space: nowrap; }
+.numtape .side { text-transform: uppercase; letter-spacing: .06em; }
+.ink { grid-column: 3; align-self: center; min-width: 0; padding: 6px calc(var(--s2) + var(--inset)); }
+.opts { margin: 0; font: 700 13px/18px var(--cell-font); text-wrap: pretty; }
+.says { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--s2); min-height: 18px; margin: 0; font: 12px/18px var(--cell-font); }
+.ink .k { font: 11px/1 system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; color: var(--manila-muted); }
 /* A mark is ink on the tag, in its ordinary ink: a solid stamp, a little
    askew, with a tick for what was checked and an arrow for a redirect; a
    dashed one with a warning triangle for what could not be; plain muted
-   words for what has nothing checked. */
-.marks { display: flex; flex-wrap: wrap; gap: .4rem .5rem; margin: .6rem 0 .8rem; }
-.mk { display: inline-flex; align-items: center; gap: 5px; padding: .2rem .45rem; border-radius: 3px; font: 900 10px/1.4 var(--label-font); letter-spacing: .06em; text-transform: uppercase; color: var(--on-manila); }
-.mk svg { flex: none; width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2.2; }
+   words for what has nothing checked. The marks begin the line under the
+   option text, the weaker first, so they scan down the list; the note
+   follows them. */
+.mk { display: inline-flex; align-items: center; gap: var(--s1); padding: 1px 5px; border-radius: 3px; font: 900 11px/12px var(--label-font); letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; color: var(--on-manila); }
+.mk svg { flex: none; width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 2.2; }
 .mk.checked, .mk.redirect, .mk.replaces { border: 2px solid var(--on-manila); transform: rotate(-1.5deg); }
 .mk.unchecked { border: 2px dashed var(--on-manila); }
-.mk.text, .mk.none { padding-left: 0; color: var(--manila-muted); }
-.more-cands { margin: 1rem 0 0; }
-/* A candidate's stock strip, along its tag's bottom edge, edge to edge:
-   the second tape, a name that is pressed. It casts no shadow off the
-   tag, so it stands raised by its edges alone, a lit top and a heavy
-   dark bottom; pushed in, open, it is darker, its bottom edge thin and
-   its chevron up. With nothing to open it is no tape: muted ink over a
-   dashed rule, the page's mark of an empty place. */
-.stk { display: flex; align-items: center; justify-content: space-between; gap: 8px; box-sizing: border-box; min-height: 40px; margin: auto -.7rem -.8rem; padding: 0 .7rem; font: 900 12px var(--cell-font); letter-spacing: .08em; text-transform: uppercase; text-align: left; text-decoration: none; cursor: pointer;
-  color: var(--on-metal); text-shadow: var(--emboss); background: var(--alu); border: 0; border-top: 1px solid #fff; border-bottom: 3px solid var(--steel-dark); border-radius: 0; box-shadow: inset 0 1px 0 rgb(255 255 255 / .6); }
-.stk svg { flex: none; width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+.mk.text, .mk.none { padding-inline: 0; font-family: var(--cell-font); font-weight: 700; letter-spacing: .04em; color: var(--manila-muted); }
+.more-cands { margin: var(--s4) var(--end) 0 var(--rail); }
+/* A candidate's stock strip, at its tag's trailing end, edge to edge:
+   the second tape, a name that is pressed, a kind of stock a cell, its
+   count as large as the part's number over its name. It casts no shadow
+   off the tag, so it stands raised by its edges alone, a lit top and a
+   heavy dark bottom; pushed in, open, it is darker, its bottom edge thin
+   and its chevron up. With nothing to open it is no tape: muted ink
+   beside a dashed rule, the page's mark of an empty place. */
+.stk { grid-column: 4; display: flex; align-items: center; gap: var(--s2); box-sizing: border-box; min-width: 0; margin: 0; padding: 0 var(--s2) 0 var(--inset); font: 900 11px/1.3 var(--cell-font); letter-spacing: .06em; text-transform: uppercase; text-align: left; text-decoration: none; cursor: pointer;
+  color: var(--on-metal); text-shadow: var(--emboss); background: var(--alu); border: 0; border-left: 1px solid var(--steel); border-top: 1px solid #fff; border-bottom: 3px solid var(--steel-dark); border-radius: 0; box-shadow: inset 0 1px 0 rgb(255 255 255 / .6); }
+.stk .sc { flex: none; display: grid; min-width: 2.4rem; }
+.stk .sc b { font: 900 20px/1.1 var(--cell-font); letter-spacing: 0; }
+.stk .sc small { font: 700 11px/1.2 var(--cell-font); letter-spacing: .02em; white-space: nowrap; }
+.stk svg { flex: none; margin-left: auto; width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; }
 .stk u { text-transform: none; letter-spacing: 0; }
-.stk:not(.none):active, .stk[aria-expanded=true] { transform: none; padding-top: 2px; background: var(--alu-in); border-bottom-width: 1px; box-shadow: var(--pressed); }
-.stk.none { cursor: auto; color: var(--manila-muted); text-shadow: none; background: none; border: 0; border-top: 2px dashed var(--manila-muted); box-shadow: none; }
-/* The open candidate's rows: a receipt, a strip of thermal paper the tag's
-   width, fed out from under the tag's stock strip (#376). On a wide page it is in
-   the row under the tag's, which the tags after it fill first (dense),
-   under whichever tag is pressed. */
-.rows { position: relative; grid-row: 2; min-width: 0; }
-.vehicles { background: var(--card-bg); border: 2px solid var(--steel); border-radius: 4px; box-shadow: 0 3px 0 var(--steel-dark), 0 8px 16px rgb(0 0 0 / .25); }
-/* The receipt: 35 to 42 columns of the printer's one face, shaded where it
-   leaves the tag, torn at its foot, its shadow on the ground. Only what a
-   receipt printer does is drawn: double height, a reversed bar, a rule of
-   dashes, a name led by dots to its value, a barcode. Nothing typed into
-   a stock file changes case on it. "Strip" alone is the tag's stock strip,
-   the control (.stk); the paper is the receipt. */
-.receipt { position: relative; box-sizing: border-box; width: min(100%, 23rem); padding: 22px 16px 26px; color: var(--on-thermal); font: 13px/1.45 var(--cell-font);
-  background: linear-gradient(rgb(8 7 15 / .32), rgb(8 7 15 / .07) 6px, transparent 15px), linear-gradient(90deg, rgb(8 7 15 / .05), transparent 5% 95%, rgb(8 7 15 / .05)), var(--thermal);
-  filter: drop-shadow(0 2px 1px rgb(8 7 15 / .35)) drop-shadow(0 10px 12px rgb(8 7 15 / .28)); }
+button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; letter-spacing: .02em; }
+/* Pushed in, the metal is darker, and so is what is struck in it: its
+   small words still read 4.5:1 on the darkest of its ridges. */
+.stk:not(.none):active, .stk[aria-expanded=true] { transform: none; padding-top: 2px; color: color-mix(in srgb, var(--on-metal) 55%, #000); background: var(--alu-in); border-bottom-width: 1px; box-shadow: var(--pressed); }
+.stk.none { cursor: auto; color: var(--manila-muted); text-shadow: none; background: none; border: 0; border-left: 2px dashed var(--manila-muted); box-shadow: none; }
+
+/* The trunk: one line of pinstripe tape from the block's bottom edge (a
+   part's tag's, in part-number mode) straight down the gutter beside the
+   first column, to the last thing tied to it: the picker's stub, or the
+   last row's. It is drawn a piece an item, each piece from the gap above
+   its item to its foot, the last to its stub, so the pieces meet and
+   nothing is measured or anchored: every browser draws it. A piece is
+   lit and shaded along its sides alone, so no seam shows where two meet;
+   a stub, along its top and bottom. */
+.band:has(.ptwrap)::before, .cand::after, .phead .rows::before, .ptwrap::before, .cand::before { content: ""; position: absolute; z-index: 2; background: var(--trunk); pointer-events: none; }
+.band:has(.ptwrap)::before, .cand::after, .phead .rows::before { left: calc(8px - var(--rail)); width: 5px; box-shadow: -1px 0 0 rgb(255 255 255 / .4), 1.5px 0 1px rgb(8 7 15 / .3); }
+.band:has(.ptwrap)::before { top: 0; bottom: calc(var(--row) / 2 - 2.5px); border-bottom-left-radius: 2.5px; }
+.fit:has(.cands) .band::before { bottom: calc(-1 * var(--s2)); border-radius: 0; }
+.cand::after { top: 0; bottom: calc(-1 * var(--s2)); }
+.cand:last-child::after { bottom: auto; height: calc(var(--row) / 2 + 2.5px); border-bottom-left-radius: 2.5px; }
+.ptwrap::before, .cand::before { left: calc(13px - var(--rail)); height: 5px; top: calc(var(--row) / 2 - 2.5px); box-shadow: 0 -1px 0 rgb(255 255 255 / .4), 0 2px 1px rgb(8 7 15 / .3); }
+.ptwrap::before { width: calc(var(--rail) - 13px); margin: -1px 0 0 -1px; }
+.cand::before { width: calc(var(--rail) - 2px); border-radius: 0 2.5px 2.5px 0; }
+
+/* The open candidate's rows: a strip of thermal paper fed out from under
+   its tag, from the tag's content to its trailing end, and torn at its
+   foot. It is a print in columns: a kind of stock under a small reversed
+   bar with its sources' dates; a line a row, its id under the part's
+   number, its location in bold, as it is what is walked to, then a
+   column for each field its source's header declares, under the field's
+   name. A column is as wide as its share of the paper and never wider:
+   a long value wraps in it. What a row has beyond those is under it, a
+   column in, in the fainter print: a name and its value each, wrapping
+   at 80 characters where the paper is wider, and a list or an object as
+   its JSON, cut to one line. No head, no barcode, no dot leaders. Nothing
+   typed into a stock file changes case on it. "Strip" alone is the tag's
+   stock strip, the control (.stk). */
+.rows { position: relative; margin: -2px 0 0 var(--lead); }
+.receipt { position: relative; box-sizing: border-box; padding: var(--s3) var(--inset) var(--s2); color: var(--on-thermal); font: 13px/18px var(--cell-font);
+  background: linear-gradient(rgb(8 7 15 / .32), rgb(8 7 15 / .07) 6px, transparent 15px), linear-gradient(90deg, rgb(8 7 15 / .05), transparent 2% 98%, rgb(8 7 15 / .05)), var(--thermal);
+  filter: drop-shadow(0 2px 1px rgb(8 7 15 / .35)) drop-shadow(0 8px 10px rgb(8 7 15 / .24)); }
 .receipt::after { content: ""; position: absolute; top: 100%; left: 0; right: 0; height: 5px; background: conic-gradient(from -45deg at 50% 100%, var(--thermal) 90deg, transparent 0) 0 0 / 9px 100% repeat-x; }
 .receipt a { color: inherit; font-weight: 700; text-underline-offset: 3px; }
-/* The head: what the receipt is of, in double height. The foot: a barcode
-   over the number. The bars are a fixed pattern and encode nothing. */
-.receipt-head { margin: 4px 0 16px; text-align: center; font: 700 15px/1.2 var(--cell-font); letter-spacing: .08em; transform: scaleY(1.7); }
-.receipt-head span { text-transform: uppercase; }
-.receipt-foot { margin: 18px 0 0; padding-top: 46px; text-align: center; font-size: 12px; letter-spacing: .3em; overflow-wrap: anywhere;
-  background: repeating-linear-gradient(90deg, currentColor 0 2px, transparent 2px 3px, currentColor 3px 4px, transparent 4px 7px, currentColor 7px 10px, transparent 10px 11px, currentColor 11px 12px, transparent 12px 14px, currentColor 14px 16px, transparent 16px 19px) top center / 190px 40px no-repeat; }
-.stock-cols:focus-visible, .nonum:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
-/* A kind of stock: its name and count on a reversed bar, its sources'
-   dates on the line under it, and a rule of dashes under both, dated or
-   not. */
-.stock-col { min-width: 0; }
-.stock-col + .stock-col { margin-top: 18px; }
-.stock-col :is(h3, h4) { display: block; margin: 0 0 6px; padding: 0 0 5px; border: 0; border-bottom: 1px dashed var(--on-thermal); font: 400 12px/1.5 var(--cell-font); letter-spacing: .04em; text-transform: none; }
-.stock-col :is(h3, h4) > span:first-child { display: block; padding: 3px 8px; font-weight: 700; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--thermal); background: var(--on-thermal); }
-.stock-col .asof { display: block; padding-top: 3px; text-align: right; }
-/* A row: its id led by dots to its location, which takes a line of its own
-   when the two do not fit on one; then each field, its name led to its
-   value. A rule of dashes between rows. */
-.stock-col table, .stock-col tbody { display: block; font-size: 13px; }
-.stock-col tr { display: flex; flex-wrap: wrap; align-items: baseline; gap: 1px 0; padding: 7px 0 8px; border-top: 1px dashed var(--on-thermal); }
-.stock-col tr:first-child { padding-top: 2px; border-top: 0; }
-.stock-col th, .stock-col td { padding: 0; font-weight: 400; overflow-wrap: anywhere; border: 0; }
-.stock-col th.id { flex: 1 0 auto; max-width: 100%; display: flex; align-items: baseline; font: 700 15px var(--cell-font); letter-spacing: .04em; }
-.stock-col th.id::after, .stock-col .fk::after { content: ""; flex: 1; min-width: 12px; margin: 0 6px; border-bottom: 2px dotted currentColor; transform: translateY(-3px); }
-.stock-col td.loc { flex: 0 1 auto; max-width: 100%; margin-left: auto; text-align: right; }
-.stock-col td.fds { flex: 0 0 100%; }
-.stock-col .fsep { display: none; }
-.stock-col .fd { display: flex; align-items: baseline; }
-.stock-col .fk { flex: 1; display: flex; align-items: baseline; min-width: 35%; }
-.stock-col .fv { max-width: 64%; text-align: right; }
-.stock-col .note { display: block; margin-top: 4px; font-size: 12px; color: var(--thermal-muted); }
-.stock-col .note::before { content: "* "; }
-.stock-col .note strong { padding: 0 5px; color: var(--thermal); background: var(--on-thermal); }
-.stock-none { margin: 8px 0 2px; text-align: center; text-transform: uppercase; letter-spacing: .1em; }
+.receipt ::selection { color: var(--thermal); background: var(--on-thermal); }
+.receipt:focus-visible, .nonum:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
+.stock-kind + .stock-kind { margin-top: var(--s4); }
+.stock-kind .kind { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 var(--s3); margin: 0 0 var(--s1); font: 12px/18px var(--cell-font); letter-spacing: .02em; }
+.stock-kind .bar { padding: 0 var(--s2); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--thermal); background: var(--on-thermal); }
+.print { table-layout: fixed; width: 100%; border-collapse: collapse; }
+.print :is(th, td) { box-sizing: border-box; padding: 0 var(--s3) 0 0; font: inherit; letter-spacing: 0; text-transform: none; text-align: left; vertical-align: baseline; overflow-wrap: anywhere; border: 0; }
+.print tr > :last-child { padding-right: 0; }
+.print :is(.id, .loc) { width: var(--m); }
+.print thead th { padding-bottom: 2px; font-size: 12px; color: var(--thermal-muted); border-bottom: 1px dashed var(--on-thermal); }
+.print.bare thead :is(th, td) { padding: 0; border: 0; }
+.print tbody > tr:first-child > * { padding-top: var(--s1); }
+.print .loc { font-weight: 700; }
+.print .rest td { padding-left: var(--m); font-size: 12px; color: var(--thermal-muted); }
+.fold { margin: 0; }
+.fold > div { display: inline-block; max-width: min(100%, 80ch); margin-right: var(--s3); vertical-align: top; text-wrap: pretty; }
+.fold :is(dt, dd) { display: inline; margin: 0; }
+.fold dd { font-weight: 700; }
+.fold > .json { display: block; margin-right: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.print .note { margin: 0; }
+.print .note::before { content: "* "; }
+.print .note strong { padding: 0 5px; color: var(--thermal); background: var(--on-thermal); }
+.stock-none { margin: 2px 0; text-transform: uppercase; letter-spacing: .1em; }
 .stock-none::before { content: "*** "; }
 .stock-none::after { content: " ***"; }
-.more-rows { margin: 0; padding-top: 8px; text-align: center; border-top: 1px dashed var(--on-thermal); }
+.more-rows { margin: var(--s2) 0 0; padding-top: var(--s1); border-top: 1px dashed var(--on-thermal); }
 /* The shelf rows with no number, after the candidates: a strip of label
-   tape, stuck on, naming the part type and the vehicle, and a receipt
-   under it with no head and no foot. */
-.nonum { margin: 30px 0 0; }
-.nonum-tape { display: flex; align-items: center; box-sizing: border-box; min-height: 2.6rem; margin: 0; padding: .3rem .7rem; color: var(--on-tape); font: 700 12px var(--cell-font); letter-spacing: .04em; text-transform: none; text-shadow: var(--tape-emboss);
+   tape, stuck on, naming the part type and the vehicle, and the same
+   print under it. They hang from no tag, and the trunk ends before them. */
+.nonum { margin: var(--s5) var(--end) 0 var(--rail); }
+.nonum-tape { display: flex; align-items: center; box-sizing: border-box; min-height: 2.25rem; margin: 0; padding: var(--s1) var(--inset); color: var(--on-tape); font: 700 12px var(--cell-font); letter-spacing: .04em; text-transform: none; text-shadow: var(--tape-emboss);
   background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck); }
-/* The receipt is its tag's width and under it, and no narrower than a
-   row of it reads at. */
-.rows .receipt { width: calc((100% - 2 * var(--gap)) / 3); min-width: min(100%, 19rem); }
-.rows.at2 .receipt { margin-inline: auto; }
-.rows.at3 .receipt { margin-left: auto; }
-.rows.more-wide::before, .rows.more-wide::after { content: ""; }
-/* From the vehicle's block to the picker (.drops): the Vehicle's and the
-   Model year's lines leave the block's bottom edge under their words, at
-   --xv and --xy of the block, and come straight down into the picker,
-   where they end: the picker's key is under the two words at every
-   width. The names' tags, hung from the block, are between the two and
-   lie over the lines. */
-.drops, .carry { display: none; }
+.nonum .receipt { margin: -2px 0 0 var(--lead); }
+
+/* The lines a narrow page carries from the cards to the block (.carry,
+   below) end over the block's words, which are packed at its leading
+   end there: --xm, --xv and --xy are the middles of the make's, the
+   model's and the year's columns. */
+.carry { display: none; }
 .fit { --xm: 3.3rem; --xv: 3.3rem; --xy: 9.9rem; }
 .fit:has(.fitstrip .g-wmi) { --xv: 9.9rem; --xy: 16.5rem; }
-.fitstrip { anchor-name: --fit-strip; }
-@supports (anchor-name: --a) {
-  .drops { display: inline; }
-  .drops::before, .drops::after { content: ""; position: absolute; z-index: -1; box-sizing: border-box; pointer-events: none; border: 0 solid var(--c-vds); filter: var(--stripe-lift); top: calc(anchor(--fit-strip bottom) - 2px); bottom: calc(anchor(--fit-part top) - 2px); width: 5px; border-left-width: 5px; }
-  .drops::before { left: calc(var(--xv) - 2.5px); }
-  .drops::after { left: calc(var(--xy) - 2.5px); border-color: var(--c-year); }
-}
 
 /* A wide page: the block's words are under their cards, the Maker's and
    the Vehicle's lines straight down to them and the Model year's stepped
-   left. The picker's tape is one line: the key, a column in from the
-   tape's left end, where it spans the model's and the year's lines, the key that clears it, then the recent part types. */
+   left, and its stamp and details share its one row. A catalog that
+   files the vehicle under no make has nothing for the first column, so
+   the stamp is there, beside the catalog's word for the vehicle, which
+   it says whose it is, and the block is a row shorter. */
 @media (width >= 64rem) {
-  .fitstrip, .fitstrip:has(.g-wmi) { grid-template-columns: 170fr 170fr 170fr 510fr; }
+  .joins { height: 8px; }
+  .fitstrip, .fitstrip:has(.g-wmi) { --drop: 8px; --stamp-h: 20px; grid-template-columns: 170fr 170fr 170fr 510fr; min-height: 0; margin-top: 8px; padding-inline: 15px; }
+  .fitstrip .stamp { margin-inline: -15px; padding-left: calc(var(--rail) + var(--lead) + var(--inset) - 1px); }
   .fitstrip .g-wmi { grid-column: 1; }
   .fitstrip .g-vds { grid-column: 2; }
   .fitstrip .g-year { grid-column: 3; }
-  .fit, .fit:has(.fitstrip .g-wmi) { --xm: 8.333%; --xv: 25%; --xy: 41.667%; }
-  .ptsel { display: flex; gap: 12px; }
-  .ptkeys { flex: none; width: 20rem; min-width: 0; margin-left: calc(16.667% + 2px); }
-  .ptrecents { flex: 0 1 auto; padding-left: 12px; border-left: 1px solid rgb(255 255 255 / .18); }
+  .fitstrip:not(:has(.g-wmi)) { --stamp-h: 0px; }
+  .fitstrip:not(:has(.g-wmi)) .stamp { grid-row: 2; grid-column: 1; align-self: center; height: auto; margin: 0; padding: var(--s1) var(--s2) var(--s1) calc(var(--rail) + var(--lead) + var(--inset) - 16px); border-bottom: 0; overflow-wrap: anywhere; }
+}
+@media (width < 64rem) {
+  .fit, .part { --end: 0px; }
+  .choice { margin: 0; }
+  .band:has(.ptwrap) { grid-template-columns: calc(3 * var(--m) - 8px) minmax(0, 1fr); }
+  .line { grid-template-columns: var(--lead) calc(2 * var(--m) - 8px - var(--lead)) minmax(0, 1fr) 7.5rem; }
+  .numtape .num { font-size: 18px; }
+  .stk { padding-inline: var(--s2); }
 }
 
 /* ---- Part-number mode (#325) ------------------------------------------
@@ -677,11 +720,12 @@ table.sum .skip { color: var(--muted); }
    the plate, raised as a control; the number is struck into the metal in
    the VIN's lettering over an underline in the Serial group's mark. Under
    the plate the number's bracket opens upward, and one line runs from it
-   (.pleader, in the 1020-unit box of the VIN's leader lines: 340 a third)
-   to the eyelet of the part's tag, which hangs in the first third (a
-   half, on a narrow page), its rows under it, beside the page's own table
-   of its vehicles. Nothing is measured: the line's ends are where the
-   grid puts the bracket and the eyelet, each width its own path. */
+   (.pleader) into the eyelet of the part's tag. Under the plate the page
+   is a VIN's: the part's tag is a row as wide as the plate, as the
+   vehicle's block is, and the trunk leaves its bottom edge, in the Serial
+   group's colour, down through the vehicles the part fits, a row each
+   (the rows and the trunk, above). Nothing is measured: the line's ends
+   are where the grid puts the bracket and the eyelet. */
 /* The mode switch and VINs share a row over the plate: the switch at its
    start, VINs at its end. */
 .moderow { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; margin: 0 0 14px; }
@@ -708,52 +752,33 @@ table.sum .skip { color: var(--muted); }
 .pplate:has(.pnum input:focus-visible) { outline: 3px solid var(--link); outline-offset: 3px; }
 .punder { padding: 0 var(--plate-pad); }
 .punder .brk { grid-column: 2; margin-inline: 9px; }
-.pleader { display: block; width: 100%; height: 36px; overflow: visible; padding: 0 var(--plate-pad); box-sizing: border-box; }
-.pleader path { fill: none; stroke: var(--c); stroke-width: 5; stroke-linejoin: round; filter: var(--stripe-lift); }
-.pleader .narrow { display: none; }
-.part { margin: 0 var(--plate-pad); }
-.part > .blank { margin-top: 18px; }
-.part > .error { margin: 18px 0 0; }
-.pgrid { display: grid; grid-template-columns: 1fr 2fr; align-items: start; }
-.pcol { margin: 0 12px; min-width: 0; }
-/* The tag hangs by its eyelet: the line runs on down into it. */
-.ptag { position: relative; }
-.ptag::before { content: ""; position: absolute; z-index: 1; top: 0; left: calc(50% - 2.5px); width: 5px; height: 11px; pointer-events: none; background: var(--c-serial); filter: var(--stripe-lift); }
-.ptag .cand-in { min-height: 12rem; }
-.ptag dl { margin-bottom: .8rem; }
-.numtape .ptn { font: 700 12px var(--cell-font); }
-/* The open part's rows (.prows) are the same receipt, under the part's tag
-   and its width. */
-/* The vehicles: the page's own table panel. Each name in a vocabulary is
-   a strip of label tape, stuck on, after the vocabulary's name. */
-.vehicles { min-width: 0; margin-left: 12px; padding: .25rem 1rem .75rem; overflow-x: auto; }
-.vehicles table { font-size: 14px; }
-.vehicles th, .vehicles td { padding: .55rem .9rem .55rem 0; }
-.vehicles thead th { padding-top: .75rem; vertical-align: bottom; }
-.vehicles thead .hint { display: block; font: 400 12px system-ui, sans-serif; letter-spacing: 0; text-transform: none; }
-.vehicles tbody th { font-weight: 700; }
-.vehicles .yrs { white-space: nowrap; }
-.vehicles .names .hint { font-size: 13px; }
-.vn { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; margin: 0 8px 4px 0; }
-.vn .voc { font-size: 12px; color: var(--muted); }
-.vtape { padding: .1rem .45rem; font: 700 13px var(--cell-font); color: var(--on-tape); text-shadow: var(--tape-emboss); background: var(--tape); border-top: 1px solid var(--tape-lit); border-bottom: 2px solid var(--tape-edge); border-radius: 1px; box-shadow: var(--lift-stuck); }
-.vehicles .more-cands { margin: .75rem 0 0; }
-/* A narrow page (under 64rem): the tag and the vehicles are halves, the
-   line running to the first's centre (.mid, 255 of 1020), and each
-   vehicle is a row of its own under the table's caption: its name and
-   years, then its options, then its names. */
-.pleader .mid { display: none; }
+/* The part's line (.pleader) is two boxes on the plate's grid: from the
+   number's bracket down, then along and down into the eyelet of the
+   part's tag. The tag's lead is the gutter's width longer than a
+   vehicle's, so its number's tape and its stock strip stand over the
+   vehicles' columns, and its rows, open, reach its trailing edge. A
+   vehicle's row has no strip: its tape is the catalog's name for it
+   with its years, and its ink its option text over its names in the
+   vocabularies loaded, a vocabulary's name small before the names it
+   has, each underlined in the Vehicle group's colour, as a name is. */
+.pleader { display: block; position: relative; z-index: 2; height: 36px; filter: var(--stripe-lift); pointer-events: none; --px: calc(var(--plate-pad) + (100% - 2 * var(--plate-pad)) * 2 / 3); }
+.pleader::before, .pleader::after { content: ""; position: absolute; box-sizing: border-box; }
+.pleader::before { left: calc(var(--px) - 2.5px); top: 0; width: 5px; height: 20px; background: var(--c-serial); }
+.pleader::after { left: 31.5px; right: calc(100% - var(--px) - 2.5px); top: 15.5px; bottom: -21px; border: 0 solid var(--c-serial); border-width: 5px 0 0 5px; border-top-left-radius: 3px; }
+.phead { position: relative; }
+.part > :is(.blank, .error) { margin-top: var(--s4); }
+.phead .rows { margin-left: calc(var(--rail) + var(--lead)); }
+.phead .rows::before { left: calc(8px - var(--rail) - var(--lead)); top: 0; bottom: calc(-1 * var(--s2)); }
+.ptag { --eye-x: calc(var(--rail) + 14px); grid-template-columns: calc(var(--rail) + var(--lead)) calc(2 * var(--m) - 8px - var(--lead)) minmax(0, 1fr) calc(var(--m) - 8px + var(--end)); }
+.vehs > .cand:first-child::after { top: calc(-1 * var(--s2)); }
+.veh .line { grid-template-columns: var(--lead) calc(2 * var(--m) - 8px - var(--lead)) minmax(0, 1fr); }
+.veh .numtape .num { font-size: 15px; letter-spacing: .02em; }
+.vnames { margin: 0; font: 12px/18px var(--cell-font); }
+.vn { display: inline-block; max-width: 100%; margin-right: var(--s3); }
+.vn .voc { font: 11px/1 system-ui, sans-serif; white-space: nowrap; color: var(--manila-muted); }
+.vnames .nw { display: inline; font-size: 12px; border-bottom-width: 2px; }
 @media (width < 64rem) {
-  .pgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .pleader .wide { display: none; }
-  .pleader .mid { display: inline; }
-  .vehicles caption { position: static; display: block; width: auto; height: auto; overflow: visible; clip-path: none; padding: .7rem 0 .4rem; text-align: left; white-space: normal; font: 900 12px var(--label-font); letter-spacing: .04em; border-bottom: 3px solid var(--steel); }
-  .vehicles thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .vehicles table, .vehicles tbody { display: block; }
-  .vehicles tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; padding: .6rem 0; border-bottom: 1px solid var(--line); }
-  .vehicles tr:last-child { border-bottom: 0; }
-  .vehicles :is(th, td) { padding: 0; border: 0; }
-  .vehicles .opts, .vehicles .names { grid-column: 1 / -1; }
+  .ptag { grid-template-columns: calc(var(--rail) + var(--lead)) calc(2 * var(--m) - 8px - var(--lead)) minmax(0, 1fr) 7.5rem; }
 }
 /* A small window: the plate's padding, as the VIN's. */
 @media (max-width: 46rem) {
@@ -767,14 +792,11 @@ table.sum .skip { color: var(--muted); }
   .modes { display: flex; flex: 1; min-width: 0; }
   .mode { flex: 1; white-space: nowrap; padding: 0 .7rem 0 1.4rem; }
   .plabels { display: none; }
-  .pplate, .punder, .pgrid { grid-template-columns: minmax(0, 1fr); }
+  .pplate, .punder { grid-template-columns: minmax(0, 1fr); }
   .pplate { row-gap: 12px; }
   .plbl { position: static; display: block; width: auto; height: auto; overflow: visible; clip-path: none; margin: 0 0 4px; font: 900 10px var(--label-font); letter-spacing: .1em; text-transform: uppercase; color: var(--on-metal); text-shadow: var(--emboss); }
   .punder .brk { grid-column: 1; }
-  .pleader .mid { display: none; }
-  .pleader .narrow { display: inline; }
-  .pcol { margin: 0; }
-  .vehicles { margin: 18px 0 0; padding-inline: .75rem; }
+  .pleader { --px: 50%; }
 }
 
 /* The VINs menu, under the header's button: recent VINs or the examples,
@@ -820,26 +842,20 @@ button.linkish:active { transform: none; box-shadow: none; }
 /* A narrow page (under 64rem): the cards are one row that scrolls
    sideways (.hang), six columns of one width (--col), in the VIN's order.
    The stepped lines (.joins), and the leader lines to cards that now
-   move, are not drawn. The names' row of tags scrolls by itself, from one
-   edge of the window to the other. */
+   move, are not drawn. */
 @media (width < 64rem) {
   .leaders, .joins { display: none; }
-  .hang { --col: 12.5rem; --lbl-h: 1.5rem; --gap: 12px; overflow-x: auto; overscroll-behavior-x: contain; margin: .75rem calc(-1 * var(--gutter)) 0; padding: 4px var(--gutter) 14px; }
+  .hang { --col: 12.5rem; overflow-x: auto; overscroll-behavior-x: contain; margin: .75rem calc(-1 * var(--gutter)) 0; padding: 4px var(--gutter) 14px; }
   .hang:focus-visible { outline-offset: -3px; }
   .cards { grid-template-columns: repeat(6, var(--col)); width: max-content; padding: 0; }
   .seg .w { font-size: .9rem; letter-spacing: .04em; }
   .problems { margin-inline: 4px; }
   /* The parts that fit are outside the row that scrolls. The block's
-     model and year are each at the middle of its half, and its stamp
-     and details are rows of their own. The lines from the cards, which
-     move, are carried to it (.carry, below). */
-  .fit { margin: 0; }
-  .fitstrip { margin-top: 30px; }
+     words are packed at its leading end, and its stamp and details are
+     rows of their own. The lines from the cards, which move, are
+     carried to it (.carry, below). */
   .fitstrip .vfacts { grid-row: 3; grid-column: 1 / -1; border-left: 0; border-top: 1px solid rgb(255 255 255 / .18); }
-  .aka { margin-right: calc(-1 * var(--gutter)); }
-  .nametags { padding-right: var(--gutter); scroll-padding-right: var(--gutter); }
   .fitstrip .seg::after { display: none; }
-  .fit > .blank { margin-top: 1rem; }
 }
 /* A narrow page's cards move and the vehicle's block does not, so the
    vehicle's and the year's lines are carried between them by the row's
@@ -920,10 +936,27 @@ button.linkish:active { transform: none; box-shadow: none; }
   /* The row's columns are narrower. */
   .hang, #answer { --col: 9.5rem; }
   .seg .w { font-size: .8rem; letter-spacing: .03em; }
-  /* Candidates are one row that scrolls sideways, the next tag showing
-     at the edge, and reaches both edges of the window. */
-  .cands { margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter); }
-  .fit { --tag: calc(100% - 2.5rem); }
+  /* A phone: the names are a row of their own, between the block and
+     the picker. A row is two lines: its number and its stock strip,
+     then its ink. The print has no columns: a row is its id and its
+     location, then each declared field after its name, then what is
+     folded. */
+  .band:has(.ptwrap) { grid-template-columns: minmax(0, 1fr); }
+  .band > .aka { grid-row: 1; }
+  .band > .ptwrap { grid-row: 2; margin-top: 0; }
+  .line, .veh .line { grid-template-columns: var(--lead) minmax(0, 1fr) auto; }
+  .ptag { grid-template-columns: calc(var(--rail) + var(--lead)) minmax(0, 1fr) auto; }
+  .ink { grid-column: 2 / -1; grid-row: 2; padding-inline: var(--inset); }
+  .veh .numtape { grid-column: 2 / -1; }
+  .stk { grid-column: 3; }
+  .print, .print tbody { display: block; }
+  .print thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .print tr { display: flex; flex-wrap: wrap; gap: 0 var(--s3); }
+  .print :is(th, td), .print :is(.id, .loc) { width: auto; padding: 0; }
+  .print tbody > tr:first-child { padding-top: var(--s1); }
+  .print td:empty { display: none; }
+  .print td[data-k]::before { content: attr(data-k) " "; color: var(--thermal-muted); }
+  .print .rest td { flex: 1 1 100%; min-width: 0; padding-left: 0; }
   .ptype { font-size: 13px; padding-inline: 10px; }
   .ptgroups { grid-template-columns: minmax(0, 1fr); }
   .labels, .cells, .under { grid-template-columns: repeat(9, minmax(0, 1fr)); }

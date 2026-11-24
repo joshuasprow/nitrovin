@@ -13,13 +13,13 @@ import (
 	"github.com/joshuasprow/nitrovin/pkg/vocab"
 )
 
-// The page's fit card (ADR 0018, #322): under "Also known as", the part
-// types the loaded catalog has for the VIN's vehicle, every page of them,
-// each with its count of candidates, and the candidates of the one
-// pressed. A picker names the pressed one and opens a dialog of all of
-// them under the headings of a part vocabulary (partGroups), its list
-// (#366); plate.js lists the ones this browser opened recently under the
-// picker, and filters the list. A
+// The page's fit card (ADR 0018, #322): under the cards, the part types
+// the loaded catalog has for the VIN's vehicle, every page of them, each
+// with its count of candidates, and the candidates of the one pressed. A
+// picker names the pressed one and opens a dialog of all of them under
+// the headings of a part vocabulary (partGroups), its list (#366);
+// plate.js leads the list with the ones this browser opened recently,
+// and filters it. A
 // part type is pressed by a link to the page with it as the second
 // parameter, part.id, the fit request's own part by its id on the
 // catalog's spine; nothing is pressed without it, and no candidate is
@@ -41,8 +41,8 @@ const (
 	// afterParam is the page of the pressed part type's candidates after
 	// the first, the fit's own after.
 	afterParam = "after"
-	// candidatesPage is how many candidates a page shows: ten rows of
-	// three on a wide page (Handler's candidates, when not 0).
+	// candidatesPage is how many candidates a page shows, a row each
+	// (Handler's candidates, when not 0).
 	candidatesPage = 30
 )
 
