@@ -305,13 +305,13 @@ form.filter .field { display: grid; gap: .25rem; }
    the Tab key with nothing to show for it. */
 .live .decode { display: none; }
 .live .plate:focus-within { outline: 3px solid var(--link); outline-offset: 3px; }
-.live .plate:focus-within .cell.next { box-shadow: inset 0 -6px 0 var(--link); animation: caret 1s steps(2) infinite; }
+.live .plate:focus-within .cell.next { box-shadow: inset 0 -6px 0 var(--link); }
 @keyframes caret { 50% { box-shadow: none; } }
 /* The caret among the characters is a bar in the gap before its cell
    (after the last cell of a whole VIN). A selected cell is inked: dark,
    its character light, ringed in its group's colour. */
 .live .cell.caret, .live .cell.caret-end { position: relative; }
-.live .plate:focus-within .cell.caret::before, .live .plate:focus-within .cell.caret-end::before { content: ""; position: absolute; left: -4px; top: 10%; bottom: 10%; width: 4px; border-radius: 2px; background: var(--on-metal); animation: blink 1s steps(2) infinite; }
+.live .plate:focus-within .cell.caret::before, .live .plate:focus-within .cell.caret-end::before { content: ""; position: absolute; left: -4px; top: 10%; bottom: 10%; width: 4px; border-radius: 2px; background: var(--on-metal); }
 .live .plate:focus-within .cell.caret-end::before { left: auto; right: -4px; }
 @keyframes blink { 50% { opacity: 0; } }
 /* Under a mouse, the gap a click would pick: the caret's bar, faint. */
@@ -1006,6 +1006,8 @@ button.linkish:active { transform: none; box-shadow: none; }
   .fitstrip .vfacts { grid-row: 3; grid-column: 1 / -1; border-left: 0; border-top: 1px solid rgb(255 255 255 / .18); }
   .fitstrip .seg::after { display: none; }
   @supports (animation-timeline: scroll()) {
+  .live .plate:focus-within .cell.next { animation: caret 1s steps(2) infinite; }
+  .live .plate:focus-within :is(.cell.caret, .cell.caret-end)::before { animation: blink 1s steps(2) infinite; }
     .hang { mask: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent) top / 100% calc(100% - 14px) no-repeat, linear-gradient(#000, #000) bottom / 100% 14px no-repeat; animation: nt-fade linear both; animation-timeline: scroll(self inline); }
   }
 }
