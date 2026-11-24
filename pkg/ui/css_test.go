@@ -9,8 +9,7 @@ import (
 
 // TestStylesheetBraces: every brace of ui.css closes one it opened. A
 // closing brace left behind when its block's opening line is deleted
-// makes a browser drop the rule after it, in silence, and breaks the
-// frames scripts/canvas.sh builds from the stylesheet.
+// makes a browser drop the rule after it, in silence.
 func TestStylesheetBraces(t *testing.T) {
 	src, err := os.ReadFile("static/ui.css")
 	if err != nil {

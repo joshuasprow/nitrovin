@@ -8,9 +8,7 @@
   },
   "detector": {
     "ignoreRules": [],
-    "ignoreFiles": [
-      "docs/design/canvas/**"
-    ],
+    "ignoreFiles": [],
     "ignoreValues": [
       {
         "rule": "border-accent-on-rounded",

@@ -58,7 +58,7 @@ flowchart LR
 | `docs/adr/`, `docs/deviations/`, [GLOSSARY.md](GLOSSARY.md) | Decisions, registered parity deviations, and project vocabulary. |
 | `testdata/parity/<month>/` | The frozen parity key. |
 | `testdata/vocab/` | The shared synthetic vocabulary fixture. The vehicle vocabulary is `fleet.jsonl`; `yard` names only a stock kind. |
-| `scripts/` | The oracle, refresh, release, tool pins, C library and Service Worker builds, and the design canvas's frames. A script's header comment is its usage text. |
+| `scripts/` | The oracle, refresh, release, tool pins, and C library and Service Worker builds. A script's header comment is its usage text. |
 
 ## Development Commands
 
@@ -147,30 +147,8 @@ A change to how the page looks follows the ["Composition rules"](docs/design/pag
 - **Look at it full.** Load several vocabularies and a vehicle with many part types before showing a change. A row of one tag proves nothing about a row of five.
 - **A correction made twice becomes a rule.** Add it to the composition rules' list, with what was sent back, in the pull request that fixes it.
 - **DESIGN.md is a map and stays within 1,600 bytes.** Past that, the Impeccable skill's `doctor` reports `design-md-sprawl`, and its `context` carries only the files DESIGN.md names. Detail goes in docs/design/page.md. The map's headings "Colors", "Typography" and "Components" are the names `doctor` looks for (`design-md-coverage`), so they keep that spelling.
-
-## Design Canvas
-
-UI that is not built yet is drawn on a Claude Design canvas before it is specified. The canvas is private to the maintainer. **The canvas is the source of truth; the repo holds snapshots of it.**
-
-- **Three records, one job each:**
-  - [DESIGN.md](DESIGN.md) and the file it maps, [docs/design/page.md](docs/design/page.md), describe the page that exists. They change in the PR that changes the stylesheet, never ahead of it.
-  - The canvas holds what is proposed: wireframes first, then textures.
-  - An issue is the public record of a decision. It states the layout in words and never links the canvas, which only its owner can open.
-- **Snapshots** go in `docs/design/canvas/`, and hold two of the canvas's pages and no other: "nitrovin UI", the page as built, and "Swatches". `project/` has one `.dc.html` per frame of those pages and `canvas.json` cut to them. A proposal's page and a page drawn by hand stay on the canvas. `scripts/canvas.sh --check` fails naming anything else in the folder. Cite a frame by commit and path.
-- **The loop**, with the Artifact tool:
-  1. Read the canvas's files down into a folder under `build/` before any edit: `canvas.json` and every frame of the two pages. Never read into the snapshot folder.
-  2. `scripts/canvas.sh --import <that folder>` is the only way a read reaches the snapshot. The page saves hand edits as new versions and sends no notice, so `git diff` after the import is the drift check. Commit what it changed, as the canvas's own edits.
-  3. Edit: rerun `scripts/canvas.sh`.
-  4. Read `canvas.json` down again, then `scripts/canvas.sh --publish <that folder>`. Publish `build/canvas-publish` and nothing else: the built frames, and the whole index as just read with only their heights set. Never publish the snapshot's `canvas.json`, which lacks the other pages.
-  5. Commit the snapshot.
-- **The frames are built, never drawn by hand.** `scripts/canvas.sh` rebuilds the twelve of the page as built from the running page and `pkg/ui/static/ui.css`. A PR that changes the stylesheet or the templates reruns it; `git diff docs/design/canvas` shows which frames moved, and those are the files to publish. Two runs on one checkout write the same bytes. A proposal's frames are captured the same way from a prototype on a throwaway branch, and the script leaves them alone. Each proposal has a page of its own on the canvas, named "Proposal: <subject>"; no page is shared between proposals, and that branch, not the snapshot, is the frames' record. `canvas.yml` runs `scripts/canvas.sh --check` on a pull request that touches `pkg/ui`, and fails naming the frames that differ from the page. Its `Frames` job is a required status check of `main`'s ruleset; it is skipped, which counts as passing, on a pull request that touches none of its paths. It first fails on anything the snapshot holds off its two pages. It leaves a frame's height, the data month and the release's hash out of the comparison, and it cannot see the canvas: publishing stays a step of the loop.
-- **Never force a publish.** A refused publish means the page is newer: read again and merge.
-- **When a slice ships, its frames are folded into the settled frames or removed.** A proposal left on the canvas after its slice ships reads as undecided.
-- **Snapshot when an issue is filed against a frame**, so the issue's wording has something fixed behind it. For a proposal's frame that is a commit on its prototype branch, which is kept until the issue closes.
-- **Uploaded images belong to one canvas.** A frame references them by an address that resolves only there. A canvas rebuilt from a snapshot needs them copied across and each reference rewritten. Their originals are `pkg/ui/static/brushed.svg` and `pkg/ui/static/paper.svg`.
-- **Frames follow the public-text rule:** the demo set's data only.
-- **A session that cannot reach the canvas works from the issue.** Only a session with the maintainer's login can read it.
-- **`/design-sync` is not this.** It pushes a component library up to a design system and does not read or write a canvas's frames.
+- **DESIGN.md and [docs/design/page.md](docs/design/page.md) describe the page that exists.** They change in the PR that changes the stylesheet, never ahead of it. What is proposed lives on a prototype branch; an issue is the public record of a decision, states the layout in words, and the branch it cites is kept until the issue closes.
+- **Materials** found or tried for the page's look are in [docs/research/swatches/](docs/research/swatches/README.md), beside [docs/research/textures.md](docs/research/textures.md).
 
 ## Runtime/Tooling Preferences
 
