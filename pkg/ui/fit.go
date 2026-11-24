@@ -136,7 +136,7 @@ type partGroup struct {
 
 // ptDialog is the part types dialog: the line saying what it lists, its
 // groups, and the spine plate.js keeps its recent part types by, "" when
-// the strip beside it says (data-spine).
+// the picker beside it says (data-spine).
 type ptDialog struct {
 	Hint, Spine string
 	Groups      []partGroup

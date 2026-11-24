@@ -12,10 +12,10 @@ type, and swaps #answer and #dev.
 Above the plate, a switch of two links (modes) turns it to part-number
 mode (part.go): the plate holds a part type and a number (part-plate),
 and the answer is the part's tag and its vehicles (part-answer).
-What developers need is behind the header's Developers button (developers,
-decode.html), and the VINs to try behind its VINs button (chips). No
-inline script or style: CSP refuses both, so every position is a class on
-a fixed grid of 17 columns. */}}
+What developers need is behind the foot's Developers button (developers,
+decode.html), and the VINs to try behind the VINs button over the plate
+(chips). No inline script or style: CSP refuses both, so every position
+is a class on a fixed grid of 17 columns. */}}
 {{define "home" -}}
 <h1 class="visually-hidden">{{if .Part}}Part number lookup{{else}}VIN decoder{{end}}</h1>
 <div id="lookup" class="stage lookup">
@@ -319,8 +319,8 @@ which plate.js swaps in place (swap). */}}
 (fitstock.go): the second tape, a link to the page with the candidate's
 rows open, its chevron down, or, open, pushed in, its chevron up, a link
 that closes them; a kind of stock a cell, its count large over its name,
-the whole said once for a screen reader. With stock loaded and none for
 and under the name "unavailable" where none of its sources answered,
+the whole said once for a screen reader. With stock loaded and none for
 the candidate it is muted words beside a dashed rule, and presses
 nothing; with none loaded it opens the Vocabularies dialog. */}}
 {{define "stock-strip" -}}
@@ -382,9 +382,9 @@ catalog's in part-number mode count nothing. */}}
 head of metal with Close, the filter (with a script), a line saying
 what it lists, the part types this browser opened recently (with a
 script), and every part type under the headings of a part vocabulary.
-On a VIN's page it lists the vehicle's, opened by "N more"; in
-part-number mode, the catalog's, opened by the plate's part type, and
-data-spine is the spine plate.js keeps them by. */}}
+On a VIN's page it lists the vehicle's, opened by the picker as its
+list; in part-number mode, the catalog's, opened by the plate's part
+type, and data-spine is the spine plate.js keeps them by. */}}
 {{define "part-types-dialog" -}}
 <dialog id="part-types" class="ptdialog" popover aria-labelledby="part-types-h"{{with .Spine}} data-spine="{{.}}"{{end}}>
 <div class="dialog-head">
