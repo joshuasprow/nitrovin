@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/joshuasprow/nitrovin/pkg/contract"
 	"github.com/joshuasprow/nitrovin/pkg/vocab"
@@ -271,10 +272,16 @@ func (r stockRow) Rest() bool {
 // a string's text, a number or a boolean as its JSON, nothing for a
 // null. JSON marks a list or an object, whose Value is its JSON,
 // compact: it is never a column's, and folded it is cut to one line.
+// Long marks a folded value past foldLines: it is cut to two lines, and
+// pressed, printed whole.
 type stockField struct {
 	Name, Value string
-	JSON        bool
+	JSON, Long  bool
 }
+
+// foldLines is how many characters two lines of a folded value hold, at
+// the 80 a line the print wraps them at.
+const foldLines = 160
 
 // stockHeadings are each kind's column heading, before its count.
 var stockHeadings = map[string]string{contract.StockShelf: "On the shelf", contract.StockYard: "In the yard"}
@@ -321,6 +328,7 @@ func newStockRow(r contract.StockRow, heads, declared []string, vin string) stoc
 			continue
 		}
 		if f.Value != "" {
+			f.Long = !f.JSON && utf8.RuneCountInString(f.Value) > foldLines
 			row.Folded = append(row.Folded, f)
 		}
 	}

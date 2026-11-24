@@ -627,16 +627,21 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; letter-spacing:
 /* The open candidate's rows: a strip of thermal paper fed out from under
    its tag, from the tag's content to its trailing end, and torn at its
    foot. It is a print in columns: a kind of stock under a small reversed
-   bar with its sources' dates; a line a row, its id under the part's
-   number, its location in bold, as it is what is walked to, then a
-   column for each field its source's header declares, under the field's
-   name. A column is as wide as its share of the paper and never wider:
-   a long value wraps in it. What a row has beyond those is under it, a
-   column in, in the fainter print: a name and its value each, wrapping
-   at 80 characters where the paper is wider, and a list or an object as
-   its JSON, cut to one line. No head, no barcode, no dot leaders. Nothing
-   typed into a stock file changes case on it. "Strip" alone is the tag's
-   stock strip, the control (.stk). */
+   bar with its sources' dates; a line a row. Its id and its location, in
+   bold, as it is what is walked to, are each as wide as the longest of
+   them and never wrap, short of 24 characters. The rest of the paper is
+   a column for each field its source's header declares, under the
+   field's name, each as wide as what it holds asks, and no value asks
+   for more than 24 characters: a longer one wraps in its column. What a
+   row has beyond those is under it, indented, in the fainter print and
+   lighter than the row: a name, a colon and its value each, wrapping at
+   80 characters where the paper is wider. A list or an object is its
+   JSON, cut to one line. A value longer than two such lines is cut to
+   two behind a plus sign, and pressing it prints it whole: a details
+   element, so without a script, and every field's name shows shut. No
+   head, no barcode, no dot leaders. Nothing typed into a stock file
+   changes case on it. "Strip" alone is the tag's stock strip, the
+   control (.stk). */
 .rows { position: relative; margin: -2px 0 0 var(--lead); }
 .receipt { position: relative; box-sizing: border-box; padding: var(--s3) var(--inset) var(--s2); color: var(--on-thermal); font: 13px/18px var(--cell-font);
   background: linear-gradient(rgb(8 7 15 / .32), rgb(8 7 15 / .07) 6px, transparent 15px), linear-gradient(90deg, rgb(8 7 15 / .05), transparent 2% 98%, rgb(8 7 15 / .05)), var(--thermal);
@@ -648,20 +653,28 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; letter-spacing:
 .stock-kind + .stock-kind { margin-top: var(--s4); }
 .stock-kind .kind { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 var(--s3); margin: 0 0 var(--s1); font: 12px/18px var(--cell-font); letter-spacing: .02em; }
 .stock-kind .bar { padding: 0 var(--s2); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--thermal); background: var(--on-thermal); }
-.print { table-layout: fixed; width: 100%; border-collapse: collapse; }
-.print :is(th, td) { box-sizing: border-box; padding: 0 var(--s3) 0 0; font: inherit; letter-spacing: 0; text-transform: none; text-align: left; vertical-align: baseline; overflow-wrap: anywhere; border: 0; }
+.print { width: 100%; border-collapse: collapse; }
+.print :is(th, td) { box-sizing: border-box; max-width: 24ch; padding: 0 var(--s3) 0 0; font: inherit; letter-spacing: 0; text-transform: none; text-align: left; vertical-align: baseline; overflow-wrap: anywhere; border: 0; }
 .print tr > :last-child { padding-right: 0; }
-.print :is(.id, .loc) { width: var(--m); }
+.print :is(.id, .loc) { width: 1%; max-width: none; white-space: nowrap; }
+.print :is(.id, .loc).long { min-width: 24ch; white-space: normal; }
 .print thead th { padding-bottom: 2px; font-size: 12px; color: var(--thermal-muted); border-bottom: 1px dashed var(--on-thermal); }
 .print.bare thead :is(th, td) { padding: 0; border: 0; }
 .print tbody > tr:first-child > * { padding-top: var(--s1); }
 .print .loc { font-weight: 700; }
-.print .rest td { padding-left: var(--m); font-size: 12px; color: var(--thermal-muted); }
+/* What is folded asks for no width of its own: it takes the paper's. */
+.print .rest td { max-width: 0; padding-left: var(--s5); font-size: 12px; color: var(--thermal-muted); }
 .fold { margin: 0; }
-.fold > div { display: inline-block; max-width: min(100%, 80ch); margin-right: var(--s3); vertical-align: top; text-wrap: pretty; }
+.fold > div { display: inline-block; max-width: min(100%, 80ch); margin-right: var(--s4); vertical-align: top; text-wrap: pretty; }
 .fold :is(dt, dd) { display: inline; margin: 0; }
-.fold dd { font-weight: 700; }
+.fold dt::after { content: ":"; }
 .fold > .json { display: block; margin-right: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fold > .long { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 6px; margin-right: 0; }
+.fold details { margin: 0; padding: 0; border: 0; }
+.fold summary { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; padding: 0; font-weight: 400; }
+.fold summary::before { content: "+ "; }
+.fold details[open] > summary { display: block; }
+.fold details[open] > summary::before { content: "\2212  "; }
 .print .note { margin: 0; }
 .print .note::before { content: "* "; }
 .print .note strong { padding: 0 5px; color: var(--thermal); background: var(--on-thermal); }
@@ -952,11 +965,11 @@ button.linkish:active { transform: none; box-shadow: none; }
   .print, .print tbody { display: block; }
   .print thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .print tr { display: flex; flex-wrap: wrap; gap: 0 var(--s3); }
-  .print :is(th, td), .print :is(.id, .loc) { width: auto; padding: 0; }
+  .print :is(th, td), .print :is(.id, .loc) { width: auto; min-width: 0; max-width: none; padding: 0; }
   .print tbody > tr:first-child { padding-top: var(--s1); }
   .print td:empty { display: none; }
-  .print td[data-k]::before { content: attr(data-k) " "; color: var(--thermal-muted); }
-  .print .rest td { flex: 1 1 100%; min-width: 0; padding-left: 0; }
+  .print td[data-k]::before { content: attr(data-k) ": "; color: var(--thermal-muted); }
+  .print .rest td { flex: 1 1 100%; min-width: 0; max-width: none; padding-left: 0; }
   .ptype { font-size: 13px; padding-inline: 10px; }
   .ptgroups { grid-template-columns: minmax(0, 1fr); }
   .labels, .cells, .under { grid-template-columns: repeat(9, minmax(0, 1fr)); }

@@ -57,7 +57,7 @@ var (
 	saidRE      = regexp.MustCompile(`<span class="visually-hidden">([^<]*)</span>`)
 	stockRowRE  = regexp.MustCompile(`(?s)<tbody>\n<tr><th scope="row" class="id">([^<]*)</th><td class="loc">([^<]*)</td>(.*?)</tr>\n(?:<tr class="rest"><td colspan="\d+">(.*?)</td></tr>\n)?</tbody>`)
 	stockCellRE = regexp.MustCompile(`<td data-k="([^"]*)">([^<]*)</td>`)
-	stockFoldRE = regexp.MustCompile(`<div(?: class="json")?><dt>([^<]*)</dt> <dd>([^<]*)</dd></div>`)
+	stockFoldRE = regexp.MustCompile(`<div(?: class="(?:json|long)")?><dt>([^<]*)</dt> <dd>(?:<details><summary>)?([^<]*)(?:</summary></details>)?</dd></div>`)
 	stockNoteRE = regexp.MustCompile(`(?s)<p class="note">(.*?)</p>`)
 )
 
@@ -515,7 +515,8 @@ func TestStockPrint(t *testing.T) {
 // declare, each once; a field is its row's column only when the row's
 // own source declares it and its value is no list or object; a null and
 // an empty string print nothing, in a column or folded; anything else
-// folds, in the source's order, a list or an object as its JSON.
+// folds, in the source's order, a list or an object as its JSON, and a
+// value past two lines marked long, to be cut to them.
 func TestStockColumn(t *testing.T) {
 	row := func(source, id, fields string) contract.StockRow {
 		return contract.StockRow{Source: source, ID: id, Fields: []byte(fields)}
@@ -527,6 +528,7 @@ func TestStockColumn(t *testing.T) {
 		row("b", "4", `{"y":"4","w":0,"x":"not b's"}`),
 		row("a", "5", `{}`),
 		row("a", "6", `"loose"`),
+		row("a", "7", `{"x":"`+strings.Repeat("é", 161)+`","short":"`+strings.Repeat("é", 160)+`","more":"`+strings.Repeat("é", 161)+`"}`),
 	}}
 	declared := map[string][]string{"a": {"x", "y"}, "b": {"y", "w"}, "unseen": {"never"}}
 	text := func(fields []stockField) string {
@@ -535,6 +537,9 @@ func TestStockColumn(t *testing.T) {
 			s := f.Name + "=" + f.Value
 			if f.JSON {
 				s += " (JSON)"
+			}
+			if f.Long {
+				s += " (long)"
 			}
 			out = append(out, s)
 		}
@@ -551,6 +556,7 @@ func TestStockColumn(t *testing.T) {
 		"4: x=, y=4, w=0 | x=not b's",
 		"5: x=, y=, w= | ",
 		"6: x=, y=, w= | =loose",
+		"7: x=" + strings.Repeat("é", 161) + ", y=, w= | short=" + strings.Repeat("é", 160) + ", more=" + strings.Repeat("é", 161) + " (long)",
 	}
 	var got []string
 	for _, r := range col.Rows {
