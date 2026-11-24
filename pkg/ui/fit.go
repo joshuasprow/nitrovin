@@ -218,8 +218,9 @@ func fitHref(vin, part, after string) string {
 }
 
 // loadedCatalog is the loaded catalog as /v1/info lists it, a zero Name
-// with none: in the browser, the server's while it holds one, else the
-// browser's.
+// with none: in the browser, the server's while it holds one, of which
+// the worker's config carries the name, spine, vehicle vocabulary and
+// filed-under vocabulary alone (workerFile), else the browser's.
 func (h *Handler) loadedCatalog(info contract.Info) contract.VocabularyFile {
 	if h.lib != nil && h.lib.ServerCatalog().Name != "" {
 		return h.lib.ServerCatalog()

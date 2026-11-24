@@ -693,3 +693,26 @@ rows with no number come with the candidates. While the server holds the
 catalog, the browser refuses to load a yard as it refuses a shelf: its fit would
 never read it. With the browser's own catalog, the page asks its own stock, as
 before.
+
+## Amendment (2026-11-23): /sw.js names the server catalog's spine and filed_under vocabulary
+
+`/sw.js` named the server's catalog by its name, version, blake3 and vehicle
+vocabulary. The pages read two more things of the loaded catalog before any fit
+answers, and read them "as `/v1/info` lists it": its spine, whose names
+part-number mode lists for the plate's part type, and its `filed_under`
+vocabulary, whose entries head the part types dialog. With neither in the
+worker's copy, part-number mode asked for the names of spine "" and was refused
+with a 400 whenever the worker answered for a server holding a catalog, and the
+dialog fell back to the first part vocabulary loaded on the spine
+([#393](https://github.com/joshuasprow/nitrovin/issues/393)).
+
+So `/sw.js` now names both beside the catalog's name and vehicle vocabulary,
+each omitted when empty. `/v1/info` already returns both, so nothing new is
+published, and a server with no catalog serves the same bytes as before. The
+worker does not ask `/v1/info` for them instead: that is a request a page, and
+none offline (ADR 0013). One pair of functions in `pkg/ui` writes a served file
+into the worker's config and reads it back, over the same fields, so a field
+cannot be written and not read. The tests' server opens its Library from the
+real `/sw.js`, read back as the worker reads it. A worker of an older release
+meeting the new server is outdated and hands pages to the server (ADR 0013, as
+amended), so no migration is needed.
