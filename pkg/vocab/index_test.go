@@ -140,7 +140,8 @@ func TestReadIndexRefuses(t *testing.T) {
 
 // TestIndexStock: a stock file, shelf or yard, with every route a row
 // names its part or vehicle by, reads back from its stored index as Read
-// made it, cut anywhere refuses, and links beside the catalog to the same
+// made it, its declared field order and its rows' fields in that order
+// among it, cut anywhere refuses, and links beside the catalog to the same
 // parts and vehicles. A connector's file, which runs on a server, has no
 // index.
 func TestIndexStock(t *testing.T) {
@@ -149,8 +150,11 @@ func TestIndexStock(t *testing.T) {
 		t.Fatal(err)
 	}
 	back := slices.Clone(files)
-	for _, name := range []string{"shelf-annex", "shelf-stock", "yard-stock", "drift/shelf-orphans"} {
+	for _, name := range []string{"shelf-annex", "shelf-stock", "yard-stock", "drift/shelf-orphans", "order/shelf-order", "order/yard-order"} {
 		f := readStock(t, name)
+		if strings.HasPrefix(name, "order/") && (len(f.Fields) == 0 || !bytes.HasPrefix(f.Stock[0].Fields, []byte(`{"stock_number":`))) {
+			t.Errorf("%s: declares %q, and its first row's fields are %s; want an order, and the row in it", name, f.Fields, f.Stock[0].Fields)
+		}
 		g := indexed(t, f)
 		if !reflect.DeepEqual(f, g) {
 			t.Errorf("%s: the index reads back as another file", f.Name)
@@ -177,8 +181,8 @@ func TestIndexStock(t *testing.T) {
 		t.Fatal(err)
 	}
 	ws, gs := want.Stock(), got.Stock()
-	if len(ws) != 4 || len(gs) != 4 {
-		t.Fatalf("%d and %d stock files linked; want 4", len(ws), len(gs))
+	if len(ws) != 6 || len(gs) != 6 {
+		t.Fatalf("%d and %d stock files linked; want 6", len(ws), len(gs))
 	}
 	for i := range ws {
 		if !reflect.DeepEqual(ws[i].Stock, gs[i].Stock) {

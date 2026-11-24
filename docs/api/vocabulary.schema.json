@@ -221,6 +221,7 @@
         "as_of": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?([Zz]|[+-][0-9]{2}:[0-9]{2}))?$", "description": "The time the rows are as of: RFC 3339, or YYYY-MM-DD. Required without connector; a connector's rows carry their own." },
         "catalog": { "$ref": "#/$defs/Name", "description": "A shelf's catalog, the one its numbers belong to. It must be loaded. A yard names none." },
         "release": { "type": "string", "minLength": 1, "description": "The catalog release a shelf's numbers are under; an answer marks catalog_mismatch when it is not the loaded catalog's. A connector reads it from release_relation instead." },
+        "fields": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 }, "description": "The order of its rows' fields (ADR 0019): every row's fields are answered with these names first, in this order, for those the row has, then the row's other fields in the source's order, each value verbatim. It orders and never cuts, and a name no row has is no fault. Absent or empty: the source's order. A file's author can write each line in order instead; a connector's cannot, as jsonb keeps an object's keys by length, then bytes." },
         "connector": { "$ref": "#/$defs/StockConnector" }
       },
       "allOf": [

@@ -129,7 +129,10 @@ type File struct {
 	// file's: shelf or yard, the time its rows are as of, and a shelf's
 	// catalog (Release is that catalog's release its numbers are under, ""
 	// when it says none). A connector's file has no AsOf or Release: it
-	// reads both from its database.
+	// reads both from its database. A stock file's Fields are the order
+	// its header declares of its rows' fields (ADR 0019), nil when it
+	// declares none: a file's rows are read into it, a connector's as
+	// they are read from its database.
 	Holds        StockHolds
 	AsOf         string
 	StockCatalog string

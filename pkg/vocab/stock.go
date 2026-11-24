@@ -16,12 +16,13 @@ import (
 // A stock file (ADR 0019) is one stock source for callers with no
 // database: a header naming the source, its kind (shelf or yard), its time
 // and, for a shelf, the catalog its numbers belong to, then one row a
-// line. Read refuses a malformed row; Link a shelf whose catalog is not
-// loaded, and resolves each row's part and vehicle against the files
-// loaded with it; Drift reports orphan rows and field names that look
-// personal. Package stock answers from it. A connector's file (ADR 0020)
-// is a header alone, naming the database relation its rows are read from
-// at request time.
+// line. Read refuses a malformed row, and puts each row's fields in the
+// order the header declares, when it declares one; Link refuses a shelf
+// whose catalog is not loaded, and resolves each row's part and vehicle
+// against the files loaded with it; Drift reports orphan rows and field
+// names that look personal. Package stock answers from it. A connector's
+// file (ADR 0020) is a header alone, naming the database relation its rows
+// are read from at request time.
 
 // StockHolds is what a stock source holds: shelf parts or yard vehicles.
 type StockHolds string
@@ -62,8 +63,9 @@ type StockRow struct {
 	Year    *int
 	vehicle []byte // as the line writes it, resolved by Link
 
-	// Fields are the row's own fields, verbatim: a JSON object, "{}" when
-	// the line has none.
+	// Fields are the row's own fields: a JSON object, each member as the
+	// line writes it, in the order the header declares (AppendStockFields),
+	// the line's own when it declares none; "{}" when the line has none.
 	Fields json.RawMessage
 }
 
@@ -121,7 +123,7 @@ var (
 )
 
 // stockHeader reads a stock header's own fields.
-func (f *File) stockHeader(source, asOf, catalog, release, connector []byte) error {
+func (f *File) stockHeader(source, asOf, catalog, release, connector, fields []byte) error {
 	s, err := stringAt(source, "/source")
 	if err != nil {
 		return err
@@ -129,6 +131,11 @@ func (f *File) stockHeader(source, asOf, catalog, release, connector []byte) err
 	f.Holds = StockHolds(s)
 	if f.Holds != StockShelf && f.Holds != StockYard {
 		return errAt("/source", "unknown source %q: shelf or yard", s)
+	}
+	if fields != nil {
+		if f.Fields, err = fieldNames(fields); err != nil {
+			return err
+		}
 	}
 	if connector != nil {
 		switch {
@@ -319,7 +326,7 @@ func (f *File) stockRow(n int, line []byte) (StockRow, error) {
 		}
 		r.vehicle = bytes.Clone(v[6])
 	}
-	if err := r.readFields(v[10], f.Holds); err != nil {
+	if err := r.readFields(v[10], f.Holds, f.Fields); err != nil {
 		return r, err
 	}
 	if f.Holds == StockShelf {
@@ -438,8 +445,9 @@ func (r *StockRow) yard(decoded, vin, vehicle, year []byte) error {
 }
 
 // readFields reads a row's fields: an object, flat (strings, numbers and
-// null) for a shelf, any JSON for a yard.
-func (r *StockRow) readFields(raw []byte, holds StockHolds) error {
+// null) for a shelf, any JSON for a yard, in the order its header
+// declares.
+func (r *StockRow) readFields(raw []byte, holds StockHolds, order []string) error {
 	if raw == nil {
 		r.Fields = json.RawMessage("{}")
 		return nil
@@ -456,8 +464,80 @@ func (r *StockRow) readFields(raw []byte, holds StockHolds) error {
 	if holds == StockShelf && !flat {
 		return errAt("/fields", "a shelf row's fields are flat: strings, numbers and null")
 	}
-	r.Fields = json.RawMessage(bytes.Clone(raw))
+	r.Fields = AppendStockFields(make([]byte, 0, len(raw)), raw, order)
 	return nil
+}
+
+// AppendStockFields appends fields, a stock row's fields, to dst in the
+// order a stock header declares (ADR 0019): the members order names
+// first, in order's order, then the others in their own. fields is a JSON
+// object, valid and with no white space around it, as a stock file's line
+// or jsonb's text gives one. Nothing is decoded: a member moves as its
+// bytes, and the bytes between members stay where they are, so a value (a
+// number's digits, a string's escapes, nested JSON) is what the source
+// wrote, and fields whose members already come in that order, as under
+// an empty order, are appended as they are. A name fields has twice keeps
+// both members, the earlier first.
+func AppendStockFields(dst, fields []byte, order []string) []byte {
+	if len(order) == 0 || len(fields) == 0 || fields[0] != '{' {
+		return append(dst, fields...)
+	}
+	// Rows of up to 16 fields, which most are, are ordered on the stack.
+	var spanBuf [16]fieldSpan
+	spans, sorted := spanBuf[:0], true
+	for i := skipSpace(fields, 1); fields[i] != '}'; {
+		end := stringEnd(fields, i)
+		s := fieldSpan{start: i, rank: fieldRank(fields[i:end], order)}
+		i = skipSpace(fields, skipSpace(fields, end)+1) // past the ':'
+		s.end = valueEnd(fields, i)
+		sorted = sorted && (len(spans) == 0 || spans[len(spans)-1].rank <= s.rank)
+		spans = append(spans, s)
+		if i = skipSpace(fields, s.end); fields[i] == ',' {
+			i = skipSpace(fields, i+1)
+		}
+	}
+	if sorted {
+		return append(dst, fields...)
+	}
+	var atBuf [16]int
+	at := atBuf[:0]
+	for j := range spans {
+		at = append(at, j)
+	}
+	slices.SortStableFunc(at, func(a, b int) int { return spans[a].rank - spans[b].rank })
+	// The kth member written takes the kth place: what fields has before
+	// its first member, between two and after its last stays put.
+	dst = append(dst, fields[:spans[0].start]...)
+	for k, j := range at {
+		if k > 0 {
+			dst = append(dst, fields[spans[k-1].end:spans[k].start]...)
+		}
+		dst = append(dst, fields[spans[j].start:spans[j].end]...)
+	}
+	return append(dst, fields[spans[len(spans)-1].end:]...)
+}
+
+// fieldSpan is one member of a row's fields: from its key's first byte to
+// just past its value, and where its name comes in the declared order,
+// after every name for a member the order does not name.
+type fieldSpan struct{ start, end, rank int }
+
+// fieldRank is the index in order of key, a member's key as JSON, and
+// len(order) for a key order does not name.
+func fieldRank(key []byte, order []string) int {
+	if k, plain := plainString(key); plain {
+		for i, name := range order {
+			if string(k) == name {
+				return i
+			}
+		}
+		return len(order)
+	}
+	s, _ := str(key)
+	if i := slices.Index(order, s); i >= 0 {
+		return i
+	}
+	return len(order)
 }
 
 // addStockRow indexes r, about to be row i, refusing it when an earlier

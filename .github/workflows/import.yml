@@ -350,6 +350,7 @@ jobs:
           go test -count=1 -race -v ./pkg/stock/pg/ | tee "$RUNNER_TEMP/stock.log"
           for t in TestParityPostgres TestUnavailablePostgres TestRowsPostgres TestSlowPostgres \
                    TestChangedPostgres TestPlansPostgres TestVPICPostgres TestColumnCheckPostgres \
-                   TestCharacterPostgres TestLostPostgres TestNoCatalogPostgres TestStockedPostgres; do
+                   TestCharacterPostgres TestLostPostgres TestNoCatalogPostgres TestStockedPostgres \
+                   TestFieldOrderPostgres; do
             grep -q -- "--- PASS: $t " "$RUNNER_TEMP/stock.log" || { echo "stock: $t did not pass" >&2; exit 1; }
           done

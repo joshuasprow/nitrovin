@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -16,6 +17,77 @@ import (
 	"github.com/joshuasprow/nitrovin/pkg/stock"
 	"github.com/joshuasprow/nitrovin/pkg/vocab"
 )
+
+// orderStockFixture is testdata/vocab/stock/order: a shelf and a yard
+// whose headers declare their rows' field order (#390), over lines written
+// out of it. The surface tests load it beside stockFixture.
+var orderStockFixture = abs("../../testdata/vocab/stock/order")
+
+// orderFit asks for the stock of the engine the order fixture's shelf and
+// yard hold, and orderCut for four of its rows' fields, named out of the
+// declared order; orderFitQuery and orderCutQuery are GET /v1/fit's of
+// them.
+const (
+	orderFit      = `{"from":{"fitment":{"type":"engine","number":"EN-57"}},"stock":["shelf","yard"]}`
+	orderCut      = `{"from":{"fitment":{"type":"engine","number":"EN-57"}},"stock":["shelf","yard"],"stock_fields":["tag","photos","price","stock_number"]}`
+	orderFitQuery = "from.fitment.type=engine&from.fitment.number=EN-57&stock=shelf&stock=yard"
+	orderCutQuery = orderFitQuery + "&stock_fields=tag&stock_fields=photos&stock_fields=price&stock_fields=stock_number"
+)
+
+// What a surface's bytes hold when the declared order reached them: the
+// fields of the shelf's R-1 and the yard's V-1 in an answer to orderFit
+// (orderedFields) and to orderCut (orderedCut), each value as its line
+// writes it; and Info's report of the two sources (orderedInfo).
+var (
+	orderedFields = []string{
+		`"fields":{"stock_number":"E500","condition":"A","price":1850.00,"tag":"T-9","miles":61250,"status":"on shelf"}`,
+		`"fields":{"stock_number":"V900","row":"K","photos":[{"url":"v900-front.jpg","w":1600,"h":1200},{"url":"v900-rear.jpg","w":1600,"h":1200}],"color":"grey","added":"2026-10-30"}`,
+	}
+	orderedCut = []string{
+		`"fields":{"stock_number":"E500","price":1850.00,"tag":"T-9"}`,
+		`"fields":{"stock_number":"V900","photos":[{"url":"v900-front.jpg","w":1600,"h":1200},{"url":"v900-rear.jpg","w":1600,"h":1200}]}`,
+	}
+	orderedInfo = []string{
+		`"source":"shelf","catalog":"parts-catalog","fields":["stock_number","condition","price","warranty"]`,
+		`"source":"yard","fields":["stock_number","row","photos"]`,
+	}
+)
+
+// holds fails unless answer, a surface's own bytes, holds each of want as
+// written.
+func holds(t *testing.T, what string, answer []byte, want []string) {
+	t.Helper()
+	for _, w := range want {
+		if !bytes.Contains(answer, []byte(w)) {
+			t.Errorf("%s holds no %s:\n%s", what, w, answer)
+		}
+	}
+}
+
+// TestStockFieldOrder: the CLI answers a stock row's fields in the order
+// its source's header declares (#390), whole and cut by stock_fields, and
+// `info` reports each source's declared order, and none for a source that
+// declares none.
+func TestStockFieldOrder(t *testing.T) {
+	fixtureData(t)
+	vocabArgs := []string{"--vocab", fixture, "--vocab", fitmentFixture, "--vocab", stockFixture, "--vocab", orderStockFixture}
+	r := cli(t, nil, orderFit+"\n"+orderCut+"\n", append(vocabArgs, "fit", "-")...)
+	answers := strings.Split(strings.TrimSuffix(r.stdout, "\n"), "\n")
+	if r.exit != 0 || r.stderr != "" || len(answers) != 2 {
+		t.Fatalf("fit -: exit %d, stderr %q, %d answers; want 2", r.exit, r.stderr, len(answers))
+	}
+	holds(t, "fit -", []byte(answers[0]), orderedFields)
+	holds(t, "fit - with stock_fields", []byte(answers[1]), orderedCut)
+
+	r = cli(t, nil, "", append(vocabArgs, "info")...)
+	if r.exit != 0 {
+		t.Fatalf("info: exit %d, %s", r.exit, r.stderr)
+	}
+	holds(t, "info", []byte(r.stdout), orderedInfo)
+	if n := strings.Count(r.stdout, `"fields":`); n != len(orderedInfo) {
+		t.Errorf("info reports fields of %d files; want of the %d sources that declare an order:\n%s", n, len(orderedInfo), r.stdout)
+	}
+}
 
 // downSource is a live stock source that is down: every lookup fails with
 // err.

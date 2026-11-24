@@ -332,5 +332,5 @@ func (l *Library) admitStock(f *vocab.File, fileName string, cur *shelf) error {
 func stockFile(h *held) contract.VocabularyFile {
 	f := h.file
 	return contract.VocabularyFile{Name: h.name, Kind: string(vocab.KindStock), Version: f.Version, Release: f.Release, Blake3: h.rec.Blake3, Path: f.Path,
-		StockCounts: &contract.StockCounts{Source: string(f.Holds), Catalog: f.StockCatalog, AsOf: f.AsOf, Rows: new(len(f.Stock))}}
+		StockCounts: &contract.StockCounts{Source: string(f.Holds), Catalog: f.StockCatalog, Fields: f.Fields, AsOf: f.AsOf, Rows: new(len(f.Stock))}}
 }
