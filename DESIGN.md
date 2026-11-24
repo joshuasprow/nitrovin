@@ -17,6 +17,7 @@ are: a change fixes a bug or follows a signature part.
 - [Composition rules](docs/design/page.md#composition-rules): how a change is
   put together, each from a correction.
 - [Building something new](docs/design/page.md#building-something-new).
+- [Widths](docs/design/page.md#widths): where the page changes, and why.
 
 ## Colors
 
