@@ -152,7 +152,8 @@ func (s *decoderServer) Post(path string, body []byte) (int, []byte, error) {
 }
 
 // serve has s serve data as its file name, a catalog naming its vehicle
-// vocabulary and a stock file what it holds, as /v1/info does.
+// vocabulary and a stock file what it holds and the fields its header
+// declares, as the worker's config does (ReadWorkerConfig).
 func (s *decoderServer) serve(t *testing.T, name string, data []byte) {
 	t.Helper()
 	f, err := vocab.Read(name+".jsonl", bytes.NewReader(data))
@@ -164,7 +165,7 @@ func (s *decoderServer) serve(t *testing.T, name string, data []byte) {
 		v.Spine, v.Vehicles = c.Info().Spine, c.Info().Vehicles
 	}
 	if f.Kind == vocab.KindStock {
-		v.StockCounts = &contract.StockCounts{Source: string(f.Holds)}
+		v.StockCounts = &contract.StockCounts{Source: string(f.Holds), Fields: f.Fields}
 	}
 	s.info.Vocabularies = append(s.info.Vocabularies, v)
 	s.files[FilePath(s.info, v)] = data

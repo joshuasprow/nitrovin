@@ -328,6 +328,106 @@ func TestLibraryStockPage(t *testing.T) {
 	}
 }
 
+// TestWorkerConfigStockFields: the worker's config carries the fields a
+// server's stock source declares (#390), so a browser whose worker
+// answers the page prints the server's stock in the server's columns. A
+// source that declares none is listed in the config as it was, with no
+// fields, and prints an id and a location a row. VIN mode is drawn from
+// the config the server's /sw.js gives. Part-number mode is drawn from
+// the fixture's own list of the server's files (decoderServer.serve),
+// which carries the declared fields as the config does and also the
+// catalog's spine, which that mode reads and the config does not carry.
+func TestWorkerConfigStockFields(t *testing.T) {
+	d := embedded(t)
+	// beside is a server holding the fitment fixture's catalog and the
+	// stock named, and the pages of a browser beside it: its library
+	// opened from the config the server's /sw.js gives, its fits the
+	// server's. entries is the config's list of the server's stock.
+	beside := func(stock ...string) (srv, browser *Handler, entries string) {
+		t.Helper()
+		tr := stockServerOf(t, d, stock)
+		t.Cleanup(tr.Close)
+		srv = New(served{tr}, log.New(io.Discard, "", 0)).WithWorker(Worker{Module: []byte("\x00asm"), Exec: []byte("// go")})
+		_, _, body := response(t, srv, "GET", "/sw.js", nil)
+		config, _, _ := strings.Cut(strings.TrimPrefix(body[strings.Index(body, "self.nitrovinConfig = "):], "self.nitrovinConfig = "), ";\n")
+		c, err := ReadWorkerConfig([]byte(config))
+		if err != nil {
+			t.Fatal(err)
+		}
+		var listed struct {
+			Stock json.RawMessage `json:"stock"`
+		}
+		if err := json.Unmarshal([]byte(config), &listed); err != nil {
+			t.Fatal(err)
+		}
+		entries = string(listed.Stock)
+		s := newDecoderServer(t, d, "part-types", "part-codes", "catalog-models")
+		s.fits = tr
+		l, err := OpenLibrary(c.Info, s, newDisk())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := len(l.ServerStock()); got != len(stock) || l.ServerCatalog().Name != "parts-catalog" {
+			t.Fatalf("the browser beside %q: %d stock sources, the catalog %q", stock, got, l.ServerCatalog().Name)
+		}
+		return srv, NewInBrowser(l, c, log.New(io.Discard, "", 0)), entries
+	}
+	const (
+		vinMode  = "/?from.vin=1D7RV1GT5AS123456&part.id=engine&fitment.number=EN-57"
+		partMode = "/?from.fitment.type=engine&from.fitment.number=EN-57&fitment.number=EN-57"
+		shelf    = `<th scope="col">stock_number</th><th scope="col">condition</th><th scope="col">price</th><th scope="col">warranty</th></tr></thead>`
+		yard     = `<th scope="col">stock_number</th><th scope="col">row</th><th scope="col">photos</th></tr></thead>`
+	)
+
+	// Declared: the config says which fields, in the header's order, and
+	// the browser's print has the server's columns.
+	srv, browser, entries := beside("shelf-order", "yard-order")
+	for _, want := range []string{
+		`"name":"shelf-order","kind":"stock","version":"2026.11.01"`, `"holds":"shelf","fields":["stock_number","condition","price","warranty"]}`,
+		`"name":"yard-order","kind":"stock","version":"2026.11.01"`, `"holds":"yard","fields":["stock_number","row","photos"]}`,
+	} {
+		if !strings.Contains(entries, want) {
+			t.Errorf("the config's stock lacks %s:\n%s", want, entries)
+		}
+	}
+	want, got := fitSection(t, srv, vinMode), fitSection(t, browser, vinMode)
+	if got != want {
+		t.Errorf("%s in the browser, the server's stock:\n%s\nwant the server's\n%s", vinMode, got, want)
+	}
+	if !strings.Contains(got, shelf) || !strings.Contains(got, yard) || strings.Contains(got, `class="print bare"`) {
+		t.Errorf("%s in the browser: want the columns the server's stock declares\n%s", vinMode, got)
+	}
+	s := newDecoderServer(t, d, "part-types", "part-codes", "catalog-models")
+	s.serve(t, "parts-catalog", fitmentFile(t, "catalog"))
+	for _, n := range []string{"shelf-order", "yard-order"} {
+		s.serve(t, n, mustRead(t, stockPath(n)))
+	}
+	s.fits = stockServerOf(t, d, []string{"shelf-order", "yard-order"})
+	t.Cleanup(s.fits.Close)
+	listed := NewInBrowser(openWith(t, s, newDisk()), BrowserConfig{}, log.New(io.Discard, "", 0))
+	want, got = partSection(t, srv, partMode), partSection(t, listed, partMode)
+	if got != want {
+		t.Errorf("%s in the browser, the server's stock:\n%s\nwant the server's\n%s", partMode, got, want)
+	}
+	if !strings.Contains(got, shelf) || !strings.Contains(got, yard) || strings.Contains(got, `class="print bare"`) {
+		t.Errorf("%s in the browser: want the columns the server's stock declares\n%s", partMode, got)
+	}
+
+	// Declared by none: the config's entries are a name, a kind, a
+	// version, a hash and a source's kind, as before a header could
+	// declare any, and the print has no column but the id and the
+	// location.
+	srv, browser, entries = beside("shelf-stock", "yard-stock")
+	if strings.Contains(entries, "fields") || !regexp.MustCompile(`^\[\{"name":"shelf-stock","kind":"stock","version":"[^"]*","blake3":"[0-9a-f]{64}","holds":"shelf"\},\{"name":"yard-stock","kind":"stock","version":"[^"]*","blake3":"[0-9a-f]{64}","holds":"yard"\}\]$`).MatchString(entries) {
+		t.Errorf("the config's stock, of sources that declare no field:\n%s", entries)
+	}
+	const rotor = "/?from.vin=1D7RV1GT5AS123456&part.id=brake-rotor-front&fitment.number=BR-2001"
+	want, got = fitSection(t, srv, rotor), fitSection(t, browser, rotor)
+	if got != want || !strings.Contains(got, `<table class="print bare">`) || strings.Contains(got, `<table class="print">`) {
+		t.Errorf("%s in the browser, sources that declare no field:\n%s\nwant the server's, with no column but the id and the location\n%s", rotor, got, want)
+	}
+}
+
 // TestLibraryStockRefusals: a shelf whose catalog the browser does not
 // hold, a connector's file, a yard whose VINs the server cannot decode,
 // and a shelf beside the server's catalog are refused in words, storing

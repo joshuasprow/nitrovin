@@ -239,9 +239,12 @@ and the price came last.
   driver's buffer, in order, where they were copied twice.
 - **`/v1/info` reports it:** a source's declared `fields` beside its
   `source` and `catalog`, absent when it declares none; a browser's own
-  `/v1/info` says the same of a stock file it holds. `list` names
-  vocabularies, extension sets and spines and no stock source, so it has
-  nothing to report it beside.
+  `/v1/info` says the same of a stock file it holds, and `/sw.js`'s config
+  says it of each stock source the server holds, so the page a browser's
+  worker draws prints the columns the server's page does. An entry of a
+  source that declares none is unchanged there, byte for byte. `list`
+  names vocabularies, extension sets and spines and no stock source, so
+  it has nothing to report it beside.
 - **Not the column's type.** A `json` column keeps the order its text was
   written in, but the connector reads `fields` as `jsonb`'s text whatever
   the column is, and a view that builds its object, or reads a `jsonb`
