@@ -132,8 +132,8 @@ func TestStockStrip(t *testing.T) {
 				t.Errorf("390 wide: the shelf at %v down to %v, the yard at %v from %v; want the shelf over the yard", shelfL, shelfB, yardL, yardT)
 			}
 			// A phone is pressed with a finger: the picker's key and a
-			// stock strip are 44 px high or more. The names, which are
-			// secondary, are drawn under the candidates. The print keeps
+			// stock strip are 44 px high or more. The names keep their
+			// place over the picker, as at every width. The print keeps
 			// its columns and scrolls sideways by itself: scrolled to
 			// its end, the row's id is at its leading edge, the location
 			// has slid under it, and the page has not moved. The yard's
@@ -148,26 +148,17 @@ func TestStockStrip(t *testing.T) {
 				print.scrollTo({left: 0, behavior: "instant"});
 				const y = r(yard), inView = sel => { const b = r(yard.querySelector(sel)); return b.width > 0 && b.left >= y.left - 1 && b.right <= y.right + 1 ? 1 : 0; };
 				return [r(document.getElementById("pick-type")).height, Math.min(...[...document.querySelectorAll(".cands a.stk")].map(e => r(e).height)),
-					r(document.querySelector("#aka .ledger")).top - r(cands[cands.length - 1]).bottom, more, first, scrolled, held, slid, document.documentElement.scrollWidth - innerWidth, scrollX,
+					r(document.querySelector(".ptwrap")).top - r(document.querySelector("#aka .ledger")).bottom, more, first, scrolled, held, slid, document.documentElement.scrollWidth - innerWidth, scrollX,
 					inView("tbody th.id") + inView("tbody td.lead"), yard.querySelector("tbody td.lead")?.textContent === "D-1" ? 1 : 0, yard.querySelector("thead").textContent.includes("stock_number") ? 1 : 0];
 			})()`)
 			if len(phone) != 13 || phone[0] < 44 || phone[1] < 44 || phone[2] < -1 {
-				t.Errorf("390 wide: the picker's key is %v px high, the lowest strip %v, and the names' row %v px under the last candidate; want 44 px or more to press, and the names under the candidates", phone[0], phone[1], phone[2])
+				t.Errorf("390 wide: the picker's key is %v px high, the lowest strip %v, and the picker %v px under the names; want 44 px or more to press, and the names over the picker", phone[0], phone[1], phone[2])
 			} else if phone[3] <= 0 || math.Abs(phone[4]) > 1 || phone[5] <= 0 || math.Abs(phone[6]) > 1 || phone[7] <= 0 || phone[8] > 0 || phone[9] != 0 {
 				t.Errorf("390 wide: the print holds %v px more than it shows, its id %v px in; scrolled %v, the id is %v px in and the location slid %v px, the page %v px wider than the window and scrolled %v; want the print to scroll sideways by itself, its id kept in sight", phone[3], phone[4], phone[5], phone[6], phone[7], phone[8], phone[9])
 			} else if phone[10] != 2 || phone[11] != 1 || phone[12] != 0 {
 				t.Errorf("390 wide: the yard's print has %v of its id and its row in view, the row D-1 %v, a stock_number column %v; want both in view, and no column that repeats the id", phone[10], phone[11], phone[12])
 			}
-			// The names are drawn under the candidates there. Where
-			// scripts run they stand there in the document too, so every
-			// browser's Tab key and a screen reader meet them where they
-			// are drawn; without scripts the markup's order stands.
-			under := `!!(document.querySelector(".cands").compareDocumentPosition(document.getElementById("aka")) & Node.DOCUMENT_POSITION_FOLLOWING)`
-			if js {
-				tb.until("390 wide: the names after the candidates in the document", under)
-			} else if measure[bool](tb, under) {
-				t.Error("390 wide, no script: the names are after the candidates in the document; want the markup's order")
-			}
+			tb.order("390 wide")
 			// On a phone no line runs from the cards to the block (#401):
 			// its facts row leads with the details, so the words are past
 			// the row's end at rest.
@@ -180,6 +171,7 @@ func TestStockStrip(t *testing.T) {
 			// the row it comes down where the row left it, wherever the
 			// row is.
 			tb.window(768, 1024)
+			tb.order("768 wide")
 			carried := measure[[]float64](tb, `(async () => {
 				if (!CSS.supports("animation-timeline: --a") || !CSS.supports("timeline-scope: --a")) return [];
 				const hang = document.querySelector(".hang"), out = [];
@@ -197,6 +189,8 @@ func TestStockStrip(t *testing.T) {
 					t.Errorf("768 wide: under the row the vehicle's line is at %v, and in the row at %v; want one line, wherever the row is scrolled", carried[i], carried[i+1])
 				}
 			}
+			tb.window(1440, 900)
+			tb.order("1440 wide")
 			// Wide again, the names are over the picker, and before it
 			// in the document.
 			tb.window(1280, 900)
@@ -312,31 +306,50 @@ func TestStockStrip(t *testing.T) {
 			rb.audit(name + ", BR-2001, every row")
 
 			// A phone, the mirrors and their shelf rows with no number.
-			// The Tab key goes down the page as it is drawn: the picker,
-			// the candidates, the names, then the rows with no number,
-			// whose print it stops on. The markup's order does that where
-			// scripts run; without them, a browser that knows reading-flow.
-			// Another meets the names before the picker, as they are written.
+			// The Tab key goes down the page as it is drawn, in the
+			// markup's order at every width, scripts or not: from the
+			// block's details to the names, the picker, the candidates,
+			// then the rows with no number, whose print it stops on.
 			rb.window(390, 844)
 			rb.do(chromedp.Navigate(ramSrv.URL + mirrors))
 			rb.wait(`#stock-nonum`)
 			if js {
 				rb.wait("#vin-form.live")
 			}
-			want := "picker, candidates, names, no number"
-			if !js && !measure[bool](rb, `CSS.supports("reading-flow: grid-order")`) {
-				want = "picker, candidates, no number"
-			}
-			if got := strings.Join(slices.Compact(rb.tabStops("#pick-type", 40)), ", "); got != want {
+			want := "names, picker, candidates, no number"
+			if got := strings.Join(slices.Compact(rb.tabStops("#fit .vdet", 60)), ", "); got != want {
 				t.Errorf("390 wide, the mirrors: the Tab key goes through %s; want %s", got, want)
 			}
 		})
 	}
 }
 
+// order checks the vehicle's block, its names, the picker and the
+// candidates are drawn down the page in the order the document holds
+// them, each under the one before, at the window's present width (#409).
+func (tb *tab) order(step string) {
+	tb.t.Helper()
+	got := measure[[]string](tb, `(() => {
+		scrollTo(0, 0);
+		const els = ["#fit > .fitstrip", "#fit > #aka", "#fit > .ptwrap", "#fit > .cands"].map(s => document.querySelector(s));
+		if (els.some(e => !e)) return ["missing"];
+		const bad = [];
+		for (let i = 1; i < els.length; i++) {
+			const a = els[i - 1], b = els[i];
+			if (!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)) bad.push("document " + i);
+			if (b.getBoundingClientRect().top < a.getBoundingClientRect().bottom - 1) bad.push("drawn " + i);
+		}
+		return bad;
+	})()`)
+	if len(got) != 0 {
+		tb.t.Errorf("%s: the block, the names, the picker and the candidates are out of order: %v; want them in that order in the document and down the page", step, got)
+	}
+}
+
 // tabStops presses Tab from the element at sel, up to n times, until the
 // focus leaves the parts that fit, and returns where each stop was: the
-// picker, the candidates, the names or the rows with no number.
+// vehicle's block, the names, the picker, the candidates or the rows
+// with no number.
 func (tb *tab) tabStops(sel string, n int) []string {
 	tb.t.Helper()
 	tb.do(chromedp.Focus(chromedp.CSS(sel)))
@@ -353,7 +366,7 @@ func (tb *tab) tabStops(sel string, n int) []string {
 		})
 		at := measure[string](tb, `(() => {
 			const on = document.activeElement;
-			for (const [name, sel] of [["names", "#aka"], ["no number", ".nonum"], ["candidates", ".cands"], ["picker", "#fit"]]) if (on.closest(sel)) return name;
+			for (const [name, sel] of [["names", "#aka"], ["no number", ".nonum"], ["candidates", ".cands"], ["block", ".fitstrip"], ["picker", "#fit"]]) if (on.closest(sel)) return name;
 			return "";
 		})()`)
 		if at == "" {

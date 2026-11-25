@@ -615,8 +615,8 @@ button:is(.vbad, .vcount):active, .pull button:active { transform: none; box-sha
    The words keep their case: a vocabulary's entry is case-exact. A
    dashed underline is a doubt, and a name's note, behind its "i", a key
    of label tape as a tag's controls are, says it in words. Nothing
-   scrolls: every name is in view. On a phone the tag is the last on
-   the trunk, under the candidates, each label over its names (below). */
+   scrolls: every name is in view. It keeps this place at every width;
+   on a phone each label is over its names (below). */
 .aka { --ledger-eye: 1.5rem; position: relative; min-width: 0; margin: 0; }
 .fit:has(> .ptwrap) > .aka::before { content: ""; position: absolute; z-index: 2; left: calc(8px - var(--rail)); top: 0; bottom: 0; width: 5px; background: var(--trunk); box-shadow: -1px 0 0 rgb(255 255 255 / .4), 1.5px 0 1px rgb(8 7 15 / .3); pointer-events: none; }
 .ledger { --eye: var(--ledger-eye); margin: var(--s2) 0 0; padding: var(--s1) var(--inset) var(--s1) calc(var(--lead) + var(--s1)); }
@@ -627,6 +627,9 @@ button:is(.vbad, .vcount):active, .pull button:active { transform: none; box-sha
 .lrow dt { color: var(--manila-muted); }
 .lrow dd { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--s4); min-width: 0; margin: 0; overflow-wrap: anywhere; }
 .lname { position: relative; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0 var(--s2); min-width: 0; min-height: 24px; }
+/* A name brought into view by the focus stops with its ring clear of
+   the held facts row, which covers the window's scroll padding. */
+.lname button { scroll-margin-block: var(--s2); }
 .ledger .nw { border-bottom-width: 2px; }
 .nw { width: fit-content; max-width: 100%; margin: 0; border-bottom: 3px solid var(--cm); }
 .nw.unsure, .lname.rule .nw:is(.g-wmi, .g-vds), .lrow.rule .lmk { border-bottom-style: dashed; }
@@ -777,7 +780,7 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
 /* The trunk: one line of pinstripe tape from the block's bottom edge (a
    part's tag's, in part-number mode) straight down the gutter beside the
    first column, to the last thing tied to it: the picker's stub, or the
-   last row's; on a phone, the names' ledger's. It is drawn a piece an item,
+   last row's. It is drawn a piece an item,
    each piece from the gap above its item to its foot, the last to its
    stub, so the pieces meet and nothing is measured or anchored: every
    browser draws it. The first piece is the picker's tape's own, from
@@ -1221,8 +1224,7 @@ button.linkish:active { transform: none; box-shadow: none; }
    page, and the line is what a keyboard scrolls from them.
    No line runs from the cards to the block here, a knowing break of rule
    7 (docs/design/page.md): at rest the words are past the line's end,
-   and lines that followed them would need a view timeline a word, which
-   in Chrome drops the section's reading-flow to the markup's order. */
+   and lines that followed them would need a view timeline a word. */
 @media (max-width: 34rem) {
   :root { --held: 2.75rem; }
   .fitstrip { grid-template-rows: var(--stamp-h) var(--held); }
@@ -1258,30 +1260,14 @@ button.linkish:active { transform: none; box-shadow: none; }
    with the cells, nine characters to a line. */
 @media (max-width: 34rem) {
   .plate { --cell-h: 15cqw; }
-  /* A phone's names are drawn last on the trunk, as rule 4 drops what
-     is secondary: the picker is the row's width and the candidates are
-     next under it, and the ledger tag takes the trunk's last stub in its
-     eyelet, as a candidate does, each label over its names. That order
-     is drawn here, whatever the markup's: the page writes the names
-     before the picker, and plate.js moves them to where they are drawn,
-     so the Tab key and a screen reader go down the page as it reads.
-     Without the script a browser that knows reading-flow still takes
-     the focus that way. A row is two lines: its number over its years,
-     beside its stock strip, a row high, then its ink. */
-  .fit { reading-flow: grid-order; }
+  /* A phone's picker is the row's width, and the names' ledger keeps
+     its place between the block and the picker, as at every width
+     (#409), each vocabulary's label over its names. The markup's order
+     is the drawn order and the Tab key's. A row is two lines: its
+     number over its years, beside its stock strip, a row high, then
+     its ink. */
   .fit > .ptwrap { justify-self: stretch; width: auto; }
-  .fit:has(> .ptwrap) > .aka { order: 1; }
-  .fit:has(.ptwrap) > :is(.nonum, .more-cands) { order: 2; }
   .lrows { grid-template-columns: minmax(0, 1fr); }
-  .fit:has(> .ptwrap) > .aka:not(.done)::before { content: none; }
-  .fit:has(> .ptwrap):has(> .aka.done) .ptwrap::after { height: auto; bottom: calc(-2px - var(--s2)); border-radius: 0; }
-  .fit:has(> .ptwrap):has(> .aka.done) .cand:last-child::after { height: auto; bottom: 0; border-radius: 0; }
-  .fit:has(> .ptwrap):has(> .aka.done) > .blank { position: relative; }
-  .fit:has(> .ptwrap):has(> .aka.done) > .blank::before, .fit:has(> .ptwrap) > .aka.done::after { content: ""; position: absolute; z-index: 2; background: var(--trunk); pointer-events: none; }
-  .fit:has(> .ptwrap):has(> .aka.done) > .blank::before { left: calc(5px - var(--rail)); top: -3px; bottom: -3px; width: 5px; box-shadow: -1px 0 0 rgb(255 255 255 / .4), 1.5px 0 1px rgb(8 7 15 / .3); }
-  .fit:has(> .ptwrap) > .aka.done::before { bottom: auto; height: calc(var(--s2) + var(--ledger-eye) + 2.5px); border-bottom-left-radius: 2.5px; }
-  .fit:has(> .ptwrap) > .aka.done::after { left: calc(13px - var(--rail)); top: calc(var(--s2) + var(--ledger-eye) - 2.5px); width: calc(var(--rail) - 13px); height: 5px; box-shadow: 0 -1px 0 rgb(255 255 255 / .4), 0 2px 1px rgb(8 7 15 / .3); }
-  .fitstrip ~ .aka .ledger::after { left: 0; top: calc(var(--eye) - 2.5px); width: 11px; height: 5px; background: var(--trunk); border-radius: 0 2.5px 2.5px 0; box-shadow: 0 -1px 0 rgb(255 255 255 / .4), 0 2px 1px rgb(8 7 15 / .3); }
   .line { grid-template-columns: var(--lead) minmax(0, 1fr) var(--sc); grid-template-rows: minmax(var(--row), auto); }
   .veh .line { grid-template-columns: var(--lead) minmax(0, 1fr); }
   .ptag { grid-template-columns: calc(var(--rail) + var(--lead)) minmax(0, 1fr) var(--sc); }

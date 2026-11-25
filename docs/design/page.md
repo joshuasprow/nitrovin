@@ -115,8 +115,10 @@ Where the maintainer later changed a rule knowingly, the rule says so after
    every name in view without scrolling (#409). It replaces the
    2026-11-23 ruling's compact tags in one row that scrolled sideways
    beside the picker, which showed two of fourteen names with seven
-   vocabularies. On a phone the ledger is drawn last, under the
-   candidates, the last thing on the trunk (the parts that fit, below).*
+   vocabularies. The order is the same at every width: the block, the
+   ledger, the picker, then the candidates. On a phone that pushes the
+   candidates down by the ledger's height, which is accepted: the page
+   reads, draws and takes the Tab key in one order at every width.*
 5. **One shape at every width.** A component is the same thing at 390,
    768 and 1280 px. It wraps or scrolls; it does not turn into another
    kind of control. A control has a largest width and keeps it: it does
@@ -352,7 +354,7 @@ lengths are the module's or a floor of their own.
 | --- | --- | --- |
 | 64 rem | Six cards in one row, each wide enough for its rows | The cards, the block's words and the picker are on one module, 9.75 rem; a row's columns are its own sixths. The cards scroll sideways. The leader lines and the stepped lines are not drawn, and the lines to the block are carried. The block's words are packed at its leading end, and its details are one line under them. `--end` is 0, the row is 3.5 rem and the display 18 px. A row's years are under its number, and its tape and strip stand at its top. The keys over the plate are 44 px high |
 | 46 rem | The label of a one-cell group, 47 px, over a cell of 40 | Those three labels are not drawn. The cells stand 2 px apart, not 4, and the page's margin is 0.5 rem |
-| 34 rem | A cell wide enough for a finger, in one row of 17; a ledger line's label beside its names; a row's ink beside its number; a print's columns on its paper; the block's details under its words | The plate is two rows. The picker is the row's width, and the names are under the candidates, each label over its names. A row is two lines. The print scrolls sideways, holding the row's id and what its header pins. The block's facts are one line that scrolls sideways, the details first, and no line runs from the cards to the block. Part-number mode's fields stack, and its switch is the plate's width. The check digit's sum is turned on its side |
+| 34 rem | A cell wide enough for a finger, in one row of 17; a ledger line's label beside its names; a row's ink beside its number; a print's columns on its paper; the block's details under its words | The plate is two rows. The picker is the row's width, and each of the names' labels is over its names. A row is two lines. The print scrolls sideways, holding the row's id and what its header pins. The block's facts are one line that scrolls sideways, the details first, and no line runs from the cards to the block. Part-number mode's fields stack, and its switch is the plate's width. The check digit's sum is turned on its side |
 
 The Developers dialog asks once more, at 40 rem, where a snippet's label
 no longer fits beside it. Every query is the window's, not a container's:
@@ -985,8 +987,7 @@ card's trailing edge, and is a whole number of columns wide.
   part-number mode asks no VIN, and it stops nothing. The trunk is there
   whenever the picker is, with a part type pressed or none. It is drawn a
   piece an item, so nothing is measured and it needs no anchor
-  positioning. It ends before the shelf rows with no number. Under
-  34 rem the last thing tied to it is the names' ledger (the names, below).
+  positioning. It ends before the shelf rows with no number.
 - **The band** under the names holds the picker. The picker is two
   columns wide on a wide page, 312 px, and two modules under 64 rem,
   19.5 rem, the same 312 px. Under 34 rem the picker is as wide as a
@@ -1025,20 +1026,11 @@ card's trailing edge, and is a whole number of columns wide.
   Every vocabulary is on the page: nothing is stacked or kept behind a
   switch. Under 64 rem two wrapped lines of names, each 24 px high with
   its "i", are 8 px apart.
-- **Under 34 rem the names are drawn last**, under the candidates and
-  over the shelf rows with no number, as rule 4 drops what is secondary,
-  each line's label over its names. The ledger cannot hang from the block
-  there, so it is the last thing on the trunk: its eyelet takes a stub of
-  the trunk, as a candidate's does. With nothing pressed the ledger is
-  under the blank strip that asks for a choice, and the trunk runs past
-  the strip to it. The page writes the names before the picker, where a
-  wider page draws them. Where scripts run, `plate.js` moves them in the
-  document to where a phone draws them, before the rows with no number
-  and "Next page", and back when the window widens, so the Tab key and a
-  screen reader go down the page as it reads in every browser. Without
-  scripts a browser that knows `reading-flow` still takes the Tab key
-  that way; another takes it to the names before the picker, and skips
-  nothing.
+- **The names keep their place at every width**: between the block and
+  the picker, the order the page writes them in, so the page draws them
+  and the Tab key and a screen reader reach them in one order. Under
+  34 rem each line's label is over its names, and the candidates start
+  under the ledger, lower by its height (rule 4's ruling).
 - **The picker's list** is the part types dialog, hung from the picker at
   its width, 4 px under it, over the candidates: it moves none of them.
   It has no head, no line saying what it lists and no backdrop, and
@@ -1229,9 +1221,7 @@ columns and is at least a row high.
 - **Narrow**, the stepped lines are not drawn, and neither are the leader
   lines: the cards they would end on move. The lines to the block are
   carried by the row's scroll (the parts that fit, above). Under 34 rem
-  none runs from the cards to the block (rule 7's ruling). There the
-  trunk's last stub runs into the eyelet of the names' ledger, under the
-  candidates.
+  none runs from the cards to the block (rule 7's ruling).
 - A newly finished group draws its bracket and line in.
 - **The lines from the cards end on the block.** None runs on from it.
   Under the block the one line is the trunk, from the block's bottom edge
