@@ -156,7 +156,7 @@ tape at the plate's foot does, the count and the leading problem. */}}
 {{define "answer" -}}
 <div id="answer" class="stage" data-vin="{{.VIN}}" data-label="{{.Label}}"{{if .Complete}} data-complete{{end}} data-done="{{range .Groups}}{{if .Done}}{{.Key}} {{end}}{{end}}"{{with .Wrong}} data-wrong="{{range .}}{{.}} {{end}}"{{end}}{{with .Fit.Part}} data-part="{{.}}"{{end}}{{with .Fit.After}} data-after="{{.}}"{{end}}{{with .Fit.Type}} data-type="{{.}}"{{end}}{{with .Fit.Number}} data-number="{{.}}"{{end}}{{with .Fit.Side}} data-side="{{.}}"{{end}}{{with .Fit.Rows}} data-rows="{{.}}"{{end}}>
 {{with .WrongText}}<p id="vin-wrong" class="visually-hidden" aria-hidden="true">{{.}}</p>
-{{end}}{{if and .Problems (or .Ways (not .Fit.Types))}}<p class="pstamp"><button type="button" class="vbad" popovertarget="problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg><b>{{len .Problems}} {{if eq (len .Problems) 1}}problem{{else}}problems{{end}}</b> <span class="s">{{.Lead}}</span></button></p>
+{{end}}{{if and (or .Problems .FixV) (or .Ways (not .Fit.Types))}}<p class="pstamp">{{if .Problems}}<button type="button" class="vbad" popovertarget="problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg><b>{{len .Problems}} {{if eq (len .Problems) 1}}problem{{else}}problems{{end}}</b> <span class="s">{{.Lead}}</span></button>{{else}}{{template "vfix" .FixV}}{{end}}</p>
 {{end}}<div class="under" aria-hidden="true">
 {{range .Groups}}<span class="brk g-{{.Key}}{{if .Done}} done{{end}}"><span class="name">{{.Label}}</span></span>
 {{end}}</div>
@@ -305,6 +305,7 @@ own, which plate.js swaps in place (swap). */}}
 {{if .Types}}<span class="carry" aria-hidden="true"><span></span><span></span><span></span>{{if .Make}}<span></span><span></span><span></span>{{end}}</span>
 <div class="fitstrip">
 {{if .Problems}}<p class="stamp"><span class="of">This vehicle · {{.Catalog}}</span><button type="button" class="vbad" popovertarget="problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg><b>{{len .Problems}} {{if eq (len .Problems) 1}}problem{{else}}problems{{end}}</b> <span class="s">{{.Lead}}</span></button></p>
+{{else if .FixV}}<p class="stamp"><span class="of">This vehicle · {{.Catalog}}</span>{{template "vfix" .FixV}}</p>
 {{else}}<p class="stamp">This vehicle · {{.Catalog}}</p>
 {{end}}<div class="vline">
 {{with .Problems}}{{template "vcount" .}}
@@ -361,6 +362,14 @@ page draws it under the year, and in the details' group, where a
 tablet's draws it after the characters (ui.css); each width draws one. */}}
 {{define "vcount" -}}
 <button type="button" class="vcount" popovertarget="problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg><b>{{len .}} {{if eq (len .) 1}}problem{{else}}problems{{end}}</b></button>
+{{- end}}
+
+{{/* vfix is the key that opens the VIN problems where the decoder
+suggests another VIN and names no problem: "Suggested VIN" and the VIN,
+on the block's stamp or the plate's foot, with no count and no
+warning, for there is none. */}}
+{{define "vfix" -}}
+<button type="button" class="vbad vfix" popovertarget="problems"><b>Suggested VIN</b> <span class="s">{{.}}</span></button>
 {{- end}}
 
 {{/* stock-strip is a candidate's stock strip, at its tag's trailing end

@@ -710,18 +710,21 @@ var surpriseVINs = []string{
 // fitView is the fit card as its template draws it: the card, the names
 // that hang under its block, the page's refusal, its last line, and the
 // decode's problems, which the block's stamp and the candidates' head
-// point to; Lead is the sentence the stamp leads with (diagram.Lead).
+// point to; Lead is the sentence the stamp leads with (diagram.Lead),
+// and FixV the VIN the decoder suggests, which the stamp names where
+// there is no problem.
 type fitView struct {
 	fitCard
 	Names    akaCard
 	Error    string
 	Problems []problem
 	Lead     string
+	FixV     string
 }
 
 // FitView is d's fit card with its names, its refusal and its problems.
 func (d diagram) FitView() fitView {
-	return fitView{fitCard: d.Fit, Names: d.Names, Error: d.Error, Problems: d.Problems, Lead: d.Lead()}
+	return fitView{fitCard: d.Fit, Names: d.Names, Error: d.Error, Problems: d.Problems, Lead: d.Lead(), FixV: d.FixV}
 }
 
 // Lead is the problem the vehicle's block's stamp leads with: the first

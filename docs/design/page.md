@@ -1313,7 +1313,10 @@ script. There are three kinds.
   where the decoder reads another VIN in its place, a link to it. It
   opens with the focus on Close, as the other dialogs do, from the keys
   that say the problems on the page (label tape, above). The field keeps
-  its own description of the wrong positions and stays invalid.
+  its own description of the wrong positions and stays invalid. Where the
+  decoder suggests another VIN and names no problem, the key reads
+  "Suggested VIN" and the VIN, in the tape's white with no count and no
+  triangle, on the block's stamp or, with no block, at the plate's foot.
 
 ## Good enough: forms and inputs
 

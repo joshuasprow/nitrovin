@@ -526,3 +526,61 @@ func TestPageBadVIN(t *testing.T) {
 		t.Errorf("cell 9 struck: the stamp leads with %q; want the problem that names it", got)
 	}
 }
+
+// suggesting is the demo's pages with a decode that names no problem and
+// suggests vin in the VIN's place, as a decoder may.
+type suggesting struct {
+	served
+	vin string
+}
+
+func (s suggesting) Decode(req contract.Request) (contract.Decode, error) {
+	dec, err := s.served.Decode(req)
+	dec.ErrorCodes, dec.CorrectedVIN = nil, contract.Null[string]{V: s.vin, Valid: true}
+	return dec, err
+}
+
+// TestPageSuggestedVIN (#398): a decode that suggests another VIN and
+// names no problem still opens the VIN problems, which shows the
+// suggestion. Its key reads "Suggested VIN" and the VIN, with no count
+// and no warning: on the vehicle's block's stamp where a block is drawn,
+// else at the plate's foot.
+func TestPageSuggestedVIN(t *testing.T) {
+	const want = "1FTEW1EG7FFA12345"
+	key := func(vin string) string {
+		return `<button type="button" class="vbad vfix" popovertarget="problems"><b>Suggested VIN</b> <span class="s">` + vin + `</span></button>`
+	}
+	dialog := func(vin string) string {
+		return `<a class="fix" href="/?from.vin=` + vin + `">Use <span class="mono">` + vin + `</span> instead</a>`
+	}
+	block := New(suggesting{served{demoTranslator(t, embedded(t), true)}, want}, log.New(io.Discard, "", 0))
+	honda := hondaDecode
+	honda.CorrectedVIN = contract.Null[string]{V: "1HGCM82633A004352", Valid: true}
+	plate := New(backend{info: hondaInfo, decode: &honda}, log.New(io.Discard, "", 0))
+	for _, c := range []struct {
+		name   string
+		h      *Handler
+		target string
+		want   []string
+	}{
+		{"a block drawn", block, "/?from.vin=1FTEW1EG9FFA12345&part.id=alternator",
+			[]string{`<p class="stamp"><span class="of">This vehicle · demo-catalog</span>` + key(want) + `</p>`, `<dialog id="problems" class="pdialog" popover`, dialog(want)}},
+		{"no block", plate, "/?from.vin=1HGCM82603A004352",
+			[]string{`<p class="pstamp">` + key("1HGCM82633A004352") + `</p>`, `<dialog id="problems" class="pdialog" popover`, dialog("1HGCM82633A004352")}},
+	} {
+		status, _, body := response(t, c.h, "GET", c.target, nil)
+		if status != 200 {
+			t.Errorf("%s: %d; want 200", c.name, status)
+		}
+		for _, w := range c.want {
+			if !strings.Contains(body, w) {
+				t.Errorf("%s: lacks %s\n%s", c.name, w, body)
+			}
+		}
+		for _, lack := range []string{`<ol class="plist">`, "problem</b>", "problems</b>", "M7 1.5l6 11H1z", `class="pull"`, `class="vcount"`, `aria-invalid`} {
+			if strings.Contains(body, lack) {
+				t.Errorf("%s: holds %s, with no problem", c.name, lack)
+			}
+		}
+	}
+}
