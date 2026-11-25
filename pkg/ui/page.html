@@ -116,7 +116,10 @@ part type on the plate, which plate.js keeps as a recent part type. */}}
 {{- end}}
 
 {{/* plate is the form: the groups' labels over their cells, the cells,
-and the input. data-vin is the VIN the server drew. */}}
+and the input. data-vin is the VIN the server drew. A cell is struck red
+where its character is one no VIN holds or the decode names its position
+wrong; the field is then invalid, and the answer's #vin-wrong says which
+positions in words. */}}
 {{define "plate" -}}
 <form id="vin-form" class="plate-form" method="get" action="/" aria-label="Decode a VIN" data-vin="{{.Diagram.VIN}}">
 <div class="stage">
@@ -128,7 +131,7 @@ and the input. data-vin is the VIN the server drew. */}}
 {{range .Diagram.Cells}}<span class="cell g-{{.Group}}{{if .Char}} filled{{end}}{{if .Bad}} bad{{end}}"><span class="ch">{{.Char}}</span></span>
 {{end}}</div>
 <label for="from-vin" class="visually-hidden">VIN</label>
-<input type="text" id="from-vin" name="from.vin" value="{{.Diagram.VIN}}" placeholder="Type a VIN" autocomplete="off" autocapitalize="characters" spellcheck="false" autofocus aria-describedby="answer">
+<input type="text" id="from-vin" name="from.vin" value="{{.Diagram.VIN}}" placeholder="Type a VIN" autocomplete="off" autocapitalize="characters" spellcheck="false" autofocus aria-describedby="{{if .Diagram.Wrong}}vin-wrong {{end}}answer"{{if .Diagram.Wrong}} aria-invalid="true"{{end}}>
 </div>
 </div>
 <button type="submit" class="decode">Decode</button>
@@ -138,15 +141,20 @@ and the input. data-vin is the VIN the server drew. */}}
 {{/* answer takes the diagram: what hangs off the plate. data-vin and
 data-label are what it answers, which plate.js keeps as a recent VIN once
 it is whole; data-done the groups whose characters are all typed;
+data-wrong the positions the decode names wrong, whose cells plate.js
+strikes, with #vin-wrong saying them in words for the field's
+description (hidden: the problems say them on the page);
 data-part and data-after the part type pressed and its page, and
 data-type, data-number, data-side and data-rows the candidate whose stock
 is open and the panel shown whole, which plate.js tells a history entry by.
 Its last part is what the decoder says is wrong with a whole VIN
-(problems), a strip of label tape with a warning triangle and, where the
+(problems, which the vehicle's block and the candidates' head link to),
+a strip of label tape with a warning triangle and, where the
 decoder reads another VIN in its place, a link to it. */}}
 {{define "answer" -}}
-<div id="answer" class="stage" data-vin="{{.VIN}}" data-label="{{.Label}}"{{if .Complete}} data-complete{{end}} data-done="{{range .Groups}}{{if .Done}}{{.Key}} {{end}}{{end}}"{{with .Fit.Part}} data-part="{{.}}"{{end}}{{with .Fit.After}} data-after="{{.}}"{{end}}{{with .Fit.Type}} data-type="{{.}}"{{end}}{{with .Fit.Number}} data-number="{{.}}"{{end}}{{with .Fit.Side}} data-side="{{.}}"{{end}}{{with .Fit.Rows}} data-rows="{{.}}"{{end}}>
-<div class="under" aria-hidden="true">
+<div id="answer" class="stage" data-vin="{{.VIN}}" data-label="{{.Label}}"{{if .Complete}} data-complete{{end}} data-done="{{range .Groups}}{{if .Done}}{{.Key}} {{end}}{{end}}"{{with .Wrong}} data-wrong="{{range .}}{{.}} {{end}}"{{end}}{{with .Fit.Part}} data-part="{{.}}"{{end}}{{with .Fit.After}} data-after="{{.}}"{{end}}{{with .Fit.Type}} data-type="{{.}}"{{end}}{{with .Fit.Number}} data-number="{{.}}"{{end}}{{with .Fit.Side}} data-side="{{.}}"{{end}}{{with .Fit.Rows}} data-rows="{{.}}"{{end}}>
+{{with .WrongText}}<p id="vin-wrong" class="visually-hidden" aria-hidden="true">{{.}}</p>
+{{end}}<div class="under" aria-hidden="true">
 {{range .Groups}}<span class="brk g-{{.Key}}{{if .Done}} done{{end}}"><span class="name">{{.Label}}</span></span>
 {{end}}</div>
 <svg class="leaders" viewBox="0 0 1020 36" preserveAspectRatio="none" aria-hidden="true" focusable="false">
@@ -169,8 +177,8 @@ decoder reads another VIN in its place, a link to it. */}}
 {{end}}</div>
 {{with .Ways}}<div class="choice"><p class="blank"><span>{{$.Error}}</span>{{range .}}<a href="{{.Href}}">{{.Text}}</a>{{end}}</p></div>
 {{else}}{{template "fit" .FitView}}{{end}}
-{{if or .Problems .Fix}}<div class="problems" role="status"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>
-{{range .Problems}}<p>{{.}}</p>
+{{if or .Problems .Fix}}<div class="problems" id="problems" role="status"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>
+{{range .Problems}}<p>{{.Text}}</p>
 {{end}}{{with .Fix}}<p><a class="fix" href="{{.}}">Use <span class="mono">{{$.FixV}}</span> instead</a></p>{{end}}
 </div>{{end}}
 </div>
@@ -179,11 +187,12 @@ decoder reads another VIN in its place, a link to it. */}}
 {{/* card is a bracket's card: its rows, each a label over its value,
 or its one large value, there but empty until its characters are
 typed. The check digit's opens its arithmetic, a popover; the year's
-carries the codes around it, one run of small text. */}}
+carries the codes around it, one run of small text. Finished with no
+value on a VIN with problems, it says why (vinGroup.Why). */}}
 {{define "card" -}}
 <section class="card g-{{.Key}}{{if .Done}} done{{end}}{{if .Bad}} bad{{end}}" data-group="{{.Key}}" aria-labelledby="card-{{.Key}}">
 <h2 id="card-{{.Key}}">{{.Title}} <span class="pos">{{if eq .From .To}}{{.From}}{{else}}{{.From}}–{{.To}}{{end}}</span></h2>
-{{with .Text}}<p class="big">{{.}}</p>{{end}}
+{{with .Text}}<p class="big">{{.}}</p>{{end}}{{with .Why}}<p class="why{{if not $.Named}} none{{end}}">{{.}}</p>{{end}}
 {{if .Rows}}<dl>
 {{range .Rows}}<div><dt>{{.Label}}</dt><dd>{{with .Flag}}<span class="flag" aria-hidden="true">{{.}}</span> {{end}}{{.Value}}</dd></div>
 {{end}}</dl>{{end}}
@@ -267,15 +276,21 @@ holds where the page's order is drawn: reading-flow, ui.css). Where
 there is nothing to list, the
 part types' place is a blank strip with a sentence, and the Vocabularies
 dialog's button or a link on. A refusal that names no cell is the
-section's last line, on its columns. Every link here is the page's own,
-which plate.js swaps in place (swap). */}}
+section's last line, on its columns. On a VIN with problems the block's
+stamp carries their count and a sentence, the first problem's that names
+a cell the plate strikes, else the decode's first (diagram.Lead), cut to
+its one line, and a stamp of label tape at the candidates' head, on the trunk,
+says to check the VIN before pulling; each links to the problems under
+the answer, and neither stops anything. Every link here but those is
+the page's own, which plate.js swaps in place (swap). */}}
 {{define "fit" -}}
 <section class="fit" id="fit" aria-labelledby="fit-h">
 <h2 id="fit-h" class="visually-hidden">Parts that fit</h2>
 {{if .Types}}<span class="carry" aria-hidden="true"><span></span><span></span><span></span>{{if .Make}}<span></span><span></span><span></span>{{end}}</span>
 <div class="fitstrip">
-<p class="stamp">This vehicle · {{.Catalog}}</p>
-{{with .Make}}<span class="seg g-wmi"><span class="w">{{.}}</span></span>
+{{if .Problems}}<p class="stamp"><span class="of">This vehicle · {{.Catalog}}</span><a class="vbad" href="#problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg><b>{{len .Problems}} {{if eq (len .Problems) 1}}problem{{else}}problems{{end}}</b> <span class="s">{{.Lead}}</span></a></p>
+{{else}}<p class="stamp">This vehicle · {{.Catalog}}</p>
+{{end}}{{with .Make}}<span class="seg g-wmi"><span class="w">{{.}}</span></span>
 {{end}}<span class="seg g-vds"><span class="w">{{.Model}}</span></span>
 <span class="seg g-year"><span class="w">{{.Year}}</span></span>
 {{with .Facts}}<dl class="vfacts" aria-label="This vehicle, to match the options against">
@@ -291,7 +306,8 @@ which plate.js swaps in place (swap). */}}
 {{if .Types}}{{template "part-types-dialog" .Dialog}}
 {{if .Invite}}<p class="blank"><span>Choose a part type to see what fits this vehicle.</span></p>
 {{end}}{{with .NoneFit}}<p class="blank"><span>{{.}}</span></p>
-{{end}}{{if .Tags}}<ol class="cands" aria-label="Candidates: {{.Pressed}}">
+{{end}}{{if .Tags}}{{if .Problems}}<p class="pull"><a href="#problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>Check the VIN before pulling</a></p>
+{{end}}<ol class="cands" aria-label="Candidates: {{.Pressed}}">
 {{range .Tags}}<li class="cand"><div class="ltag line">
 <h3 class="numtape"><span class="num">{{.Number}}</span>{{if or .Side .Years}} <span class="of">{{with .Side}}<span class="side">{{.}}</span> {{end}}{{with .Years}}<span class="yrs">{{.}}</span>{{end}}</span>{{end}}</h3>
 <div class="ink">{{with .Options}}<p class="opts">{{range $i, $o := .}}{{if $i}}<br>{{end}}{{.}}{{end}}</p>

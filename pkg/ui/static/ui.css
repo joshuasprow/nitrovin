@@ -379,6 +379,11 @@ form.filter .field { display: grid; gap: .25rem; }
 .card.g-check .big { font: 900 1rem/1.25 var(--label-font); }
 .card.bad { --cm: var(--manila-bad); }
 .card.bad .big { color: var(--manila-bad); }
+/* A finished card with no value, on a VIN with problems, says why: the
+   decode's own sentence for the problem at its positions, in its ink,
+   or "Not in the decode", muted, where no problem names them. */
+.card .why { margin: 0; line-height: 1.35; }
+.card .why.none { color: var(--manila-muted); }
 /* A control on a tag is not metal: it is a strip of label tape in the
    tag's own colour, stuck on the paper. The tape's ridges and edges are
    the label tape's, its body the group's mark, and its letters raised
@@ -484,6 +489,19 @@ table.sum .skip { color: var(--muted); }
   background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck); }
 .fitstrip:has(.g-wmi) { grid-template-columns: repeat(3, var(--wc)) minmax(0, 1fr); }
 .fitstrip .stamp { grid-row: 1; grid-column: 1 / -1; display: flex; align-items: center; box-sizing: border-box; min-width: 0; height: var(--stamp-h); margin: 0; padding: 0 var(--inset); border-bottom: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss); }
+/* On a VIN with problems the stamp carries them after the catalog: the
+   warning triangle and their count in the error colour as tape takes
+   it, then the first one's sentence, a link to the problems under the
+   answer. It keeps the stamp's one line, so the block is no taller:
+   the catalog's name gives way first, then the sentence is cut with
+   "…", its link's name still whole. */
+.fitstrip .stamp:has(.vbad) { gap: var(--s4); white-space: nowrap; }
+.fitstrip .stamp .of { flex: 0 1 auto; min-width: 0; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
+.vbad { flex: 0 1 auto; display: flex; align-items: center; gap: var(--s1) var(--s2); min-width: 0; margin-block: -3px; padding-block: 3px; color: inherit; text-decoration: none; }
+.vbad svg { flex: none; width: 12px; height: 12px; fill: none; stroke: #ff8a8a; stroke-width: 2.2; }
+.vbad b { flex: none; color: #ff8a8a; }
+.vbad .s { min-width: 0; overflow: hidden; text-overflow: ellipsis; font: var(--type-value-b); letter-spacing: normal; text-transform: none; text-decoration: underline; text-underline-offset: 3px; }
+.vbad:focus-visible { outline-color: var(--ring-tape); }
 .fitstrip .g-wmi { --cm: #ff6b81; }
 .fitstrip .g-vds { --cm: #7db4ff; }
 .fitstrip .g-year { --cm: #ffb067; }
@@ -748,6 +766,17 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
 .ptwrap::before, .cand::before { left: calc(13px - var(--rail)); height: 5px; top: calc(var(--row) / 2 - 2.5px); box-shadow: 0 -1px 0 rgb(255 255 255 / .4), 0 2px 1px rgb(8 7 15 / .3); }
 .ptwrap::before { z-index: 3; width: calc(var(--rail) - 13px); margin: -1px 0 0 -1px; }
 .cand::before { width: calc(var(--rail) - 2px); border-radius: 0 2.5px 2.5px 0; }
+/* At the candidates' head on a VIN with problems, a stamp of label
+   tape, stuck on and tied to the trunk by a stub as the picker is, says
+   to check the VIN before pulling: a link to the problems under the
+   answer. It stops nothing. */
+.pull { position: relative; justify-self: start; display: flex; align-items: center; box-sizing: border-box; min-height: 2.25rem; margin: var(--s2) var(--end) 0 var(--rail); padding: 0 var(--inset); color: var(--on-tape); text-shadow: var(--tape-emboss);
+  background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck); --ring: var(--ring-tape); }
+.pull a { display: flex; align-items: center; gap: var(--s2); min-height: 24px; font: var(--type-micro); letter-spacing: var(--track-micro); text-transform: uppercase; color: inherit; text-underline-offset: 3px; }
+.pull svg { flex: none; width: 12px; height: 12px; fill: none; stroke: #ff8a8a; stroke-width: 2.2; }
+.pull::after, .pull::before { content: ""; position: absolute; z-index: 2; background: var(--trunk); pointer-events: none; }
+.pull::after { left: calc(7px - var(--rail)); top: -1px; bottom: calc(-4px - var(--s2)); width: 5px; box-shadow: -1px 0 0 rgb(255 255 255 / .4), 1.5px 0 1px rgb(8 7 15 / .3); }
+.pull::before { z-index: 3; left: calc(13px - var(--rail)); top: calc(50% - 2.5px); width: calc(var(--rail) - 13px); height: 5px; margin: -1px 0 0 -1px; box-shadow: 0 -1px 0 rgb(255 255 255 / .4), 0 2px 1px rgb(8 7 15 / .3); }
 
 /* The open candidate's rows: a strip of thermal paper fed out from under
    its tag, from the tag's content to its trailing end, and torn at its
@@ -858,6 +887,12 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
   .fitstrip .g-year { grid-column: 3; }
   .fitstrip:not(:has(.g-wmi)) { --stamp-h: 0px; }
   .fitstrip:not(:has(.g-wmi)) .stamp { grid-row: 2; grid-column: 1; align-self: center; height: auto; margin: 0; padding: var(--s1) var(--s2) var(--s1) calc(var(--rail) + var(--lead) + var(--inset) - 16px); border-bottom: 0; overflow-wrap: anywhere; }
+  /* There, a VIN's problems take the strip across the top that a block
+     with a make has, and the stamp stays beside the catalog's word. */
+  .fitstrip:not(:has(.g-wmi)):has(.vbad) { --stamp-h: 24px; }
+  .fitstrip:not(:has(.g-wmi)) .stamp:has(.vbad) { display: contents; }
+  .fitstrip:not(:has(.g-wmi)) .stamp .of { grid-row: 2; grid-column: 1; align-self: center; max-width: none; padding: var(--s1) var(--s2) var(--s1) calc(var(--rail) + var(--lead) + var(--inset) - 16px); white-space: normal; overflow-wrap: anywhere; }
+  .fitstrip:not(:has(.g-wmi)) .vbad { grid-row: 1; grid-column: 1 / -1; box-sizing: border-box; height: var(--stamp-h); margin: 0 -15px; padding: 0 var(--inset) 0 calc(var(--rail) + var(--lead) + var(--inset) - 1px); white-space: nowrap; border-bottom: 1px solid rgb(255 255 255 / .18); }
 }
 /* A narrow page, a tablet's or a phone's, is pressed with a finger. A
    row is 3.5rem, so the picker's key and a stock strip are 44px high

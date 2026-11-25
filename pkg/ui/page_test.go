@@ -196,13 +196,33 @@ func TestPage(t *testing.T) {
 // the answer for as much of a VIN as it holds: a card's rows once its
 // group's characters are typed, the check digit's verdict by its own
 // arithmetic once the VIN is whole, and then the decoder's error texts
-// and the VIN it suggests instead.
+// and the VIN it suggests instead. A cell the decode names is struck
+// as a character no VIN holds is, the field says which positions in
+// words, and a finished card with no value says why.
 func TestPlate(t *testing.T) {
 	h := New(backend{info: hondaInfo, decode: &hondaDecode}, log.New(io.Discard, "", 0))
 	corrected := hondaDecode
 	corrected.ErrorCodes, corrected.CorrectedVIN = []int{1}, contract.Null[string]{V: "1HGCM82633A004352", Valid: true}
 	suggesting := New(backend{info: hondaInfo, decode: &corrected}, log.New(io.Discard, "", 0))
 	suggesting.errorTexts = map[int]string{1: "1 - Check Digit (9th position) does not calculate properly"}
+	texts := map[int]string{
+		1:   "1 - Check Digit (9th position) does not calculate properly",
+		8:   "8 - No detailed data available currently",
+		11:  "11 - Incorrect Model Year - Position 10 does not match valid model year codes (I, O, Q, U, Z, 0). Decoded data may not be accurate.",
+		400: "400 - Invalid Characters Present",
+	}
+	// A year code no year uses: the decode names position 10, reads no
+	// model year, and fails the check digit, whose sum holds.
+	yearless := hondaDecode
+	yearless.ModelYear = contract.Null[int32]{}
+	yearless.ErrorCodes, yearless.CorrectedVIN = []int{1, 11, 400}, contract.Null[string]{V: "1HGCM8261!A004352", Valid: true}
+	naming := New(backend{info: hondaInfo, decode: &yearless}, log.New(io.Discard, "", 0))
+	naming.errorTexts = texts
+	// A problem that names no position, and no model year read.
+	undetailed := hondaDecode
+	undetailed.ModelYear, undetailed.ErrorCodes = contract.Null[int32]{}, []int{8}
+	unnamed := New(backend{info: hondaInfo, decode: &undetailed}, log.New(io.Discard, "", 0))
+	unnamed.errorTexts = texts
 	for _, c := range []struct {
 		name       string
 		h          *Handler
@@ -222,12 +242,24 @@ func TestPlate(t *testing.T) {
 			[]string{"data-complete", `id="check-sum"`, "Checks out"}},
 		{"whole", h, "from.vin=1HGCM82633A004352",
 			[]string{"data-complete", `<p class="big">004352</p>`, `<p class="big">Checks out</p>`, `<button type="button" class="how" popovertarget="check-sum">`, `<dialog id="check-sum" popover`, "it checks out."},
-			[]string{`class="problems"`, " bad"}},
+			[]string{`class="problems"`, " bad", "aria-invalid", "vin-wrong", "data-wrong", `class="why`}},
 		{"a wrong check digit", h, "from.vin=1HGCM82603A004352",
 			[]string{`<section class="card g-check done bad"`, `<p class="big">Should be 3</p>`, `so it should be <span class="mono">3</span>.`}, []string{"Checks out"}},
 		{"a letter no VIN holds", h, "from.vin=1OG", []string{`<span class="cell g-wmi filled bad"><span class="ch">O</span></span>`}, nil},
 		{"the decoder's errors", suggesting, "from.vin=1HGCM82603A004352",
-			[]string{`<p>1 - Check Digit (9th position) does not calculate properly</p>`, `<a class="fix" href="/?from.vin=1HGCM82633A004352">Use <span class="mono">1HGCM82633A004352</span> instead</a>`}, nil},
+			[]string{`<p>1 - Check Digit (9th position) does not calculate properly</p>`, `<a class="fix" href="/?from.vin=1HGCM82633A004352">Use <span class="mono">1HGCM82633A004352</span> instead</a>`,
+				`<span class="cell g-check filled bad"><span class="ch">0</span></span>`, `<p id="vin-wrong" class="visually-hidden" aria-hidden="true">Position 9 is wrong.</p>`}, nil},
+		{"a year code no year uses", naming, "from.vin=1HGCM8261UA004352",
+			[]string{`<span class="cell g-year filled bad"><span class="ch">U</span></span>`, `data-wrong="10 "`,
+				`aria-describedby="vin-wrong answer" aria-invalid="true">`, `<p id="vin-wrong" class="visually-hidden" aria-hidden="true">Position 10 is wrong.</p>`,
+				`<p class="why">11 - Incorrect Model Year - Position 10 does not match valid model year codes (I, O, Q, U, Z, 0). Decoded data may not be accurate.</p>`,
+				`<div class="problems" id="problems" role="status">`, `<p class="big">Checks out</p>`},
+			// The check digit's card says its sum holds: the decoder fails
+			// it for the year code, and its cell is not struck.
+			[]string{`<span class="cell g-check filled bad">`, `<p class="big">2003</p>`}},
+		{"a problem that names no position", unnamed, "from.vin=1HGCM82633A004352",
+			[]string{`<p class="why none">Not in the decode</p>`, `<p>8 - No detailed data available currently</p>`},
+			[]string{" bad", "aria-invalid", "vin-wrong", "data-wrong"}},
 		{"none before it is whole", suggesting, "from.vin=1HGCM82603A", nil, []string{`class="problems"`, `class="fix"`}},
 	} {
 		status, _, body := response(t, c.h, "GET", "/?"+c.query, nil)

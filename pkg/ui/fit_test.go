@@ -439,3 +439,78 @@ func TestPageFitFacts(t *testing.T) {
 		t.Errorf("nothing pressed, the block does not say what the vehicle is\n%s", s)
 	}
 }
+
+// TestPageBadVIN (#398): a bad VIN still decodes and fits, and the page
+// says what is wrong where the reader works. The block's stamp carries
+// the problems' count and leads with the first that names a cell the
+// plate strikes, else the decode's first; the plate strikes
+// the cell the decode names, a year code no year uses as a character no
+// VIN holds; a stamp at the candidates' head says to check the VIN; a
+// finished card with no value says why; and the field is invalid, its
+// description the wrong positions. Each links to the problems under the
+// answer. A good VIN's page has none of it.
+func TestPageBadVIN(t *testing.T) {
+	h := demoPages(t, true)
+	h.errorTexts = map[int]string{
+		1:   "1 - Check Digit (9th position) does not calculate properly",
+		11:  "11 - Incorrect Model Year - Position 10 does not match valid model year codes (I, O, Q, U, Z, 0). Decoded data may not be accurate.",
+		400: "400 - Invalid Characters Present",
+	}
+	const stamp = `<p class="stamp"><span class="of">This vehicle · demo-catalog</span><a class="vbad" href="#problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>`
+	const pull = `<p class="pull"><a href="#problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>Check the VIN before pulling</a></p>` + "\n" + `<ol class="cands"`
+	for _, c := range []struct {
+		target     string
+		want, lack []string
+	}{
+		// A year code no year uses: U at position 10. The stamp leads with
+		// error 11, which names the struck cell, not the decode's first.
+		{"/?from.vin=1FTEW1EG0UFA12345&part.id=alternator", []string{
+			stamp + `<b>3 problems</b> <span class="s">11 - Incorrect Model Year - Position 10 does not match valid model year codes (I, O, Q, U, Z, 0). Decoded data may not be accurate.</span></a></p>`,
+			`<span class="cell g-year filled bad"><span class="ch">U</span></span>`,
+			`aria-describedby="vin-wrong answer" aria-invalid="true">`,
+			`<p id="vin-wrong" class="visually-hidden" aria-hidden="true">Position 10 is wrong.</p>`,
+			`<p class="why">11 - Incorrect Model Year - Position 10 does not match valid model year codes (I, O, Q, U, Z, 0). Decoded data may not be accurate.</p>`,
+			pull, `<div class="problems" id="problems" role="status">`,
+		}, []string{`<span class="cell g-check filled bad">`}},
+		// A character no VIN holds: I at position 13, which error 400's
+		// suggested VIN marks. The check digit's card has no sum to show,
+		// and says the decode's sentence.
+		{"/?from.vin=1FTEW1EG7FFAI2345&part.id=alternator", []string{
+			stamp + `<b>2 problems</b> <span class="s">400 - Invalid Characters Present</span></a></p>`,
+			`<span class="cell g-serial filled bad"><span class="ch">I</span></span>`,
+			`<p id="vin-wrong" class="visually-hidden" aria-hidden="true">Position 13 is wrong.</p>`,
+			`<p class="why">1 - Check Digit (9th position) does not calculate properly</p>`,
+			pull,
+		}, nil},
+		// Nothing pressed: no candidates, so no stamp at their head.
+		{"/?from.vin=1FTEW1EG0UFA12345", []string{stamp}, []string{`class="pull"`}},
+		{"/?from.vin=1FTEW1EG7FFA12345&part.id=alternator", []string{`<p class="stamp">This vehicle · demo-catalog</p>`, `aria-describedby="answer">`},
+			[]string{"vbad", `class="pull"`, "aria-invalid", "vin-wrong", "data-wrong", `class="why`, ` bad"`, `id="problems"`}},
+	} {
+		status, _, body := response(t, h, "GET", c.target, nil)
+		if status != 200 {
+			t.Errorf("%s: %d; want 200", c.target, status)
+		}
+		for _, want := range c.want {
+			if !strings.Contains(body, want) {
+				t.Errorf("%s lacks %s\n%s", c.target, want, body)
+			}
+		}
+		for _, lack := range c.lack {
+			if strings.Contains(body, lack) {
+				t.Errorf("%s holds %s", c.target, lack)
+			}
+		}
+	}
+
+	// Where no problem names a struck cell, the stamp leads with the
+	// decode's first.
+	d := diagram{Problems: []problem{{Text: "8 - No detailed data available currently"}, {Text: "1 - Check Digit (9th position) does not calculate properly", Positions: []int{9}}}}
+	if got := d.Lead(); got != d.Problems[0].Text {
+		t.Errorf("no struck cell: the stamp leads with %q; want the decode's first", got)
+	}
+	d.Wrong = []int{9}
+	if got := d.Lead(); got != d.Problems[1].Text {
+		t.Errorf("cell 9 struck: the stamp leads with %q; want the problem that names it", got)
+	}
+}

@@ -88,6 +88,12 @@ Where the maintainer later changed a rule knowingly, the rule says so after
    *Sent back: "VIN 4–8" over five characters that each carry their
    position; "Make" and "Model" over words already underlined in the
    Maker's and the Vehicle's colours.*
+   *Ruled, 2026-11-24: a VIN's problems are said where the reader works,
+   in more than one place at once: the vehicle's block's stamp, the
+   struck cell, the stamp at the candidates' head, an empty card, and the
+   strip under the answer (#398). A part pulled for a mistyped VIN is the
+   trade's expensive error. It is a knowing exception to "nothing says
+   the same thing twice".*
 4. **One thing leads; the rest sit on it.** A block has one primary thing.
    What serves it sits on the same piece of material, smaller, after it,
    and is dropped first when the window narrows. It never gets a block of
@@ -352,9 +358,21 @@ text field laid over them.
   Under a mouse, the gap a click would pick shows the same bar at 35%.
 - **A selected cell** is inked: `#16202b`, white character, ringed 3 px in its
   group's colour.
-- **A character no VIN holds** fills its cell with `--bad`. A bad VIN is not
-  an error: the plate still decodes, and once the VIN is whole its problems
-  are on a strip of label tape under the answer (vinyl tape, below).
+- **A cell that is wrong** fills with `--bad`: a character no VIN holds,
+  and a cell the decode names, as a year code no year uses (position 10,
+  error 11) or a position its suggested VIN marks with "!". It has one
+  meaning, "this cell is wrong", and the vehicle's block says why (the
+  parts that fit, below). The check digit's cell is struck only where
+  its card's own sum fails: the decoder also fails the check digit of a
+  VIN with a character invalid for its position, whose sum the card
+  shows holds. A bad VIN is not an error: the plate still decodes, and
+  once the VIN is whole its problems are on a strip of label tape under
+  the answer (vinyl tape, below). While a cell is struck the field is
+  `aria-invalid`, and a line out of sight says in words which positions
+  are wrong ("Position 10 is wrong."), its first description; the answer
+  is the rest of it, as on any VIN. `plate.js` strikes a cell as it is
+  typed when it holds a letter no VIN holds, and the cells the answer
+  names (`data-wrong`) when it comes.
 - **A typed character stamps** into its cell (scale 1.6 to 1, 0.18 s).
 - **Narrow windows keep the plate.** Under 34 rem the cells wrap to two rows of
   nine, breaking after the check digit, so a cell stays wide enough for a
@@ -539,9 +557,12 @@ leader line or the trunk is pinstripe tape in a group's colour.
   a bold row value raised white, and, where the decoder reads another
   VIN in its place, a link to it, underlined in the tape's own white. It
   was text in `--bad` on the ground, which rule 1 does not allow. It is
-  under the answer at every width, where the text was, and so far from
-  the plate it is about: between the brackets and the cards it would
-  push the picker under a phone's fold on every VIN with a problem.
+  under the answer at every width, where the text was: between the
+  brackets and the cards it would push the picker under a phone's fold
+  on every VIN with a problem. The reader is told where they work
+  instead, at no cost in height: the vehicle's block's stamp carries the
+  count and the first sentence, and a stamp at the candidates' head says
+  to check the VIN; each links to this strip (the parts that fit, below).
 - **An empty place stays.** With no vocabulary loaded, or before the model
   is known, the names' place is a blank strip: a 3 px dashed `--faint`
   outline with a sentence in it (empty places, below).
@@ -751,6 +772,12 @@ that it is narrow.
   card's leading edge, so every row reads alike whatever its value's length. The check digit's card opens its arithmetic in a dialog.
   The year's card shows the year, then the codes around its own as one run of
   small text with its own in bold.
+- **A finished card with no value**, on a VIN with problems, says why in
+  the body face: the decode's own sentence for the first problem at the
+  card's positions, in its ink, or "Not in the decode", muted, where no
+  problem names them. A year code no year uses leaves the Model year's
+  card with no year, and it says error 11's sentence. On a VIN with no
+  problem an empty card stays as it was.
 - The six cards share one grid row, as tall as its tallest card. Up to four
   rows, eight or nine lines, is usual and is not a limit. No card cuts text off or keeps it behind
   a control.
@@ -799,6 +826,27 @@ card's trailing edge, and is a whole number of columns wide.
   edge, over the stamp's strip and never across it. The page puts the
   vehicle's details over the candidates' options and judges nothing: it
   marks no candidate as the match.
+- **On a VIN with problems the block's stamp says so** (#398), after the
+  catalog's name on the same strip: a warning triangle and the count, in
+  the error colour as tape takes it (`#ff8a8a`), then one of the decode's
+  sentences, a bold row value underlined in the tape's white, the whole a
+  link to the problems under the answer. The sentence is the first
+  problem's that names a cell the plate strikes (error 11's cell 10,
+  error 7's cells 1–3, a "!" in the suggested VIN), so the stamp says why
+  the red cell is red; where none does, it is the decode's first. On a
+  year code no year uses it is error 11's, not error 1's, which comes
+  first in the decode. It keeps the strip's one line,
+  so the block is no taller: the catalog's name gives way to 40% of the
+  strip, and the sentence is cut with "…", the link's name still whole.
+  On a wide page whose catalog files the vehicle under no make, where
+  the stamp shares the block's row, the link takes the strip across the
+  top that a block with a make has, 24 px; the stamp stays beside the
+  catalog's word. That block grows, 52 to 77 px on the demo set's vPIC
+  catalog, the one place a VIN's problems cost height. *Ruled,
+  2026-11-24: accepted.* With the vehicle found and a stock print open, the
+  first statement of the problem is in the first window at 1440, 768
+  and 390 px, where the strip under the answer was at 1,130, 1,247 and
+  1,613 px on a VIN whose year code no year uses.
 - **A catalog that files the vehicle under no make**, as one on vPIC's own
   vehicles does, has a block with no make, and the Maker's line is not
   brought down. On a wide page the stamp then takes the first column,
@@ -819,7 +867,12 @@ card's trailing edge, and is a whole number of columns wide.
   gutter beside the first column, to the last thing tied to it. That is
   the picker with no candidates listed, and the last candidate with some.
   Each is tied to it by a stub half a row down: the picker's ends on its
-  tape, and a candidate's runs into its eyelet. The trunk is there
+  tape, and a candidate's runs into its eyelet. On a VIN with problems a
+  stamp of label tape stands at the candidates' head, its stub ending on
+  its tape as the picker's does: a warning triangle in the error colour
+  as tape takes it, and "Check the VIN before pulling", a micro label, a
+  link to the problems under the answer. It is VIN mode's alone, as
+  part-number mode asks no VIN, and it stops nothing. The trunk is there
   whenever the picker is, with a part type pressed or none. It is drawn a
   piece an item, so nothing is measured and it needs no anchor
   positioning. It ends before the shelf rows with no number. Under
@@ -1185,7 +1238,8 @@ Every other control is plain and small.
   `--bad` rule down the left. Under the plate a refusal is the last line
   of the parts that fit, or of a part's answer, on the columns. What the
   decoder says is wrong with a whole VIN is not an error of the page's:
-  it is on label tape (vinyl tape, above).
+  it is on label tape (vinyl tape, above), and the cells it names are
+  struck (the VIN input, above).
 - **Targets:** a link or a button in a table row is at least 24 px high,
   and so is a key on a card, and a link in a sentence under the cards
   ("Show all", "Next page", a blank strip's way on), whose line is no
