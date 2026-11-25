@@ -227,34 +227,31 @@ value on a VIN with problems, it says why (vinGroup.Why). */}}
 </section>
 {{- end}}
 
-{{/* aka is "Also known as" (#366): the vehicle's names in the
-vocabularies loaded, a manila tag a vocabulary, in one row that scrolls
-sideways beside the picker, hung from the vehicle's block (fit). A tag is
-laid long, as a candidate's is, and a whole number of the page's columns
-wide (akaRow.Span): its eyelet, the vocabulary's name on a strip of
-label tape, with its count where it holds several names, then its names
-in the tag's ink: the make once, where every name shares it; then a line
-a name, two lines and then a second column: the model, and the years its
-mapping holds for. No word has a label: each stands over its group's
-colour, the Maker's, the Vehicle's or the Model year's. A dashed
+{{/* aka is "Also known as" (#366, #409): the vehicle's names in the
+vocabularies loaded, on one ledger tag between the vehicle's block and
+the picker, hung from the block by one wire (fit). The tag is a ruled
+line a vocabulary: the vocabulary's name, a small label in ink, then its
+names in the tag's ink, wrapping within the line: the make once, where
+every name shares it; then each name, its model and the years its
+mapping holds for. No word has a label: each is underlined in its
+group's colour, the Maker's, the Vehicle's or the Model year's. A dashed
 underline is a doubt (akaTag), which the word's title and the name's
 note, a popover behind its button, say in words. A vocabulary with no
-name keeps a tag that says so. Before the model is known, or with no
+name keeps a line that says so. Before the model is known, or with no
 vocabulary loaded, the names' place is a blank strip. */}}
 {{define "aka" -}}
 <section class="aka{{if not (or .Waiting .None)}} done{{end}}" id="aka" aria-labelledby="aka-h">
 <h3 id="aka-h" class="visually-hidden">Also known as</h3>
 {{if .None}}<p class="blank"><span>No vocabulary loaded.</span><button type="button" popovertarget="vocabularies">Add a vocabulary</button></p>
 {{else if .Waiting}}<p class="blank"><span>Names turn up once the model is known.</span></p>
-{{else}}<ol class="nametags" aria-label="Also known as" tabindex="0">
-{{range .Rows}}{{$make := .Make}}<li class="ltag name c{{.Span}}{{if .Rule}} rule{{end}}">
-<h4 class="nvoc"><span>{{.Vocabulary}}</span>{{if gt (len .Names) 1}} <span class="count">{{len .Names}}<span class="visually-hidden"> names</span></span>{{end}}</h4>
-{{if .Names}}<div class="nrows">{{with $make}}<p class="nw g-wmi">{{.}}</p>
-{{end}}{{range .Names}}{{$n := .}}<p class="nrow{{if .Rule}} rule{{end}}">{{if and .Make (not $make)}}<span class="nw g-wmi" title="{{.MakeNote}}">{{.Make}}</span>{{end}}<span class="nw g-vds{{if .ModelUnsure}} unsure{{end}}" title="{{.ModelNote}}">{{.Model}}</span><span class="nw g-year{{if .YearUnsure}} unsure{{end}}" title="{{.YearNote}}">{{.Years}}</span>{{with .Details}}<button type="button" class="{{if $n.Doubt}}info{{else}}how{{end}}" popovertarget="{{$n.ID}}" aria-label="How {{$n.Make}} {{$n.Model}} was reached">{{if $n.Doubt}}i{{end}}</button>{{end}}</p>
+{{else}}<div class="ltag ledger">
+<dl class="lrows" aria-label="Also known as">
+{{range .Rows}}{{$make := .Make}}<div class="lrow{{if .Rule}} rule{{end}}"><dt>{{.Vocabulary}}</dt><dd>{{if .Names}}{{with $make}}<span class="nw g-wmi lmk">{{.}}</span>
+{{end}}{{range .Names}}{{$n := .}}<span class="lname{{if .Rule}} rule{{end}}">{{if and .Make (not $make)}}<span class="nw g-wmi" title="{{.MakeNote}}">{{.Make}}</span> {{end}}<span class="nw g-vds{{if .ModelUnsure}} unsure{{end}}" title="{{.ModelNote}}">{{.Model}}</span> <span class="nw g-year{{if .YearUnsure}} unsure{{end}}" title="{{.YearNote}}">{{.Years}}</span>{{with .Details}}<button type="button" class="{{if $n.Doubt}}info{{else}}how{{end}}" popovertarget="{{$n.ID}}" aria-label="How {{$n.Make}} {{$n.Model}} was reached">{{if $n.Doubt}}i{{end}}</button>{{end}}</span>
 {{with .Details}}<div class="note" id="{{$n.ID}}" popover>{{.}}</div>
-{{end}}{{end}}</div>{{else}}<p class="none">No name for this one yet.</p>
-{{end}}</li>
-{{end}}</ol>
+{{end}}{{end}}{{else}}<span class="none">No name for this one yet.</span>{{end}}</dd></div>
+{{end}}</dl>
+</div>
 {{end}}</section>
 {{- end}}
 
@@ -274,8 +271,9 @@ section's next row: the part
 type picker (#366), a key of the second tape on a short piece of label
 tape (.ptwrap), which names the pressed part type
 and opens the part types dialog as its list, with a key beside it that
-clears the pressed one; and beside the picker the vehicle's names (aka),
-found or not, which a phone draws last, under the candidates. Under the
+clears the pressed one. Between the block and the band are the
+vehicle's names (aka), found or not, which a phone draws last, under
+the candidates. Under the
 band are the pressed part type's candidates, rows down the page
 (.cands), each a manila tag laid long (.line): its number on label tape
 with its side and its years, its option text, its marks and its note in
@@ -321,12 +319,12 @@ own, which plate.js swaps in place (swap). */}}
 {{end}}</div>
 {{end}}</div>
 </div>
-{{end}}{{if .Types}}<div class="ptwrap" data-spine="{{.Spine}}">
+{{end}}{{template "aka" .Names}}
+{{if .Types}}<div class="ptwrap" data-spine="{{.Spine}}">
 <button type="button" id="pick-type" class="ptfield" popovertarget="part-types"><span class="plab">Part type</span><span class="nm">{{if .Pressed}}{{.Pressed}}{{else}}Choose a part type{{end}}</span><span class="n">{{.PickCount}}<span class="visually-hidden"> {{.PickNoun}}</span></span><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 6l5 5 5-5"/></svg></button>
 {{if .Pressed}}<a class="ptclear swap" id="clear-type" data-focus="pick-type" href="{{.Clear}}" aria-label="Clear {{.Pressed}}">×</a>
 {{end}}</div>
-{{end}}{{template "aka" .Names}}
-{{if .Types}}{{template "part-types-dialog" .Dialog}}
+{{end}}{{if .Types}}{{template "part-types-dialog" .Dialog}}
 {{if .Invite}}<p class="blank"><span>Choose a part type to see what fits this vehicle.</span></p>
 {{end}}{{with .NoneFit}}<p class="blank"><span>{{.}}</span></p>
 {{end}}{{if .Tags}}{{if .Problems}}<p class="pull"><button type="button" popovertarget="problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>Check the VIN before pulling</button></p>

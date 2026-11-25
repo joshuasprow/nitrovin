@@ -343,11 +343,10 @@ func TestBrowserDecode(t *testing.T) {
 		"<title>2010 DODGE Ram · nitrovin</title>",
 		`<div><dt>Make</dt><dd>DODGE</dd></div>`,
 		`<div><dt>Trim</dt><dd>DS (1500)</dd></div>`,
-		`<h4 class="nvoc"><span>fleet</span> <span class="count">3<span class="visually-hidden"> names</span></span></h4>` + "\n" +
-			`<div class="nrows"><p class="nw g-wmi">Dodge</p>`,
+		`<div class="lrow"><dt>fleet</dt><dd><span class="nw g-wmi lmk">Dodge</span>`,
 		`<span class="nw g-vds" title="From the vehicle, positions 4–8">Ram 1500</span>`,
 		`<span class="nw g-vds unsure" title="From the vehicle, positions 4–8. Not checked: element 15">Ram 1500 4x4</span>`,
-		`<h4 class="nvoc"><span>alpha</span></h4>` + "\n" + `<p class="none">No name for this one yet.</p>`,
+		`<div class="lrow"><dt>alpha</dt><dd><span class="none">No name for this one yet.</span></dd></div>`,
 		// A name with something unchecked has the "i" key; a sure one
 		// opens its note from the name itself.
 		`<button type="button" class="info" popovertarget="aka-3" aria-label="How Dodge Ram 1500 4x4 was reached">i</button>`,
@@ -366,7 +365,7 @@ func TestBrowserDecode(t *testing.T) {
 	if want := []string{"/v1/decode/" + vin + "?full=true"}; !slices.Equal(s.gets, want) {
 		t.Errorf("the browser asked the server %q; want %q: the VIN decoded once", s.gets, want)
 	}
-	if named, blank := strings.Index(body, `<h4 class="nvoc"><span>fleet</span>`), strings.Index(body, `<h4 class="nvoc"><span>alpha</span></h4>`); named < 0 || named > blank {
+	if named, blank := strings.Index(body, `<dt>fleet</dt>`), strings.Index(body, `<dt>alpha</dt>`); named < 0 || named > blank {
 		t.Errorf("alpha, which has no name, is listed before fleet, which has\n%s", body)
 	}
 
@@ -438,14 +437,14 @@ func TestNameTags(t *testing.T) {
 				picked = append(picked, vocabulary("extra-"+strconv.Itoa(i+1), "Chevy", "Silverado"))
 			}
 			body := page(t, picked)
-			if got := strings.Count(body, `<li class="ltag name c`); got != 1+extra {
-				t.Errorf("%d tags; want %d: every vocabulary is on the page", got, 1+extra)
+			if got := strings.Count(body, `<div class="lrow`); got != 1+extra {
+				t.Errorf("%d lines; want %d: every vocabulary is on the page", got, 1+extra)
 			}
 			if strings.Contains(body, "more vocabular") || strings.Contains(body, `type="checkbox"`) {
 				t.Errorf("the names keep vocabularies behind a switch\n%s", body)
 			}
 			// fleet, which has a name, is before those that have none.
-			if fleet, none := strings.Index(body, `<h4 class="nvoc"><span>fleet</span>`), strings.Index(body, `<p class="none">`); fleet < 0 || none < fleet {
+			if fleet, none := strings.Index(body, `<dt>fleet</dt>`), strings.Index(body, `<span class="none">`); fleet < 0 || none < fleet {
 				t.Errorf("fleet is not before the vocabularies with no name\n%s", body)
 			}
 		})

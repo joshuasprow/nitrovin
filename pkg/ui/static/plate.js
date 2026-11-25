@@ -496,21 +496,21 @@
     const by = Math.min(over, room);
     if (by > 0) window.scrollBy({ top: by, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   };
-  // The vehicle's names are written after the picker, where a wide page
-  // draws them. A phone draws them last on the trunk, under the
-  // candidates (ui.css, under 34rem), and only a browser that knows
-  // reading-flow follows a drawn order. So seat moves them to where they
-  // are drawn: before the rows with no number and "Next page" on a phone,
-  // after the picker on anything wider. What had the focus in them keeps
-  // it. Without this script the markup's order stands.
+  // The vehicle's names are written before the picker, where a wide page
+  // draws them, hung from the block. A phone draws them last on the
+  // trunk, under the candidates (ui.css, under 34rem), and only a browser
+  // that knows reading-flow follows a drawn order. So seat moves them to
+  // where they are drawn: before the rows with no number and "Next page"
+  // on a phone, before the picker on anything wider. What had the focus
+  // in them keeps it. Without this script the markup's order stands.
   const phone = matchMedia('(max-width: 34rem)');
   const seat = () => {
     const fit = document.getElementById('fit');
     const aka = document.getElementById('aka');
     const picker = fit && fit.querySelector(':scope > .ptwrap');
     if (!picker || !aka || aka.parentElement !== fit) return;
-    const next = phone.matches ? fit.querySelector(':scope > .nonum, :scope > .more-cands') : picker.nextElementSibling;
-    if (next === aka || (phone.matches && aka.nextElementSibling === next)) return;
+    const next = phone.matches ? fit.querySelector(':scope > .nonum, :scope > .more-cands') : picker;
+    if (aka.nextElementSibling === next) return;
     const held = aka.contains(document.activeElement) ? document.activeElement : null;
     fit.insertBefore(aka, next);
     if (held) held.focus({ preventScroll: true });

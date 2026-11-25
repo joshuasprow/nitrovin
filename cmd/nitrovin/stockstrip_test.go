@@ -148,7 +148,7 @@ func TestStockStrip(t *testing.T) {
 				print.scrollTo({left: 0, behavior: "instant"});
 				const y = r(yard), inView = sel => { const b = r(yard.querySelector(sel)); return b.width > 0 && b.left >= y.left - 1 && b.right <= y.right + 1 ? 1 : 0; };
 				return [r(document.getElementById("pick-type")).height, Math.min(...[...document.querySelectorAll(".cands a.stk")].map(e => r(e).height)),
-					r(document.querySelector("#aka .nametags")).top - r(cands[cands.length - 1]).bottom, more, first, scrolled, held, slid, document.documentElement.scrollWidth - innerWidth, scrollX,
+					r(document.querySelector("#aka .ledger")).top - r(cands[cands.length - 1]).bottom, more, first, scrolled, held, slid, document.documentElement.scrollWidth - innerWidth, scrollX,
 					inView("tbody th.id") + inView("tbody td.lead"), yard.querySelector("tbody td.lead")?.textContent === "D-1" ? 1 : 0, yard.querySelector("thead").textContent.includes("stock_number") ? 1 : 0];
 			})()`)
 			if len(phone) != 13 || phone[0] < 44 || phone[1] < 44 || phone[2] < -1 {
@@ -197,10 +197,10 @@ func TestStockStrip(t *testing.T) {
 					t.Errorf("768 wide: under the row the vehicle's line is at %v, and in the row at %v; want one line, wherever the row is scrolled", carried[i], carried[i+1])
 				}
 			}
-			// Wide again, the names are beside the picker, and after it
+			// Wide again, the names are over the picker, and before it
 			// in the document.
 			tb.window(1280, 900)
-			tb.until("1280 wide: the names after the picker in the document", `document.querySelector("#fit > .ptwrap").nextElementSibling.id === "aka"`)
+			tb.until("1280 wide: the names before the picker in the document", `document.querySelector("#fit > .ptwrap").previousElementSibling.id === "aka"`)
 
 			// Wide, each line into the vehicle's block is one piece: it
 			// starts where the stepped line under the cards ends, and ends
@@ -214,25 +214,25 @@ func TestStockStrip(t *testing.T) {
 			})()`)
 			// Under the block, one trunk: it leaves the block's bottom
 			// edge in the gutter beside the first card's column and runs
-			// straight down, a piece an item with no gap between two, past
-			// the open candidate's rows, to the last candidate's stub. The
-			// picker and every candidate are tied to it by a stub, which
-			// starts on the trunk and ends at the picker's tape or in the
-			// candidate's lead, where its eyelet is.
+			// straight down, past the names, a piece an item with no gap
+			// between two, past the open candidate's rows, to the last
+			// candidate's stub. The picker and every candidate are tied to
+			// it by a stub, which starts on the trunk and ends at the
+			// picker's tape or in the candidate's lead, where its eyelet is.
 			trunk := measure[[]float64](tb, `(() => {
 				const piece = (el, pseudo) => { const b = el.getBoundingClientRect(), s = getComputedStyle(el, pseudo), top = b.top + el.clientTop + parseFloat(s.top), left = b.left + el.clientLeft + parseFloat(s.left);
 					return {left, right: left + parseFloat(s.width), top, bottom: top + parseFloat(s.height)}; };
 				const block = document.querySelector(".fitstrip").getBoundingClientRect(), card = document.querySelector(".cards .card").getBoundingClientRect();
 				const tape = document.querySelector(".ptwrap"), cands = [...document.querySelectorAll(".cands > .cand")];
-				const pieces = [piece(tape, "::after"), ...cands.map(c => piece(c, "::after"))], stubs = cands.map(c => piece(c, "::before")), key = piece(tape, "::before");
+				const pieces = [piece(document.getElementById("aka"), "::before"), piece(tape, "::after"), ...cands.map(c => piece(c, "::after"))], stubs = cands.map(c => piece(c, "::before")), key = piece(tape, "::before");
 				const tags = cands.map(c => c.querySelector(".line").getBoundingClientRect()), last = pieces[pieces.length - 1];
 				return [pieces.length, pieces[0].top - block.bottom, Math.max(...pieces.map(p => Math.abs(p.left - pieces[0].left))), pieces[0].left - block.left, card.left - pieces[0].right,
 					Math.max(...pieces.slice(1).map((p, i) => p.top - pieces[i].bottom)), last.bottom - stubs[stubs.length - 1].bottom,
 					Math.max(...stubs.map(s => Math.abs(s.left - pieces[0].right))), Math.min(...stubs.map((s, i) => s.right - tags[i].left)), Math.max(...stubs.map((s, i) => s.right - tags[i].left)),
 					Math.abs(key.left - pieces[0].right), Math.abs(key.right - tape.getBoundingClientRect().left)];
 			})()`)
-			if len(trunk) != 12 || trunk[0] != 4 || math.Abs(trunk[1]) > 1 || trunk[2] > 0.5 || trunk[3] <= 0 || trunk[4] <= 0 || trunk[5] > 0.5 || math.Abs(trunk[6]) > 1 {
-				t.Errorf("1280 wide: the trunk is %v [pieces, its top past the block's bottom edge, their spread sideways, in from the block's edge, short of the first card's, the widest gap between two, its end past the last stub]; want four pieces, one line in the gutter from the block to the last candidate's stub", trunk)
+			if len(trunk) != 12 || trunk[0] != 5 || math.Abs(trunk[1]) > 1 || trunk[2] > 0.5 || trunk[3] <= 0 || trunk[4] <= 0 || trunk[5] > 0.5 || math.Abs(trunk[6]) > 1 {
+				t.Errorf("1280 wide: the trunk is %v [pieces, its top past the block's bottom edge, their spread sideways, in from the block's edge, short of the first card's, the widest gap between two, its end past the last stub]; want five pieces, one line in the gutter from the block past the names to the last candidate's stub", trunk)
 			} else if trunk[7] > 1 || trunk[8] <= 0 || trunk[9] > 28 || trunk[10] > 1 || trunk[11] > 1.5 {
 				t.Errorf("1280 wide: the stubs are %v [off the trunk, the least and the most into their tag, the picker's off the trunk, and short of its tape]; want each from the trunk into its tag's lead, and the picker's to its tape", trunk[7:])
 			}
@@ -316,6 +316,7 @@ func TestStockStrip(t *testing.T) {
 			// the candidates, the names, then the rows with no number,
 			// whose print it stops on. The markup's order does that where
 			// scripts run; without them, a browser that knows reading-flow.
+			// Another meets the names before the picker, as they are written.
 			rb.window(390, 844)
 			rb.do(chromedp.Navigate(ramSrv.URL + mirrors))
 			rb.wait(`#stock-nonum`)
@@ -324,7 +325,7 @@ func TestStockStrip(t *testing.T) {
 			}
 			want := "picker, candidates, names, no number"
 			if !js && !measure[bool](rb, `CSS.supports("reading-flow: grid-order")`) {
-				want = "picker, names, candidates, no number"
+				want = "picker, candidates, no number"
 			}
 			if got := strings.Join(slices.Compact(rb.tabStops("#pick-type", 40)), ", "); got != want {
 				t.Errorf("390 wide, the mirrors: the Tab key goes through %s; want %s", got, want)
