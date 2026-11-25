@@ -58,10 +58,16 @@
     return '/?' + q;
   };
 
-  // paint shows vin in the cells; a cell just filled is stamped.
+  // paint shows vin in the cells; a cell just filled is stamped. A cell
+  // is struck where its character is one no VIN holds, or where the
+  // answer, when it is of vin, says the decode names its position wrong
+  // (data-wrong); the field is then invalid, and #vin-wrong in the
+  // answer says which positions in words.
   const paint = (vin, stamp) => {
     const form = document.getElementById('vin-form');
     if (!form) return;
+    const answer = document.getElementById('answer');
+    const wrong = answer && answer.dataset.vin === vin ? (answer.dataset.wrong || '').split(' ').filter(Boolean).map(Number) : [];
     form.querySelectorAll('.cell').forEach((cell, i) => {
       const c = vin[i] || '';
       const ch = cell.firstElementChild;
@@ -72,9 +78,14 @@
       }
       ch.textContent = c;
       cell.classList.toggle('filled', c !== '');
-      cell.classList.toggle('bad', 'IOQ'.includes(c) && c !== '');
+      cell.classList.toggle('bad', c !== '' && ('IOQ'.includes(c) || wrong.includes(i + 1)));
       cell.classList.toggle('next', i === vin.length);
     });
+    const field = document.getElementById('from-vin');
+    if (!field) return;
+    field.setAttribute('aria-describedby', wrong.length ? 'vin-wrong answer' : 'answer');
+    if (wrong.length) field.setAttribute('aria-invalid', 'true');
+    else field.removeAttribute('aria-invalid');
   };
 
   const done = (answer) => new Set((answer && answer.dataset.done || '').split(' ').filter(Boolean));
@@ -100,6 +111,12 @@
     old.replaceWith(answer);
     for (const key of done(answer)) {
       if (!before.has(key)) answer.querySelectorAll('.g-' + key).forEach((el) => el.classList.add('fresh'));
+    }
+    // The answer names the cells its decode says are wrong.
+    const vinField = document.getElementById('from-vin');
+    if (vinField) {
+      paint(clean(vinField.value), false);
+      show();
     }
     seat();
     const dev = document.getElementById('dev');
@@ -791,7 +808,7 @@
     let input = document.getElementById('from-vin');
     if (input.tagName === 'INPUT') {
       const area = document.createElement('textarea');
-      for (const name of ['id', 'name', 'placeholder', 'autocomplete', 'autocapitalize', 'spellcheck', 'aria-describedby']) {
+      for (const name of ['id', 'name', 'placeholder', 'autocomplete', 'autocapitalize', 'spellcheck', 'aria-describedby', 'aria-invalid']) {
         if (input.hasAttribute(name)) area.setAttribute(name, input.getAttribute(name));
       }
       area.rows = 1;

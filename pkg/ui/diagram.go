@@ -103,6 +103,12 @@ type vinGroup struct {
 	// Text is the card's one large value when it has no rows: the year,
 	// the serial, the check digit's verdict.
 	Text string
+	// Why is what a finished card with no value says in its place on a
+	// VIN with problems: the decode's sentence for the problem at the
+	// card's positions, or "Not in the decode" where none names them;
+	// Named says a problem does. "" on a VIN with none.
+	Why   string
+	Named bool
 	// Bad marks a check digit that does not match.
 	Bad   bool
 	Check *checkSum
@@ -224,10 +230,14 @@ type diagram struct {
 	// Label names the vehicle, for the title and a recent chip: "2003
 	// HONDA Accord".
 	Label string
-	// Problems are the decode's error texts for a complete VIN, and Fix
-	// the page with the VIN the decoder suggests instead, "" for none.
-	Problems  []string
+	// Problems are the decode's error texts for a complete VIN, each with
+	// the positions it names, and Fix the page with the VIN the decoder
+	// suggests instead, "" for none.
+	Problems  []problem
 	Fix, FixV string
+	// Wrong are the positions the problems name, ascending: their cells
+	// are struck as a character no VIN holds is, and the field says so.
+	Wrong []int
 	// Error is a refusal that names no cell, and Ways the links on from
 	// it: a link naming a VIN and a part number offers each.
 	Error string
@@ -249,6 +259,57 @@ func cleanVIN(s string) string {
 
 // badVINChar reports whether c is a letter no VIN holds.
 func badVINChar(c byte) bool { return c == 'I' || c == 'O' || c == 'Q' }
+
+// problem is one of the decode's error texts on a whole VIN, its code,
+// and the positions it names, 1-based.
+type problem struct {
+	Text      string
+	Positions []int
+	code      int
+}
+
+// problemPositions are the positions error code names in a decode of vin
+// whose suggested VIN is corrected: the check digit's for 1, the
+// maker's three for 7, the model year's for 11 and 12, and for a code
+// the suggested VIN marks, each position where it differs from vin, a
+// "!" or the character it reads in its place. nil for a code that names
+// none.
+func problemPositions(code int, vin, corrected string) []int {
+	switch code {
+	case 1:
+		return []int{9}
+	case 7:
+		return []int{1, 2, 3}
+	case 11, 12:
+		return []int{10}
+	case 2, 3, 4, 5, 14, 400:
+		var out []int
+		for i := 0; i < min(len(vin), len(corrected)); i++ {
+			if vin[i] != corrected[i] {
+				out = append(out, i+1)
+			}
+		}
+		return out
+	}
+	return nil
+}
+
+// WrongText says in words which positions the decode names wrong, for
+// the field's description: "Position 10 is wrong.", "Positions 9 and 10
+// are wrong.", "" for none.
+func (d diagram) WrongText() string {
+	if len(d.Wrong) == 0 {
+		return ""
+	}
+	if len(d.Wrong) == 1 {
+		return "Position " + strconv.Itoa(d.Wrong[0]) + " is wrong."
+	}
+	ps := make([]string, len(d.Wrong))
+	for i, p := range d.Wrong {
+		ps[i] = strconv.Itoa(p)
+	}
+	return "Positions " + strings.Join(ps[:len(ps)-1], ", ") + " and " + ps[len(ps)-1] + " are wrong."
+}
 
 // newDiagram is the plate for vin, cleaned, before any decode: its cells
 // and its six brackets, each done once its characters are typed.
@@ -355,16 +416,58 @@ func (d *diagram) fill(dec contract.Decode, elements contract.Elements, view *de
 	}
 	d.Label = strings.Join(label, " ")
 	if d.Complete {
+		corrected := ""
+		if dec.CorrectedVIN.Valid {
+			corrected = strings.ToUpper(dec.CorrectedVIN.V)
+		}
 		for _, c := range view.Codes {
 			if c.Code != 0 && c.Text != "" {
-				d.Problems = append(d.Problems, c.Text)
+				d.Problems = append(d.Problems, problem{Text: c.Text, Positions: problemPositions(c.Code, d.VIN, corrected), code: c.Code})
 			}
 		}
 		if dec.CorrectedVIN.Valid && !strings.EqualFold(dec.CorrectedVIN.V, d.VIN) && !strings.ContainsAny(dec.CorrectedVIN.V, "!*") {
 			d.FixV = dec.CorrectedVIN.V
 		}
+		d.explain()
 	}
 	d.Names.Waiting = model == ""
+}
+
+// explain marks what the problems of a complete VIN name: each cell a
+// problem names is struck (Wrong), and each finished card with no value
+// says why, in the sentence of the first problem at its positions, or
+// "Not in the decode". A VIN with no problem keeps its page as it is.
+// The check digit's cell is struck only where its card's own sum says
+// it is wrong: the decoder also fails the check digit of a VIN with a
+// character invalid for its position, whose sum the card shows holds.
+func (d *diagram) explain() {
+	for _, p := range d.Problems {
+		if p.code == 1 && !d.group(groupCheck).Bad {
+			continue
+		}
+		for _, pos := range p.Positions {
+			if !slices.Contains(d.Wrong, pos) {
+				d.Wrong = append(d.Wrong, pos)
+			}
+		}
+	}
+	slices.Sort(d.Wrong)
+	for _, pos := range d.Wrong {
+		d.Cells[pos-1].Bad = true
+	}
+	for i := range d.Groups {
+		g := &d.Groups[i]
+		if len(d.Problems) == 0 || !g.Done || g.Text != "" || len(g.Rows) > 0 {
+			continue
+		}
+		g.Why = "Not in the decode"
+		for _, p := range d.Problems {
+			if slices.ContainsFunc(p.Positions, func(pos int) bool { return pos >= g.From && pos <= g.To }) {
+				g.Why, g.Named = p.Text, true
+				break
+			}
+		}
+	}
 }
 
 // akaLess is the page's rule for which of a vocabulary's names lies on top
@@ -576,12 +679,17 @@ var surpriseVINs = []string{
 }
 
 // fitView is the fit card as its template draws it: the card, the names
-// that hang under its block, and the page's refusal, its last line.
+// that hang under its block, the page's refusal, its last line, and the
+// decode's problems, which the block's stamp and the candidates' head
+// point to.
 type fitView struct {
 	fitCard
-	Names akaCard
-	Error string
+	Names    akaCard
+	Error    string
+	Problems []problem
 }
 
-// FitView is d's fit card with its names and its refusal.
-func (d diagram) FitView() fitView { return fitView{fitCard: d.Fit, Names: d.Names, Error: d.Error} }
+// FitView is d's fit card with its names, its refusal and its problems.
+func (d diagram) FitView() fitView {
+	return fitView{fitCard: d.Fit, Names: d.Names, Error: d.Error, Problems: d.Problems}
+}
