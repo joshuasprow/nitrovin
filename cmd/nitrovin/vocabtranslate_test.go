@@ -63,7 +63,7 @@ type stack struct {
 	Shown      int      `json:"shown"`
 }
 
-// stacks are the tags of "Also known as" in page order, each name its
+// stacks are the lines of "Also known as" in page order, each name its
 // make and the rest of its entry; none before a vocabulary is loaded or
 // the model is known. Without JavaScript the page's scripts never ran:
 // scripts are let run for the reading alone.
@@ -73,10 +73,10 @@ func stacks(tb *tab) []stack {
 		tb.scripts(true)
 		defer tb.scripts(false)
 	}
-	return eval[[]stack](tb, `[...document.querySelectorAll("#aka li.name")].map(tag => {
-		const make = tag.querySelector(".nrows > .nw.g-wmi"), rows = [...tag.querySelectorAll(".nrow")];
+	return eval[[]stack](tb, `[...document.querySelectorAll("#aka .lrow")].map(tag => {
+		const make = tag.querySelector(".lmk"), rows = [...tag.querySelectorAll(".lname")];
 		return {
-			vocabulary: tag.querySelector(".nvoc").firstChild.textContent.trim(),
+			vocabulary: tag.querySelector("dt").textContent.trim(),
 			names: rows.map(r => [(r.querySelector(".g-wmi") || make || {textContent: ""}).textContent, r.querySelector(".g-vds").textContent].join(" ").trim()).sort(),
 			shown: rows.filter(r => r.checkVisibility({visibilityProperty: true})).length,
 		};
@@ -131,11 +131,11 @@ func namesJSOn(t *testing.T, path, base string, wire *wireLog) {
 	tb.vocabularies()
 	tb.do(chromedp.SetUploadFiles(chromedp.CSS("#vocab-files"), []string{filepath.Join(fixture, "fleet.jsonl")}))
 	tb.waitPrefix("#load-status", "Loaded fleet (")
-	tb.until("fleet's names on the page", `document.querySelectorAll("#aka li.name").length === 1`)
+	tb.until("fleet's names on the page", `document.querySelectorAll("#aka .lrow").length === 1`)
 	checkStacks(tb, "a load", "fleet")
 	tb.do(chromedp.Click(chromedp.CSS("#load-epa")))
 	tb.waitPrefix("#load-status", "Loaded epa-vehicles (")
-	tb.until("EPA's tag on the page", `document.querySelectorAll("#aka li.name").length === 2`)
+	tb.until("EPA's line on the page", `document.querySelectorAll("#aka .lrow").length === 2`)
 	checkStacks(tb, "a second load", "fleet", "epa-vehicles")
 	tb.audit("the dialog, two files loaded")
 	tb.closeVocabularies()
@@ -144,7 +144,7 @@ func namesJSOn(t *testing.T, path, base string, wire *wireLog) {
 	// A removed file is off the page; the rest stay.
 	tb.vocabularies()
 	tb.do(chromedp.Click(chromedp.CSS(`form.inline:has(input[value="fleet"]) button`)))
-	tb.until("removing fleet", `!document.querySelector('a[href="/ui/vocabularies/fleet"]') && document.querySelectorAll("#aka li.name").length === 1`)
+	tb.until("removing fleet", `!document.querySelector('a[href="/ui/vocabularies/fleet"]') && document.querySelectorAll("#aka .lrow").length === 1`)
 	checkStacks(tb, "a removal", "epa-vehicles")
 	tb.audit("the dialog after a removal")
 	if !eval[bool](tb, `window.stayed === true`) {

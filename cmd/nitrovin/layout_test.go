@@ -2,12 +2,10 @@ package main
 
 import (
 	"context"
-	"math"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/chromedp/cdproto/emulation"
@@ -16,16 +14,15 @@ import (
 
 // TestPageLayout lays the page out in headless Chrome or Chromium at the
 // widths its cards and names change at
-// (https://github.com/joshuasprow/nitrovin/issues/320, and #366), without
-// JavaScript and with it, on a server that loaded the fixture and three
-// vocabularies with no name for the VIN, four in all. On a wide page
+// (https://github.com/joshuasprow/nitrovin/issues/320, #366 and #409),
+// without JavaScript and with it, on a server that loaded the fixture and
+// three vocabularies with no name for the VIN, four in all. On a wide page
 // (1280) the six cards share one row, each holding its text with every
-// value under its label, and nothing but the names' row scrolls sideways.
-// On a narrow one (768, and a phone's 390) the cards are a region that
-// scrolls sideways. At every width the names are one row of tags, a tag a
-// vocabulary, every one on the page, which scrolls sideways by itself:
-// the cards and the page stay. axe audits each state. CI (CI set) needs
-// the browser; a machine without one skips.
+// value under its label, and nothing scrolls sideways. On a narrow one
+// (768, and a phone's 390) the cards are a region that scrolls sideways.
+// At every width the names are one ledger tag, a line a vocabulary, every
+// one on the page and every name in view without scrolling. axe audits
+// each state. CI (CI set) needs the browser; a machine without one skips.
 func TestPageLayout(t *testing.T) {
 	path := chromePath()
 	if path == "" {
@@ -116,16 +113,14 @@ type laid struct {
 	// Ragged counts the cards' values that do not start under their label,
 	// at its leading edge.
 	Ragged int `json:"ragged"`
-	// Tags are the names' tags, a vocabulary each, in document order;
-	// Names their row: how wide it is and how wide what it holds, its
-	// name and whether a keyboard reaches it.
+	// Tags are the ledger's lines, a vocabulary each, in document order;
+	// Names the ledger: how wide it is and how wide what it holds, and its
+	// name. Out counts the names drawn outside the ledger or the window.
 	Tags        []box   `json:"tags"`
 	NamesWidth  float64 `json:"namesWidth"`
 	NamesScroll float64 `json:"namesScroll"`
 	NamesName   string  `json:"namesName"`
-	NamesTab    int     `json:"namesTab"`
-	// Fade is the row's mask, which fades an end with tags past it.
-	Fade string `json:"fade"`
+	Out         int     `json:"out"`
 	// Region is the cards' region: how wide it is and how wide what it
 	// holds, its name and whether a keyboard reaches it.
 	RegionWidth  float64 `json:"regionWidth"`
@@ -140,7 +135,7 @@ type laid struct {
 
 const layoutJS = `(() => {
 	const box = el => { const r = el.getBoundingClientRect(); return {left: r.left, right: r.right, top: r.top, bottom: r.bottom}; };
-	const hang = document.querySelector(".hang"), names = document.querySelector("#aka .nametags");
+	const hang = document.querySelector(".hang"), names = document.querySelector("#aka .ledger");
 	const cards = [...document.querySelectorAll(".cards .card")];
 	return {
 		cards: cards.map(box),
@@ -153,9 +148,9 @@ const layoutJS = `(() => {
 			});
 		}).map(c => c.dataset.group),
 		ragged: cards.flatMap(c => [...c.querySelectorAll("dl")]).flatMap(dl => [...dl.querySelectorAll("dd")].filter(dd => { const v = dd.getBoundingClientRect(), k = dd.previousElementSibling.getBoundingClientRect(); return Math.abs(v.left - k.left) > 1 || v.top < k.bottom - 1; })).length,
-		tags: [...names.querySelectorAll(":scope > li.name")].map(box),
-		namesWidth: names.clientWidth, namesScroll: names.scrollWidth, namesName: names.getAttribute("aria-label"), namesTab: names.tabIndex,
-		fade: getComputedStyle(names).maskImage,
+		tags: [...names.querySelectorAll(".lrow")].map(box),
+		namesWidth: names.clientWidth, namesScroll: names.scrollWidth, namesName: names.querySelector(".lrows").getAttribute("aria-label"),
+		out: (() => { const own = names.getBoundingClientRect(); return [...names.querySelectorAll(".lname, .lmk")].filter(n => { const r = n.getBoundingClientRect(); return r.width === 0 || r.left < Math.max(own.left, 0) - 1 || r.right > Math.min(own.right, innerWidth) + 1; }).length; })(),
 		regionWidth: hang.clientWidth, regionScroll: hang.scrollWidth,
 		regionName: hang.getAttribute("role") + ": " + hang.getAttribute("aria-label"), regionTab: hang.tabIndex,
 		pageScroll: document.documentElement.scrollWidth, window: innerWidth,
@@ -187,7 +182,7 @@ func (tb *tab) oneRow(step string, l laid) {
 }
 
 // wide: at 1280 the cards are one row across the page and the page does
-// not scroll sideways; the four vocabularies' tags are one row.
+// not scroll sideways; the four vocabularies are the ledger's lines.
 func (tb *tab) wide() {
 	tb.t.Helper()
 	const step = "1280 wide"
@@ -196,7 +191,7 @@ func (tb *tab) wide() {
 	l := tb.layout()
 	tb.oneRow(step, l)
 	if l.RegionScroll > l.RegionWidth || l.PageScroll > l.Window {
-		tb.t.Errorf("%s: the region holds %v in %v, the page %v in %v; want nothing but the names to scroll sideways", step, l.RegionScroll, l.RegionWidth, l.PageScroll, l.Window)
+		tb.t.Errorf("%s: the region holds %v in %v, the page %v in %v; want nothing to scroll sideways", step, l.RegionScroll, l.RegionWidth, l.PageScroll, l.Window)
 	}
 	if first, last := l.Cards[0], l.Cards[5]; first.Left < 0 || last.Right > l.Window {
 		tb.t.Errorf("%s: cards from %v to %v in a window of %v; want all six in it", step, first.Left, last.Right, l.Window)
@@ -205,42 +200,27 @@ func (tb *tab) wide() {
 	tb.audit(step)
 }
 
-// tags checks the names are one row of four tags, a vocabulary each,
-// under the cards, in a row a keyboard reaches that scrolls by itself.
+// tags checks the names are one ledger tag under the cards, a line a
+// vocabulary down it in order, every name in view without scrolling.
 func (tb *tab) tags(step string, l laid) {
 	tb.t.Helper()
 	if len(l.Tags) != 4 {
-		tb.t.Fatalf("%s: %d name tags; want 4, a vocabulary each", step, len(l.Tags))
+		tb.t.Fatalf("%s: %d ledger lines; want 4, a vocabulary each", step, len(l.Tags))
 	}
 	for i, tag := range l.Tags[1:] {
-		if prev := l.Tags[i]; tag.Top != prev.Top || tag.Left < prev.Right {
-			tb.t.Errorf("%s: tag %d at %+v, tag %d at %+v; want one row, in order", step, i+1, prev, i+2, tag)
+		if prev := l.Tags[i]; tag.Top < prev.Bottom-1 || tag.Left != prev.Left {
+			tb.t.Errorf("%s: line %d at %+v, line %d at %+v; want one under the other, in order", step, i+1, prev, i+2, tag)
 		}
 	}
 	if l.Tags[0].Top < l.Cards[0].Bottom {
-		tb.t.Errorf("%s: the first tag at %+v; want it under the cards, which end at %v", step, l.Tags[0], l.Cards[0].Bottom)
+		tb.t.Errorf("%s: the first line at %+v; want it under the cards, which end at %v", step, l.Tags[0], l.Cards[0].Bottom)
 	}
-	if l.NamesName != "Also known as" || l.NamesTab != 0 {
-		tb.t.Errorf("%s: the names' row is %q, tabindex %d; want a named row a keyboard reaches", step, l.NamesName, l.NamesTab)
+	if l.NamesName != "Also known as" {
+		tb.t.Errorf("%s: the names are %q; want them named", step, l.NamesName)
 	}
-	if l.NamesScroll <= l.NamesWidth {
-		if strings.Contains(l.Fade, "48px") {
-			tb.t.Errorf("%s: the names' row fits and is masked %s; want no fade", step, l.Fade)
-		}
-		return
+	if l.NamesScroll > l.NamesWidth+1 || l.Out > 0 {
+		tb.t.Errorf("%s: the ledger holds %v in %v, %d names out of view; want every name in view without scrolling", step, l.NamesScroll, l.NamesWidth, l.Out)
 	}
-	if !strings.HasSuffix(l.Fade, "calc(100% - 48px), rgba(0, 0, 0, 0))") {
-		tb.t.Errorf("%s: tags run past the row's right end and its mask is %s; want that end faded over 48px", step, l.Fade)
-	}
-	// Where the tags run past the row's edge, the row scrolls and the
-	// cards stay.
-	// It snaps to a tag, so it is scrolled to its end.
-	scrolled := measure[float64](tb, `(document.querySelector("#aka .nametags").scrollTo({left: 1e6, behavior: "instant"}), document.querySelector("#aka .nametags").scrollLeft)`)
-	s := tb.layout()
-	if scrolled <= 0 || math.Abs(s.Tags[0].Left-(l.Tags[0].Left-scrolled)) > 1 || s.Cards[0].Left != l.Cards[0].Left || s.PageScroll > s.Window {
-		tb.t.Errorf("%s: the names scrolled %v, the first tag from %v to %v and the first card from %v to %v; want the tags alone to move", step, scrolled, l.Tags[0].Left, s.Tags[0].Left, l.Cards[0].Left, s.Cards[0].Left)
-	}
-	measure[float64](tb, `(document.querySelector("#aka .nametags").scrollTo({left: 0, behavior: "instant"}), 0)`)
 }
 
 // narrow: at width the cards are a region that scrolls sideways, one row

@@ -2,11 +2,9 @@ package ui
 
 import (
 	"cmp"
-	"math"
 	"slices"
 	"strconv"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/joshuasprow/nitrovin/pkg/contract"
 )
@@ -135,15 +133,15 @@ type akaTag struct {
 // rule's name, or one whose model or years were not verified.
 func (t akaTag) Doubt() bool { return t.Rule || t.YearUnsure || t.ModelUnsure }
 
-// akaRow is one vocabulary's tag of "Also known as": its names, a line
-// each. A vocabulary with no name keeps its tag, which says so.
+// akaRow is one vocabulary's line of the names' ledger (#409): its
+// names, in order. A vocabulary with no name keeps its line, which says so.
 type akaRow struct {
 	Vocabulary string
 	Names      []akaTag
 }
 
-// Make is the make every name of the tag shares, written once on it; ""
-// when they differ, or have none, and each line says its own.
+// Make is the make every name of the line shares, written once on it; ""
+// when they differ, or have none, and each name says its own.
 func (r akaRow) Make() string {
 	if len(r.Names) == 0 {
 		return ""
@@ -156,61 +154,15 @@ func (r akaRow) Make() string {
 	return r.Names[0].Make
 }
 
-// Rule says every name of the tag was matched by rule: the mark under
-// the make they share is dashed, as each line's is.
+// Rule says every name of the line was matched by rule: the mark under
+// the make they share is dashed, as each name's is.
 func (r akaRow) Rule() bool {
 	return len(r.Names) > 0 && !slices.ContainsFunc(r.Names, func(n akaTag) bool { return !n.Rule })
 }
 
-// Span is how many of the page's columns the tag is wide, from 2 to 9
-// (ui.css's .name): the first holds its eyelet and its vocabulary's
-// strip, the rest its names, two to a column of names. A stylesheet
-// cannot round a width up to whole columns, so the page counts them
-// from the words: every one is in the monospace face, a character a
-// fixed advance. The lengths here are the stylesheet's, and a tag whose
-// words turn out wider than counted grows past its columns and cuts
-// nothing off.
-func (r akaRow) Span() int {
-	const (
-		column = 160.0 // a column of the page: a card and its gap
-		gap    = 8.0   // between two columns, and two words of a name
-		inset  = 12.0  // the ink's, each side
-		apart  = 16.0  // two columns of names
-		char   = 8.25  // a character of a make or a model, 13px and tracked
-		small  = 7.65  // a character of the years, 12px
-		info   = 24.0  // a doubtful name's "i"
-	)
-	chars := func(s string) float64 { return float64(utf8.RuneCountInString(strings.Join(strings.Fields(s), " "))) }
-	shared := r.Make()
-	var names float64
-	if shared != "" {
-		names = chars(shared)*char + gap
-	}
-	for i := 0; i < len(r.Names); i += 2 {
-		var widest float64
-		for _, n := range r.Names[i:min(i+2, len(r.Names))] {
-			w := chars(n.Model)*char + gap + chars(n.Years)*small
-			if n.Make != "" && shared == "" {
-				w += chars(n.Make)*char + gap
-			}
-			if n.Doubt() && n.Details != "" {
-				w += gap + info
-			}
-			widest = max(widest, w)
-		}
-		if i > 0 {
-			names += apart
-		}
-		names += widest
-	}
-	// The first column, less the gap after it, then the ink.
-	width := column - gap + 2*inset + names
-	return min(max(int(math.Ceil((width+gap)/column)), 2), 9)
-}
-
-// akaCard is "Also known as": a tag for every vocabulary loaded, under
-// the vehicle's block. Waiting says the model is not known yet; None that
-// no vocabulary is loaded.
+// akaCard is "Also known as": a line of one ledger tag for every
+// vocabulary loaded, hung from the vehicle's block. Waiting says the
+// model is not known yet; None that no vocabulary is loaded.
 type akaCard struct {
 	Rows          []akaRow
 	Waiting, None bool

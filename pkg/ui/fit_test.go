@@ -427,7 +427,7 @@ func TestPageFitFacts(t *testing.T) {
 	if strings.Contains(s, "Catalog text only") || strings.Contains(s, `<dt>Model</dt>`) {
 		t.Errorf("the alternators keep the old mark, or repeat the model the strip names\n%s", s)
 	}
-	facts, names, cands := strings.Index(s, `class="vfacts"`), strings.Index(s, `<ol class="nametags"`), strings.Index(s, `<ol class="cands"`)
+	facts, names, cands := strings.Index(s, `class="vfacts"`), strings.Index(s, `<dl class="lrows"`), strings.Index(s, `<ol class="cands"`)
 	if facts < 0 || names < facts || cands < names {
 		t.Errorf("want the vehicle's facts, then its names, then the candidates; they are at %d, %d and %d\n%s", facts, names, cands, s)
 	}
