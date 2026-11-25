@@ -32,13 +32,18 @@ import (
 // same stock, a page at a time.
 //
 // The rows are a print in columns (stockColumn): a row's id, its
-// location, then the fields its source's header declares (#390,
-// contract.StockCounts.Fields), a column each. What a row has beyond
-// those folds under it as name and value (stockRow), so a source that
-// declares nothing prints an id, a location and the rest folded. A
-// declared field whose value is the row's id on every row is no column
-// (#397), and a field the header pins (#404) is held beside the id or
-// at the print's trailing end.
+// location, then the fields its sources' headers declare (#390,
+// contract.StockCounts.Fields), a column each. A row's field is printed
+// in the column of its name, whether or not its own source declares it
+// (#400). What a row has beyond the print's columns folds under it as
+// name and value (stockRow), a list or an object as how many it holds,
+// so a print none of whose sources declares anything is an id and a
+// location a row, and the rest folded. A declared field whose value is
+// the row's id on every row is no column (#397), and a field the header
+// pins (#404) is held beside the id or at the print's trailing end. The
+// stylesheet sets the columns on the row the print hangs from: the id
+// and the next column under the number's tape, the rest under its ink,
+// and the last under its stock strip.
 //
 // With shelf stock asked for, the candidates' answer also carries the
 // shelf rows with no number for the part type and the vehicle, which
@@ -264,6 +269,9 @@ type stockColumn struct {
 	// location.
 	Lead, Trail string
 	Heads       []string
+	// Last says the last of Heads is printed under the stock strip, as
+	// Trail is: there is no Trail, and two Heads or more.
+	Last bool
 	// IDWidth is how many characters the widest of the rows' ids is, up
 	// to the 24 a column holds before it wraps: where the print holds
 	// Lead beside the id, the id's column is that wide.
@@ -279,8 +287,7 @@ func (c stockColumn) Bare() bool {
 }
 
 // Span is how many cells a row of the print has: the id, the location
-// and a cell for each of Lead, Heads and Trail, with one to fill the line
-// where nothing follows the location.
+// and a cell for each of Lead, Heads and Trail.
 func (c stockColumn) Span() int {
 	n := 2 + len(c.Heads)
 	if c.Lead != "" {
@@ -289,18 +296,54 @@ func (c stockColumn) Span() int {
 	if c.Trail != "" {
 		n++
 	}
-	if len(c.Heads) == 0 && c.Trail == "" {
-		n++
-	}
 	return n
 }
 
+// The print's columns stand on the row it hangs from (#400): the id
+// under the number's tape, the next column under the tape's second
+// module, three columns under the ink, and the last under the stock
+// strip. Where fewer than three stand under the ink, the last of them
+// fills the ink, and the strip's too where nothing is under the strip:
+// it is the column the stylesheet leaves to take the line's rest.
+
+// inkHeads is how many of Heads stand under the ink, before the strip's.
+func (c stockColumn) inkHeads() int {
+	if c.Last {
+		return len(c.Heads) - 1
+	}
+	return len(c.Heads)
+}
+
+// LocFill says the location takes the line's rest: no head stands
+// between it and the strip's column, or the line's end.
+func (c stockColumn) LocFill() bool {
+	return c.inkHeads() == 0
+}
+
+// HeadClass is the class of the i'th of Heads in the print's head:
+// "last" under the stock strip, "fill" where it takes the line's rest,
+// else none.
+func (c stockColumn) HeadClass(i int) string {
+	ink := c.inkHeads()
+	under := ink
+	if c.Lead != "" {
+		under++ // the location stands under the ink too
+	}
+	switch {
+	case c.Last && i == len(c.Heads)-1:
+		return "last"
+	case i == ink-1 && under < 3:
+		return "fill"
+	}
+	return ""
+}
+
 // stockRow is one row: its id and its location; under each of its
-// print's columns, the value it has for the field its own source
-// declares, "" where it has none or a null (Lead, Cells under Heads, and
-// Trail); Folded, what it has beyond those, under the row; and two
-// notes: the retired number a shelf row is tagged with, and whether a
-// yard row is the VIN on the plate.
+// print's columns, the value it has for the field of that name, "" where
+// it has none or a null (Lead, Cells under Heads, and Trail); Folded,
+// what it has beyond those, under the row; and two notes: the retired
+// number a shelf row is tagged with, and whether a yard row is the VIN
+// on the plate.
 type stockRow struct {
 	ID, Location string
 	Lead, Trail  stockField
@@ -317,10 +360,10 @@ func (r stockRow) Rest() bool {
 
 // stockField is one of a row's fields, its value as the source wrote it:
 // a string's text, a number or a boolean as its JSON, nothing for a
-// null. JSON marks a list or an object, whose Value is its JSON,
-// compact: it is never a column's, and folded it is cut to one line.
-// Long marks a folded value past foldLines: it is cut to two lines, and
-// pressed, printed whole.
+// null. JSON marks a list or an object, whose Value is how many items or
+// members it holds (#400): it is never a column's. Long marks a folded
+// value past foldLines: it is cut to two lines, and pressed, printed
+// whole.
 type stockField struct {
 	Name, Value string
 	JSON, Long  bool
@@ -359,7 +402,7 @@ func newStockColumn(kind string, l *contract.StockList, declared map[string]stoc
 	var same []string
 	heads = slices.DeleteFunc(heads, func(name string) bool {
 		for i, r := range l.Rows {
-			if v, ok := declaredValue(fields[i], declared[r.Source].Fields, name); !ok || v != r.ID {
+			if v, ok := columnValue(fields[i], name); !ok || v != r.ID {
 				return false
 			}
 		}
@@ -373,9 +416,10 @@ func newStockColumn(kind string, l *contract.StockList, declared map[string]stoc
 		col.Trail = pin[1]
 	}
 	col.Heads = slices.DeleteFunc(heads, func(name string) bool { return name == col.Lead || name == col.Trail })
+	col.Last = col.Trail == "" && len(col.Heads) > 1
 	cols := slices.Concat([]string{col.Lead}, col.Heads, []string{col.Trail})
 	for i, r := range l.Rows {
-		col.Rows = append(col.Rows, newStockRow(r, fields[i], cols, declared[r.Source].Fields, same, vin))
+		col.Rows = append(col.Rows, newStockRow(r, fields[i], cols, same, vin))
 	}
 	if more != "" && l.Total > len(l.Rows) {
 		col.More = more
@@ -383,13 +427,10 @@ func newStockColumn(kind string, l *contract.StockList, declared map[string]stoc
 	return col
 }
 
-// declaredValue is the value fields has for name, a field declared
-// names and the row's column holds: the first it has, and no list or
-// object. ok is false where it has none.
-func declaredValue(fields []stockField, declared []string, name string) (v string, ok bool) {
-	if !slices.Contains(declared, name) {
-		return "", false
-	}
+// columnValue is the value fields has for name, which a column of that
+// name prints: the first it has, and no list or object. ok is false
+// where it has none.
+func columnValue(fields []stockField, name string) (v string, ok bool) {
 	for _, f := range fields {
 		if f.Name == name && !f.JSON {
 			return f.Value, true
@@ -400,12 +441,12 @@ func declaredValue(fields []stockField, declared []string, name string) (v strin
 
 // newStockRow is r, whose fields are fields, as its print shows it: cols
 // its print's columns, Lead first and Trail last, "" where it has none;
-// declared the fields r's own source declares; same the declared fields
-// that are the id on every row, which it leaves out; and vin the VIN on
-// the plate. A field is a column's when its source declares it and its
-// value is no list or object; every other one that has a value folds
-// under the row, in the source's order.
-func newStockRow(r contract.StockRow, fields []stockField, cols, declared, same []string, vin string) stockRow {
+// same the declared fields that are the id on every row, which it leaves
+// out; and vin the VIN on the plate. A field is printed in the column of
+// its name, whichever source declares that column (#400), when its value
+// is no list or object; every other one that has a value folds under
+// the row, in the source's order.
+func newStockRow(r contract.StockRow, fields []stockField, cols, same []string, vin string) stockRow {
 	row := stockRow{ID: r.ID, Location: r.Location, ThisVIN: r.VIN != "" && r.VIN == vin}
 	cells := make([]stockField, len(cols))
 	for i, name := range cols {
@@ -416,8 +457,8 @@ func newStockRow(r contract.StockRow, fields []stockField, cols, declared, same 
 	}
 	filled := make([]bool, len(cols))
 	for _, f := range fields {
-		if !f.JSON && slices.Contains(declared, f.Name) {
-			if i := slices.Index(cols, f.Name); i >= 0 && f.Name != "" && !filled[i] {
+		if !f.JSON && f.Name != "" {
+			if i := slices.Index(cols, f.Name); i >= 0 && !filled[i] {
 				cells[i].Value, filled[i] = f.Value, true
 				continue
 			}
@@ -460,20 +501,26 @@ func stockFields(raw json.RawMessage) []stockField {
 	return out
 }
 
-// newStockField is the field name with the JSON value v.
+// newStockField is the field name with the JSON value v: a list or an
+// object as how many items or members it holds.
 func newStockField(name string, v json.RawMessage) stockField {
 	f := stockField{Name: name}
 	v = bytes.TrimSpace(v)
 	switch {
 	case len(v) == 0 || string(v) == "null":
 	case v[0] == '"' && json.Unmarshal(v, &f.Value) == nil:
-	case v[0] == '{' || v[0] == '[':
-		var b bytes.Buffer
-		if json.Compact(&b, v) != nil {
-			b.Reset()
-			b.Write(v)
+	case v[0] == '[':
+		var items []json.RawMessage
+		if err := json.Unmarshal(v, &items); err != nil { // stockFields decoded it: unreachable
+			panic(err)
 		}
-		f.Value, f.JSON = b.String(), true
+		f.Value, f.JSON = strconv.Itoa(len(items)), true
+	case v[0] == '{':
+		var members map[string]json.RawMessage
+		if err := json.Unmarshal(v, &members); err != nil { // stockFields decoded it: unreachable
+			panic(err)
+		}
+		f.Value, f.JSON = strconv.Itoa(len(members)), true
 	default:
 		f.Value = string(v)
 	}

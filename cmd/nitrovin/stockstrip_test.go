@@ -45,12 +45,16 @@ func TestStockStrip(t *testing.T) {
 	ram := &requestLog{h: vocabServer(t, nil, fixture, fitmentFixture, stockFixture, moreStockFixture)}
 	ramSrv := httptest.NewServer(ram)
 	t.Cleanup(ramSrv.Close)
+	pinned := &requestLog{h: vocabServer(t, nil, fixture, fitmentFixture, stockFixture, orderStockFixture)}
+	pinnedSrv := httptest.NewServer(pinned)
+	t.Cleanup(pinnedSrv.Close)
 	const (
 		alternators = "/?from.vin=1FTEW1EG7FFA12345&part.id=alternator"
 		first       = alternators + "&fitment.number=DEMO-1001"
 		second      = alternators + "&fitment.number=DEMO-1002"
 		rotor       = "/?from.vin=1D7RV1GT5AS123456&part.id=brake-rotor-front&fitment.number=BR-2001"
 		mirrors     = "/?from.vin=1D7RV1GT5AS123456&part.id=mirror"
+		engine      = "/?from.vin=1D7RV1GT5AS123456&part.id=engine&fitment.number=EN-57"
 	)
 	for _, js := range []bool{false, true} {
 		name := map[bool]string{false: "js-off", true: "js-on"}[js]
@@ -256,6 +260,23 @@ func TestStockStrip(t *testing.T) {
 			if len(cols) == 10 && (cols[7] != 0 || cols[8] < 20 || cols[8] > 36 || math.Abs(cols[9]) > 1) {
 				t.Errorf("1280 wide: %v candidates share a row, and the open one's rows start %v px in from its tag's leading edge and end %v px from its trailing one; want a column of rows, and the print from the tag's lead to its end", -cols[7], cols[8], cols[9])
 			}
+			// The print's columns stand on the cards' columns (#400): each
+			// of shelf's and yard's starts on a card's leading edge, the
+			// id's on the number's tape's, with its text where the
+			// number's is; the first under the ink has its text where the
+			// option text's is; and the print ends with the sixth card.
+			paper := measure[[]float64](tb, `(() => {
+				const r = e => e.getBoundingClientRect(), pad = e => r(e).left + parseFloat(getComputedStyle(e).paddingLeft);
+				const cards = [...document.querySelectorAll(".cards .card")].map(r), tag = document.getElementById("stock-rows").previousElementSibling, tape = tag.querySelector(".numtape");
+				const edges = [r(tape).left, ...cards.map(c => c.left)], heads = [...document.querySelectorAll("#stock-rows .print thead tr")];
+				const cells = heads.flatMap(tr => [...tr.children]);
+				return [cells.length, Math.max(...cells.map(c => Math.min(...edges.map(e => Math.abs(r(c).left - e))))),
+					Math.max(...heads.map(tr => Math.abs(pad(tr.children[0]) - pad(tape)))), Math.max(...heads.map(tr => Math.abs(pad(tr.children[2]) - pad(tag.querySelector(".ink"))))),
+					r(document.querySelector("#stock-rows .receipt")).right - cards[5].right];
+			})()`)
+			if len(paper) != 5 || paper[0] != 6 || paper[1] > 1 || paper[2] > 1 || paper[3] > 1 || math.Abs(paper[4]) > 1 {
+				t.Errorf("1280 wide: the print's columns are %v [cells in its heads, the farthest off a card's edge, the id's text off the number's, the third column's off the option text's, its end past the sixth card's]; want each on a card's edge, its text on the row's", paper)
+			}
 			if len(lines) != 6 {
 				t.Fatalf("1280 wide: %d measures of the block's lines; want 6, two of each of three", len(lines))
 			}
@@ -319,6 +340,47 @@ func TestStockStrip(t *testing.T) {
 			want := "names, picker, candidates, no number"
 			if got := strings.Join(slices.Compact(rb.tabStops("#fit .vdet", 60)), ", "); got != want {
 				t.Errorf("390 wide, the mirrors: the Tab key goes through %s; want %s", got, want)
+			}
+
+			// A print's columns keep one order at every width (#400): the
+			// id, the field pinned first, the location, the declared
+			// fields in the header's order, the field pinned second. EN-57's
+			// shelf pins two. Its head is in that order at 390, 768 and
+			// 1440, and what is in view, at rest and scrolled to the end,
+			// is in that order too: a held column covers a column, never
+			// passes it.
+			pb := newTab(t, path, pinnedSrv.URL, pinned, js)
+			pb.do(chromedp.Navigate(pinnedSrv.URL + engine))
+			pb.wait(`#stock-region`)
+			const shelfOrder = "Id,stock_number,Location,condition,warranty,price"
+			for _, width := range []int64{390, 768, 1440} {
+				pb.window(width, 900)
+				got := measure[[]string](pb, `(() => {
+					const sc = document.querySelector("#stock-region .pscroll"), cells = [...sc.querySelectorAll("thead tr > *")];
+					const name = c => c.textContent.trim(), dom = cells.map(name);
+					sc.scrollIntoView({block: "center", behavior: "instant"});
+					const seen = () => { const v = sc.getBoundingClientRect(); return cells.filter(c => { const b = c.getBoundingClientRect(), y = b.top + b.height / 2;
+						for (let x = Math.max(b.left, v.left) + 1; x < Math.min(b.right, v.right) - 1; x += 2) { const e = document.elementFromPoint(x, y); if (e && c.contains(e)) return true; }
+						return false; }).sort((a, b) => a.getBoundingClientRect().left - b.getBoundingClientRect().left).map(name); };
+					sc.scrollLeft = 0; const rest = seen(); sc.scrollLeft = sc.scrollWidth; const end = seen(); sc.scrollLeft = 0;
+					return [dom.join(","), rest.join(","), end.join(",")];
+				})()`)
+				if len(got) != 3 || got[0] != shelfOrder {
+					t.Errorf("%d wide: EN-57's shelf heads %q; want %s", width, got, shelfOrder)
+					continue
+				}
+				order := strings.Split(shelfOrder, ",")
+				for _, inView := range got[1:] {
+					at := 0
+					for _, c := range strings.Split(inView, ",") {
+						i := slices.Index(order[at:], c)
+						if i < 0 {
+							t.Errorf("%d wide: EN-57's shelf shows %s; want its columns in the order %s", width, inView, shelfOrder)
+							break
+						}
+						at += i + 1
+					}
+				}
 			}
 		})
 	}

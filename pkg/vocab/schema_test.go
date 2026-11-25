@@ -71,8 +71,9 @@ func TestSchema(t *testing.T) {
 	stockLive, _ := filepath.Glob("../../testdata/vocab/stock/live/*.jsonl")
 	stockMore, _ := filepath.Glob("../../testdata/vocab/stock/more/*.jsonl")
 	stockOrder, _ := filepath.Glob("../../testdata/vocab/stock/order/*.jsonl")
-	if len(stockFiles) == 0 || len(stockLive) == 0 || len(stockMore) == 0 || len(stockOrder) == 0 {
-		t.Fatal("no testdata/vocab/stock/*.jsonl, or none in its live, more or order")
+	stockColumns, _ := filepath.Glob("../../testdata/vocab/stock/columns/*.jsonl")
+	if len(stockFiles) == 0 || len(stockLive) == 0 || len(stockMore) == 0 || len(stockOrder) == 0 || len(stockColumns) == 0 {
+		t.Fatal("no testdata/vocab/stock/*.jsonl, or none in its live, more, order or columns")
 	}
 	strip, _ := filepath.Glob("../../testdata/vocab/strip/*.jsonl")
 	if len(strip) == 0 {
@@ -87,7 +88,7 @@ func TestSchema(t *testing.T) {
 	if len(demo) == 0 || len(vpicDemo) == 0 {
 		t.Fatal("no pkg/ui/demo/*.jsonl or pkg/ui/demo/vpic/*.jsonl")
 	}
-	for _, p := range slices.Concat(paths, drift, fitment, stockFiles, stockDrift, stockLive, stockMore, stockOrder, strip, partMode, demo, vpicDemo) {
+	for _, p := range slices.Concat(paths, drift, fitment, stockFiles, stockDrift, stockLive, stockMore, stockOrder, stockColumns, strip, partMode, demo, vpicDemo) {
 		data, err := os.ReadFile(p)
 		if err != nil {
 			t.Fatal(err)

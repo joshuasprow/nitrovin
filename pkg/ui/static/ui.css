@@ -811,18 +811,16 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
 /* The open candidate's rows: a strip of thermal paper fed out from under
    its tag, from the tag's content to its trailing end, and torn at its
    foot. It is a print in columns: a kind of stock under a small reversed
-   bar with its sources' dates; a line a row. Its id and its location,
-   larger and bold, as it is what is walked to, are each as wide as the
-   longest of them and never wrap, short of 24 characters. The rest of the
-   paper is
-   a column for each field its source's header declares, under the
-   field's name, each as wide as what it holds asks, and no value asks
-   for more than 24 characters: a longer one wraps in its column. What a
-   row has beyond those is under it, indented, in the fainter print and a
-   size under the row: a name, a colon and its value each, wrapping at
-   80 characters where the paper is wider. A list or an object is its
-   JSON, cut to one line. A value longer than two such lines is cut to
-   two behind a plus sign, and pressing it prints it whole: a details
+   bar with its sources' dates; a line a row. Its location is larger and
+   bold, as it is what is walked to. From 34rem up the columns stand on
+   the row the print hangs from (below): the id under the number's tape,
+   the location beside it, a column for each field its sources' headers
+   declare under the ink, and the last under the stock strip. What a
+   row has beyond those is under it, indented, in the fainter print and
+   a size under the row: a name, a colon and its value each, wrapping at
+   80 characters where the paper is wider. A list or an object is how
+   many it holds. A value longer than two such lines is cut to two
+   behind a plus sign, and pressing it prints it whole: a details
    element, so without a script, and every field's name shows shut. No
    head, no barcode, no dot leaders. Nothing typed into a stock file
    changes case on it. "Strip" alone is the tag's stock strip, the
@@ -859,11 +857,8 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
 .print { width: 100%; border-collapse: collapse; }
 .print :is(th, td) { box-sizing: border-box; max-width: 24ch; padding: 0 var(--s3) 0 0; text-align: left; vertical-align: baseline; overflow-wrap: break-word; border: 0; }
 .print tr > :last-child { padding-right: 0; }
-.print :is(.id, .lead, .loc) { width: 1%; max-width: none; white-space: nowrap; }
+.print :is(.id, .lead, .loc) { max-width: none; white-space: nowrap; }
 .print :is(.id, .lead, .loc).long { min-width: 24ch; white-space: normal; }
-/* With no column after it, the location takes the line's rest, so a
-   field held beside the id stays beside it. */
-.print:has(thead td) .loc { width: auto; }
 .print .loc { position: sticky; left: 0; z-index: 1; background: var(--thermal); }
 .print thead th { padding-bottom: 2px; white-space: nowrap; color: var(--thermal-muted); border-bottom: 1px dashed var(--on-thermal); }
 .print.bare thead :is(th, td) { padding: 0; border: 0; }
@@ -876,7 +871,6 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
 .fold > div { display: inline-block; max-width: min(100%, 80ch); margin-right: var(--s4); vertical-align: top; text-wrap: pretty; }
 .fold :is(dt, dd) { display: inline; margin: 0; }
 .fold dt::after { content: ":"; }
-.fold > .json { display: block; margin-right: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fold > .long { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 6px; margin-right: 0; }
 .fold details { margin: 0; padding: 0; border: 0; }
 .fold summary { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; padding: 0; }
@@ -886,6 +880,43 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
 .print .note { margin: 0; }
 .print .note::before { content: "* "; }
 .print .note strong { padding: 0 5px; color: var(--thermal); background: var(--on-thermal); }
+/* From 34rem up a print's columns stand on the row it hangs from, so
+   that shelf and yard, and a candidate's print and the next one's, are
+   one set of columns down the page. Each is a module of the row: the
+   id's from the number's tape's leading edge to the second module, the
+   next column the second module, to the ink's; under the ink, three
+   columns, its thirds, which on a wide page are modules; and the last
+   column under the stock strip, the field the header pins second or,
+   with none pinned and two fields or more, the last field. A column's
+   text is in from its edge by the inset, as the number's, the option
+   text's and the counts' are on the row. Where fewer than three columns
+   stand under the ink, the last of them takes the line's rest (.fill),
+   to the strip's column or the paper's end. The paper's width is the
+   scroller's (.pscroll, a container, 100cqw); the row's lengths are
+   taken on the paper (--print-tape, --print-strip), where the page's
+   container measures them. A print with more columns than its paper
+   holds keeps them a module each and scrolls. */
+@property --print-tape { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --print-strip { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@media (width >= 34rem) {
+  .receipt { --print-tape: calc(var(--num) + 8px); --print-strip: var(--strip); }
+  .pscroll { margin-inline: calc(-1 * var(--inset)); }
+  .print { --print-slot: calc((100cqw - var(--print-tape) - var(--print-strip)) / 3); }
+  .print :is(th, td) { max-width: none; padding: 0 var(--s2) 0 var(--inset); }
+  .print tr > :last-child { padding-right: var(--inset); }
+  .print thead > tr > :nth-child(n+3) { width: var(--print-slot); }
+  .print thead > tr > .id { width: calc((var(--print-tape) - var(--lead)) / 2); }
+  .print thead > tr > :nth-child(2) { width: calc((var(--print-tape) + var(--lead)) / 2); }
+  .print thead > tr > :is(.trail, .last) { width: var(--print-strip); }
+  .print thead > tr > .fill { width: auto; }
+  .print .rest td { padding-left: calc(var(--inset) + var(--s5)); }
+  .print .rest td > * { left: calc(var(--inset) + var(--s5)); max-width: calc(100cqw - 2 * var(--inset) - var(--s5)); }
+}
+/* Under 64rem the strip's counts are in by 8px, and so is the column
+   under it. */
+@media (34rem <= width < 64rem) {
+  .print :is(.trail, .last) { padding-left: var(--s2); }
+}
 .stock-none { margin: 2px 0; }
 .stock-none::before { content: "*** "; }
 .stock-none::after { content: " ***"; }
@@ -1038,7 +1069,7 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
 .pleader::after { left: 31.5px; right: calc(100% - var(--px) - 2.5px); top: 15.5px; bottom: -21px; border: 0 solid var(--c-serial); border-width: 5px 0 0 5px; border-top-left-radius: 3px; }
 .phead { position: relative; }
 .part > :is(.blank, .error) { margin-top: var(--s4); }
-.phead .rows { margin-left: calc(var(--rail) + var(--lead)); }
+.phead .rows { margin-left: calc(var(--rail) + var(--lead)); margin-right: var(--end); }
 .phead .rows::before { left: calc(8px - var(--rail) - var(--lead)); top: 0; bottom: calc(-1 * var(--s2)); }
 .ptag { --sc: calc(var(--strip) + var(--end)); --eye-x: calc(var(--rail) + 14px); grid-template-columns: calc(var(--rail) + var(--lead)) var(--num) minmax(0, 1fr) var(--sc); }
 .ptag:has(.sc .down) { --sc: minmax(calc(var(--strip) + var(--end)), max-content); }
@@ -1281,11 +1312,16 @@ button.linkish:active { transform: none; box-shadow: none; }
      second at the trailing edge, shaded where the rest slides under it;
      with no pin, the id alone. The first is set beside the id by the
      id's width, which the print names (.idw1 to .idw24, its widest id
-     in characters, up to the 24 at which an id wraps). The location
-     scrolls with the rest. What is folded is set in 12px, not 24, and
-     wraps as a row whose space between two fields is never counted at
-     a line's end: a field as long as the paper keeps one line. */
+     in characters, up to the 24 at which an id wraps), so the id's
+     column is never wider than its widest id: where the paper is wider
+     than the print, the column that takes the line's rest (.fill) takes
+     what is left. The location scrolls with the rest. What is folded is
+     set in 12px, not 24, and wraps as a row whose space between two
+     fields is never counted at a line's end: a field as long as the
+     paper keeps one line. */
   .print { width: max-content; min-width: 100%; }
+  .print :is(.id, .lead, .loc) { width: 1%; }
+  .print:has(thead .loc.fill) .loc { width: auto; }
   .print .loc { position: static; }
   .print :is(.id, .lead, .trail) { position: sticky; z-index: 1; background: var(--thermal); }
   .print .id { left: 0; }
@@ -1301,7 +1337,7 @@ button.linkish:active { transform: none; box-shadow: none; }
   .print .rest td > * { left: var(--s3); max-width: calc(100cqw - var(--s3)); }
   .fold { display: flex; flex-wrap: wrap; column-gap: calc(var(--s4) + 1ch); }
   .fold > div { margin-right: 0; }
-  .fold > :is(.json, .long) { flex: none; width: 100%; }
+  .fold > .long { flex: none; width: 100%; }
   .ptype { font-size: 13px; padding-inline: 10px; }
   .ptgroups { grid-template-columns: minmax(0, 1fr); }
   .labels, .cells, .under { grid-template-columns: repeat(9, minmax(0, 1fr)); }

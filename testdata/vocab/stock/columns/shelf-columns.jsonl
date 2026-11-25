@@ -1,0 +1,3 @@
+{"format":1,"kind":"stock","name":"shelf-columns","version":"2026.11.01","source":"shelf","as_of":"2026-11-04","catalog":"parts-catalog","fields":["condition","price"]}
+{"id":"K-1","location":"east","type":"brake-rotor-front","number":"BR-2001","fields":{"condition":"A","price":38.5,"bin":"K-07"}}
+{"id":"K-2","location":"west","type":"brake-rotor-front","number":"BR-2001","fields":{"price":41,"condition":"B"}}
