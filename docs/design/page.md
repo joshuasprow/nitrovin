@@ -119,9 +119,22 @@ Where the maintainer later changed a rule knowingly, the rule says so after
    width from 34 rem up; under 34 rem it is the row's width, where the
    row is narrower than that or nothing is beside it. A stock print is
    columns at every width, and scrolls sideways where its paper is too
-   narrow (thermal paper, below). The widths under 64 rem had a pass of
-   their own: what the page does there is described with each part
-   below, as built, and is not yet ruled.
+   narrow (thermal paper, below).
+   *Ruled, 2026-11-24: under 64 rem the cards, the block's words and the
+   picker are set on one module, 9.75 rem, half the picker's 19.5 rem.
+   The rows under them keep their own widths there: a row's number tape
+   and stock strip are sixths of the row with their floors, so its
+   number tape no longer ends where the picker does, and its ink keeps
+   room for its option text; the tape and the strip are a row high at
+   the row's top and do not stretch with the ink. A first version put
+   the rows on the module too, and was sent back: between 34 and 64 rem
+   it squeezed the option text into a narrow column beside tall fields
+   of tape and metal. Under 34 rem
+   a print holds the row's id and the field its header pins first at
+   its leading edge, and the field it pins second at its trailing edge,
+   while the rest scrolls between. The pass the widths under 64 rem had
+   of their own, before this ruling, set the cards, the block's words
+   and the picker on three lengths.*
 6. **A row scrolls sideways before it stacks or hides.** Things of a kind
    are one row. Past the window, the row scrolls by itself, shows the next
    one at its edge, and fades at an end with more beyond it. Nothing is
@@ -294,9 +307,9 @@ that its parts line up down the page.
 
 | Token | Value | What it sets |
 | --- | --- | --- |
-| Module `--m` | a sixth of the row under the block: 160 px on a wide page | A column. A card is a module less the 8 px between two, and what hangs under the vehicle's block is a whole number of modules wide, less those 8 px. Under 64 rem the cards scroll, and no card stands over a column |
+| Module `--m` | a sixth of the row under the block: 160 px on a wide page; 9.75 rem, 156 px, under 64 rem | A column. A card is a module less the 8 px between two, and what hangs under the vehicle's block is a whole number of modules wide, less those 8 px. Under 64 rem the module is fixed, half the picker's 19.5 rem, and sets the cards, the block's words and the picker: the cards scroll, six modules (`--col`), the first on the rows' leading edge at rest, the block's words are a module each, and the picker two |
 | `--rail`, `--end` | 20 px each; `--end` is 0 under 64 rem | How far the first column's leading edge and the last column's trailing edge are in from the block's. The gutter that `--rail` leaves beside the first column is the trunk's |
-| `--num`, `--strip` | two modules, and one, each less the 8 px, the first less the lead too. Under 64 rem no narrower than 9.5 rem and 7.5 rem | A row's two fixed columns: its number's tape and its stock strip. The floors are what they hold: a number of eleven characters, and two counts of three digits |
+| `--num`, `--strip` | two modules, and one, each less the 8 px, the first less the lead too. Under 64 rem the same of the row's own sixth, not the module, and no narrower than 9.5 rem and 7.5 rem | A row's two fixed columns: its number's tape and its stock strip. The floors are what they hold: a number of eleven characters, and two counts of three digits |
 | Spacing `--s1` to `--s5` | 4, 8, 12, 16 and 24 px | The one scale of spaces |
 | Inset `--inset` | 12 px | Text's distance from the edge of its material, on every material |
 | Row `--row` | 3 rem, 48 px; 3.5 rem, 56 px, under 64 rem | The height of a tag laid long, the picker and a blank strip. Under 64 rem it is a finger's: the picker's key in it is 45 px high, a stock strip is a row high, and a tag's two names, 24 px each, are 8 px apart |
@@ -316,9 +329,9 @@ lengths are the module's or a floor of their own.
 
 | Width | What stops fitting | What changes under it |
 | --- | --- | --- |
-| 64 rem | Six cards in one row, each wide enough for its rows | The cards scroll sideways. The leader lines and the stepped lines are not drawn, and the lines to the block are carried. The block's words are packed at its leading end. `--end` is 0, the row is 3.5 rem and the display 18 px. A row's years are under its number. The keys over the plate are 44 px high |
+| 64 rem | Six cards in one row, each wide enough for its rows | The cards, the block's words and the picker are on one module, 9.75 rem; a row's columns are its own sixths. The cards scroll sideways. The leader lines and the stepped lines are not drawn, and the lines to the block are carried. The block's words are packed at its leading end. `--end` is 0, the row is 3.5 rem and the display 18 px. A row's years are under its number, and its tape and strip stand at its top. The keys over the plate are 44 px high |
 | 46 rem | The label of a one-cell group, 47 px, over a cell of 40 | Those three labels are not drawn. The cells stand 2 px apart, not 4, and the page's margin is 0.5 rem |
-| 34 rem | A cell wide enough for a finger, in one row of 17; the names beside the picker; a row's ink beside its number; a print's columns on its paper | The plate is two rows, and a card's column 9.5 rem. The picker is the row's width, and the names are under the candidates. A row is two lines. The print scrolls sideways. Part-number mode's fields stack, and its switch is the plate's width. The check digit's sum is turned on its side |
+| 34 rem | A cell wide enough for a finger, in one row of 17; the names beside the picker; a row's ink beside its number; a print's columns on its paper | The plate is two rows. The picker is the row's width, and the names are under the candidates. A row is two lines. The print scrolls sideways, holding the row's id and what its header pins. Part-number mode's fields stack, and its switch is the plate's width. The check digit's sum is turned on its side |
 
 The Developers dialog asks once more, at 40 rem, where a snippet's label
 no longer fits beside it. Every query is the window's, not a container's:
@@ -678,21 +691,29 @@ control; the paper is the print (`.receipt` in the stylesheet).
   head role, larger and heavier than the row, as it is what is walked to,
   then a column for each field its
   source's header declares (`fields`, ADR 0019's amendment of 2026-11-23),
-  in the header's order. A declared column stands under its field's name,
+  in the header's order. A header may pin one or two of its fields
+  (`pin`, #404): the first is printed beside the id, before the location,
+  and the second last, at every width; a print whose rows come from
+  several sources takes the pins of the first that pins. A declared
+  column stands under its field's name,
   in the fainter print over a rule of dashes; the id and the location have
-  no name printed. The id and the location are each as wide as the longest
-  of them and never wrap, short of 24 characters. A declared column is
+  no name printed. The id, the location and the first pinned field are
+  each as wide as the longest of them and never wrap, short of 24
+  characters; with nothing after it, the location takes the line's rest.
+  A declared column is
   never narrower than its field's name. The declared columns
   share the rest of the paper by what they hold: none asks for more than
   24 characters, and a longer value wraps in its column, between words.
   Where rows of two
   sources share a print, it has a column for every field either declares,
   each once, and a row leaves empty those its own source does not declare.
-- **Exactly the declared fields are columns.** A source that declares none
+- **Exactly the declared fields are columns**, but one: a declared field
+  whose value is the row's id on every row of the print says what the id
+  says, so it is no column and is not folded (#397). A source that
+  declares none
   prints an id and a location a row, and folds the rest. A null prints
   nothing. A number or a boolean prints as its JSON. A list or an object
-  is never a column's. A field is printed as its file has it, so a file
-  that repeats a row's id as a field prints it twice.
+  is never a column's. A field is printed as its file has it.
 - **The fold:** what a row has beyond its declared fields is under it,
   indented 24 px, in the fine role: the fainter print, a size under the
   row, at regular weight, so the declared columns and the location are the
@@ -720,7 +741,8 @@ control; the paper is the print (`.receipt` in the stylesheet).
   page's own words, a kind's name and "None." are capitals.
 - **Where the paper is too narrow for its columns** the print scrolls
   sideways under its bar, by itself, and the page stays. It is the same
-  columns at every width. The location stays at the print's leading edge
+  columns at every width. From 34 rem up the location stays at the
+  print's leading edge
   while the id and the columns slide under it, so the eye still runs
   down the locations, and what is folded keeps the paper's width and
   does not move. An end with more beyond it is shaded for 12 px, as the
@@ -728,9 +750,19 @@ control; the paper is the print (`.receipt` in the stylesheet).
   paper does not fade, and a fade would take the last characters of
   what is folded with it. It needs no script and no scroll timeline.
 - **Under 34 rem** a phone's paper is narrower than most prints, so the
-  columns keep the widths their values ask, and the print scrolls. The
-  location is never wider than half the paper there: a longer one
-  wraps. What is folded is indented 12 px, not 24, and wraps as one row
+  columns keep the widths their values ask, and the print scrolls. It
+  holds what the yard needs in view: the row's id and the first pinned
+  field at its leading edge, and the second pinned field at its trailing
+  edge, shaded for 8 px along its leading edge on each of its rows, where
+  the rest slides under it; that print draws no shade at the paper's end.
+  The location scrolls with the rest. With no pin only the id is held.
+  The first pinned field stands beside the id by the id's width, which
+  the print names as a class (`.idw1` to `.idw24`, its widest id in
+  characters), since a script would be needed to measure it. With the
+  demo set the yard's print at 390 px holds `DEMO-Y-01` and `D-1` in
+  view, where its paper, 302 px, showed the id, the location and the
+  stock number that repeated the id. What is folded is indented 12 px,
+  not 24, and wraps as one row
   whose space between two fields is not counted at a line's end, so a
   field as long as the paper keeps one line. On a deployer's shelf rows
   of eleven fields a row is 76 px high there. The form it replaced, a
@@ -784,7 +816,9 @@ that it is narrow.
 - A newly finished group pops its card in (0.3 s).
 - **Wide**, the six cards span the plate's width, each under its leader line.
 - **Narrow**, the six cards are one row that scrolls sideways, in the VIN's
-  order, six columns of one width (12.5 rem, and 9.5 rem under 34 rem). The region reaches both edges of the
+  order, six columns of the module under the cards (9.75 rem, so a card
+  is 148 px at every narrow width), the first on the rows' leading edge
+  at rest. The region reaches both edges of the
   window, is named, and takes focus, so a keyboard scrolls it. An end of
   it with more beyond fades over 48 px, as the names' row does, but for
   the row's last 14 px, where the lines to the block leave it whole. The
@@ -819,8 +853,9 @@ card's trailing edge, and is a whole number of columns wide.
   model under the Vehicle's, whose lines come straight down, and the year
   is in the third, where the Model year's line steps left to it. On a
   narrow page, where the cards scroll and the lines are carried, the
-  words are packed at the block's left, a column 8 rem wide each, or a
-  third of the block where that is less, so a word of eleven characters
+  words are packed at the block's left, a module each, centred on the
+  cards' columns as they rest, or a third of the block where three
+  modules are wider than it (a phone's), so a word of eleven characters
   keeps the head's size on one line, and
   the details are a row under them. Each line ends on the block's top
   edge, over the stamp's strip and never across it. The page puts the
@@ -879,8 +914,8 @@ card's trailing edge, and is a whole number of columns wide.
   34 rem the last thing tied to it is the names' row (the names, below).
 - **The band** under the block holds the picker and, beside it, the
   names' row, which reaches the block's trailing edge. The picker is two
-  columns wide on a wide page, 312 px, and keeps that width under
-  64 rem, as 19.5 rem. Under 34 rem nothing fits beside it: the picker is
+  columns wide on a wide page, 312 px, and two modules under 64 rem,
+  19.5 rem, the same 312 px. Under 34 rem nothing fits beside it: the picker is
   as wide as a candidate's row, and the names are drawn last, under the
   candidates (the names, below).
 - **The picker** is one key of the second tape on a short piece of label
@@ -988,15 +1023,21 @@ card's trailing edge, and is a whole number of columns wide.
   are scanned down. After the tag's lead comes its number on label tape,
   with its side and its years at the tape's trailing end, two columns;
   then, in the tag's ink, its option text (verbatim, each application's
-  on a line of its own) over its marks and its note; then its stock
+  on a line of its own), its marks and its note, one run of lines; then
+  its stock
   strip, the last column. A candidate has no group and takes no colour. A
-  row is a row high, and grows only where the option text or the note
-  needs another line, or a kind of stock is unavailable (the stock
+  row is a row high, and grows only where that run needs another line,
+  or a kind of stock is unavailable (the stock
   strip, below). Under 64 rem a row is 3.5 rem and a finger's. Its
   side and its years are under its number there, so a number never
-  breaks for want of room. The number's tape is two columns and no
-  narrower than 9.5 rem, the strip one column and no narrower than
-  7.5 rem, and a mark's stamp wraps before it leaves the ink. Under
+  breaks for want of room. The number's tape is two sixths of the row
+  less 8 px and the lead, and no narrower than 9.5 rem; the strip one
+  sixth less 8 px, and no narrower than 7.5 rem. The ink has what is
+  left: 363 px of a row at 768 px, and 261 px at 600, room for 28
+  characters of option text a line. The tape and the strip are a row
+  high at the row's top: a row the ink makes taller does not stretch
+  them. A mark's stamp wraps before it leaves
+  the ink. Under
   34 rem a row is two lines: its number and its stock strip, a row high,
   then its ink.
 - **Marks are ink on the tag**, in its ordinary ink: a solid stamp, a little
@@ -1010,7 +1051,11 @@ card's trailing edge, and is a whole number of columns wide.
   matches against the vehicle; and a solid stamp with an
   arrow, "By redirect" and the part type the catalog lists it under. A model
   year confirmed alone earns no stamp: every candidate's years held. The
-  marks begin the line under the option text, and the note follows them.
+  marks follow the option text on its last line, and wrap to the next
+  only where that one is full; the note follows them. No width asks for
+  that: a candidate whose ink fits one line is a row high wherever its
+  row has the room. They began the line under the option text, which
+  made every candidate with marks two lines high.
 - **Weakest wins.** Each of a candidate's applications earns its own marks,
   and the tag shows their union, each kind once with its elements merged, so
   it never claims more than the weakest way the candidate fits: an

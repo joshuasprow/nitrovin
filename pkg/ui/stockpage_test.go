@@ -55,9 +55,9 @@ var (
 	stripRE     = regexp.MustCompile(`(?s)<(a|p|button) [^>]*class="stk[^"]*"[^>]*>(.*?)</(?:a|p|button)>`)
 	stripTagRE  = regexp.MustCompile(`<(?:a|p|button) [^>]*class="stk[^"]*"[^>]*>`)
 	saidRE      = regexp.MustCompile(`<span class="visually-hidden">([^<]*)</span>`)
-	stockRowRE  = regexp.MustCompile(`(?s)<tbody>\n<tr><th scope="row" class="id">([^<]*)</th><td class="loc">([^<]*)</td>(.*?)</tr>\n(?:<tr class="rest"><td colspan="\d+">(.*?)</td></tr>\n)?</tbody>`)
-	stockHeadRE = regexp.MustCompile(`<th scope="col">([^<]*)</th>`)
-	stockCellRE = regexp.MustCompile(`<td>([^<]*)</td>`)
+	stockRowRE  = regexp.MustCompile(`(?s)<tbody>\n<tr><th scope="row" class="id">([^<]*)</th>(<td class="lead">[^<]*</td>)?<td class="loc">([^<]*)</td>(.*?)</tr>\n(?:<tr class="rest"><td colspan="\d+">(.*?)</td></tr>\n)?</tbody>`)
+	stockHeadRE = regexp.MustCompile(`<th scope="col"(?: class="(?:lead|trail)")?>([^<]*)</th>`)
+	stockCellRE = regexp.MustCompile(`<td(?: class="(?:lead|trail)")?>([^<]*)</td>`)
 	stockFoldRE = regexp.MustCompile(`<div(?: class="(?:json|long)")?><dt>([^<]*)</dt> <dd>(?:<details><summary>)?([^<]*)(?:</summary></details>)?</dd></div>`)
 	stockNoteRE = regexp.MustCompile(`(?s)<p class="note">(.*?)</p>`)
 )
@@ -103,7 +103,8 @@ func strip(s, number string) string {
 // stockRows are rows of a print, "id | location | folded fields and
 // notes", with "name=value" for each of the print's columns before the
 // folded fields where it has any: a cell under the column's name in its
-// table's head, in the head's order.
+// table's head, in the head's order, the pinned field held beside the
+// id first.
 func stockRows(s string) []string {
 	var out []string
 	for _, table := range strings.Split(s, `<table class="print`)[1:] {
@@ -111,11 +112,18 @@ func stockRows(s string) []string {
 		for _, h := range stockHeadRE.FindAllStringSubmatch(table, -1) {
 			heads = append(heads, h[1])
 		}
+		// A print whose head ends in a cell with no name fills its line
+		// with one, which is no column's.
+		filler := strings.Contains(table, "<td></td></tr></thead>")
 		for _, m := range stockRowRE.FindAllStringSubmatch(table, -1) {
-			parts := []string{m[1], m[2]}
+			parts := []string{m[1], m[3]}
 			var cells, folded []string
 			if heads != nil {
-				for i, c := range stockCellRE.FindAllStringSubmatch(m[3], -1) {
+				row := m[2] + m[4]
+				if filler {
+					row = strings.TrimSuffix(row, "<td></td>")
+				}
+				for i, c := range stockCellRE.FindAllStringSubmatch(row, -1) {
 					name := "no column"
 					if i < len(heads) {
 						name = heads[i]
@@ -126,11 +134,11 @@ func stockRows(s string) []string {
 			if cells != nil {
 				parts = append(parts, strings.Join(cells, ", "))
 			}
-			for _, f := range stockFoldRE.FindAllStringSubmatch(m[4], -1) {
+			for _, f := range stockFoldRE.FindAllStringSubmatch(m[5], -1) {
 				folded = append(folded, f[1]+" "+f[2])
 			}
 			rest := strings.Join(folded, " · ")
-			for _, n := range stockNoteRE.FindAllStringSubmatch(m[4], -1) {
+			for _, n := range stockNoteRE.FindAllStringSubmatch(m[5], -1) {
 				rest += " " + plain(n[1])
 			}
 			out = append(out, html.UnescapeString(strings.Join(append(parts, strings.TrimSpace(rest)), " | ")))
@@ -239,11 +247,11 @@ func TestPageStock(t *testing.T) {
 	wantRows := [][]string{
 		{"DEMO-1001"},
 		{"On the shelf · 2 as of 2026-11-12",
-			"DEMO-S-01 | demo-north | stock_number=DEMO-S-01, condition=demo: used, grade A | ",
-			"DEMO-S-02 | demo-south | stock_number=DEMO-S-02, condition=demo: used, grade B; tagged with its old number | Tagged with a retired number, DEMO-0901"},
+			"DEMO-S-01 | demo-north | condition=demo: used, grade A | ",
+			"DEMO-S-02 | demo-south | condition=demo: used, grade B; tagged with its old number | Tagged with a retired number, DEMO-0901"},
 		{"In the yard · 2 as of 2026-11-12",
-			"DEMO-Y-01 | demo-north | stock_number=DEMO-Y-01, row=D-1 | color demo: white This VIN : the vehicle being looked up",
-			"DEMO-Y-02 | demo-south | stock_number=DEMO-Y-02, row=D-1 | color demo: blue"},
+			"DEMO-Y-01 | demo-north | row=D-1 | color demo: white This VIN : the vehicle being looked up",
+			"DEMO-Y-02 | demo-south | row=D-1 | color demo: blue"},
 	}
 	if got := openRows(s); !slices.EqualFunc(got, wantRows, slices.Equal) {
 		t.Errorf("DEMO-1001 open: %q; want %q\n%s", got, wantRows, s)
@@ -499,7 +507,9 @@ func demoStockWith(t *testing.T, paths []string, stock ...string) *nitrovin.Tran
 // columns. The region names the part; a kind of stock is a section under
 // its heading; a row is its id, its location, and under each field its
 // source's header declares (#390), in the header's order, the row's value
-// for it, as its file wrote it. What a row has beyond those is under it,
+// for it, as its file wrote it; a field the header pins first (#404) is
+// beside the id, before the location, and one it pins second is last.
+// What a row has beyond those is under it,
 // a name and its value each: a null and an empty string print nothing,
 // and a list or an object, which is no column's though declared, is its
 // JSON. A source that declares nothing has no column but the id and the
@@ -515,8 +525,8 @@ func TestStockPrint(t *testing.T) {
 		`<div class="rows" id="stock-rows">` + "\n" + `<div class="receipt" id="stock-region" role="region" aria-label="Stock of EN-57" tabindex="-1">`,
 		// A kind of stock is a heading one level under the part's number.
 		`<section class="stock-kind" aria-labelledby="stock-shelf-h">` + "\n" + `<p class="kind" id="stock-shelf-h" role="heading" aria-level="3"><span class="bar">On the shelf · 4</span> <span class="asof">as of 2026-11-03</span></p>`,
-		`<thead><tr><th scope="col" class="id"><span class="visually-hidden">Id</span></th><th scope="col" class="loc"><span class="visually-hidden">Location</span></th>` +
-			`<th scope="col">stock_number</th><th scope="col">condition</th><th scope="col">price</th><th scope="col">warranty</th></tr></thead>`,
+		`<table class="print idw3">` + "\n" + `<thead><tr><th scope="col" class="id"><span class="visually-hidden">Id</span></th><th scope="col" class="lead">stock_number</th><th scope="col" class="loc"><span class="visually-hidden">Location</span></th>` +
+			`<th scope="col">condition</th><th scope="col">warranty</th><th scope="col" class="trail">price</th></tr></thead>`,
 		`<th scope="col">stock_number</th><th scope="col">row</th><th scope="col">photos</th></tr></thead>`,
 		`<div class="json"><dt>photos</dt> <dd>[{&#34;url&#34;:&#34;v900-front.jpg&#34;,`,
 	} {
@@ -525,10 +535,10 @@ func TestStockPrint(t *testing.T) {
 		}
 	}
 	want := []string{
-		"R-1 | west | stock_number=E500, condition=A, price=1850.00, warranty= | tag T-9 · miles 61250 · status on shelf",
-		`R-2 | west | stock_number=E501, condition=, price=9.5e2, warranty= | comments turns over; sold "as is"`,
-		"R-3 | west | stock_number=, condition=, price=, warranty= | tag T-11",
-		"R-4 | west | stock_number=E503, condition=B, price=1200, warranty= | tag T-12",
+		"R-1 | west | stock_number=E500, condition=A, warranty=, price=1850.00 | tag T-9 · miles 61250 · status on shelf",
+		`R-2 | west | stock_number=E501, condition=, warranty=, price=9.5e2 | comments turns over; sold "as is"`,
+		"R-3 | west | stock_number=, condition=, warranty=, price= | tag T-11",
+		"R-4 | west | stock_number=E503, condition=B, warranty=, price=1200 | tag T-12",
 		`V-1 | west | stock_number=V900, row=K, photos= | photos [{"url":"v900-front.jpg","w":1600,"h":1200},{"url":"v900-rear.jpg","w":1600,"h":1200}] · color grey · added 2026-10-30`,
 		"V-2 | west | stock_number=, row=, photos= | color black · keys true",
 	}
@@ -581,7 +591,7 @@ func TestStockColumn(t *testing.T) {
 		row("a", "6", `"loose"`),
 		row("a", "7", `{"x":"`+strings.Repeat("é", 161)+`","short":"`+strings.Repeat("é", 160)+`","more":"`+strings.Repeat("é", 161)+`"}`),
 	}}
-	declared := map[string][]string{"a": {"x", "y"}, "b": {"y", "w"}, "unseen": {"never"}}
+	declared := map[string]stockHeader{"a": {Fields: []string{"x", "y"}}, "b": {Fields: []string{"y", "w"}}, "unseen": {Fields: []string{"never"}}}
 	text := func(fields []stockField) string {
 		var out []string
 		for _, f := range fields {
@@ -624,5 +634,53 @@ func TestStockColumn(t *testing.T) {
 	col = newStockColumn(contract.StockShelf, l, nil, "", "")
 	if col.Heads != nil || col.Span() != 3 || len(col.Rows[1].Cells) != 0 || text(col.Rows[1].Folded) != "x=2, list=[1,2] (JSON), n=3.50, ok=false" {
 		t.Errorf("nothing declared: columns %q, %d cells a row, row 2 %q | %q", col.Heads, col.Span(), text(col.Rows[1].Cells), text(col.Rows[1].Folded))
+	}
+}
+
+// TestStockColumnHeld: a declared field that is its row's id on every
+// row is no column, and does not fold (#397); a pinned field (#404) is
+// printed beside the id, the first, or last, the second, and the print
+// says how wide its ids are where it holds the first.
+func TestStockColumnHeld(t *testing.T) {
+	row := func(id, fields string) contract.StockRow {
+		return contract.StockRow{Source: "s", ID: id, Location: "north", Fields: []byte(fields)}
+	}
+	rows := []contract.StockRow{
+		row("A-1", `{"stock_number":"A-1","row":"R1","price":"10","cond":"used"}`),
+		row("LONGER-ID-2", `{"stock_number":"LONGER-ID-2","row":"R2","price":"20"}`),
+	}
+	header := stockHeader{Fields: []string{"stock_number", "row", "price", "cond"}}
+	cells := func(r stockRow) string {
+		var out []string
+		for _, f := range slices.Concat([]stockField{r.Lead}, r.Cells, []stockField{r.Trail}) {
+			out = append(out, f.Name+"="+f.Value)
+		}
+		return strings.Join(out, " ")
+	}
+	for _, c := range []struct {
+		name        string
+		pin         []string
+		rows        []contract.StockRow
+		lead, trail string
+		heads       []string
+		span, idw   int
+		first       string
+	}{
+		{"both pinned", []string{"row", "price"}, rows, "row", "price", []string{"cond"}, 5, 11, "row=R1 cond=used price=10"},
+		{"one pinned", []string{"row"}, rows, "row", "", []string{"price", "cond"}, 5, 11, "row=R1 price=10 cond=used ="},
+		{"none pinned", nil, rows, "", "", []string{"row", "price", "cond"}, 5, 11, "= row=R1 price=10 cond=used ="},
+		{"the first pin is the id", []string{"stock_number", "price"}, rows, "", "price", []string{"row", "cond"}, 5, 11, "= row=R1 cond=used price=10"},
+		{"one row's number is not its id", []string{"row"}, append(slices.Clone(rows), row("B-3", `{"stock_number":"B-03"}`)), "row", "", []string{"stock_number", "price", "cond"}, 6, 11, "row=R1 stock_number=A-1 price=10 cond=used ="},
+	} {
+		h := header
+		h.Pin = c.pin
+		l := &contract.StockList{Total: len(c.rows), Rows: c.rows}
+		col := newStockColumn(contract.StockYard, l, map[string]stockHeader{"s": h}, "", "")
+		if col.Lead != c.lead || col.Trail != c.trail || !slices.Equal(col.Heads, c.heads) || col.Span() != c.span || col.IDWidth != c.idw {
+			t.Errorf("%s: lead %q, heads %q, trail %q, %d cells, ids %d wide; want %q, %q, %q, %d, %d", c.name, col.Lead, col.Heads, col.Trail, col.Span(), col.IDWidth, c.lead, c.heads, c.trail, c.span, c.idw)
+		}
+		if got := cells(col.Rows[0]); got != c.first || len(col.Rows[0].Folded) != 0 {
+			t.Errorf("%s: the first row's cells %q, folded %v; want %q and nothing folded", c.name, got, col.Rows[0].Folded, c.first)
+		}
 	}
 }

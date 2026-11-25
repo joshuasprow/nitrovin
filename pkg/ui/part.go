@@ -450,7 +450,7 @@ func plural(n int, one, many string) string {
 // partStock fills the part's stock strip and, when the URL opens it, its
 // rows, as a candidate's (stockColumns), key the key the part was
 // answered from, kinds and declared the stock loaded.
-func (h *Handler) partStock(ctx context.Context, p *partPage, key partKey, fit contract.Fit, kinds []string, declared map[string][]string, res *result) error {
+func (h *Handler) partStock(ctx context.Context, p *partPage, key partKey, fit contract.Fit, kinds []string, declared map[string]stockHeader, res *result) error {
 	cand := contract.FitCandidate{Fitment: *fit.Fitment, Shelf: fit.Shelf, Yard: fit.Yard}
 	own := candidateKey(cand)
 	s := newStockStrip(cand, kinds)

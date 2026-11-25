@@ -135,21 +135,28 @@ func TestStockStrip(t *testing.T) {
 			// stock strip are 44 px high or more. The names, which are
 			// secondary, are drawn under the candidates. The print keeps
 			// its columns and scrolls sideways by itself: scrolled to
-			// its end, its location is at its leading edge, and the
-			// page has not moved.
+			// its end, the row's id is at its leading edge, the location
+			// has slid under it, and the page has not moved. The yard's
+			// print holds the id and the row its header pins in view, and
+			// has no column for the stock number that repeats the id
+			// (#397).
 			phone := measure[[]float64](tb, `(() => {
-				const r = e => e.getBoundingClientRect(), cands = [...document.querySelectorAll(".cands > .cand")], print = document.querySelector("#stock-region .pscroll");
-				const at = () => r(print.querySelector("td.loc")).left - r(print).left, more = print.scrollWidth - print.clientWidth, first = at();
+				const r = e => e.getBoundingClientRect(), cands = [...document.querySelectorAll(".cands > .cand")], [print, yard] = document.querySelectorAll("#stock-region .pscroll");
+				const at = sel => r(print.querySelector(sel)).left - r(print).left, more = print.scrollWidth - print.clientWidth, first = at("tbody th.id"), loc = at("td.loc");
 				print.scrollTo({left: print.scrollWidth, behavior: "instant"});
-				const scrolled = print.scrollLeft, held = at();
+				const scrolled = print.scrollLeft, held = at("tbody th.id"), slid = loc - at("td.loc");
 				print.scrollTo({left: 0, behavior: "instant"});
+				const y = r(yard), inView = sel => { const b = r(yard.querySelector(sel)); return b.width > 0 && b.left >= y.left - 1 && b.right <= y.right + 1 ? 1 : 0; };
 				return [r(document.getElementById("pick-type")).height, Math.min(...[...document.querySelectorAll(".cands a.stk")].map(e => r(e).height)),
-					r(document.querySelector("#aka .nametags")).top - r(cands[cands.length - 1]).bottom, more, first, scrolled, held, document.documentElement.scrollWidth - innerWidth, scrollX];
+					r(document.querySelector("#aka .nametags")).top - r(cands[cands.length - 1]).bottom, more, first, scrolled, held, slid, document.documentElement.scrollWidth - innerWidth, scrollX,
+					inView("tbody th.id") + inView("tbody td.lead"), yard.querySelector("tbody td.lead")?.textContent === "D-1" ? 1 : 0, yard.querySelector("thead").textContent.includes("stock_number") ? 1 : 0];
 			})()`)
-			if len(phone) != 9 || phone[0] < 44 || phone[1] < 44 || phone[2] < -1 {
+			if len(phone) != 13 || phone[0] < 44 || phone[1] < 44 || phone[2] < -1 {
 				t.Errorf("390 wide: the picker's key is %v px high, the lowest strip %v, and the names' row %v px under the last candidate; want 44 px or more to press, and the names under the candidates", phone[0], phone[1], phone[2])
-			} else if phone[3] <= 0 || phone[4] <= 0 || phone[5] <= 0 || math.Abs(phone[6]) > 1 || phone[7] > 0 || phone[8] != 0 {
-				t.Errorf("390 wide: the print holds %v px more than it shows, its location %v px in; scrolled %v, the location is %v px in, the page %v px wider than the window and scrolled %v; want the print to scroll sideways by itself, its location kept in sight", phone[3], phone[4], phone[5], phone[6], phone[7], phone[8])
+			} else if phone[3] <= 0 || math.Abs(phone[4]) > 1 || phone[5] <= 0 || math.Abs(phone[6]) > 1 || phone[7] <= 0 || phone[8] > 0 || phone[9] != 0 {
+				t.Errorf("390 wide: the print holds %v px more than it shows, its id %v px in; scrolled %v, the id is %v px in and the location slid %v px, the page %v px wider than the window and scrolled %v; want the print to scroll sideways by itself, its id kept in sight", phone[3], phone[4], phone[5], phone[6], phone[7], phone[8], phone[9])
+			} else if phone[10] != 2 || phone[11] != 1 || phone[12] != 0 {
+				t.Errorf("390 wide: the yard's print has %v of its id and its row in view, the row D-1 %v, a stock_number column %v; want both in view, and no column that repeats the id", phone[10], phone[11], phone[12])
 			}
 			// The names are drawn under the candidates there. Where
 			// scripts run they stand there in the document too, so every

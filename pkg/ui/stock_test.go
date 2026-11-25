@@ -384,7 +384,7 @@ func TestWorkerConfigStockFields(t *testing.T) {
 	const (
 		vinMode  = "/?from.vin=1D7RV1GT5AS123456&part.id=engine&fitment.number=EN-57"
 		partMode = "/?from.fitment.type=engine&from.fitment.number=EN-57&fitment.number=EN-57"
-		shelf    = `<th scope="col">stock_number</th><th scope="col">condition</th><th scope="col">price</th><th scope="col">warranty</th></tr></thead>`
+		shelf    = `<th scope="col" class="lead">stock_number</th><th scope="col" class="loc"><span class="visually-hidden">Location</span></th><th scope="col">condition</th><th scope="col">warranty</th><th scope="col" class="trail">price</th></tr></thead>`
 		yard     = `<th scope="col">stock_number</th><th scope="col">row</th><th scope="col">photos</th></tr></thead>`
 	)
 
