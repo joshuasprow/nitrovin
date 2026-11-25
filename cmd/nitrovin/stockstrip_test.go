@@ -45,12 +45,16 @@ func TestStockStrip(t *testing.T) {
 	ram := &requestLog{h: vocabServer(t, nil, fixture, fitmentFixture, stockFixture, moreStockFixture)}
 	ramSrv := httptest.NewServer(ram)
 	t.Cleanup(ramSrv.Close)
+	pinned := &requestLog{h: vocabServer(t, nil, fixture, fitmentFixture, stockFixture, orderStockFixture)}
+	pinnedSrv := httptest.NewServer(pinned)
+	t.Cleanup(pinnedSrv.Close)
 	const (
 		alternators = "/?from.vin=1FTEW1EG7FFA12345&part.id=alternator"
 		first       = alternators + "&fitment.number=DEMO-1001"
 		second      = alternators + "&fitment.number=DEMO-1002"
 		rotor       = "/?from.vin=1D7RV1GT5AS123456&part.id=brake-rotor-front&fitment.number=BR-2001"
 		mirrors     = "/?from.vin=1D7RV1GT5AS123456&part.id=mirror"
+		engine      = "/?from.vin=1D7RV1GT5AS123456&part.id=engine&fitment.number=EN-57"
 	)
 	for _, js := range []bool{false, true} {
 		name := map[bool]string{false: "js-off", true: "js-on"}[js]
@@ -336,6 +340,47 @@ func TestStockStrip(t *testing.T) {
 			want := "names, picker, candidates, no number"
 			if got := strings.Join(slices.Compact(rb.tabStops("#fit .vdet", 60)), ", "); got != want {
 				t.Errorf("390 wide, the mirrors: the Tab key goes through %s; want %s", got, want)
+			}
+
+			// A print's columns keep one order at every width (#400): the
+			// id, the field pinned first, the location, the declared
+			// fields in the header's order, the field pinned second. EN-57's
+			// shelf pins two. Its head is in that order at 390, 768 and
+			// 1440, and what is in view, at rest and scrolled to the end,
+			// is in that order too: a held column covers a column, never
+			// passes it.
+			pb := newTab(t, path, pinnedSrv.URL, pinned, js)
+			pb.do(chromedp.Navigate(pinnedSrv.URL + engine))
+			pb.wait(`#stock-region`)
+			const shelfOrder = "Id,stock_number,Location,condition,warranty,price"
+			for _, width := range []int64{390, 768, 1440} {
+				pb.window(width, 900)
+				got := measure[[]string](pb, `(() => {
+					const sc = document.querySelector("#stock-region .pscroll"), cells = [...sc.querySelectorAll("thead tr > *")];
+					const name = c => c.textContent.trim(), dom = cells.map(name);
+					sc.scrollIntoView({block: "center", behavior: "instant"});
+					const seen = () => { const v = sc.getBoundingClientRect(); return cells.filter(c => { const b = c.getBoundingClientRect(), y = b.top + b.height / 2;
+						for (let x = Math.max(b.left, v.left) + 1; x < Math.min(b.right, v.right) - 1; x += 2) { const e = document.elementFromPoint(x, y); if (e && c.contains(e)) return true; }
+						return false; }).sort((a, b) => a.getBoundingClientRect().left - b.getBoundingClientRect().left).map(name); };
+					sc.scrollLeft = 0; const rest = seen(); sc.scrollLeft = sc.scrollWidth; const end = seen(); sc.scrollLeft = 0;
+					return [dom.join(","), rest.join(","), end.join(",")];
+				})()`)
+				if len(got) != 3 || got[0] != shelfOrder {
+					t.Errorf("%d wide: EN-57's shelf heads %q; want %s", width, got, shelfOrder)
+					continue
+				}
+				order := strings.Split(shelfOrder, ",")
+				for _, inView := range got[1:] {
+					at := 0
+					for _, c := range strings.Split(inView, ",") {
+						i := slices.Index(order[at:], c)
+						if i < 0 {
+							t.Errorf("%d wide: EN-57's shelf shows %s; want its columns in the order %s", width, inView, shelfOrder)
+							break
+						}
+						at += i + 1
+					}
+				}
 			}
 		})
 	}
