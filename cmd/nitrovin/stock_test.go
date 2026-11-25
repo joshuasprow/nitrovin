@@ -37,7 +37,8 @@ const (
 // What a surface's bytes hold when the declared order reached them: the
 // fields of the shelf's R-1 and the yard's V-1 in an answer to orderFit
 // (orderedFields) and to orderCut (orderedCut), each value as its line
-// writes it; and Info's report of the two sources (orderedInfo).
+// writes it; and Info's report of the two sources (orderedInfo), the
+// shelf's pin (#404) among it and the yard, which pins none, without one.
 var (
 	orderedFields = []string{
 		`"fields":{"stock_number":"E500","condition":"A","price":1850.00,"tag":"T-9","miles":61250,"status":"on shelf"}`,
@@ -48,8 +49,8 @@ var (
 		`"fields":{"stock_number":"V900","photos":[{"url":"v900-front.jpg","w":1600,"h":1200},{"url":"v900-rear.jpg","w":1600,"h":1200}]}`,
 	}
 	orderedInfo = []string{
-		`"source":"shelf","catalog":"parts-catalog","fields":["stock_number","condition","price","warranty"]`,
-		`"source":"yard","fields":["stock_number","row","photos"]`,
+		`"source":"shelf","catalog":"parts-catalog","fields":["stock_number","condition","price","warranty"],"pin":["stock_number","price"]`,
+		`"source":"yard","fields":["stock_number","row","photos"],"as_of"`,
 	}
 )
 
@@ -86,6 +87,16 @@ func TestStockFieldOrder(t *testing.T) {
 	holds(t, "info", []byte(r.stdout), orderedInfo)
 	if n := strings.Count(r.stdout, `"fields":`); n != len(orderedInfo) {
 		t.Errorf("info reports fields of %d files; want of the %d sources that declare an order:\n%s", n, len(orderedInfo), r.stdout)
+	}
+	reportsPin(t, "info", []byte(r.stdout))
+}
+
+// reportsPin fails unless info, a surface's /v1/info in its own bytes,
+// reports a pin (#404) for the one source that declares one, shelf-order.
+func reportsPin(t *testing.T, what string, info []byte) {
+	t.Helper()
+	if n := bytes.Count(info, []byte(`"pin":`)); n != 1 {
+		t.Errorf("%s reports a pin of %d files; want of shelf-order alone:\n%s", what, n, info)
 	}
 }
 

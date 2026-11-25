@@ -138,6 +138,7 @@ func (e *indexWriter) stock(f *File) {
 	for _, s := range []string{string(f.Holds), f.AsOf, f.StockCatalog, f.Release} {
 		e.str(s)
 	}
+	e.strs(f.Pin)
 	e.count(len(f.Stock), f.Stock == nil)
 	for i := range f.Stock {
 		r := &f.Stock[i]
@@ -441,6 +442,7 @@ func (d *indexReader) stock(f *File) {
 	f.AsOf = d.str()
 	f.StockCatalog = d.str()
 	f.Release = d.str()
+	f.Pin = d.strs(nil)
 	if n, ok := d.count(); ok {
 		f.Stock = make([]StockRow, n)
 	}

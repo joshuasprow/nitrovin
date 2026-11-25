@@ -123,7 +123,7 @@ var (
 )
 
 // stockHeader reads a stock header's own fields.
-func (f *File) stockHeader(source, asOf, catalog, release, connector, fields []byte) error {
+func (f *File) stockHeader(source, asOf, catalog, release, connector, fields, pin []byte) error {
 	s, err := stringAt(source, "/source")
 	if err != nil {
 		return err
@@ -134,6 +134,11 @@ func (f *File) stockHeader(source, asOf, catalog, release, connector, fields []b
 	}
 	if fields != nil {
 		if f.Fields, err = fieldNames(fields); err != nil {
+			return err
+		}
+	}
+	if pin != nil {
+		if f.Pin, err = pinNames(pin, f.Fields); err != nil {
 			return err
 		}
 	}
@@ -179,6 +184,38 @@ func (f *File) stockHeader(source, asOf, catalog, release, connector, fields []b
 		}
 	}
 	return nil
+}
+
+// pinNames reads raw, a stock header's pin (#404): an array of one or two
+// distinct names, each among fields, the header's own. Every other pin is
+// a fault at /pin, and so is any pin under a header that declares no
+// fields.
+func pinNames(raw []byte, fields []string) ([]string, error) {
+	if len(fields) == 0 {
+		return nil, errAt("/pin", "pins only fields the header declares, and it declares none")
+	}
+	list, ok := items(raw, nil)
+	switch {
+	case !ok:
+		return nil, errAt("/pin", "must be an array of strings")
+	case len(list) == 0 || len(list) > 2:
+		return nil, errAt("/pin", "must name one or two fields, not %d", len(list))
+	}
+	var names []string
+	for i, raw := range list {
+		s, err := stringAt(raw, "/pin")
+		if err != nil {
+			return nil, err
+		}
+		switch {
+		case !slices.Contains(fields, s):
+			return nil, errAt("/pin", "%q is not among the header's fields", s)
+		case i > 0 && names[0] == s:
+			return nil, errAt("/pin", "duplicate field %q", s)
+		}
+		names = append(names, s)
+	}
+	return names, nil
 }
 
 // stockConnector reads a header's connector, of a source holding holds.

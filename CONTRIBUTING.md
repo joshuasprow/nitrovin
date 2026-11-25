@@ -402,6 +402,12 @@ a browser holding the two files, opened again from what it stored.
 `TestWorkerConfigStockFields` (`pkg/ui`) holds `/sw.js`'s config to the
 two files' declared fields while a server holds them, and the page a
 browser draws beside that server to the server's columns.
+The shelf's header also pins `stock_number` and `price` (#404) and the
+yard's pins nothing: `TestStockPin` (`pkg/vocab`) refuses each fault at
+`/pin`, and `cmd/nitrovin`'s `TestStockFieldOrder`, `TestServeContract`,
+`TestLibraryStockFieldOrder`, `TestFieldOrderPostgres` and the C
+library's smoke hold `/v1/info` to reporting the shelf's pin and no
+other.
 
 `testdata/vocab/stock/live/` reads the same three sources through
 connectors ([ADR 0020](docs/adr/0020-request-time-stock-the-postgres-connector.md)):

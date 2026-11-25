@@ -1117,6 +1117,7 @@ func TestServeContract(t *testing.T) {
 	}
 	s.run(t, client, base, apiCase{op: opInfo, method: "GET", target: "/v1/info", status: 200, check: func(t *testing.T, body []byte) {
 		holds(t, "GET /v1/info", body, orderedInfo)
+		reportsPin(t, "GET /v1/info", body)
 	}})
 	faults := faultyServer(t, "")
 	for _, c := range faultCases() {

@@ -255,15 +255,24 @@ func TestLibraryStockFieldOrder(t *testing.T) {
 		"shelf-order": {"stock_number", "condition", "price", "warranty"},
 		"yard-order":  {"stock_number", "row", "photos"},
 	}
+	// Of them, shelf-order pins two of its fields (#404) and no other
+	// source pins any.
+	wantPin := map[string][]string{"shelf-order": {"stock_number", "price"}}
 	for i, l := range []*Library{first, openWith(t, s, disk)} {
-		got := map[string][]string{}
+		got, gotPin := map[string][]string{}, map[string][]string{}
 		for _, v := range l.Info().Vocabularies {
 			if v.StockCounts != nil {
 				got[v.Name] = v.Fields
+				if v.Pin != nil {
+					gotPin[v.Name] = v.Pin
+				}
 			}
 		}
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("opened %d times, info's declared orders\n%q\nwant\n%q", i+1, got, want)
+		}
+		if !reflect.DeepEqual(gotPin, wantPin) {
+			t.Errorf("opened %d times, info's pins\n%q\nwant\n%q", i+1, gotPin, wantPin)
 		}
 		f, err := l.Fit(context.Background(), contract.FitRequest{From: contract.FitFrom{Fitment: &contract.FitmentKey{Type: "engine", Number: "EN-57"}}, Stock: []string{"shelf"}, Now: fitNow})
 		if err != nil {
@@ -383,7 +392,7 @@ func TestWorkerConfigStockFields(t *testing.T) {
 	// the browser's print has the server's columns.
 	srv, browser, entries := beside("shelf-order", "yard-order")
 	for _, want := range []string{
-		`"name":"shelf-order","kind":"stock","version":"2026.11.01"`, `"holds":"shelf","fields":["stock_number","condition","price","warranty"]}`,
+		`"name":"shelf-order","kind":"stock","version":"2026.11.01"`, `"holds":"shelf","fields":["stock_number","condition","price","warranty"],"pin":["stock_number","price"]}`,
 		`"name":"yard-order","kind":"stock","version":"2026.11.01"`, `"holds":"yard","fields":["stock_number","row","photos"]}`,
 	} {
 		if !strings.Contains(entries, want) {

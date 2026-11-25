@@ -156,6 +156,12 @@ for v, f in zip(loaded, vocab_files):
     assert os.path.isabs(v["path"]) and os.path.samefile(v["path"], f), (v["path"], f)
 print(f"nitrovin_info: vocabularies {', '.join(names)}")
 
+# A stock header's pin (#404): shelf-order pins two of its fields, and no
+# other loaded file reports one.
+pins = {v["name"]: v["pin"] for v in loaded if "pin" in v}
+assert pins == {"shelf-order": ["stock_number", "price"]}, pins
+print("nitrovin_info: shelf-order pins stock_number and price")
+
 session(hv, "nitrovin_open_vocab", lines(vocab_requests_path), lines(vocab_replies_path))
 
 # The left mirror's two applications, the second with a Drive Type (15)

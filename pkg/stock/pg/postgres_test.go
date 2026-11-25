@@ -734,7 +734,7 @@ func TestFieldOrderPostgres(t *testing.T) {
 		t.Cleanup(s.Close)
 		return s
 	}
-	const declared = `,"fields":["stock_number","condition","price","warranty"]`
+	const declared = `,"fields":["stock_number","condition","price","warranty"],"pin":["stock_number","price"]`
 	engine := [][]vocab.FitmentKey{{{Type: "engine", Number: "EN-57"}}}
 	for _, tc := range []struct {
 		name string
@@ -794,8 +794,8 @@ func TestFieldOrderPostgres(t *testing.T) {
 		}
 	}
 	for _, h := range tr.Info().Vocabularies {
-		if want := []string{"stock_number", "condition", "price", "warranty"}; h.StockCounts != nil && (!slices.Equal(h.Fields, want) || h.Connector != "postgres" || h.Status != contract.StockAvailable) {
-			t.Errorf("%s in Info: %+v; want fields %q beside its connector", h.Name, *h.StockCounts, want)
+		if want, pin := []string{"stock_number", "condition", "price", "warranty"}, []string{"stock_number", "price"}; h.StockCounts != nil && (!slices.Equal(h.Fields, want) || !slices.Equal(h.Pin, pin) || h.Connector != "postgres" || h.Status != contract.StockAvailable) {
+			t.Errorf("%s in Info: %+v; want fields %q and pin %q beside its connector", h.Name, *h.StockCounts, want, pin)
 		}
 	}
 }

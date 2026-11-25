@@ -542,6 +542,8 @@ specifies.
   `catalog`, or whose catalog is not loaded; a yard with a `catalog` or
   `release`; header `fields` (Stock, below) that are not an array of
   distinct, non-empty strings (`/fields/2: duplicate field "price"`); a
+  header `pin` (Stock, below) that is not one or two distinct names of
+  its `fields`, or a `pin` with no `fields`; a
   row without `id` or `location`, or two rows with one `id`;
   a shelf row with both a fitment key and `part`, or neither whole, or
   whose `fields` are not flat; a yard row naming no route; a `vehicle`
@@ -629,7 +631,9 @@ specifies.
   (nothing connects at load), then `available`, or `unavailable` with a
   `reason`. Never a DSN, host or user. Either adds `fields`, the names its
   header declares, in the order every row's fields are answered in
-  ([Stock](#stock)); absent when it declares none. No other
+  ([Stock](#stock)); absent when it declares none. Either adds `pin`,
+  the one or two of those names its header pins ([Stock](#stock));
+  absent when it pins none. No other
   kind has them. A compiled
   catalog adds `compiled`: its `format`, the `source_blake3` of the JSON
   Lines file it was compiled from, the `writer` (the nitrovin version that
@@ -1179,6 +1183,16 @@ lines are written out of it. With it loaded beside the synthetic stock,
 answers the shelf's `R-1`, whose line ends with its stock number, as
 `{"stock_number":"E500","condition":"A","price":1850.00,"tag":"T-9","miles":61250,"status":"on shelf"}`,
 tested on every surface.
+
+**The fields a print keeps in view** (#404). A stock header that declares
+`fields` may carry `pin`, one or two distinct names among its `fields`:
+a print of a row holds the first at its leading edge beside the row's
+id and the second at its trailing edge. Any other `pin`, or a `pin`
+under a header with no `fields`, is a fault at `/pin`. It changes no
+answer's rows: `/v1/info` reports it beside the source's `fields`,
+absent when the header pins none, on every surface; `list` names no
+stock source. `testdata/vocab/stock/order`'s shelf pins
+`["stock_number","price"]`.
 
 **Only the fields read** (`stock_fields`, [ADR
 0019](../adr/0019-what-stock-says.md#amendment-2026-11-20-a-request-names-the-row-fields-it-reads)).
