@@ -298,7 +298,8 @@ the page's own, which plate.js swaps in place (swap). */}}
 {{if .Problems}}<p class="stamp"><span class="of">This vehicle · {{.Catalog}}</span><a class="vbad" href="#problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg><b>{{len .Problems}} {{if eq (len .Problems) 1}}problem{{else}}problems{{end}}</b> <span class="s">{{.Lead}}</span></a></p>
 {{else}}<p class="stamp">This vehicle · {{.Catalog}}</p>
 {{end}}<div class="vline">
-{{with .Make}}<span class="seg g-wmi"><span class="w">{{.}}</span></span>
+{{with .Problems}}{{template "vcount" .}}
+{{end}}{{with .Make}}<span class="seg g-wmi"><span class="w">{{.}}</span></span>
 {{end}}<span class="seg g-vds"><span class="w">{{.Model}}</span></span>
 <span class="seg g-year"><span class="w">{{.Year}}</span></span>
 {{if or .Facts .Problems}}<div class="vfacts" role="group" aria-label="This vehicle, to match the options against">
@@ -308,7 +309,6 @@ the page's own, which plate.js swaps in place (swap). */}}
 {{end}}{{with .Chars}}<dl class="vchars"><div><dt class="visually-hidden">VIN 4–8</dt><dd>{{range .}}<span class="vc"><b>{{.Char}}</b><small>{{.Pos}}</small></span>{{end}}</dd></div></dl>
 {{end}}{{end}}{{with .Problems}}{{template "vcount" .}}
 {{end}}</div>
-{{end}}{{with .Problems}}{{template "vcount" .}}
 {{end}}</div>
 </div>
 {{end}}{{if .Types}}<div class="ptwrap" data-spine="{{.Spine}}">
@@ -344,13 +344,11 @@ the page's own, which plate.js swaps in place (swap). */}}
 {{end}}</section>
 {{- end}}
 
-{{/* vcount is a bad VIN's count at the end of the vehicle's facts row,
-as the block's stamp says it, a link to the problems (#401). The page
-writes it twice: in the details' group, where a wide page and a
-tablet's draw it, and at the facts row's end, where a phone's line ends
-(ui.css); each width draws one. On a phone the one in the details'
-group keeps Chrome's reading-flow from taking the Tab key down the page
-as drawn. */}}
+{{/* vcount is a bad VIN's count in the vehicle's facts row, as the
+block's stamp says it, a link to the problems (#401). The page writes it
+twice: first in the row, where a phone's line leads with it and a wide
+page draws it under the year, and in the details' group, where a
+tablet's draws it after the characters (ui.css); each width draws one. */}}
 {{define "vcount" -}}
 <a class="vcount" href="#problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg><b>{{len .}} {{if eq (len .) 1}}problem{{else}}problems{{end}}</b></a>
 {{- end}}

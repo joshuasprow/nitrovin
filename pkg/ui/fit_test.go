@@ -473,10 +473,12 @@ func TestPageBadVIN(t *testing.T) {
 			`<p id="vin-wrong" class="visually-hidden" aria-hidden="true">Position 10 is wrong.</p>`,
 			`<p class="why">11 - Incorrect Model Year - Position 10 does not match valid model year codes (I, O, Q, U, Z, 0). Decoded data may not be accurate.</p>`,
 			pull, `<div class="problems" id="problems" role="status">`,
-			// The facts row, held while candidates are read (#401), ends
-			// with the stamp's count, a link to the problems: in the
-			// details' group for a wide page, at the row's end for a phone.
-			`</dl>` + "\n" + count3 + "\n" + `</div>` + "\n" + count3 + "\n" + `</div>`,
+			// The facts row, held while candidates are read (#401), carries
+			// the stamp's count, a link to the problems: leading the row,
+			// where a phone's line starts and a wide page draws it under
+			// the year, and after the characters, where a tablet draws it.
+			`<div class="vline">` + "\n" + count3 + "\n" + `<span class="seg g-wmi">`,
+			`</dl>` + "\n" + count3 + "\n" + `</div>` + "\n" + `</div>`,
 		}, []string{`<span class="cell g-check filled bad">`}},
 		// A character no VIN holds: I at position 13, which error 400's
 		// suggested VIN marks. The check digit's card has no sum to show,

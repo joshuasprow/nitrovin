@@ -898,8 +898,8 @@ card's trailing edge, and is a whole number of columns wide.
   2026-11-24: accepted.* With the vehicle found and a stock print open, the
   first statement of the problem is in the first window at 1440, 768
   and 390 px, where the strip under the answer was at 1,130, 1,247 and
-  1,613 px on a VIN whose year code no year uses. The facts row ends
-  with the count as well, so it is held with the row (below).
+  1,613 px on a VIN whose year code no year uses. The facts row carries
+  the count as well, so it is held with the row (below).
 - **The details never wrap.** Where they are wider than their room they
   scroll sideways by themselves, without a scroll bar, and fade at an end
   with more beyond it, as the names' row does (rule 6). They take the
@@ -922,23 +922,26 @@ card's trailing edge, and is a whole number of columns wide.
   ends on it but the cards' lines, which are above the window while it
   is held. What opens lies over it (rule 8).
 - **A bad VIN's count is held** (#398, #401). On a VIN with problems the
-  facts row ends with their count, as the stamp says it: the warning
+  facts row carries their count, as the stamp says it: the warning
   triangle and "N problems" in the error colour, a link to the problems
   under the answer. The stamp scrolls above the window when the row is
-  held; the count stays. On a wide page it is after the characters, at
-  the block's trailing end; under 64 rem, at the details' line's end;
-  under 34 rem, the line's last thing.
+  held; the count stays. On a wide page it is under the year, in the
+  year's column, and the three words stand at the row's top over it: the
+  words stay over their lines, and the details keep their width, so none
+  is cut into the fade. Under 64 rem it is at the details' line's end;
+  under 34 rem it leads the line. *Ruled, 2026-11-24: the count is in
+  view whenever the row is held, and takes no room from the details.*
 - **A phone's facts row is one line, the details first.** Under 34 rem
   the facts row is one line that scrolls sideways (rule 6), held or not:
-  the details, the characters, a rule, then the make, the model and the
-  year in their columns, then the count on a bad VIN. It fades at an end
-  with more beyond it, and the details take the focus and a keyboard
-  scrolls the line from them. A 390 px window shows the details and the
-  characters first, and the words scroll in after them. The block held
-  is 47 px of an 844 px window where it was 124 px and gone by the
-  second candidate. *Ruled, 2026-11-24: the line leads with what a
-  candidate's option text is matched against; the make, the model and
-  the year come after.*
+  a bad VIN's count, the details, the characters, a rule, then the make,
+  the model and the year in their columns. It fades at an end with more
+  beyond it, and the details take the focus and a keyboard scrolls the
+  line from them. A 390 px window shows the count, then the details and
+  the characters, and the words scroll in after them. The block held is
+  47 px of an 844 px window where it was 124 px and gone by the second
+  candidate. *Ruled, 2026-11-24: the line leads with what a candidate's
+  option text is matched against, after a bad VIN's count; the make, the
+  model and the year come after.*
 - **A catalog that files the vehicle under no make**, as one on vPIC's own
   vehicles does, has a block with no make, and the Maker's line is not
   brought down. On a wide page the stamp then takes the first column,
