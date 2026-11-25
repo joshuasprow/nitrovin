@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"cmp"
 	"context"
 	"html"
 	"io"
@@ -56,9 +57,9 @@ var (
 	stripTagRE  = regexp.MustCompile(`<(?:a|p|button) [^>]*class="stk[^"]*"[^>]*>`)
 	saidRE      = regexp.MustCompile(`<span class="visually-hidden">([^<]*)</span>`)
 	stockRowRE  = regexp.MustCompile(`(?s)<tbody>\n<tr><th scope="row" class="id">([^<]*)</th>(<td class="lead">[^<]*</td>)?<td class="loc">([^<]*)</td>(.*?)</tr>\n(?:<tr class="rest"><td colspan="\d+">(.*?)</td></tr>\n)?</tbody>`)
-	stockHeadRE = regexp.MustCompile(`<th scope="col"(?: class="(?:lead|trail)")?>([^<]*)</th>`)
-	stockCellRE = regexp.MustCompile(`<td(?: class="(?:lead|trail)")?>([^<]*)</td>`)
-	stockFoldRE = regexp.MustCompile(`<div(?: class="(?:json|long)")?><dt>([^<]*)</dt> <dd>(?:<details><summary>)?([^<]*)(?:</summary></details>)?</dd></div>`)
+	stockHeadRE = regexp.MustCompile(`<th scope="col"(?: class="(?:lead|trail|fill|last)")?>([^<]*)</th>`)
+	stockCellRE = regexp.MustCompile(`<td(?: class="(?:lead|trail|last)")?>([^<]*)</td>`)
+	stockFoldRE = regexp.MustCompile(`<div(?: class="long")?><dt>([^<]*)</dt> <dd>(?:<details><summary>)?([^<]*)(?:</summary></details>)?</dd></div>`)
 	stockNoteRE = regexp.MustCompile(`(?s)<p class="note">(.*?)</p>`)
 )
 
@@ -112,18 +113,11 @@ func stockRows(s string) []string {
 		for _, h := range stockHeadRE.FindAllStringSubmatch(table, -1) {
 			heads = append(heads, h[1])
 		}
-		// A print whose head ends in a cell with no name fills its line
-		// with one, which is no column's.
-		filler := strings.Contains(table, "<td></td></tr></thead>")
 		for _, m := range stockRowRE.FindAllStringSubmatch(table, -1) {
 			parts := []string{m[1], m[3]}
 			var cells, folded []string
 			if heads != nil {
-				row := m[2] + m[4]
-				if filler {
-					row = strings.TrimSuffix(row, "<td></td>")
-				}
-				for i, c := range stockCellRE.FindAllStringSubmatch(row, -1) {
+				for i, c := range stockCellRE.FindAllStringSubmatch(m[2]+m[4], -1) {
 					name := "no column"
 					if i < len(heads) {
 						name = heads[i]
@@ -391,7 +385,7 @@ func TestPageStock(t *testing.T) {
 		t.Errorf("BR-2001 open: %q\n%s", got, s)
 	}
 	wantYard := []string{"In the yard · 3 as of 2026-11-01T06:30:00Z",
-		"Y-1 | north | stock_number Y100 · color red · row B · photos [\"y100-1.jpg\",\"y100-2.jpg\"] This VIN : the vehicle being looked up",
+		"Y-1 | north | stock_number Y100 · color red · row B · photos 2 This VIN : the vehicle being looked up",
 		"Y-2 | south | stock_number Y101 · color white · row C This VIN : the vehicle being looked up",
 		"Y-3 | south | stock_number Y102 · color blue · row A · added 2026-10-28"}
 	if !slices.Equal(got[2], wantYard) {
@@ -511,8 +505,8 @@ func demoStockWith(t *testing.T, paths []string, stock ...string) *nitrovin.Tran
 // beside the id, before the location, and one it pins second is last.
 // What a row has beyond those is under it,
 // a name and its value each: a null and an empty string print nothing,
-// and a list or an object, which is no column's though declared, is its
-// JSON. A source that declares nothing has no column but the id and the
+// and a list or an object, which is no column's though declared, is how
+// many it holds. A source that declares nothing has no column but the id and the
 // location. The rows with no number are a print under the tape that
 // names them. No print has a head, a foot or a barcode.
 func TestStockPrint(t *testing.T) {
@@ -527,8 +521,8 @@ func TestStockPrint(t *testing.T) {
 		`<section class="stock-kind" aria-labelledby="stock-shelf-h">` + "\n" + `<p class="kind" id="stock-shelf-h" role="heading" aria-level="3"><span class="bar">On the shelf · 4</span> <span class="asof">as of 2026-11-03</span></p>`,
 		`<table class="print idw3">` + "\n" + `<thead><tr><th scope="col" class="id"><span class="visually-hidden">Id</span></th><th scope="col" class="lead">stock_number</th><th scope="col" class="loc"><span class="visually-hidden">Location</span></th>` +
 			`<th scope="col">condition</th><th scope="col">warranty</th><th scope="col" class="trail">price</th></tr></thead>`,
-		`<th scope="col">stock_number</th><th scope="col">row</th><th scope="col">photos</th></tr></thead>`,
-		`<div class="json"><dt>photos</dt> <dd>[{&#34;url&#34;:&#34;v900-front.jpg&#34;,`,
+		`<th scope="col">stock_number</th><th scope="col" class="fill">row</th><th scope="col" class="last">photos</th></tr></thead>`,
+		`<div><dt>photos</dt> <dd>2</dd></div>`,
 	} {
 		if !strings.Contains(s, want) {
 			t.Errorf("EN-57's print lacks %s\n%s", want, s)
@@ -539,7 +533,7 @@ func TestStockPrint(t *testing.T) {
 		`R-2 | west | stock_number=E501, condition=, warranty=, price=9.5e2 | comments turns over; sold "as is"`,
 		"R-3 | west | stock_number=, condition=, warranty=, price= | tag T-11",
 		"R-4 | west | stock_number=E503, condition=B, warranty=, price=1200 | tag T-12",
-		`V-1 | west | stock_number=V900, row=K, photos= | photos [{"url":"v900-front.jpg","w":1600,"h":1200},{"url":"v900-rear.jpg","w":1600,"h":1200}] · color grey · added 2026-10-30`,
+		`V-1 | west | stock_number=V900, row=K, photos= | photos 2 · color grey · added 2026-10-30`,
 		"V-2 | west | stock_number=, row=, photos= | color black · keys true",
 	}
 	if got := stockRows(s); !slices.Equal(got, want) {
@@ -571,13 +565,39 @@ func TestStockPrint(t *testing.T) {
 	}
 }
 
+// TestStockPrintColumns: a print's columns are its sources' declared
+// fields, and a row's field is printed in the column of its name
+// whichever source declares it (#400). With a shelf that declares no
+// field beside one that declares condition and price, the first shelf's
+// condition and price are in those columns, and what no source declares
+// folds. The head says which column stands under the stock strip and
+// which takes the line's rest.
+func TestStockPrintColumns(t *testing.T) {
+	h := stockPages(stockServerOf(t, embedded(t), []string{"shelf-annex", "shelf-columns", "shelf-stock"}), new([]contract.FitRequest))
+	s := fitSection(t, h, "/?from.vin=1D7RV1GT5AS123456&part.id=brake-rotor-front&fitment.number=BR-2001")
+	if head := `<th scope="col" class="loc"><span class="visually-hidden">Location</span></th><th scope="col" class="fill">condition</th><th scope="col" class="last">price</th></tr></thead>`; !strings.Contains(s, head) {
+		t.Errorf("BR-2001's shelf lacks the head %s\n%s", head, s)
+	}
+	want := []string{
+		"A-1 | east | condition=new, price= | stock_number C300",
+		"K-1 | east | condition=A, price=38.5 | bin K-07",
+		"K-2 | west | condition=B, price=41 | ",
+		"S-2 | south | condition=B, price=45 | stock_number A101",
+		"S-3 | north | condition=A, price=52 | stock_number A102 Tagged with a retired number, BR-1999",
+	}
+	if got := stockRows(s); !slices.Equal(got, want) {
+		t.Errorf("BR-2001's shelf\n%s\nwant\n%s\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"), s)
+	}
+}
+
 // TestStockColumn: which of a row's fields are its print's columns and
 // which fold under it. The columns are the fields the rows' sources
-// declare, each once; a field is its row's column only when the row's
-// own source declares it and its value is no list or object; a null and
-// an empty string print nothing, in a column or folded; anything else
-// folds, in the source's order, a list or an object as its JSON, and a
-// value past two lines marked long, to be cut to them.
+// declare, each once; a field is in the column of its name, whichever
+// source declares it (#400), when its value is no list or object; a
+// null and an empty string print nothing, in a column or folded;
+// anything else folds, in the source's order, a list or an object as
+// how many it holds, and a value past two lines marked long, to be cut
+// to them.
 func TestStockColumn(t *testing.T) {
 	row := func(source, id, fields string) contract.StockRow {
 		return contract.StockRow{Source: source, ID: id, Fields: []byte(fields)}
@@ -611,10 +631,10 @@ func TestStockColumn(t *testing.T) {
 		t.Errorf("the columns %q, %d cells a row; want %q and 5: a source with no row here adds none", col.Heads, col.Span(), want)
 	}
 	want := []string{
-		"1: x=, y=, w= | x=1, note=n",
-		"2: x=2, y=, w= | list=[1,2] (JSON), n=3.50, ok=false",
-		`3: x=, y=, w= | y={"k":"v"} (JSON), x=["p"] (JSON)`,
-		"4: x=, y=4, w=0 | x=not b's",
+		"1: x=1, y=, w= | note=n",
+		"2: x=2, y=, w= | list=2 (JSON), n=3.50, ok=false",
+		"3: x=, y=, w= | y=1 (JSON), x=1 (JSON)",
+		"4: x=not b's, y=4, w=0 | ",
 		"5: x=, y=, w= | ",
 		"6: x=, y=, w= | =loose",
 		"7: x=" + strings.Repeat("é", 161) + ", y=, w= | short=" + strings.Repeat("é", 160) + ", more=" + strings.Repeat("é", 161) + " (long)",
@@ -630,10 +650,52 @@ func TestStockColumn(t *testing.T) {
 		t.Errorf("row 5, with no field, has a second line, or row 1 has none")
 	}
 
-	// No source declares a field: no column, and one cell fills the line.
+	// No source declares a field: no column but the id and the location.
 	col = newStockColumn(contract.StockShelf, l, nil, "", "")
-	if col.Heads != nil || col.Span() != 3 || len(col.Rows[1].Cells) != 0 || text(col.Rows[1].Folded) != "x=2, list=[1,2] (JSON), n=3.50, ok=false" {
-		t.Errorf("nothing declared: columns %q, %d cells a row, row 2 %q | %q", col.Heads, col.Span(), text(col.Rows[1].Cells), text(col.Rows[1].Folded))
+	if col.Heads != nil || col.Span() != 2 || !col.LocFill() || len(col.Rows[1].Cells) != 0 || text(col.Rows[1].Folded) != "x=2, list=2 (JSON), n=3.50, ok=false" {
+		t.Errorf("nothing declared: columns %q, %d cells a row, the location filling %v, row 2 %q | %q", col.Heads, col.Span(), col.LocFill(), text(col.Rows[1].Cells), text(col.Rows[1].Folded))
+	}
+}
+
+// TestStockColumnPlace: where the stylesheet sets each column of a print
+// on the row it hangs from (#400). The id and the next column stand
+// under the number's tape, three under the ink, and the last under the
+// stock strip: the field pinned second or, with none pinned and two
+// fields or more, the last field. Where fewer than three stand under the
+// ink, the last of them takes the line's rest; with a field pinned first,
+// the location stands under the ink.
+func TestStockColumnPlace(t *testing.T) {
+	for _, c := range []struct {
+		name        string
+		lead, trail string
+		heads       []string
+		// want is the location's class and each head's, "-" for none.
+		want string
+	}{
+		{"bare", "", "", nil, "fill"},
+		{"one field", "", "", []string{"condition"}, "- fill"},
+		{"two fields", "", "", []string{"condition", "price"}, "- fill last"},
+		{"three fields", "", "", []string{"a", "b", "c"}, "- - fill last"},
+		{"four fields fill the ink", "", "", []string{"a", "b", "c", "d"}, "- - - - last"},
+		{"five fields scroll", "", "", []string{"a", "b", "c", "d", "e"}, "- - - - - last"},
+		{"pinned first alone", "row", "", nil, "fill"},
+		{"pinned first, two fields", "row", "", []string{"a", "b"}, "- fill last"},
+		{"pinned first, three fields", "row", "", []string{"a", "b", "c"}, "- - - last"},
+		{"pinned second alone", "", "price", nil, "fill"},
+		{"pinned both, two fields", "stock_number", "price", []string{"condition", "warranty"}, "- - -"},
+		{"pinned both, one field", "stock_number", "price", []string{"condition"}, "- fill"},
+	} {
+		col := stockColumn{Lead: c.lead, Trail: c.trail, Heads: c.heads, Last: c.trail == "" && len(c.heads) > 1}
+		got := []string{"-"}
+		if col.LocFill() {
+			got[0] = "fill"
+		}
+		for i := range c.heads {
+			got = append(got, cmp.Or(col.HeadClass(i), "-"))
+		}
+		if strings.Join(got, " ") != c.want {
+			t.Errorf("%s: the location's class and the heads' %q; want %q", c.name, strings.Join(got, " "), c.want)
+		}
 	}
 }
 

@@ -332,7 +332,7 @@ that its parts line up down the page.
 | --- | --- | --- |
 | Module `--m` | a sixth of the row under the block: 160 px on a wide page; 9.75 rem, 156 px, under 64 rem | A column. A card is a module less the 8 px between two, and what hangs under the vehicle's block is a whole number of modules wide, less those 8 px. Under 64 rem the module is fixed, half the picker's 19.5 rem, and sets the cards, the block's words and the picker: the cards scroll, six modules (`--col`), the first on the rows' leading edge at rest, the block's words are a module each, and the picker two |
 | `--rail`, `--end` | 20 px each; `--end` is 0 under 64 rem | How far the first column's leading edge and the last column's trailing edge are in from the block's. The gutter that `--rail` leaves beside the first column is the trunk's |
-| `--num`, `--strip` | two modules, and one, each less the 8 px, the first less the lead too. Under 64 rem the same of the row's own sixth, not the module, and no narrower than 9.5 rem and 7.5 rem | A row's two fixed columns: its number's tape and its stock strip. The floors are what they hold: a number of eleven characters, and two counts of three digits |
+| `--num`, `--strip` | two modules, and one, each less the 8 px, the first less the lead too. Under 64 rem the same of the row's own sixth, not the module, and no narrower than 9.5 rem and 7.5 rem | A row's two fixed columns: its number's tape and its stock strip. The floors are what they hold: a number of eleven characters, and two counts of three digits. From 34 rem up a stock print's columns are set on them too (`--print-tape`, `--print-strip`; thermal paper, below) |
 | Spacing `--s1` to `--s5` | 4, 8, 12, 16 and 24 px | The one scale of spaces |
 | Inset `--inset` | 12 px | Text's distance from the edge of its material, on every material |
 | Row `--row` | 3 rem, 48 px; 3.5 rem, 56 px, under 64 rem | The height of a tag laid long, the picker and a blank strip. Under 64 rem it is a finger's: the picker's key in it is 45 px high, a stock strip is a row high, and two wrapped lines of names, 24 px each, are 8 px apart |
@@ -705,7 +705,10 @@ control; the paper is the print (`.receipt` in the stylesheet).
   fainter print: a column's name, what is folded, a note. No other colour
   is printed, and a group's colour never is.
 - **Width:** the paper runs from its tag's content, after the tag's lead,
-  to the tag's trailing end.
+  to the last module's trailing edge, where the candidates' rows and the
+  cards' row end. In part-number mode the part's tag runs on to the
+  plate's edge, and its print still ends there, where the vehicles' rows
+  do: one right edge in both modes (#400).
 - **A kind of stock:** its name and count reversed, a micro label,
   `--thermal` on a small bar of `--on-thermal`, and on the bar's line, at
   the right, its sources' as-of dates, or why one did not answer, each
@@ -723,30 +726,49 @@ control; the paper is the print (`.receipt` in the stylesheet).
   several sources takes the pins of the first that pins. A declared
   column stands under its field's name,
   in the fainter print over a rule of dashes; the id and the location have
-  no name printed. The id, the location and the first pinned field are
-  each as wide as the longest of them and never wrap, short of 24
-  characters; with nothing after it, the location takes the line's rest.
-  A declared column is
-  never narrower than its field's name. The declared columns
-  share the rest of the paper by what they hold: none asks for more than
-  24 characters, and a longer value wraps in its column, between words.
-  Where rows of two
+  no name printed. Where rows of two
   sources share a print, it has a column for every field either declares,
-  each once, and a row leaves empty those its own source does not declare.
+  each once.
+- **On the row (#400):** from 34 rem up the columns are one template, set
+  on the row the print hangs from, so that shelf and yard, and every
+  print on the page, are one set of columns. Each column is a module of
+  the row. The id's runs from the number's tape's leading edge to the
+  second module; the next column, the location or the field pinned
+  first, is the second module, to the ink's edge; under the ink stand
+  three, its thirds; and the last is under the stock strip: the field
+  pinned second or, with none pinned and two fields or more, the last
+  field. On a wide page every column starts on a module's edge, the
+  cards' columns: at 1440 px, 272, 404, 564, 724, 884 and 1044. Under
+  64 rem the tape, the ink and the strip are the row's own (the module,
+  Tokens, above), and the columns are on them. A column's text is in
+  from its edge by the inset, as the row's is: the id under the
+  number, the first column under the ink under the option text, the
+  last under the counts. Where fewer than three columns stand under the
+  ink, the last of them takes the line's rest, to the strip's column, or
+  to the paper's end where nothing is under the strip. A value wider
+  than its column wraps in it, between words; the id, the location and
+  the first pinned field never wrap, short of 24 characters, and a
+  column is never narrower than its field's name, so a print whose
+  values cannot keep the template, or one with more than three columns
+  under the ink, keeps them a module each and scrolls.
 - **Exactly the declared fields are columns**, but one: a declared field
   whose value is the row's id on every row of the print says what the id
-  says, so it is no column and is not folded (#397). A source that
-  declares none
-  prints an id and a location a row, and folds the rest. A null prints
-  nothing. A number or a boolean prints as its JSON. A list or an object
-  is never a column's. A field is printed as its file has it.
-- **The fold:** what a row has beyond its declared fields is under it,
+  says, so it is no column and is not folded (#397). A row's field is
+  printed in the column of its name whichever source declares that
+  column (#400): a shelf that declares no `fields`, beside one that
+  declares `condition` and `price`, has its condition and price in those
+  columns, where a price column that skipped a row's price would be a
+  scanning error at the counter. A print none of whose sources declares
+  any prints an id and a location a row, and folds the rest. A null
+  prints nothing. A number or a boolean prints as its JSON. A list or an
+  object is never a column's. A field is printed as its file has it.
+- **The fold:** what a row has beyond the print's columns is under it,
   indented 24 px, in the fine role: the fainter print, a size under the
   row, at regular weight, so the declared columns and the location are the
   darkest things in a row.
   Each is a name, a colon and its value, one after another, wrapping at 80
-  characters where the paper is wider. A list or an object is its JSON,
-  compact, cut to one line.
+  characters where the paper is wider. A list or an object is how many
+  it holds, "photos: 4", until #391 draws photos.
 - **The clamp:** a folded value past 160 characters, two such lines, is cut
   to two lines behind a plus sign. Pressing it prints it whole, in place,
   behind a minus sign. It is a `details` element whose summary is the

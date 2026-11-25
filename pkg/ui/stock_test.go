@@ -38,6 +38,8 @@ func stockPath(name string) string {
 		dir = filepath.Join(dir, "more")
 	case "shelf-order", "yard-order":
 		dir = filepath.Join(dir, "order")
+	case "shelf-columns":
+		dir = filepath.Join(dir, "columns")
 	}
 	return filepath.Join(dir, name+".jsonl")
 }
@@ -385,7 +387,7 @@ func TestWorkerConfigStockFields(t *testing.T) {
 		vinMode  = "/?from.vin=1D7RV1GT5AS123456&part.id=engine&fitment.number=EN-57"
 		partMode = "/?from.fitment.type=engine&from.fitment.number=EN-57&fitment.number=EN-57"
 		shelf    = `<th scope="col" class="lead">stock_number</th><th scope="col" class="loc"><span class="visually-hidden">Location</span></th><th scope="col">condition</th><th scope="col">warranty</th><th scope="col" class="trail">price</th></tr></thead>`
-		yard     = `<th scope="col">stock_number</th><th scope="col">row</th><th scope="col">photos</th></tr></thead>`
+		yard     = `<th scope="col">stock_number</th><th scope="col" class="fill">row</th><th scope="col" class="last">photos</th></tr></thead>`
 	)
 
 	// Declared: the config says which fields, in the header's order, and

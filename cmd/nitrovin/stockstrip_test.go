@@ -256,6 +256,23 @@ func TestStockStrip(t *testing.T) {
 			if len(cols) == 10 && (cols[7] != 0 || cols[8] < 20 || cols[8] > 36 || math.Abs(cols[9]) > 1) {
 				t.Errorf("1280 wide: %v candidates share a row, and the open one's rows start %v px in from its tag's leading edge and end %v px from its trailing one; want a column of rows, and the print from the tag's lead to its end", -cols[7], cols[8], cols[9])
 			}
+			// The print's columns stand on the cards' columns (#400): each
+			// of shelf's and yard's starts on a card's leading edge, the
+			// id's on the number's tape's, with its text where the
+			// number's is; the first under the ink has its text where the
+			// option text's is; and the print ends with the sixth card.
+			paper := measure[[]float64](tb, `(() => {
+				const r = e => e.getBoundingClientRect(), pad = e => r(e).left + parseFloat(getComputedStyle(e).paddingLeft);
+				const cards = [...document.querySelectorAll(".cards .card")].map(r), tag = document.getElementById("stock-rows").previousElementSibling, tape = tag.querySelector(".numtape");
+				const edges = [r(tape).left, ...cards.map(c => c.left)], heads = [...document.querySelectorAll("#stock-rows .print thead tr")];
+				const cells = heads.flatMap(tr => [...tr.children]);
+				return [cells.length, Math.max(...cells.map(c => Math.min(...edges.map(e => Math.abs(r(c).left - e))))),
+					Math.max(...heads.map(tr => Math.abs(pad(tr.children[0]) - pad(tape)))), Math.max(...heads.map(tr => Math.abs(pad(tr.children[2]) - pad(tag.querySelector(".ink"))))),
+					r(document.querySelector("#stock-rows .receipt")).right - cards[5].right];
+			})()`)
+			if len(paper) != 5 || paper[0] != 6 || paper[1] > 1 || paper[2] > 1 || paper[3] > 1 || math.Abs(paper[4]) > 1 {
+				t.Errorf("1280 wide: the print's columns are %v [cells in its heads, the farthest off a card's edge, the id's text off the number's, the third column's off the option text's, its end past the sixth card's]; want each on a card's edge, its text on the row's", paper)
+			}
 			if len(lines) != 6 {
 				t.Fatalf("1280 wide: %d measures of the block's lines; want 6, two of each of three", len(lines))
 			}

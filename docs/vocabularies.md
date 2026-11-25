@@ -628,7 +628,13 @@ In Go, it is the stock file's `vocab.File.Pin`. On the page a pinned
 field is a column at every width, the first beside the id and the
 second last ([page.md](design/page.md#signature-thermal-paper)), and a
 declared field whose value is its row's id on every row of a print is
-no column there.
+no column there. Where sources share a print, a row's field is printed
+in the column of its name whichever of them declares it, so a source
+that declares no `fields` still fills the columns another declares:
+`testdata/vocab/stock/columns` is a shelf that declares `condition` and
+`price`, and beside `testdata/vocab/stock`'s shelves, which declare
+none, the rotor `BR-2001`'s print has every shelf's condition and price
+in those columns.
 
 A shelf whose catalog is not loaded, a row in neither form, a duplicate
 id, a part the catalog's spine lacks, and a vehicle its vehicle

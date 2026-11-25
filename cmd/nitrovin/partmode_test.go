@@ -138,6 +138,12 @@ func TestPartMode(t *testing.T) {
 			if rows := tb.count("#stock-region tbody"); rows != 3 || tb.count(".phead > .ptag + #stock-rows") != 1 {
 				t.Errorf("DEMO-4001's stock: %d rows, under its tag %d; want 3, 1", rows, tb.count(".phead > .ptag + #stock-rows"))
 			}
+			// The print ends where the vehicles' rows do, as a VIN's print
+			// ends where its candidates' rows do: one right edge in both
+			// modes (#400).
+			if edge := measure[float64](tb, `document.querySelector("#stock-rows .receipt").getBoundingClientRect().right - document.querySelector(".vehs .line").getBoundingClientRect().right`); math.Abs(edge) > 1 {
+				t.Errorf("1280 wide: DEMO-4001's print ends %v px past the vehicles' rows; want their right edge", edge)
+			}
 			tb.audit(name + ", DEMO-4001's stock")
 
 			// The URL is the page: a reload draws it again, and Back steps
