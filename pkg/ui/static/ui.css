@@ -144,7 +144,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
    control on a tag, on a print or on the plate, and one on label tape. A
    dialog's panel is the scheme's, wherever its markup is. */
 .card, .ltag, .stock-kind, .ptpick { --ring: var(--ring-pale); }
-.ptwrap, .problems { --ring: var(--ring-tape); }
+.ptwrap, .pstamp { --ring: var(--ring-tape); }
 dialog[popover], .note[popover] { --ring: var(--link); }
 /* Under a finger the part types list opens with the focus on itself
    (plate.js): from a keyboard there its ring is the page's, drawn inside
@@ -405,18 +405,17 @@ table.sum { width: auto; font-size: 13px; }
 table.sum th, table.sum td { white-space: nowrap; }
 table.sum td { text-align: center; padding: .2rem .45rem; }
 table.sum .skip { color: var(--muted); }
-/* What the decoder says is wrong with a whole VIN, and the VIN it would
-   read in its place: the page's own word on what was typed, so a strip
-   of label tape, stuck on, as wide as the plate, under the answer: a
-   warning triangle in the error colour as tape takes it, then its
-   sentences, raised white. It is under the answer at every width: over
-   the cards it would push the picker under a phone's fold on every VIN
-   with a problem. */
-.problems { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; align-content: center; gap: 0 var(--s2); box-sizing: border-box; min-height: 2.25rem; margin: var(--s4) 0 0; padding: var(--s1) var(--inset); font: var(--type-value-b); color: var(--on-tape); text-shadow: var(--tape-emboss);
-  background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck); }
-.problems p { grid-column: 2; margin: 0; }
-.problems svg { grid-row: 1 / span 9; align-self: start; width: 14px; height: 14px; margin-top: 2px; fill: none; stroke: #ff8a8a; stroke-width: 2.2; }
-.problems .fix { display: inline-block; padding-block: 3px; color: inherit; text-underline-offset: 3px; }
+/* The VIN problems (#problems): a dialog of what the decoder says is
+   wrong with a whole VIN, each problem a row, its code in the data face
+   before its sentence and, muted after it, the positions it names, which
+   the plate strikes; then the VIN the decoder would read in its place,
+   where it has one. Nothing of it is at the page's foot. */
+.plist { margin: 0; padding: 0; list-style: none; }
+.plist li { padding: .55rem 0; border-bottom: 1px solid var(--line); }
+.plist li b { margin-right: .35rem; }
+.plist .where { color: var(--muted); white-space: nowrap; }
+.fixline { margin: .9rem 0 0; }
+.fixline .fix { display: inline-block; padding-block: 3px; }
 
 /* ---- Under the cards --------------------------------------------------
    Everything under the cards is set on one module, the cards' column: a
@@ -498,10 +497,10 @@ table.sum .skip { color: var(--muted); }
 .fitstrip .stamp { grid-row: 1; grid-column: 1 / -1; display: flex; align-items: center; box-sizing: border-box; min-width: 0; height: var(--stamp-h); margin: 0; padding: 0 var(--inset); border-bottom: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss); }
 /* On a VIN with problems the stamp carries them after the catalog: the
    warning triangle and their count in the error colour as tape takes
-   it, then the first one's sentence, a link to the problems under the
-   answer. It keeps the stamp's one line, so the block is no taller:
+   it, then the first one's sentence, a key that opens the VIN problems
+   dialog. It keeps the stamp's one line, so the block is no taller:
    the catalog's name gives way first, then the sentence is cut with
-   "…", its link's name still whole. */
+   "…", its key's name still whole. */
 .fitstrip .stamp:has(.vbad) { gap: var(--s4); white-space: nowrap; }
 .fitstrip .stamp .of { flex: 0 1 auto; min-width: 0; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
 .vbad { flex: 0 1 auto; display: flex; align-items: center; gap: var(--s1) var(--s2); min-width: 0; margin-block: -3px; padding-block: 3px; color: inherit; text-decoration: none; }
@@ -509,6 +508,17 @@ table.sum .skip { color: var(--muted); }
 :is(.vbad, .vcount) b { flex: none; color: #ff8a8a; }
 .vbad .s { min-width: 0; overflow: hidden; text-overflow: ellipsis; font: var(--type-value-b); letter-spacing: normal; text-transform: none; text-decoration: underline; text-underline-offset: 3px; }
 .vbad:focus-visible { outline-color: var(--ring-tape); }
+/* The keys that open the VIN problems keep the look of what they sit
+   on, words on tape: none is a key of metal. */
+button:is(.vbad, .vcount), .pull button { padding-inline: 0; text-align: left; color: inherit; text-shadow: inherit; background: none; border: 0; border-radius: 0; box-shadow: none; }
+button.vbad { font: inherit; letter-spacing: inherit; text-transform: inherit; }
+button:is(.vbad, .vcount):active, .pull button:active { transform: none; box-shadow: none; }
+/* Where a VIN has problems and no vehicle's block is drawn (no catalog,
+   or nothing fits), their key is a stamp of label tape at the plate's
+   foot, as the block's stamp would say it: the count and the leading
+   sentence, cut to one line. */
+.pstamp { display: flex; align-items: center; box-sizing: border-box; min-height: 1.5rem; margin: 0 0 var(--s2); padding: var(--s1) var(--inset); font: var(--type-micro); letter-spacing: var(--track-micro); text-transform: uppercase; white-space: nowrap; color: var(--on-tape); text-shadow: var(--tape-emboss);
+  background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck); }
 .fitstrip .g-wmi { --cm: #ff6b81; }
 .fitstrip .g-vds { --cm: #7db4ff; }
 .fitstrip .g-year { --cm: #ffb067; }
@@ -798,11 +808,11 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
 .cand::before { width: calc(var(--rail) - 2px); border-radius: 0 2.5px 2.5px 0; }
 /* At the candidates' head on a VIN with problems, a stamp of label
    tape, stuck on and tied to the trunk by a stub as the picker is, says
-   to check the VIN before pulling: a link to the problems under the
-   answer. It stops nothing. */
+   to check the VIN before pulling: a key that opens the VIN problems
+   dialog. It stops nothing. */
 .pull { position: relative; justify-self: start; display: flex; align-items: center; box-sizing: border-box; min-height: 2.25rem; margin: var(--s2) var(--end) 0 var(--rail); padding: 0 var(--inset); color: var(--on-tape); text-shadow: var(--tape-emboss);
   background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck); --ring: var(--ring-tape); }
-.pull a { display: flex; align-items: center; gap: var(--s2); min-height: 24px; font: var(--type-micro); letter-spacing: var(--track-micro); text-transform: uppercase; color: inherit; text-underline-offset: 3px; }
+.pull button { display: flex; align-items: center; gap: var(--s2); min-height: 24px; font: var(--type-micro); letter-spacing: var(--track-micro); text-transform: uppercase; text-decoration: underline; text-underline-offset: 3px; }
 .pull svg { flex: none; width: 12px; height: 12px; fill: none; stroke: #ff8a8a; stroke-width: 2.2; }
 .pull::after, .pull::before { content: ""; position: absolute; z-index: 2; background: var(--trunk); pointer-events: none; }
 .pull::after { left: calc(7px - var(--rail)); top: -1px; bottom: calc(-4px - var(--s2)); width: 5px; box-shadow: -1px 0 0 rgb(255 255 255 / .4), 1.5px 0 1px rgb(8 7 15 / .3); }
@@ -1224,7 +1234,7 @@ button.linkish:active { transform: none; box-shadow: none; }
 @media (max-width: 34rem) {
   :root { --held: 2.75rem; }
   .fitstrip { grid-template-rows: var(--stamp-h) var(--held); }
-  .vline { grid-row: 2; grid-column: 1 / -1; align-self: stretch; display: flex; align-items: center; min-width: 0; overflow: auto hidden; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .vline { grid-row: 2; grid-column: 1 / -1; align-self: stretch; display: flex; align-items: center; min-width: 0; margin-left: calc(-1 * var(--wp)); overflow: auto hidden; overscroll-behavior-x: contain; scrollbar-width: none; }
   .vline > .seg { order: 1; flex: none; width: var(--wc); }
   .vline:has(.vdet, .vchars) > .seg:first-of-type { border-left: 1px solid rgb(255 255 255 / .18); }
   .vline .vfacts { display: contents; }

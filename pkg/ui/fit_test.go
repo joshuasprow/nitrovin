@@ -448,8 +448,10 @@ func TestPageFitFacts(t *testing.T) {
 // the cell the decode names, a year code no year uses as a character no
 // VIN holds; a stamp at the candidates' head says to check the VIN; a
 // finished card with no value says why; and the field is invalid, its
-// description the wrong positions. Each links to the problems under the
-// answer. A good VIN's page has none of it.
+// description the wrong positions. Each opens the VIN problems, a
+// dialog, which lists each problem with its code and the positions it
+// names; nothing of them is at the page's foot. A good VIN's page has
+// none of it.
 func TestPageBadVIN(t *testing.T) {
 	h := demoPages(t, true)
 	h.errorTexts = map[int]string{
@@ -457,9 +459,10 @@ func TestPageBadVIN(t *testing.T) {
 		11:  "11 - Incorrect Model Year - Position 10 does not match valid model year codes (I, O, Q, U, Z, 0). Decoded data may not be accurate.",
 		400: "400 - Invalid Characters Present",
 	}
-	const stamp = `<p class="stamp"><span class="of">This vehicle · demo-catalog</span><a class="vbad" href="#problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>`
-	const pull = `<p class="pull"><a href="#problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>Check the VIN before pulling</a></p>` + "\n" + `<ol class="cands"`
-	const count3 = `<a class="vcount" href="#problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg><b>3 problems</b></a>`
+	const stamp = `<p class="stamp"><span class="of">This vehicle · demo-catalog</span><button type="button" class="vbad" popovertarget="problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>`
+	const pull = `<p class="pull"><button type="button" popovertarget="problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>Check the VIN before pulling</button></p>` + "\n" + `<ol class="cands"`
+	const count3 = `<button type="button" class="vcount" popovertarget="problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg><b>3 problems</b></button>`
+	const dialog = `<dialog id="problems" class="pdialog" popover aria-labelledby="problems-h">` + "\n" + `<div class="dialog-head">` + "\n" + `<h2 id="problems-h">VIN problems</h2>` + "\n" + `<button type="button" popovertarget="problems" popovertargetaction="hide">Close</button>`
 	for _, c := range []struct {
 		target     string
 		want, lack []string
@@ -467,24 +470,25 @@ func TestPageBadVIN(t *testing.T) {
 		// A year code no year uses: U at position 10. The stamp leads with
 		// error 11, which names the struck cell, not the decode's first.
 		{"/?from.vin=1FTEW1EG0UFA12345&part.id=alternator", []string{
-			stamp + `<b>3 problems</b> <span class="s">11 - Incorrect Model Year - Position 10 does not match valid model year codes (I, O, Q, U, Z, 0). Decoded data may not be accurate.</span></a></p>`,
+			stamp + `<b>3 problems</b> <span class="s">11 - Incorrect Model Year - Position 10 does not match valid model year codes (I, O, Q, U, Z, 0). Decoded data may not be accurate.</span></button></p>`,
 			`<span class="cell g-year filled bad"><span class="ch">U</span></span>`,
 			`aria-describedby="vin-wrong answer" aria-invalid="true">`,
 			`<p id="vin-wrong" class="visually-hidden" aria-hidden="true">Position 10 is wrong.</p>`,
 			`<p class="why">11 - Incorrect Model Year - Position 10 does not match valid model year codes (I, O, Q, U, Z, 0). Decoded data may not be accurate.</p>`,
-			pull, `<div class="problems" id="problems" role="status">`,
+			pull, dialog,
+			`<li><b class="mono">11</b> <span>Incorrect Model Year - Position 10 does not match valid model year codes (I, O, Q, U, Z, 0). Decoded data may not be accurate.</span> <span class="where">Position 10</span></li>`,
 			// The facts row, held while candidates are read (#401), carries
-			// the stamp's count, a link to the problems: leading the row,
+			// the stamp's count, a key to the problems: leading the row,
 			// where a phone's line starts and a wide page draws it under
 			// the year, and after the characters, where a tablet draws it.
 			`<div class="vline">` + "\n" + count3 + "\n" + `<span class="seg g-wmi">`,
 			`</dl>` + "\n" + count3 + "\n" + `</div>` + "\n" + `</div>`,
-		}, []string{`<span class="cell g-check filled bad">`}},
+		}, []string{`<span class="cell g-check filled bad">`, `class="problems"`, `href="#problems"`, `class="pstamp"`}},
 		// A character no VIN holds: I at position 13, which error 400's
 		// suggested VIN marks. The check digit's card has no sum to show,
 		// and says the decode's sentence.
 		{"/?from.vin=1FTEW1EG7FFAI2345&part.id=alternator", []string{
-			stamp + `<b>2 problems</b> <span class="s">400 - Invalid Characters Present</span></a></p>`,
+			stamp + `<b>2 problems</b> <span class="s">400 - Invalid Characters Present</span></button></p>`,
 			`<span class="cell g-serial filled bad"><span class="ch">I</span></span>`,
 			`<p id="vin-wrong" class="visually-hidden" aria-hidden="true">Position 13 is wrong.</p>`,
 			`<p class="why">1 - Check Digit (9th position) does not calculate properly</p>`,

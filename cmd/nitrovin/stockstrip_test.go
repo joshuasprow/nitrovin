@@ -271,6 +271,22 @@ func TestStockStrip(t *testing.T) {
 				}
 			}
 
+			// A bad VIN's problems are a dialog: the block's stamp is a
+			// key that opens it, with no script too, the focus on its
+			// Close. Nothing of them is at the page's foot.
+			tb.do(chromedp.Navigate(srv.URL + "/?from.vin=1FTEW1EG0UFA12345&part.id=alternator"))
+			tb.wait(`#fit .stamp .vbad`)
+			if js {
+				tb.wait("#vin-form.live")
+			}
+			demo.take()
+			tb.do(chromedp.Click(chromedp.CSS(`#fit .stamp .vbad`)))
+			opened := measure[[]string](tb, `[String(document.getElementById("problems").matches(":popover-open")), document.activeElement.textContent.trim(), String(document.querySelectorAll("#problems .plist li").length), String(!!document.querySelector(".problems, a[href='#problems']"))]`)
+			if !slices.Equal(opened, []string{"true", "Close", "3", "false"}) {
+				t.Errorf("the year-code VIN's stamp pressed: [open, focus, problems, anything at the foot] %q; want the VIN problems open with the focus on Close, three problems, nothing at the foot", opened)
+			}
+			tb.audit(name + ", the VIN problems")
+
 			// Past ten rows, "Show all": every row, in place where scripts
 			// run.
 			rb := newTab(t, path, ramSrv.URL, ram, js)

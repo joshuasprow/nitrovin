@@ -93,9 +93,9 @@ Where the maintainer later changed a rule knowingly, the rule says so after
    *Ruled, 2026-11-24: a VIN's problems are said where the reader works,
    in more than one place at once: the vehicle's block's stamp, the
    struck cell, the stamp at the candidates' head, an empty card, and the
-   strip under the answer (#398). A part pulled for a mistyped VIN is the
-   trade's expensive error. It is a knowing exception to "nothing says
-   the same thing twice".*
+   VIN problems dialog they open (#398). A part pulled for a mistyped VIN
+   is the trade's expensive error. It is a knowing exception to "nothing
+   says the same thing twice".*
 4. **One thing leads; the rest sit on it.** A block has one primary thing.
    What serves it sits on the same piece of material, smaller, after it,
    and is dropped first when the window narrows. It never gets a block of
@@ -578,18 +578,21 @@ leader line or the trunk is pinstripe tape in a group's colour.
   with the tape's lit top and heavy bottom and no shadow of its own: a
   vocabulary's name on a name's tag, and a candidate's or a part's number,
   or a vehicle's name, on a row's.
-- **What the decoder says is wrong** with a whole VIN is a strip of label
-  tape, stuck on, as wide as the plate: a warning triangle in the error
-  colour as tape takes it (`#ff8a8a`), then the decoder's sentences, each
-  a bold row value raised white, and, where the decoder reads another
-  VIN in its place, a link to it, underlined in the tape's own white. It
-  was text in `--bad` on the ground, which rule 1 does not allow. It is
-  under the answer at every width, where the text was: between the
-  brackets and the cards it would push the picker under a phone's fold
-  on every VIN with a problem. The reader is told where they work
-  instead, at no cost in height: the vehicle's block's stamp carries the
-  count and the first sentence, and a stamp at the candidates' head says
-  to check the VIN; each links to this strip (the parts that fit, below).
+- **What the decoder says is wrong** with a whole VIN opens in a dialog,
+  the VIN problems (dialogs, below), and nothing of it is at the page's
+  foot. Its keys are words on label tape where the reader works: the
+  vehicle's block's stamp carries the count and the first sentence, a
+  stamp at the candidates' head says to check the VIN, and the held
+  facts row carries the count (the parts that fit, below). Each is a
+  button that opens the dialog, with no script, and looks as it did as
+  a link: the triangle and the count in the error colour as tape takes
+  it (`#ff8a8a`), the sentence underlined in the tape's own white. Where
+  no vehicle's block is drawn (no catalog, or nothing fits), one stamp of
+  label tape at the plate's foot, under the plate and over its lower
+  brackets, says the count and the first sentence, and opens it.
+  *Ruled, 2026-11-24: the problems move into a dialog; they were a strip
+  of tape under the answer, at the page's foot, which a reader reached
+  only by scrolling past every candidate.*
 - **An empty place stays.** With no vocabulary loaded, or before the model
   is known, the names' place is a blank strip: a 3 px dashed `--faint`
   outline with a sentence in it (empty places, below).
@@ -882,24 +885,25 @@ card's trailing edge, and is a whole number of columns wide.
   catalog's name on the same strip: a warning triangle and the count, in
   the error colour as tape takes it (`#ff8a8a`), then one of the decode's
   sentences, a bold row value underlined in the tape's white, the whole a
-  link to the problems under the answer. The sentence is the first
+  key that opens the VIN problems dialog. The sentence is the first
   problem's that names a cell the plate strikes (error 11's cell 10,
   error 7's cells 1–3, a "!" in the suggested VIN), so the stamp says why
   the red cell is red; where none does, it is the decode's first. On a
   year code no year uses it is error 11's, not error 1's, which comes
   first in the decode. It keeps the strip's one line,
   so the block is no taller: the catalog's name gives way to 40% of the
-  strip, and the sentence is cut with "…", the link's name still whole.
+  strip, and the sentence is cut with "…", the key's name still whole.
   On a wide page whose catalog files the vehicle under no make, where
-  the stamp shares the block's row, the link takes the strip across the
+  the stamp shares the block's row, the key takes the strip across the
   top that a block with a make has, 24 px; the stamp stays beside the
   catalog's word. That block grows, 52 to 77 px on the demo set's vPIC
   catalog, the one place a VIN's problems cost height. *Ruled,
   2026-11-24: accepted.* With the vehicle found and a stock print open, the
   first statement of the problem is in the first window at 1440, 768
-  and 390 px, where the strip under the answer was at 1,130, 1,247 and
-  1,613 px on a VIN whose year code no year uses. The facts row carries
-  the count as well, so it is held with the row (below).
+  and 390 px, where the strip that once held the problems, under the
+  answer, was at 1,130, 1,247 and 1,613 px on a VIN whose year code no
+  year uses. The facts row carries the count as well, so it is held with
+  the row (below).
 - **The details never wrap.** Where they are wider than their room they
   scroll sideways by themselves, without a scroll bar, and fade at an end
   with more beyond it, as the names' row does (rule 6). They take the
@@ -923,8 +927,8 @@ card's trailing edge, and is a whole number of columns wide.
   is held. What opens lies over it (rule 8).
 - **A bad VIN's count is held** (#398, #401). On a VIN with problems the
   facts row carries their count, as the stamp says it: the warning
-  triangle and "N problems" in the error colour, a link to the problems
-  under the answer. The stamp scrolls above the window when the row is
+  triangle and "N problems" in the error colour, a key that opens the
+  VIN problems. The stamp scrolls above the window when the row is
   held; the count stays. On a wide page it is under the year, in the
   year's column, and the three words stand at the row's top over it: the
   words stay over their lines, and the details keep their width, so none
@@ -969,7 +973,7 @@ card's trailing edge, and is a whole number of columns wide.
   stamp of label tape stands at the candidates' head, its stub ending on
   its tape as the picker's does: a warning triangle in the error colour
   as tape takes it, and "Check the VIN before pulling", a micro label, a
-  link to the problems under the answer. It is VIN mode's alone, as
+  key that opens the VIN problems. It is VIN mode's alone, as
   part-number mode asks no VIN, and it stops nothing. The trunk is there
   whenever the picker is, with a part type pressed or none. It is drawn a
   piece an item, so nothing is measured and it needs no anchor
@@ -1248,7 +1252,7 @@ script. There are three kinds.
 
 | Kind | Used for | Width | Backdrop |
 | --- | --- | --- | --- |
-| Dialog (`dialog[popover]`) | Vocabularies, Developers, JSON, the check digit's sum, part-number mode's part types | `min(56rem, 100vw - 2rem)` | `rgb(10 18 26 / .55)` |
+| Dialog (`dialog[popover]`) | Vocabularies, Developers, JSON, the check digit's sum, part-number mode's part types, VIN problems | `min(56rem, 100vw - 2rem)` | `rgb(10 18 26 / .55)` |
 | Note (`.note[popover]`) | How a name on a tag was reached | up to `30rem` | `rgb(10 18 26 / .35)` |
 | Menu (`.menu[popover]`) | The VINs to try | `19rem` | none |
 
@@ -1303,6 +1307,13 @@ script. There are three kinds.
   rule in the vehicle group's blue.
 - **A dialog inside a card** (the check digit's sum) takes the panel's colours,
   not the manila's.
+- **VIN problems** (#398) is what the decoder says is wrong with a whole
+  VIN: a row each, its code in bold in the data face, its sentence, and,
+  muted after it, the positions it names, which the plate strikes; then,
+  where the decoder reads another VIN in its place, a link to it. It
+  opens with the focus on Close, as the other dialogs do, from the keys
+  that say the problems on the page (label tape, above). The field keeps
+  its own description of the wrong positions and stays invalid.
 
 ## Good enough: forms and inputs
 

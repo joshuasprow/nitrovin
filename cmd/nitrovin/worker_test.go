@@ -27,6 +27,7 @@ import (
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/serviceworker"
 	"github.com/chromedp/chromedp"
+	"github.com/joshuasprow/nitrovin-data/pkg/embedded"
 
 	"github.com/joshuasprow/nitrovin/pkg/nitrovin"
 	"github.com/joshuasprow/nitrovin/pkg/ui"
@@ -128,8 +129,9 @@ var builtWorker = sync.OnceValues(func() (ui.Worker, error) {
 	return builds[0], nil
 })
 
-// vocabServer serves the API with the embedded data and the files at
-// paths loaded, with the worker's module when w is not nil.
+// vocabServer serves the API with the embedded data and its error codes'
+// texts, as serve does, and the files at paths loaded, with the worker's
+// module when w is not nil.
 func vocabServer(t *testing.T, w *ui.Worker, paths ...string) http.Handler {
 	t.Helper()
 	d, err := nitrovin.Embedded()
@@ -144,7 +146,11 @@ func vocabServer(t *testing.T, w *ui.Worker, paths ...string) http.Handler {
 	if err != nil {
 		t.Fatal(err)
 	}
-	a, err := newAPI(loaded{d, tr}, log.New(io.Discard, "", 0), io.Discard, nil, "")
+	texts, err := errorTexts(embedded.Artifact())
+	if err != nil {
+		t.Fatal(err)
+	}
+	a, err := newAPI(loaded{d, tr}, log.New(io.Discard, "", 0), io.Discard, texts, "")
 	if err != nil {
 		t.Fatal(err)
 	}
