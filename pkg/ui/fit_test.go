@@ -147,7 +147,7 @@ func TestPageFit(t *testing.T) {
 		t.Errorf("the pickup's part types %q; want %q", got, want)
 	}
 	for _, want := range []string{
-		`<p class="stamp">This vehicle · demo-catalog</p>`,
+		`<p class="stamp">This vehicle · demo-catalog</p>` + "\n" + `<div class="vline">`,
 		// The catalog's make, in its own word, with the Maker's line to it.
 		`<span class="seg g-wmi"><span class="w">Ford</span></span>` + "\n" + `<span class="seg g-vds"><span class="w">F150</span></span>`,
 		`<span class="seg g-year"><span class="w">2015</span></span>`,
@@ -407,16 +407,17 @@ func TestCatalogEntries(t *testing.T) {
 // its position, so "VIN G, 8th digit" is matched at a glance. The mark on
 // such a candidate says in plain words that the options are the reader's
 // to match. The block says it whatever is pressed, and before the names
-// and the candidates.
+// and the candidates. The details take focus, so a keyboard scrolls them
+// where they are wider than their room (#401).
 func TestPageFitFacts(t *testing.T) {
 	h := demoPages(t, true)
 	const pickup = "/?from.vin=1FTEW1EG7FFA12345"
 	s := fitSection(t, h, pickup+"&part.id=alternator")
 	for _, want := range []string{
-		`<dl class="vfacts" aria-label="This vehicle, to match the options against">`,
+		`<div class="vfacts" role="group" aria-label="This vehicle, to match the options against">` + "\n" + `<dl class="vdet" tabindex="0">`,
 		`<div><dt>Body</dt><dd>Pickup</dd></div>`,
 		`<div><dt>Engine</dt><dd>3.5 L · 6 cyl · Gasoline</dd></div>`,
-		`<div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>`,
+		`<dl class="vchars"><div><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div></dl>`,
 		`<span class="mk text">Match the options yourself</span>`,
 	} {
 		if !strings.Contains(s, want) {

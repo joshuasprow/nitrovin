@@ -477,15 +477,22 @@ table.sum .skip { color: var(--muted); }
 
 /* The vehicle's block (page.html's fit): label tape, stuck on. Its stamp,
    "This vehicle" and the catalog, is a strip across its top; under it,
-   the catalog's make, its model and the year, each raised white over its
-   group's mark on the line that comes down from its card (.seg, whose
-   line is the last --drop above the block and ends on its top edge), then
-   what the decode says of the vehicle (.vfacts): a small label before
-   each value, in the size and face of a candidate's option text, which
-   they are read against, and the VIN's characters 4 to 8 over the
-   Vehicle group's mark, each with its position under it. No line runs to
-   the page's blank strips. */
-.fitstrip { --drop: 30px; --stamp-h: 1.5rem; display: grid; grid-template-columns: repeat(2, var(--wc)) minmax(0, 1fr); align-items: center; margin-top: var(--drop); min-height: 2.9rem; color: var(--on-tape);
+   the facts row (.vline): the catalog's make, its model and the year,
+   each raised white over its group's mark on the line that comes down
+   from its card (.seg, whose line is the last --drop above the block and
+   ends on its top edge), then what the decode says of the vehicle
+   (.vfacts): its details (.vdet), a small label before each value, in
+   the size and face of a candidate's option text, which they are read
+   against, and the VIN's characters 4 to 8 over the Vehicle group's
+   mark, each with its position under it, at the block's trailing end.
+   No line runs to the page's blank strips.
+   The facts row is as high at each width as --held says (below), so the
+   page knows how much of the window it covers when it is held. The
+   details never wrap: where they are wider than their room they scroll
+   sideways by themselves, and fade at an end with more beyond it (a
+   scroll-driven animation; without it they are cut square). */
+:root { --held: 4.625rem; }
+.fitstrip { --drop: 30px; --stamp-h: 1.5rem; --ring: var(--ring-tape); display: grid; grid-template-columns: repeat(2, var(--wc)) minmax(0, 1fr); grid-template-rows: var(--stamp-h) 2.125rem calc(var(--held) - 2.125rem); align-items: center; margin-top: var(--drop); color: var(--on-tape);
   background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck); }
 .fitstrip:has(.g-wmi) { grid-template-columns: repeat(3, var(--wc)) minmax(0, 1fr); }
 .fitstrip .stamp { grid-row: 1; grid-column: 1 / -1; display: flex; align-items: center; box-sizing: border-box; min-width: 0; height: var(--stamp-h); margin: 0; padding: 0 var(--inset); border-bottom: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss); }
@@ -505,21 +512,36 @@ table.sum .skip { color: var(--muted); }
 .fitstrip .g-wmi { --cm: #ff6b81; }
 .fitstrip .g-vds { --cm: #7db4ff; }
 .fitstrip .g-year { --cm: #ffb067; }
-.seg { position: relative; grid-row: 2; align-self: stretch; display: flex; align-items: center; justify-content: center; min-width: 0; padding: .35rem .3rem; text-align: center; }
+.vline { display: contents; }
+.vdet:focus-visible { outline: 3px solid var(--ring); outline-offset: -3px; }
+.seg { position: relative; grid-row: 2; align-self: stretch; display: flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: 0; padding: .35rem .3rem; text-align: center; }
 .seg .w { text-shadow: var(--tape-emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere; }
 .seg::after { content: ""; position: absolute; left: calc(50% - 2.5px); top: calc(-1px - var(--drop) - var(--stamp-h)); height: calc(var(--drop) + 1px); border-left: 5px solid var(--c); filter: var(--stripe-lift); }
-.vfacts { position: relative; grid-row: 2; grid-column: -2; align-self: stretch; display: flex; flex-wrap: wrap; align-items: center; align-content: center; gap: 0 var(--s4); min-width: 0; margin: 0; padding: var(--s1) var(--inset); border-left: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss); }
-.vfacts > div { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.vfacts { position: relative; grid-row: 2; grid-column: -2; align-self: stretch; display: flex; align-items: center; gap: var(--s4); min-width: 0; padding: var(--s1) var(--inset); border-left: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss); }
+.vdet, .vchars, .vfacts dd { margin: 0; }
+.vdet { flex: 0 1 auto; display: flex; align-items: center; gap: var(--s4); min-width: 0; overflow: auto hidden; overscroll-behavior-x: contain; scrollbar-width: none; }
+.vdet > div { flex: none; display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
 .vfacts dt { color: #aeb7c0; text-shadow: none; }
-.vfacts dd { margin: 0; }
-/* The characters keep the block's trailing end, beside the details,
-   however many lines those take. */
-.vfacts:has(.vchars) { padding-right: calc(var(--inset) + 6.6rem + var(--s4)); }
-.vfacts > .vchars { position: absolute; right: var(--inset); top: 50%; transform: translateY(-50%); }
+@supports (animation-timeline: scroll()) {
+  .vdet { mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline); }
+}
+.vchars { flex: none; margin-left: auto; }
 .vchars dd { display: flex; gap: 3px; }
 .vc { display: grid; justify-items: center; min-width: 1.15rem; }
 .vc b { width: 100%; text-align: center; border-bottom: 3px solid #7db4ff; }
 .vc small { color: #aeb7c0; text-shadow: none; }
+
+/* Held: while a part type's candidates are listed, the block's facts row
+   stays at the window's top as the page scrolls, at every width (#401).
+   The block sticks with its stamp and its top edge above the window, so
+   only the facts row and the block's foot show; the section's end lets
+   it go. The window's scroll padding is that height, so a row brought
+   into view, by focus, a link to a fragment or a press (plate.js's
+   reveal), stops under it, never beneath it. It lies over what scrolls
+   under it, the trunk and the tags hung from it, and under what opens:
+   the picker's list is in the top layer. Nothing animates as it sticks. */
+.fit:has(> .cands) > .fitstrip { position: sticky; top: calc(-1px - var(--stamp-h)); z-index: 5; }
+:root:has(.fit > .cands) { scroll-padding-top: calc(var(--held) + 3px); }
 
 /* The band under the block: the picker, two columns, and beside it the
    names' row, which reaches the block's trailing edge. The section is a
@@ -881,13 +903,17 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
 
 /* A wide page: the block's words are under their cards, the Maker's and
    the Vehicle's lines straight down to them and the Model year's stepped
-   left, and its stamp and details share its one row. A catalog that
-   files the vehicle under no make has nothing for the first column, so
-   the stamp is there, beside the catalog's word for the vehicle, which
-   it says whose it is, and the block is a row shorter. */
+   left, and its stamp and details share its one row, a detail a line:
+   two lines high, three where the decode has three. The facts row lays
+   its words on the block's columns (a subgrid). A catalog that files the
+   vehicle under no make has nothing for the first column, so the stamp
+   is there, beside the catalog's word for the vehicle, which it says
+   whose it is, and the block is a row shorter. */
 @media (width >= 64rem) {
+  :root { --held: 2.75rem; }
+  :root:has(.vdet > :nth-child(3)) { --held: 3.875rem; }
   .joins { height: 8px; }
-  .fitstrip, .fitstrip:has(.g-wmi) { --drop: 8px; --stamp-h: 20px; grid-template-columns: 170fr 170fr 170fr 510fr; min-height: 0; padding-inline: 15px; }
+  .fitstrip, .fitstrip:has(.g-wmi) { --drop: 8px; --stamp-h: 20px; grid-template-columns: 170fr 170fr 170fr 510fr; grid-template-rows: var(--stamp-h) var(--held); padding-inline: 15px; }
   .fitstrip .stamp { margin-inline: -15px; padding-left: calc(var(--rail) + var(--lead) + var(--inset) - 1px); }
   .fitstrip .g-wmi { grid-column: 1; }
   .fitstrip .g-vds { grid-column: 2; }
@@ -900,6 +926,12 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
   .fitstrip:not(:has(.g-wmi)) .stamp:has(.vbad) { display: contents; }
   .fitstrip:not(:has(.g-wmi)) .stamp .of { grid-row: 2; grid-column: 1; align-self: center; max-width: none; padding: var(--s1) var(--s2) var(--s1) calc(var(--rail) + var(--lead) + var(--inset) - 16px); white-space: normal; overflow-wrap: anywhere; }
   .fitstrip:not(:has(.g-wmi)) .vbad { grid-row: 1; grid-column: 1 / -1; box-sizing: border-box; height: var(--stamp-h); margin: 0 -15px; padding: 0 var(--inset) 0 calc(var(--rail) + var(--lead) + var(--inset) - 1px); white-space: nowrap; border-bottom: 1px solid rgb(255 255 255 / .18); }
+  .vline { grid-row: 2; grid-column: 1 / -1; align-self: stretch; display: grid; grid-template-columns: subgrid; }
+  .vline > * { grid-row: 1; }
+  .fitstrip:not(:has(.g-wmi)) .vline { grid-column: 2 / -1; }
+  .fitstrip:not(:has(.g-wmi)) .g-vds { grid-column: 1; }
+  .fitstrip:not(:has(.g-wmi)) .g-year { grid-column: 2; }
+  .vdet { flex-direction: column; gap: 0; align-self: stretch; align-items: flex-start; justify-content: center; }
 }
 /* A narrow page, a tablet's or a phone's, is pressed with a finger. A
    row is 3.5rem, so the picker's key and a stock strip are 44px high
@@ -1092,11 +1124,12 @@ button.linkish:active { transform: none; box-shadow: none; }
   /* The parts that fit are outside the row that scrolls. The block's
      words are packed at its leading end, a module each, centred on the
      cards' columns as they rest (--wc, --wp, above), and its stamp and
-     details are rows of their own, edge to edge. The lines from the
-     cards, which move, are carried to it (.carry, below). */
+     details are rows of their own, edge to edge, the details one line,
+     as high as the characters at its end. The lines from the cards,
+     which move, are carried to it (.carry, below). */
   .fitstrip { padding-left: var(--wp); }
   .fitstrip :is(.stamp, .vfacts) { margin-left: calc(-1 * var(--wp)); }
-  .fitstrip .vfacts { grid-row: 3; grid-column: 1 / -1; border-left: 0; border-top: 1px solid rgb(255 255 255 / .18); }
+  .fitstrip .vfacts { grid-row: 3; grid-column: 1 / -1; padding-block: 0; border-left: 0; border-top: 1px solid rgb(255 255 255 / .18); }
   .fitstrip .seg::after { display: none; }
   @supports (animation-timeline: scroll()) {
     .hang { mask: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent) top / 100% calc(100% - 14px) no-repeat, linear-gradient(#000, #000) bottom / 100% 14px no-repeat; animation: nt-fade linear both; animation-timeline: scroll(self inline); }
@@ -1159,6 +1192,40 @@ button.linkish:active { transform: none; box-shadow: none; }
 }
 @media (width < 64rem) and (prefers-reduced-motion: no-preference) {
   .hang { scroll-behavior: smooth; }
+}
+
+/* A phone: the block's facts row is one line that scrolls sideways by
+   itself (#401), the words in their columns, then the details, then the
+   characters, and fades at an end with more beyond it. The details take
+   the focus there as on a wider page, and the line is what a keyboard
+   scrolls from them. The lines carried to the words follow that line's
+   scroll too: the year's word is a view timeline (--held) in it, and
+   --held-s is how far the line has moved the words, from the year's
+   left edge at the line's trailing edge (its progress 0) to its right
+   edge at the leading one (1). With the line at rest, or no view
+   timeline, it is 0. A word scrolled out of the window takes its line
+   to the window's edge, as a card does. */
+@property --held-s { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@keyframes held-s { from { --held-s: calc(var(--xy) - .5 * var(--wc) - 100cqw + 2px); } to { --held-s: calc(var(--xy) + .5 * var(--wc)); } }
+@media (max-width: 34rem) {
+  :root { --held: 2.75rem; }
+  .fitstrip { grid-template-rows: var(--stamp-h) var(--held); }
+  .vline { position: relative; grid-row: 2; grid-column: 1 / -1; align-self: stretch; display: flex; align-items: center; min-width: 0; overflow: auto hidden; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .vline > .seg { flex: none; width: var(--wc); }
+  .vline:has(.vfacts) > .g-year { border-right: 1px solid rgb(255 255 255 / .18); }
+  .vline .vfacts { display: contents; }
+  .vline .vdet { flex: none; align-self: stretch; margin-left: var(--inset); overflow: visible; }
+  .vline .vchars { margin: 0 var(--inset) 0 var(--s4); }
+  @supports (animation-timeline: scroll()) {
+    .vline { mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline); }
+  }
+  @supports (animation-timeline: --a) and (timeline-scope: --a) {
+    #answer { timeline-scope: --hang, --held; }
+    .vline > .g-year { view-timeline: --held x; }
+    .carry { animation: hang-p linear both, held-s linear both; animation-timeline: --hang, --held;
+      --fv: calc(var(--gutter) + var(--xv) - var(--held-s)); --fy: calc(var(--gutter) + var(--xy) - var(--held-s)); }
+    .carry:has(span:nth-child(4)) { --fm: calc(var(--gutter) + var(--xm) - var(--held-s)); }
+  }
 }
 
 /* A small window: the plate's cells are closer, and the one-cell groups'

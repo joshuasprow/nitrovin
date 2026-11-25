@@ -483,14 +483,16 @@
   // list, the first candidates under a pressed part type, the rows under
   // a candidate's stock strip. It never scrolls what was pressed (from)
   // off the top, so the picker or the candidate's tag stays in sight
-  // above what it opened, and it never scrolls up. Following the link's
-  // focus would do as much for a keyboard; a pointer has no focus to
-  // follow.
+  // above what it opened, and it never scrolls up. The top is under the
+  // vehicle's facts row where it is held (ui.css): the window's scroll
+  // padding, its height. Following the link's focus would do as much for
+  // a keyboard; a pointer has no focus to follow.
   const reveal = (what, from) => {
     if (!what) return;
     const pad = 16;
+    const held = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
     const over = what.getBoundingClientRect().bottom + pad - window.innerHeight;
-    const room = (from || what).getBoundingClientRect().top - pad;
+    const room = (from || what).getBoundingClientRect().top - pad - held;
     const by = Math.min(over, room);
     if (by > 0) window.scrollBy({ top: by, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   };
