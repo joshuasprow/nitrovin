@@ -168,9 +168,18 @@ func TestStockStrip(t *testing.T) {
 			} else if measure[bool](tb, under) {
 				t.Error("390 wide, no script: the names are after the candidates in the document; want the markup's order")
 			}
-			// The vehicle's line is carried from the names, which scroll,
-			// to the strip of parts, which does not: under the row it
-			// comes down where the row left it, wherever the row is.
+			// On a phone no line runs from the cards to the block (#401):
+			// its facts row leads with the details, so the words are past
+			// the row's end at rest.
+			if drawn := measure[[]string](tb, `[".carry", ".cards"].map(s => getComputedStyle(document.querySelector(s), s === ".cards" ? "::before" : null).display)`); len(drawn) != 2 || drawn[0] != "none" || drawn[1] != "none" {
+				t.Errorf("390 wide: the lines from the cards to the block are drawn %v; want none", drawn)
+			}
+			tb.audit(name + ", 390 wide")
+			// A tablet's: the vehicle's line is carried from the cards,
+			// which scroll, to the vehicle's block, which does not: under
+			// the row it comes down where the row left it, wherever the
+			// row is.
+			tb.window(768, 1024)
 			carried := measure[[]float64](tb, `(async () => {
 				if (!CSS.supports("animation-timeline: --a") || !CSS.supports("timeline-scope: --a")) return [];
 				const hang = document.querySelector(".hang"), out = [];
@@ -185,10 +194,9 @@ func TestStockStrip(t *testing.T) {
 			})()`)
 			for i := 0; i+1 < len(carried); i += 2 {
 				if math.Abs(carried[i]-carried[i+1]) > 1.5 {
-					t.Errorf("390 wide: under the row the vehicle's line is at %v, and in the row at %v; want one line, wherever the row is scrolled", carried[i], carried[i+1])
+					t.Errorf("768 wide: under the row the vehicle's line is at %v, and in the row at %v; want one line, wherever the row is scrolled", carried[i], carried[i+1])
 				}
 			}
-			tb.audit(name + ", 390 wide")
 			// Wide again, the names are beside the picker, and after it
 			// in the document.
 			tb.window(1280, 900)

@@ -255,11 +255,13 @@ that says what the vehicle is: under its stamp, "This vehicle" and the
 catalog, its facts row (.vline), the make, the model and the year it
 asked the catalog with, on the lines from their cards, then what the
 decode says of the vehicle to match a candidate's options against
-(.vfacts): its details (.vdet) and the VIN's characters 4 to 8. While
+(.vfacts): its details (.vdet) and the VIN's characters 4 to 8, then on
+a VIN with problems their count (.vcount), a link to them. While
 candidates are listed the facts row is held at the window's top, and
-on a phone it is one line that scrolls sideways (#401). The details
-take focus, so a keyboard scrolls them, and on a phone the line they
-are in. Under the block is one band, the section's next row: the part
+on a phone it is one line that scrolls sideways and leads with the
+details (#401). The details take focus, so a keyboard scrolls them,
+and on a phone the line they are in. Under the block is one band, the
+section's next row: the part
 type picker (#366), a key of the second tape on a short piece of label
 tape (.ptwrap), which names the pressed part type
 and opens the part types dialog as its list, with a key beside it that
@@ -299,12 +301,14 @@ the page's own, which plate.js swaps in place (swap). */}}
 {{with .Make}}<span class="seg g-wmi"><span class="w">{{.}}</span></span>
 {{end}}<span class="seg g-vds"><span class="w">{{.Model}}</span></span>
 <span class="seg g-year"><span class="w">{{.Year}}</span></span>
-{{with .Facts}}<div class="vfacts" role="group" aria-label="This vehicle, to match the options against">
-{{with .Rows}}<dl class="vdet" tabindex="0">
+{{if or .Facts .Problems}}<div class="vfacts" role="group" aria-label="This vehicle, to match the options against">
+{{with .Facts}}{{with .Rows}}<dl class="vdet" tabindex="0">
 {{range .}}<div><dt>{{.Label}}</dt><dd>{{.Value}}</dd></div>
 {{end}}</dl>
 {{end}}{{with .Chars}}<dl class="vchars"><div><dt class="visually-hidden">VIN 4–8</dt><dd>{{range .}}<span class="vc"><b>{{.Char}}</b><small>{{.Pos}}</small></span>{{end}}</dd></div></dl>
+{{end}}{{end}}{{with .Problems}}{{template "vcount" .}}
 {{end}}</div>
+{{end}}{{with .Problems}}{{template "vcount" .}}
 {{end}}</div>
 </div>
 {{end}}{{if .Types}}<div class="ptwrap" data-spine="{{.Spine}}">
@@ -338,6 +342,17 @@ the page's own, which plate.js swaps in place (swap). */}}
 {{end}}{{end}}{{else}}<p class="blank"><span>{{.Blank}}</span>{{if .Add}}<button type="button" popovertarget="vocabularies">Add a catalog</button>{{end}}{{range .Ways}}<a href="{{.Href}}">{{.Text}}</a>{{end}}</p>
 {{end}}{{with .Error}}<p class="error" role="alert">{{.}}</p>
 {{end}}</section>
+{{- end}}
+
+{{/* vcount is a bad VIN's count at the end of the vehicle's facts row,
+as the block's stamp says it, a link to the problems (#401). The page
+writes it twice: in the details' group, where a wide page and a
+tablet's draw it, and at the facts row's end, where a phone's line ends
+(ui.css); each width draws one. On a phone the one in the details'
+group keeps Chrome's reading-flow from taking the Tab key down the page
+as drawn. */}}
+{{define "vcount" -}}
+<a class="vcount" href="#problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg><b>{{len .}} {{if eq (len .) 1}}problem{{else}}problems{{end}}</b></a>
 {{- end}}
 
 {{/* stock-strip is a candidate's stock strip, at its tag's trailing end

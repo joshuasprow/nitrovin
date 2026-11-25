@@ -459,6 +459,7 @@ func TestPageBadVIN(t *testing.T) {
 	}
 	const stamp = `<p class="stamp"><span class="of">This vehicle · demo-catalog</span><a class="vbad" href="#problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>`
 	const pull = `<p class="pull"><a href="#problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>Check the VIN before pulling</a></p>` + "\n" + `<ol class="cands"`
+	const count3 = `<a class="vcount" href="#problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg><b>3 problems</b></a>`
 	for _, c := range []struct {
 		target     string
 		want, lack []string
@@ -472,6 +473,10 @@ func TestPageBadVIN(t *testing.T) {
 			`<p id="vin-wrong" class="visually-hidden" aria-hidden="true">Position 10 is wrong.</p>`,
 			`<p class="why">11 - Incorrect Model Year - Position 10 does not match valid model year codes (I, O, Q, U, Z, 0). Decoded data may not be accurate.</p>`,
 			pull, `<div class="problems" id="problems" role="status">`,
+			// The facts row, held while candidates are read (#401), ends
+			// with the stamp's count, a link to the problems: in the
+			// details' group for a wide page, at the row's end for a phone.
+			`</dl>` + "\n" + count3 + "\n" + `</div>` + "\n" + count3 + "\n" + `</div>`,
 		}, []string{`<span class="cell g-check filled bad">`}},
 		// A character no VIN holds: I at position 13, which error 400's
 		// suggested VIN marks. The check digit's card has no sum to show,
@@ -486,7 +491,7 @@ func TestPageBadVIN(t *testing.T) {
 		// Nothing pressed: no candidates, so no stamp at their head.
 		{"/?from.vin=1FTEW1EG0UFA12345", []string{stamp}, []string{`class="pull"`}},
 		{"/?from.vin=1FTEW1EG7FFA12345&part.id=alternator", []string{`<p class="stamp">This vehicle · demo-catalog</p>`, `aria-describedby="answer">`},
-			[]string{"vbad", `class="pull"`, "aria-invalid", "vin-wrong", "data-wrong", `class="why`, ` bad"`, `id="problems"`}},
+			[]string{"vbad", "vcount", `class="pull"`, "aria-invalid", "vin-wrong", "data-wrong", `class="why`, ` bad"`, `id="problems"`}},
 	} {
 		status, _, body := response(t, h, "GET", c.target, nil)
 		if status != 200 {

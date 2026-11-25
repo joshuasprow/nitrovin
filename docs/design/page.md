@@ -168,6 +168,13 @@ Where the maintainer later changed a rule knowingly, the rule says so after
    was sent back because it never detours. It leaves the block and goes
    straight down, in the gutter between the plate's edge and the cards'
    edge.*
+   *Ruled, 2026-11-24: under 34 rem no line runs from the cards to the
+   vehicle's block, a knowing break of this rule (#401). A phone's facts
+   row leads with the details, so at rest the words are past the row's
+   end. Lines that followed them would need a view timeline for each
+   word, and in Chrome 158 those drop the section's reading-flow to the
+   markup's order, so the Tab key goes to the names before the
+   candidates (TestStockStrip, without scripts).*
 8. **What opens hangs from its control and overlaps the page.** A list or a
    note opened from a control is anchored to it, no wider than it where it
    is a list, and lies over what is beneath. It does not push the page
@@ -338,7 +345,7 @@ lengths are the module's or a floor of their own.
 | --- | --- | --- |
 | 64 rem | Six cards in one row, each wide enough for its rows | The cards, the block's words and the picker are on one module, 9.75 rem; a row's columns are its own sixths. The cards scroll sideways. The leader lines and the stepped lines are not drawn, and the lines to the block are carried. The block's words are packed at its leading end, and its details are one line under them. `--end` is 0, the row is 3.5 rem and the display 18 px. A row's years are under its number, and its tape and strip stand at its top. The keys over the plate are 44 px high |
 | 46 rem | The label of a one-cell group, 47 px, over a cell of 40 | Those three labels are not drawn. The cells stand 2 px apart, not 4, and the page's margin is 0.5 rem |
-| 34 rem | A cell wide enough for a finger, in one row of 17; the names beside the picker; a row's ink beside its number; a print's columns on its paper; the block's details under its words | The plate is two rows. The picker is the row's width, and the names are under the candidates. A row is two lines. The print scrolls sideways, holding the row's id and what its header pins. The block's facts are one line that scrolls sideways. Part-number mode's fields stack, and its switch is the plate's width. The check digit's sum is turned on its side |
+| 34 rem | A cell wide enough for a finger, in one row of 17; the names beside the picker; a row's ink beside its number; a print's columns on its paper; the block's details under its words | The plate is two rows. The picker is the row's width, and the names are under the candidates. A row is two lines. The print scrolls sideways, holding the row's id and what its header pins. The block's facts are one line that scrolls sideways, the details first, and no line runs from the cards to the block. Part-number mode's fields stack, and its switch is the plate's width. The check digit's sum is turned on its side |
 
 The Developers dialog asks once more, at 40 rem, where a snippet's label
 no longer fits beside it. Every query is the window's, not a container's:
@@ -945,10 +952,11 @@ card's trailing edge, and is a whole number of columns wide.
   22 px), and runs along to drop into the block over its word. The
   Maker's, whose card and word are both the first, turns deepest, so it
   crosses neither of the others. A line whose column is off the window
-  runs to the window's edge. Under 34 rem the facts row scrolls too, and
-  each drop follows its word: the year's word is a view timeline in the
-  row, and the drops move as far as it has. A browser without scroll
-  timelines draws no line between the cards and the block.
+  runs to the window's edge. Under 34 rem no line is drawn between the
+  cards and the block: the facts row leads with the details there, and
+  its words are past the row's end at rest (rule 7's ruling). A browser
+  without scroll timelines draws no line between the cards and the
+  block.
 - **The trunk** is the one line under the block: pinstripe tape in the
   Vehicle group's colour, from the block's bottom edge straight down the
   gutter beside the first column, to the last thing tied to it. That is
@@ -1214,8 +1222,8 @@ columns and is at least a row high.
   come from arithmetic on the grid, and nothing is measured at run time.
 - **Narrow**, the stepped lines are not drawn, and neither are the leader
   lines: the cards they would end on move. The lines to the block are
-  carried by the row's scroll (the parts that fit, above), and under
-  34 rem by the block's facts row's scroll as well. Under 34 rem the
+  carried by the row's scroll (the parts that fit, above). Under 34 rem
+  none runs from the cards to the block (rule 7's ruling). There the
   trunk's last stub runs into the eyelet of the names' first tag, under
   the candidates, and a wire joins each tag to the next.
 - A newly finished group draws its bracket and line in.
