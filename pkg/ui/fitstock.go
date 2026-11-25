@@ -35,7 +35,10 @@ import (
 // location, then the fields its source's header declares (#390,
 // contract.StockCounts.Fields), a column each. What a row has beyond
 // those folds under it as name and value (stockRow), so a source that
-// declares nothing prints an id, a location and the rest folded.
+// declares nothing prints an id, a location and the rest folded. A
+// declared field whose value is the row's id on every row is no column
+// (#397), and a field the header pins (#404) is held beside the id or
+// at the print's trailing end.
 //
 // With shelf stock asked for, the candidates' answer also carries the
 // shelf rows with no number for the part type and the vehicle, which
@@ -64,14 +67,22 @@ const (
 // fitAsk is what the page's URL asks of the parts that fit: the part
 // type pressed and its candidates' page, the candidate whose stock is
 // open (Type "" for the pressed part type), which panel shows every row,
-// the kinds of stock loaded, and the fields each loaded source's header
+// the kinds of stock loaded, and what each loaded source's header
 // declares, by the source's name (stockDeclared).
 type fitAsk struct {
 	Part, After        string
 	Type, Number, Side string
 	Rows               string
 	Stock              []string
-	Declared           map[string][]string
+	Declared           map[string]stockHeader
+}
+
+// stockHeader is what a stock source's header says of its print: the
+// fields it declares (contract.StockCounts.Fields), a column each, and
+// the one or two of them it pins (#404), held in sight where the print
+// scrolls.
+type stockHeader struct {
+	Fields, Pin []string
 }
 
 // stockHref is the page with vin on the plate, part pressed from its
@@ -144,13 +155,13 @@ func (h *Handler) stockKinds(info contract.Info) []string {
 	return out
 }
 
-// stockDeclared are the fields each of those sources' headers declares,
-// by the source's name; a source that declares none has no entry.
-func (h *Handler) stockDeclared(info contract.Info) map[string][]string {
-	out := map[string][]string{}
+// stockDeclared are each of those sources' headers, by the source's
+// name; a source that declares no field has no entry, and pins none.
+func (h *Handler) stockDeclared(info contract.Info) map[string]stockHeader {
+	out := map[string]stockHeader{}
 	for _, v := range h.stockSources(info) {
 		if len(v.Fields) > 0 {
-			out[v.Name] = v.Fields
+			out[v.Name] = stockHeader{Fields: v.Fields, Pin: v.Pin}
 		}
 	}
 	return out
@@ -232,40 +243,67 @@ type stockPanel struct {
 }
 
 // stockColumn is one kind's print: its heading, before the count, and
-// its sources' as-of dates; its columns after the id and the location
-// (Heads); the rows shown; and, when there are more, how many of them
-// are shown (Shown of Total) and the page showing all, whose link leaves
-// the focus on the element Focus names. Level is its heading's: one
-// under what the print is of, a candidate's number or a part's. Down
-// says none of its sources answered: the print states no count, a dash
-// in its place, and no "None.".
+// its sources' as-of dates; its columns beside the id and the location
+// (Lead, Heads and Trail); the rows shown; and, when there are more, how
+// many of them are shown (Shown of Total) and the page showing all, whose
+// link leaves the focus on the element Focus names. Level is its
+// heading's: one under what the print is of, a candidate's number or a
+// part's. Down says none of its sources answered: the print states no
+// count, a dash in its place, and no "None.".
 type stockColumn struct {
 	ID, Heading, AsOf string
 	Down              bool
 	Level             int
-	// Heads are the fields the headers of its rows' sources declare,
-	// each once, in the headers' order and the rows': none where no
-	// row's source declares any, and the print is then an id and a
-	// location a row.
-	Heads        []string
+	// Lead, Heads and Trail are the fields the headers of its rows'
+	// sources declare, each once, in the headers' order and the rows',
+	// but a field whose value is its row's id on every row: none where
+	// no row's source declares any, and the print is then an id and a
+	// location a row. The first of the fields the first pinning source
+	// pins is Lead, printed beside the id, before the location; the
+	// second is Trail, printed last. Heads are the rest, after the
+	// location.
+	Lead, Trail string
+	Heads       []string
+	// IDWidth is how many characters the widest of the rows' ids is, up
+	// to the 24 a column holds before it wraps: where the print holds
+	// Lead beside the id, the id's column is that wide.
+	IDWidth      int
 	Rows         []stockRow
 	Shown, Total int
 	More, Focus  string
 }
 
+// Bare says the print has no column beside the id and the location.
+func (c stockColumn) Bare() bool {
+	return c.Lead == "" && c.Trail == "" && len(c.Heads) == 0
+}
+
 // Span is how many cells a row of the print has: the id, the location
-// and a cell for each of Heads, or one to fill the line with none.
+// and a cell for each of Lead, Heads and Trail, with one to fill the line
+// where nothing follows the location.
 func (c stockColumn) Span() int {
-	return 2 + max(len(c.Heads), 1)
+	n := 2 + len(c.Heads)
+	if c.Lead != "" {
+		n++
+	}
+	if c.Trail != "" {
+		n++
+	}
+	if len(c.Heads) == 0 && c.Trail == "" {
+		n++
+	}
+	return n
 }
 
 // stockRow is one row: its id and its location; under each of its
-// print's Heads, the value it has for the field its own source declares,
-// "" where it has none or a null; Folded, what it has beyond those, under
-// the row; and two notes: the retired number a shelf row is tagged with,
-// and whether a yard row is the VIN on the plate.
+// print's columns, the value it has for the field its own source
+// declares, "" where it has none or a null (Lead, Cells under Heads, and
+// Trail); Folded, what it has beyond those, under the row; and two
+// notes: the retired number a shelf row is tagged with, and whether a
+// yard row is the VIN on the plate.
 type stockRow struct {
 	ID, Location string
+	Lead, Trail  stockField
 	Cells        []stockField
 	Folded       []stockField
 	Retired      string
@@ -295,21 +333,49 @@ const foldLines = 160
 // stockHeadings are each kind's column heading, before its count.
 var stockHeadings = map[string]string{contract.StockShelf: "On the shelf", contract.StockYard: "In the yard"}
 
-// newStockColumn is l, a list of kind, as its print: declared are the
-// fields each source's header declares, by source name, vin the VIN on
-// the plate, and more the page with every row, "" when all are shown.
-func newStockColumn(kind string, l *contract.StockList, declared map[string][]string, vin, more string) stockColumn {
+// newStockColumn is l, a list of kind, as its print: declared are each
+// source's header, by source name, vin the VIN on the plate, and more
+// the page with every row, "" when all are shown.
+func newStockColumn(kind string, l *contract.StockList, declared map[string]stockHeader, vin, more string) stockColumn {
 	col := stockColumn{ID: "stock-" + kind, Heading: stockHeadings[kind], AsOf: sourcesText(l.Sources), Down: listDown(l), Level: 4,
 		Shown: len(l.Rows), Total: l.Total, Focus: "stock-region"}
-	for _, r := range l.Rows {
-		for _, name := range declared[r.Source] {
-			if !slices.Contains(col.Heads, name) {
-				col.Heads = append(col.Heads, name)
+	fields := make([][]stockField, len(l.Rows))
+	var heads, pin []string
+	for i, r := range l.Rows {
+		fields[i] = stockFields(r.Fields)
+		h := declared[r.Source]
+		for _, name := range h.Fields {
+			if !slices.Contains(heads, name) {
+				heads = append(heads, name)
 			}
 		}
+		if pin == nil {
+			pin = h.Pin
+		}
+		col.IDWidth = max(col.IDWidth, min(utf8.RuneCountInString(r.ID), 24))
 	}
-	for _, r := range l.Rows {
-		col.Rows = append(col.Rows, newStockRow(r, col.Heads, declared[r.Source], vin))
+	// A field that is its row's id on every row says what the id does:
+	// it is no column, and it does not fold.
+	var same []string
+	heads = slices.DeleteFunc(heads, func(name string) bool {
+		for i, r := range l.Rows {
+			if v, ok := declaredValue(fields[i], declared[r.Source].Fields, name); !ok || v != r.ID {
+				return false
+			}
+		}
+		same = append(same, name)
+		return true
+	})
+	if len(pin) > 0 && slices.Contains(heads, pin[0]) {
+		col.Lead = pin[0]
+	}
+	if len(pin) > 1 && slices.Contains(heads, pin[1]) {
+		col.Trail = pin[1]
+	}
+	col.Heads = slices.DeleteFunc(heads, func(name string) bool { return name == col.Lead || name == col.Trail })
+	cols := slices.Concat([]string{col.Lead}, col.Heads, []string{col.Trail})
+	for i, r := range l.Rows {
+		col.Rows = append(col.Rows, newStockRow(r, fields[i], cols, declared[r.Source].Fields, same, vin))
 	}
 	if more != "" && l.Total > len(l.Rows) {
 		col.More = more
@@ -317,30 +383,54 @@ func newStockColumn(kind string, l *contract.StockList, declared map[string][]st
 	return col
 }
 
-// newStockRow is r as its print shows it: heads its print's columns,
-// declared the fields r's own source declares, and vin the VIN on the
-// plate. A field is a column's when its source declares it and its
+// declaredValue is the value fields has for name, a field declared
+// names and the row's column holds: the first it has, and no list or
+// object. ok is false where it has none.
+func declaredValue(fields []stockField, declared []string, name string) (v string, ok bool) {
+	if !slices.Contains(declared, name) {
+		return "", false
+	}
+	for _, f := range fields {
+		if f.Name == name && !f.JSON {
+			return f.Value, true
+		}
+	}
+	return "", false
+}
+
+// newStockRow is r, whose fields are fields, as its print shows it: cols
+// its print's columns, Lead first and Trail last, "" where it has none;
+// declared the fields r's own source declares; same the declared fields
+// that are the id on every row, which it leaves out; and vin the VIN on
+// the plate. A field is a column's when its source declares it and its
 // value is no list or object; every other one that has a value folds
 // under the row, in the source's order.
-func newStockRow(r contract.StockRow, heads, declared []string, vin string) stockRow {
-	row := stockRow{ID: r.ID, Location: r.Location, Cells: make([]stockField, len(heads)), ThisVIN: r.VIN != "" && r.VIN == vin}
-	for i, name := range heads {
-		row.Cells[i].Name = name
+func newStockRow(r contract.StockRow, fields []stockField, cols, declared, same []string, vin string) stockRow {
+	row := stockRow{ID: r.ID, Location: r.Location, ThisVIN: r.VIN != "" && r.VIN == vin}
+	cells := make([]stockField, len(cols))
+	for i, name := range cols {
+		cells[i].Name = name
 	}
 	if r.Reached == contract.ReachedRetired && r.Fitment != nil {
 		row.Retired = r.Fitment.Number
 	}
-	filled := make([]bool, len(heads))
-	for _, f := range stockFields(r.Fields) {
-		if i := slices.Index(heads, f.Name); i >= 0 && !f.JSON && !filled[i] && slices.Contains(declared, f.Name) {
-			row.Cells[i].Value, filled[i] = f.Value, true
-			continue
+	filled := make([]bool, len(cols))
+	for _, f := range fields {
+		if !f.JSON && slices.Contains(declared, f.Name) {
+			if i := slices.Index(cols, f.Name); i >= 0 && f.Name != "" && !filled[i] {
+				cells[i].Value, filled[i] = f.Value, true
+				continue
+			}
+			if slices.Contains(same, f.Name) && f.Value == r.ID {
+				continue
+			}
 		}
 		if f.Value != "" {
 			f.Long = !f.JSON && utf8.RuneCountInString(f.Value) > foldLines
 			row.Folded = append(row.Folded, f)
 		}
 	}
+	row.Lead, row.Cells, row.Trail = cells[0], cells[1:len(cells)-1], cells[len(cells)-1]
 	return row
 }
 
@@ -469,9 +559,9 @@ func (h *Handler) fitStock(ctx context.Context, c *fitCard, vin string, ask fitA
 // stockColumns are an open candidate's or part's rows, a print for each
 // of kinds: the rows cand arrived with, the page with every row more; or,
 // all asked for, the whole of key's stock (allStock), with no more.
-// declared are the fields each source declares (stockDeclared), and vin
-// is the VIN on the plate, "" for none.
-func (h *Handler) stockColumns(ctx context.Context, key fitKey, cand contract.FitCandidate, kinds []string, declared map[string][]string, all bool, more, vin string, res *result) ([]stockColumn, error) {
+// declared are each source's header (stockDeclared), and vin is the
+// VIN on the plate, "" for none.
+func (h *Handler) stockColumns(ctx context.Context, key fitKey, cand contract.FitCandidate, kinds []string, declared map[string]stockHeader, all bool, more, vin string, res *result) ([]stockColumn, error) {
 	lists := map[string]*contract.StockList{contract.StockShelf: cand.Shelf, contract.StockYard: cand.Yard}
 	if all {
 		var err error

@@ -624,7 +624,11 @@ rows: `/v1/info` reports it beside the source's `fields`, absent when
 the header pins none, and `list` names no stock source, as before.
 `testdata/vocab/stock/order`'s shelf pins its stock number and price,
 and its yard pins nothing; the demo yard pins `row`, the row to walk to.
-In Go, it is the stock file's `vocab.File.Pin`.
+In Go, it is the stock file's `vocab.File.Pin`. On the page a pinned
+field is a column at every width, the first beside the id and the
+second last ([page.md](design/page.md#signature-thermal-paper)), and a
+declared field whose value is its row's id on every row of a print is
+no column there.
 
 A shelf whose catalog is not loaded, a row in neither form, a duplicate
 id, a part the catalog's spine lacks, and a vehicle its vehicle

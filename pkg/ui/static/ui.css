@@ -432,8 +432,8 @@ table.sum .skip { color: var(--muted); }
 .fit, .part { position: relative; isolation: isolate; display: flow-root; margin: 0; container-type: inline-size;
   --rail: 20px; --end: 20px; --m: calc((100cqw - var(--rail) - var(--end) + 8px) / 6); --lead: 28px; --trunk: var(--c-vds);
   /* A row's two fixed columns: its number's tape, two modules with its
-     lead, and its stock strip, one. On a narrow page (below) neither is
-     narrower than what it holds. */
+     lead, and its stock strip, one. On a narrow page (below) they are
+     the row's own sixths, and the module is fixed. */
   --num: calc(2 * var(--m) - 8px - var(--lead)); --strip: calc(var(--m) - 8px); }
 .part { --trunk: var(--c-serial); }
 
@@ -467,7 +467,7 @@ table.sum .skip { color: var(--muted); }
    Under 64rem one role is redefined, the display, 18px in every row
    and on a card (body, below). */
 .fitstrip .stamp, .vfacts dt, .vc small, .ptfield .plab, :is(.ptfield, .ptype) .n, .name .nvoc, .ink .k, .mk, .stk, .stk .sc small, .numtape .side, .stock-kind .bar, .stock-none, .vnames .voc { font: var(--type-micro); letter-spacing: var(--track-micro); text-transform: uppercase; }
-.receipt, .print :is(th, td), .stock-kind .kind, .says, .vnames, .nrow .g-year, .name .none { font: var(--type-value); letter-spacing: normal; text-transform: none; }
+.receipt, .print :is(th, td), .stock-kind .kind, .ink, .vnames, .nrow .g-year, .name .none { font: var(--type-value); letter-spacing: normal; text-transform: none; }
 .print .rest td, .fold summary { font: var(--type-fine); letter-spacing: normal; text-transform: none; }
 .opts, .nw, .receipt a, .print .note strong, .name .info, .mk b, .vfacts dd, .vc b, .numtape .of { font: var(--type-value-b); letter-spacing: normal; text-transform: none; }
 .seg .w, .ptfield .nm, .ptclear, .veh .numtape, .nonum-tape { font: var(--type-head); letter-spacing: var(--track-tape); text-transform: none; }
@@ -682,9 +682,9 @@ table.sum .skip { color: var(--muted); }
    (.line), tied to the trunk by a stub that runs into its eyelet. A row
    is one grid on the columns, so its parts scan down the list: the
    number on label tape with its side and its years, two columns; the
-   option text over the marks and the note in the tag's ink, three; the
-   stock strip, the last. It is --row high and grows only where the
-   option text or the note needs another line. The open candidate's
+   option text, its marks and its note in the tag's ink, one run of
+   lines; the stock strip, the last. It is --row high and grows only
+   where that run needs another line. The open candidate's
    rows are under its tag, in the same list item. A part's tag and the
    vehicles it fits are the same rows (part-number mode, below). */
 .cands { list-style: none; margin: 0 var(--end) 0 var(--rail); padding: 0; }
@@ -695,9 +695,8 @@ table.sum .skip { color: var(--muted); }
 .numtape .num { min-width: 0; }
 .numtape .of { display: grid; justify-items: end; min-width: min-content; text-align: right; }
 .numtape :is(.yrs, .side) { white-space: nowrap; }
-.ink { grid-column: 3; align-self: center; min-width: 0; padding: 6px calc(var(--s2) + var(--inset)); }
-.opts { margin: 0; text-wrap: pretty; }
-.says { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--s2); min-height: 1.125rem; margin: 0; }
+.ink { grid-column: 3; align-self: center; min-width: 0; padding: 6px calc(var(--s2) + var(--inset)); text-wrap: pretty; }
+.opts, .says { display: inline; margin: 0; }
 .ink .k { color: var(--manila-muted); }
 /* A mark is ink on the tag, in its ordinary ink: a solid stamp, a little
    askew, with a tick for what was checked and an arrow for a redirect; a
@@ -705,8 +704,8 @@ table.sum .skip { color: var(--muted); }
    with no box, for what has nothing checked: in the tag's ink too, so
    that they stand apart from the muted label of the note after them. A
    number in a stamp is data, in the data's face and its own case. The
-   marks begin the line under the option text, the weaker first, so they
-   scan down the list; the note follows them. */
+   marks follow the option text on its last line, the weaker first, and
+   wrap only where the line is full; the note follows them. */
 .mk { display: inline-flex; align-items: center; gap: var(--s1); padding: 1px 5px; border-radius: 3px; white-space: nowrap; color: var(--on-manila); }
 .mk svg { flex: none; width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 2.2; }
 .mk.checked, .mk.redirect, .mk.replaces { border: 2px solid var(--on-manila); transform: rotate(-1.5deg); }
@@ -820,7 +819,8 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
    leaves its tag, and the shade goes when the print is scrolled to
    that end (two backgrounds, one the scroller's and one its
    contents', which covers the first there; no script, no timeline).
-   The location stays in sight as the rest slides under it, and so does
+   The location stays in sight as the rest slides under it (on a phone,
+   the id and what the header pins instead, below), and so does
    what is folded, which keeps the paper's width: .pscroll is a
    container, and 100cqw its width. */
 .pscroll { container-type: inline-size; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: var(--thermal-muted) transparent;
@@ -828,8 +828,11 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
 .print { width: 100%; border-collapse: collapse; }
 .print :is(th, td) { box-sizing: border-box; max-width: 24ch; padding: 0 var(--s3) 0 0; text-align: left; vertical-align: baseline; overflow-wrap: break-word; border: 0; }
 .print tr > :last-child { padding-right: 0; }
-.print :is(.id, .loc) { width: 1%; max-width: none; white-space: nowrap; }
-.print :is(.id, .loc).long { min-width: 24ch; white-space: normal; }
+.print :is(.id, .lead, .loc) { width: 1%; max-width: none; white-space: nowrap; }
+.print :is(.id, .lead, .loc).long { min-width: 24ch; white-space: normal; }
+/* With no column after it, the location takes the line's rest, so a
+   field held beside the id stays beside it. */
+.print:has(thead td) .loc { width: auto; }
 .print .loc { position: sticky; left: 0; z-index: 1; background: var(--thermal); }
 .print thead th { padding-bottom: 2px; white-space: nowrap; color: var(--thermal-muted); border-bottom: 1px dashed var(--on-thermal); }
 .print.bare thead :is(th, td) { padding: 0; border: 0; }
@@ -866,11 +869,15 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
 
 /* The lines a narrow page carries from the cards to the block (.carry,
    below) end over the block's words, which are packed at its leading
-   end there: --xm, --xv and --xy are the middles of the make's, the
+   end there, a module a word (--wc), or a third of the block where
+   three modules are wider than it. Each word's column is centred on a
+   card's as the cards rest: the block's leading space (--wp), with its
+   1px border, is the gutter less the 4px a card stands in from its
+   column. --xm, --xv and --xy are the middles of the make's, the
    model's and the year's columns. */
 .carry { display: none; }
-.fit { --wc: min(8rem, (100cqw - 2px) / 3); --xm: calc(.5 * var(--wc)); --xv: calc(.5 * var(--wc)); --xy: calc(1.5 * var(--wc)); }
-.fit:has(.fitstrip .g-wmi) { --xv: calc(1.5 * var(--wc)); --xy: calc(2.5 * var(--wc)); }
+.fit { --wp: calc(var(--rail) - 5px); --wc: min(var(--m), (100cqw - 2px - var(--wp)) / 2); --xm: calc(1px + var(--wp) + .5 * var(--wc)); --xv: var(--xm); --xy: calc(1px + var(--wp) + 1.5 * var(--wc)); }
+.fit:has(.fitstrip .g-wmi) { --wc: min(var(--m), (100cqw - 2px - var(--wp)) / 3); --xv: calc(1px + var(--wp) + 1.5 * var(--wc)); --xy: calc(1px + var(--wp) + 2.5 * var(--wc)); }
 
 /* A wide page: the block's words are under their cards, the Maker's and
    the Vehicle's lines straight down to them and the Model year's stepped
@@ -896,23 +903,28 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
 }
 /* A narrow page, a tablet's or a phone's, is pressed with a finger. A
    row is 3.5rem, so the picker's key and a stock strip are 44px high
-   or more, and a tag's two names, each 24px, are 8px apart. The picker
-   keeps the wide page's width, two columns there, and the names' row
-   takes what is beside it. A row's two fixed columns are modules, as on
-   a wide page, and no narrower than what they hold: a number of eleven
-   characters, and two counts of three digits. A number never breaks
+   or more, and a tag's two names, each 24px, are 8px apart. The cards,
+   the block's words and the picker are on one module, 9.75rem, half
+   the picker's 19.5rem, the cards' column too (--col, below): the
+   picker is two modules, and the names' row takes what is beside it.
+   A row keeps its own columns: its number's tape two sixths of the row
+   less the 8px between two and the lead, its stock strip one less the
+   8px, and neither narrower than what it holds, a number of eleven
+   characters and two counts of three digits. Both are a row high at
+   the row's top, and never stretch with the ink. A number never breaks
    for want of room: its years, its side or its part type are under it,
    in the row's own height, and a mark's stamp wraps before it leaves
    the ink. The display is 18px. */
 @media (width < 64rem) {
-  .fit, .part { --end: 0px; --num: max(calc(2 * var(--m) - 8px - var(--lead)), 9.5rem); --strip: max(calc(var(--m) - 8px), 7.5rem); }
+  .fit, .part { --end: 0px; --m: 9.75rem; --num: max(calc((100cqw - var(--rail) + 8px) / 3 - 8px - var(--lead)), 9.5rem); --strip: max(calc((100cqw - var(--rail) + 8px) / 6 - 8px), 7.5rem); }
   .choice { margin: 0; }
   body { --row: 3.5rem; --type-display: 900 1.125rem/1.2 var(--cell-font); }
-  .fit > .ptwrap { width: 19.5rem; }
+  .fit > .ptwrap { width: calc(2 * var(--m)); }
   .ptwrap { gap: var(--s2); }
   .ptclear { min-width: 44px; }
   .nrows { row-gap: var(--s2); }
   .name .info { height: 24px; }
+  .line > :is(.numtape, .stk) { align-self: start; box-sizing: border-box; min-height: var(--row); }
   .numtape { flex-direction: column; align-items: flex-start; justify-content: center; gap: 0; }
   .numtape .of { justify-items: start; text-align: left; }
   .mk { white-space: normal; }
@@ -1056,7 +1068,9 @@ button.linkish:active { transform: none; box-shadow: none; }
 @keyframes stamp { from { transform: scale(1.6); opacity: .2; } }
 
 /* A narrow page (under 64rem): the cards are one row that scrolls
-   sideways (.hang), six columns of one width (--col), in the VIN's order.
+   sideways (.hang), six columns of the module (--col, 9.75rem), in the
+   VIN's order; at rest the first stands on the rows' leading edge, as
+   on a wide page.
    An end of it with more beyond fades, as the names' row does, but for
    its last 14px, where the lines to the block leave it whole. The
    stepped lines (.joins), and the leader lines to cards that now move,
@@ -1067,18 +1081,21 @@ button.linkish:active { transform: none; box-shadow: none; }
    into the next. */
 @media (width < 64rem) {
   .leaders, .joins { display: none; }
-  .hang { --col: 12.5rem; overflow-x: auto; overscroll-behavior-x: contain; margin: .75rem calc(-1 * var(--gutter)) 0; padding: 4px var(--gutter) 14px; }
+  #answer { --col: 9.75rem; }
+  .hang { overflow-x: auto; overscroll-behavior-x: contain; margin: .75rem calc(-1 * var(--gutter)) 0; padding: 4px var(--gutter) 14px; }
   .hang:focus-visible { outline-offset: -3px; }
-  .cards { grid-template-columns: repeat(6, var(--col)); width: max-content; padding: 0; }
+  .cards { grid-template-columns: repeat(6, var(--col)); width: max-content; }
   .mode, .open-vins { min-height: 44px; }
   .lab:is(.g-check, .g-plant) > span { display: flex; }
   .lab.g-check > span { justify-content: flex-end; padding-right: 3px; }
   .lab.g-plant > span { padding-left: 3px; }
   /* The parts that fit are outside the row that scrolls. The block's
-     words are packed at its leading end, a column of 8rem each, or a
-     third of the block where that is less, and its stamp and details
-     are rows of their own. The lines from the cards, which move, are
-     carried to it (.carry, below). */
+     words are packed at its leading end, a module each, centred on the
+     cards' columns as they rest (--wc, --wp, above), and its stamp and
+     details are rows of their own, edge to edge. The lines from the
+     cards, which move, are carried to it (.carry, below). */
+  .fitstrip { padding-left: var(--wp); }
+  .fitstrip :is(.stamp, .vfacts) { margin-left: calc(-1 * var(--wp)); }
   .fitstrip .vfacts { grid-row: 3; grid-column: 1 / -1; border-left: 0; border-top: 1px solid rgb(255 255 255 / .18); }
   .fitstrip .seg::after { display: none; }
   @supports (animation-timeline: scroll()) {
@@ -1102,17 +1119,18 @@ button.linkish:active { transform: none; box-shadow: none; }
 @keyframes hang-p { to { --hang-p: 1; } }
 @media (width < 64rem) {
   @supports (animation-timeline: --a) and (timeline-scope: --a) {
-    #answer { timeline-scope: --hang; --col: 12.5rem; }
+    #answer { timeline-scope: --hang; }
     .hang { scroll-timeline: --hang x; }
     /* Under the Vehicle's and the Model year's cards, each line runs on
-       to the row's bottom edge, 2px short of it. */
+       to the row's bottom edge, 2px short of it. The row's columns begin
+       16px in, where a wide page's do (--c0, in .carry). */
     .cards { position: relative; }
-    #answer:has(.fitstrip) .cards::before, #answer:has(.fitstrip) .cards::after { content: ""; position: absolute; top: 100%; height: 12px; left: calc(1.5 * var(--col) - 2.5px); border-left: 5px solid var(--c-vds); filter: var(--stripe-lift); pointer-events: none; }
-    #answer:has(.fitstrip) .cards::after { left: calc(3.5 * var(--col) - 2.5px); border-left-color: var(--c-year); }
+    #answer:has(.fitstrip) .cards::before, #answer:has(.fitstrip) .cards::after { content: ""; position: absolute; top: 100%; height: 12px; left: calc(16px + 1.5 * var(--col) - 2.5px); border-left: 5px solid var(--c-vds); filter: var(--stripe-lift); pointer-events: none; }
+    #answer:has(.fitstrip) .cards::after { left: calc(16px + 3.5 * var(--col) - 2.5px); border-left-color: var(--c-year); }
     .carry { display: block; position: absolute; z-index: -1; top: -3px; left: calc(-1 * var(--gutter)); right: calc(-1 * var(--gutter)); height: 35px; overflow: clip; pointer-events: none;
       animation: hang-p linear both; animation-timeline: --hang;
-      --w: calc(100% - 2 * var(--gutter)); --r: calc(6 * var(--col) - var(--w));
-      --mv: calc(var(--gutter) + 1.5 * var(--col) - round(var(--hang-p) * var(--r), .02px)); --my: calc(var(--gutter) + 3.5 * var(--col) - round(var(--hang-p) * var(--r), .02px));
+      --w: calc(100% - 2 * var(--gutter)); --c0: calc(var(--gutter) + 16px); --r: calc(6 * var(--col) + 32px - var(--w));
+      --mv: calc(var(--c0) + 1.5 * var(--col) - round(var(--hang-p) * var(--r), .02px)); --my: calc(var(--c0) + 3.5 * var(--col) - round(var(--hang-p) * var(--r), .02px));
       --fv: calc(var(--gutter) + var(--xv)); --fy: calc(var(--gutter) + var(--xy)); }
     .carry span { position: absolute; inset: 0; }
     .carry span::before, .carry span::after { content: ""; position: absolute; box-sizing: border-box; border: 0 solid var(--c-vds); filter: var(--stripe-lift); }
@@ -1130,7 +1148,7 @@ button.linkish:active { transform: none; box-shadow: none; }
        too, the deepest of the three, so that it crosses neither of the
        others: its card is the first and its word the first. The block's
        three words are at the middle of its first three columns. */
-    .carry:has(span:nth-child(4)) { --mm: calc(var(--gutter) + .5 * var(--col) - round(var(--hang-p) * var(--r), .02px)); --fm: calc(var(--gutter) + var(--xm)); }
+    .carry:has(span:nth-child(4)) { --mm: calc(var(--c0) + .5 * var(--col) - round(var(--hang-p) * var(--r), .02px)); --fm: calc(var(--gutter) + var(--xm)); }
     .carry span:nth-child(n + 4)::after { display: none; }
     .carry span:nth-child(n + 4)::before { border-color: var(--c-wmi); }
     .carry span:nth-child(4)::before { top: 0; left: calc(var(--mm) - 2.5px); width: 5px; height: 30px; border-left-width: 5px; }
@@ -1160,8 +1178,6 @@ button.linkish:active { transform: none; box-shadow: none; }
    with the cells, nine characters to a line. */
 @media (max-width: 34rem) {
   .plate { --cell-h: 15cqw; }
-  /* The row's columns are narrower. */
-  .hang, #answer { --col: 9.5rem; }
   /* A phone's row is too narrow for the names beside the picker. The
      picker is the row's width and the candidates are next under it.
      The names, which are secondary, are the last row on the trunk: its
@@ -1196,14 +1212,28 @@ button.linkish:active { transform: none; box-shadow: none; }
   .veh .numtape { grid-column: 2 / -1; }
   .stk { grid-column: 3; }
   /* A phone's paper is narrower than most prints: the columns keep the
-     widths their values ask, and the print scrolls sideways. The
-     location, which stays in sight, is never wider than half the
-     paper, so the columns have room beside it: a longer one wraps.
-     What is folded is set in 12px, not 24, and wraps as a row whose
-     space between two fields is never counted at a line's end: a
-     field as long as the paper keeps one line. */
+     widths their values ask, and the print scrolls sideways. What the
+     yard needs stays in sight while the rest slides between: the row's
+     id and the first field its header pins at the leading edge, the
+     second at the trailing edge, shaded where the rest slides under it;
+     with no pin, the id alone. The first is set beside the id by the
+     id's width, which the print names (.idw1 to .idw24, its widest id
+     in characters, up to the 24 at which an id wraps). The location
+     scrolls with the rest. What is folded is set in 12px, not 24, and
+     wraps as a row whose space between two fields is never counted at
+     a line's end: a field as long as the paper keeps one line. */
   .print { width: max-content; min-width: 100%; }
-  .print .loc { width: auto; max-width: 50cqw; white-space: normal; }
+  .print .loc { position: static; }
+  .print :is(.id, .lead, .trail) { position: sticky; z-index: 1; background: var(--thermal); }
+  .print .id { left: 0; }
+  .print .lead { left: calc(var(--idw) + var(--s3)); }
+  .print .trail { right: 0; padding-left: var(--s3); }
+  .print .trail::before { content: ""; position: absolute; top: 0; bottom: 0; right: 100%; width: 8px; background: linear-gradient(to left, rgb(8 7 15 / .2), transparent); pointer-events: none; }
+  .pscroll:has(.trail) { background: none; }
+  .print.idw1 { --idw: 1ch; } .print.idw2 { --idw: 2ch; } .print.idw3 { --idw: 3ch; } .print.idw4 { --idw: 4ch; } .print.idw5 { --idw: 5ch; } .print.idw6 { --idw: 6ch; }
+  .print.idw7 { --idw: 7ch; } .print.idw8 { --idw: 8ch; } .print.idw9 { --idw: 9ch; } .print.idw10 { --idw: 10ch; } .print.idw11 { --idw: 11ch; } .print.idw12 { --idw: 12ch; }
+  .print.idw13 { --idw: 13ch; } .print.idw14 { --idw: 14ch; } .print.idw15 { --idw: 15ch; } .print.idw16 { --idw: 16ch; } .print.idw17 { --idw: 17ch; } .print.idw18 { --idw: 18ch; }
+  .print.idw19 { --idw: 19ch; } .print.idw20 { --idw: 20ch; } .print.idw21 { --idw: 21ch; } .print.idw22 { --idw: 22ch; } .print.idw23 { --idw: 23ch; } .print.idw24 { --idw: 24ch; }
   .print .rest td { padding-left: var(--s3); }
   .print .rest td > * { left: var(--s3); max-width: calc(100cqw - var(--s3)); }
   .fold { display: flex; flex-wrap: wrap; column-gap: calc(var(--s4) + 1ch); }
