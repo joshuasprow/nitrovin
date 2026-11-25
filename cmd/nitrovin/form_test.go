@@ -182,7 +182,7 @@ func TestForm(t *testing.T) {
 				`href="/v1/decode/1HGCM82633A004352"`,
 				`href="https://vpic.nhtsa.dot.gov/decoder/VinDecoder?VIN=1HGCM82633A004352"`,
 			},
-			[]string{`class="problems"`, `class="error"`}},
+			[]string{`id="problems"`, `class="error"`}},
 		// The page reads the VIN and nothing else: a decode's options in
 		// its URL are ignored, as any parameter it does not know is. The
 		// decode, its link to /v1 and NHTSA's decoder are the plain ones.
@@ -199,27 +199,27 @@ func TestForm(t *testing.T) {
 		{"/?from.vin=1HGCM82633A004353", 200,
 			[]string{
 				`<p class="big">Should be 5</p>`, "<dt>Make</dt><dd>HONDA</dd>",
-				"<p>1 - Check Digit (9th position) does not calculate properly</p>",
+				`<b class="mono">1</b> <span>Check Digit (9th position) does not calculate properly</span>`,
 			},
 			[]string{`class="error"`, "Checks out"}},
 		// A clean decode's code 0 is no problem to list; code 14 is.
 		{"/?from.vin=JH2PC40066M200001", 200,
 			[]string{
 				`<p class="big">Checks out</p>`,
-				"<p>14 - Unable to provide information for some of the characters in the VIN, based on the manufacturer submission.</p>",
+				`<b class="mono">14</b> <span>Unable to provide information for some of the characters in the VIN, based on the manufacturer submission.</span>`,
 			},
-			[]string{"<p>0 - "}},
+			[]string{`<b class="mono">0</b>`}},
 		// A suggested VIN is a link to the page with it on the plate.
 		{"/?from.vin=1FBNF0AA21A111111", 200,
 			[]string{
-				"<p>3 - VIN corrected, error in one position (assuming Check Digit is correct)</p>",
+				`<b class="mono">3</b> <span>VIN corrected, error in one position (assuming Check Digit is correct)</span>`,
 				`<a class="fix" href="/?from.vin=1FBNF01A21A111111">Use <span class="mono">1FBNF01A21A111111</span> instead</a>`,
 			},
 			nil},
 		// '!' marks each position the procedure could not correct: no VIN
 		// to offer.
 		{"/?from.vin=1GTW7NFH5PA077131", 200,
-			[]string{"<p>5 - VIN has errors in few positions</p>"},
+			[]string{`<b class="mono">5</b> <span>VIN has errors in few positions</span>`},
 			[]string{`class="fix"`}},
 		// An option the API would refuse is ignored too: never validated.
 		{"/?from.vin=1HGCM82633A004352&model_year=2003.5", 200,

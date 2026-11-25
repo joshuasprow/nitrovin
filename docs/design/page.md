@@ -50,7 +50,9 @@ Each part has one of two standings.
   motion that loops is the caret's blink on the focused plate, once a
   second; under `prefers-reduced-motion` the caret stands still. What a
   scroll moves, a row's fade and the lines a narrow page carries, is tied
-  to the scroll and not to a clock, so it stays.
+  to the scroll and not to a clock, so it stays. The vehicle's facts row,
+  held at the window's top (the parts that fit, below), sticks and lets
+  go with the scroll and nothing animates as it does.
 
 ## Composition rules
 
@@ -91,9 +93,9 @@ Where the maintainer later changed a rule knowingly, the rule says so after
    *Ruled, 2026-11-24: a VIN's problems are said where the reader works,
    in more than one place at once: the vehicle's block's stamp, the
    struck cell, the stamp at the candidates' head, an empty card, and the
-   strip under the answer (#398). A part pulled for a mistyped VIN is the
-   trade's expensive error. It is a knowing exception to "nothing says
-   the same thing twice".*
+   VIN problems dialog they open (#398). A part pulled for a mistyped VIN
+   is the trade's expensive error. It is a knowing exception to "nothing
+   says the same thing twice".*
 4. **One thing leads; the rest sit on it.** A block has one primary thing.
    What serves it sits on the same piece of material, smaller, after it,
    and is dropped first when the window narrows. It never gets a block of
@@ -166,6 +168,13 @@ Where the maintainer later changed a rule knowingly, the rule says so after
    was sent back because it never detours. It leaves the block and goes
    straight down, in the gutter between the plate's edge and the cards'
    edge.*
+   *Ruled, 2026-11-24: under 34 rem no line runs from the cards to the
+   vehicle's block, a knowing break of this rule (#401). A phone's facts
+   row leads with the details, so at rest the words are past the row's
+   end. Lines that followed them would need a view timeline for each
+   word, and in Chrome 158 those drop the section's reading-flow to the
+   markup's order, so the Tab key goes to the names before the
+   candidates (TestStockStrip, without scripts).*
 8. **What opens hangs from its control and overlaps the page.** A list or a
    note opened from a control is anchored to it, no wider than it where it
    is a list, and lies over what is beneath. It does not push the page
@@ -176,6 +185,11 @@ Where the maintainer later changed a rule knowingly, the rule says so after
    too short for it the list lengthens the page, and it never opens
    upward over the plate. It is a bend of this rule: the list still lies
    over the candidates and moves none of them.*
+   A held row is not something opened, and this rule does not cover it:
+   the vehicle's facts row, held at the window's top while candidates are
+   read (#401), is the block itself kept in sight, opened by nothing. What
+   opens lies over it too: the picker's list and every note are in the
+   top layer.
 9. **Bracket ends are the plate's.** Only the VIN input's brackets end in
    a bracket. Every other line ends on the thing it reaches.
 
@@ -329,9 +343,9 @@ lengths are the module's or a floor of their own.
 
 | Width | What stops fitting | What changes under it |
 | --- | --- | --- |
-| 64 rem | Six cards in one row, each wide enough for its rows | The cards, the block's words and the picker are on one module, 9.75 rem; a row's columns are its own sixths. The cards scroll sideways. The leader lines and the stepped lines are not drawn, and the lines to the block are carried. The block's words are packed at its leading end. `--end` is 0, the row is 3.5 rem and the display 18 px. A row's years are under its number, and its tape and strip stand at its top. The keys over the plate are 44 px high |
+| 64 rem | Six cards in one row, each wide enough for its rows | The cards, the block's words and the picker are on one module, 9.75 rem; a row's columns are its own sixths. The cards scroll sideways. The leader lines and the stepped lines are not drawn, and the lines to the block are carried. The block's words are packed at its leading end, and its details are one line under them. `--end` is 0, the row is 3.5 rem and the display 18 px. A row's years are under its number, and its tape and strip stand at its top. The keys over the plate are 44 px high |
 | 46 rem | The label of a one-cell group, 47 px, over a cell of 40 | Those three labels are not drawn. The cells stand 2 px apart, not 4, and the page's margin is 0.5 rem |
-| 34 rem | A cell wide enough for a finger, in one row of 17; the names beside the picker; a row's ink beside its number; a print's columns on its paper | The plate is two rows. The picker is the row's width, and the names are under the candidates. A row is two lines. The print scrolls sideways, holding the row's id and what its header pins. Part-number mode's fields stack, and its switch is the plate's width. The check digit's sum is turned on its side |
+| 34 rem | A cell wide enough for a finger, in one row of 17; the names beside the picker; a row's ink beside its number; a print's columns on its paper; the block's details under its words | The plate is two rows. The picker is the row's width, and the names are under the candidates. A row is two lines. The print scrolls sideways, holding the row's id and what its header pins. The block's facts are one line that scrolls sideways, the details first, and no line runs from the cards to the block. Part-number mode's fields stack, and its switch is the plate's width. The check digit's sum is turned on its side |
 
 The Developers dialog asks once more, at 40 rem, where a snippet's label
 no longer fits beside it. Every query is the window's, not a container's:
@@ -564,18 +578,21 @@ leader line or the trunk is pinstripe tape in a group's colour.
   with the tape's lit top and heavy bottom and no shadow of its own: a
   vocabulary's name on a name's tag, and a candidate's or a part's number,
   or a vehicle's name, on a row's.
-- **What the decoder says is wrong** with a whole VIN is a strip of label
-  tape, stuck on, as wide as the plate: a warning triangle in the error
-  colour as tape takes it (`#ff8a8a`), then the decoder's sentences, each
-  a bold row value raised white, and, where the decoder reads another
-  VIN in its place, a link to it, underlined in the tape's own white. It
-  was text in `--bad` on the ground, which rule 1 does not allow. It is
-  under the answer at every width, where the text was: between the
-  brackets and the cards it would push the picker under a phone's fold
-  on every VIN with a problem. The reader is told where they work
-  instead, at no cost in height: the vehicle's block's stamp carries the
-  count and the first sentence, and a stamp at the candidates' head says
-  to check the VIN; each links to this strip (the parts that fit, below).
+- **What the decoder says is wrong** with a whole VIN opens in a dialog,
+  the VIN problems (dialogs, below), and nothing of it is at the page's
+  foot. Its keys are words on label tape where the reader works: the
+  vehicle's block's stamp carries the count and the first sentence, a
+  stamp at the candidates' head says to check the VIN, and the held
+  facts row carries the count (the parts that fit, below). Each is a
+  button that opens the dialog, with no script, and looks as it did as
+  a link: the triangle and the count in the error colour as tape takes
+  it (`#ff8a8a`), the sentence underlined in the tape's own white. Where
+  no vehicle's block is drawn (no catalog, or nothing fits), one stamp of
+  label tape at the plate's foot, under the plate and over its lower
+  brackets, says the count and the first sentence, and opens it.
+  *Ruled, 2026-11-24: the problems move into a dialog; they were a strip
+  of tape under the answer, at the page's foot, which a reader reached
+  only by scrolling past every candidate.*
 - **An empty place stays.** With no vocabulary loaded, or before the model
   is known, the names' place is a blank strip: a 3 px dashed `--faint`
   outline with a sentence in it (empty places, below).
@@ -837,51 +854,98 @@ card's trailing edge, and is a whole number of columns wide.
 
 - **The vehicle's block** is label tape, stuck on: a strip across its top
   with its stamp, "This vehicle ·" and the catalog's name, as a name tag
-  has its vocabulary, then one row. From the left: the make the catalog
-  files the vehicle under, in the catalog's word, where it has one; the
-  catalog's model the decode reached; and the year it asked with ("any
-  year" without one), each over its group's underline, the Maker's red,
-  the Vehicle's blue and the Model year's orange, lightened for the tape.
-  Then comes what the decode says of the vehicle that a catalog's option
-  text names: the Vehicle card's rows but the model, a small label before
-  each value, raised white on the tape, in the face and size of a
-  candidate's option text, which they are read against; and at the
-  block's trailing end the Vehicle group's five characters, each over the
-  group's mark, as on the plate, with its position under it and no label:
-  the positions say what they are. On a wide page the block's first three
-  columns are the cards': the make is under the Maker's card and the
-  model under the Vehicle's, whose lines come straight down, and the year
-  is in the third, where the Model year's line steps left to it. On a
-  narrow page, where the cards scroll and the lines are carried, the
-  words are packed at the block's left, a module each, centred on the
-  cards' columns as they rest, or a third of the block where three
-  modules are wider than it (a phone's), so a word of eleven characters
-  keeps the head's size on one line, and
-  the details are a row under them. Each line ends on the block's top
-  edge, over the stamp's strip and never across it. The page puts the
-  vehicle's details over the candidates' options and judges nothing: it
-  marks no candidate as the match.
+  has its vocabulary, then its facts row. From the left: the make the
+  catalog files the vehicle under, in the catalog's word, where it has
+  one; the catalog's model the decode reached; and the year it asked
+  with ("any year" without one), each over its group's underline, the
+  Maker's red, the Vehicle's blue and the Model year's orange, lightened
+  for the tape. Then comes what the decode says of the vehicle that a
+  catalog's option text names, its details: the Vehicle card's rows but
+  the model, a small label before each value, raised white on the tape,
+  in the face and size of a candidate's option text, which they are read
+  against; and at the block's trailing end the Vehicle group's five
+  characters, each over the group's mark, as on the plate, with its
+  position under it and no label: the positions say what they are. On a
+  wide page the block's first three columns are the cards': the make is
+  under the Maker's card and the model under the Vehicle's, whose lines
+  come straight down, and the year is in the third, where the Model
+  year's line steps left to it; the details are a line each, so the row
+  is two lines high, or three where the decode has three. On a narrow
+  page, where the cards scroll and the lines are carried, the words are
+  packed at the block's left, a module each, centred on the cards'
+  columns as they rest, or a third of the block where three modules are
+  wider than it (a phone's), so a word of eleven characters keeps the
+  head's size on one line, and the details are one line under them, as
+  high as the characters at its end. Under 34 rem the facts row is one
+  line that leads with the details (held, below). Each line ends on the
+  block's top edge, over the stamp's strip and never across it. The page
+  puts the vehicle's details over the candidates' options and judges
+  nothing: it marks no candidate as the match.
 - **On a VIN with problems the block's stamp says so** (#398), after the
   catalog's name on the same strip: a warning triangle and the count, in
   the error colour as tape takes it (`#ff8a8a`), then one of the decode's
   sentences, a bold row value underlined in the tape's white, the whole a
-  link to the problems under the answer. The sentence is the first
+  key that opens the VIN problems dialog. The sentence is the first
   problem's that names a cell the plate strikes (error 11's cell 10,
   error 7's cells 1–3, a "!" in the suggested VIN), so the stamp says why
   the red cell is red; where none does, it is the decode's first. On a
   year code no year uses it is error 11's, not error 1's, which comes
   first in the decode. It keeps the strip's one line,
   so the block is no taller: the catalog's name gives way to 40% of the
-  strip, and the sentence is cut with "…", the link's name still whole.
+  strip, and the sentence is cut with "…", the key's name still whole.
   On a wide page whose catalog files the vehicle under no make, where
-  the stamp shares the block's row, the link takes the strip across the
+  the stamp shares the block's row, the key takes the strip across the
   top that a block with a make has, 24 px; the stamp stays beside the
   catalog's word. That block grows, 52 to 77 px on the demo set's vPIC
   catalog, the one place a VIN's problems cost height. *Ruled,
   2026-11-24: accepted.* With the vehicle found and a stock print open, the
   first statement of the problem is in the first window at 1440, 768
-  and 390 px, where the strip under the answer was at 1,130, 1,247 and
-  1,613 px on a VIN whose year code no year uses.
+  and 390 px, where the strip that once held the problems, under the
+  answer, was at 1,130, 1,247 and 1,613 px on a VIN whose year code no
+  year uses. The facts row carries the count as well, so it is held with
+  the row (below).
+- **The details never wrap.** Where they are wider than their room they
+  scroll sideways by themselves, without a scroll bar, and fade at an end
+  with more beyond it, as the names' row does (rule 6). They take the
+  focus, so a keyboard scrolls them. The facts row is as high at each
+  width as the token `--held` says, so the page knows the height it
+  covers when it is held.
+- **Held: the facts row stays in sight while candidates are read**
+  (#401). With a part type's candidates listed, the block is
+  `position: sticky`: it sticks with its stamp's strip and its top edge
+  above the window, so the facts row and the block's foot stay at the
+  window's top as the candidates, their prints and the names scroll
+  under it, at every width, and the section's end lets it go. No script
+  reads a position. With no part type pressed nothing is held. The
+  window's scroll padding is the held row's height: 47 px on a wide page
+  (65 px with three details), 77 px under 64 rem and 47 px under 34 rem,
+  so a row brought into view by the focus or a link to it stops under
+  the held row, never beneath it. The trunk, a candidate's stub and a
+  name's wire pass under it, so the trunk reads as leaving its bottom
+  edge, as it leaves the block's; no line is drawn over it, and none
+  ends on it but the cards' lines, which are above the window while it
+  is held. What opens lies over it (rule 8).
+- **A bad VIN's count is held** (#398, #401). On a VIN with problems the
+  facts row carries their count, as the stamp says it: the warning
+  triangle and "N problems" in the error colour, a key that opens the
+  VIN problems. The stamp scrolls above the window when the row is
+  held; the count stays. On a wide page it is under the year, in the
+  year's column, and the three words stand at the row's top over it: the
+  words stay over their lines, and the details keep their width, so none
+  is cut into the fade. Under 64 rem it is at the details' line's end;
+  under 34 rem it leads the line. *Ruled, 2026-11-24: the count is in
+  view whenever the row is held, and takes no room from the details.*
+- **A phone's facts row is one line, the details first.** Under 34 rem
+  the facts row is one line that scrolls sideways (rule 6), held or not:
+  a bad VIN's count, the details, the characters, a rule, then the make,
+  the model and the year in their columns. It fades at an end with more
+  beyond it, and the details take the focus and a keyboard scrolls the
+  line from them. A 390 px window shows the count, then the details and
+  the characters, and the words scroll in after them. The block held is
+  47 px of an 844 px window where it was 124 px and gone by the second
+  candidate. *Ruled, 2026-11-24: the line leads with what a candidate's
+  option text is matched against, after a bad VIN's count; the make, the
+  model and the year come after.*
 - **A catalog that files the vehicle under no make**, as one on vPIC's own
   vehicles does, has a block with no make, and the Maker's line is not
   brought down. On a wide page the stamp then takes the first column,
@@ -895,8 +959,11 @@ card's trailing edge, and is a whole number of columns wide.
   22 px), and runs along to drop into the block over its word. The
   Maker's, whose card and word are both the first, turns deepest, so it
   crosses neither of the others. A line whose column is off the window
-  runs to the window's edge. A browser without scroll timelines draws no
-  line between the cards and the block.
+  runs to the window's edge. Under 34 rem no line is drawn between the
+  cards and the block: the facts row leads with the details there, and
+  its words are past the row's end at rest (rule 7's ruling). A browser
+  without scroll timelines draws no line between the cards and the
+  block.
 - **The trunk** is the one line under the block: pinstripe tape in the
   Vehicle group's colour, from the block's bottom edge straight down the
   gutter beside the first column, to the last thing tied to it. That is
@@ -906,7 +973,7 @@ card's trailing edge, and is a whole number of columns wide.
   stamp of label tape stands at the candidates' head, its stub ending on
   its tape as the picker's does: a warning triangle in the error colour
   as tape takes it, and "Check the VIN before pulling", a micro label, a
-  link to the problems under the answer. It is VIN mode's alone, as
+  key that opens the VIN problems. It is VIN mode's alone, as
   part-number mode asks no VIN, and it stops nothing. The trunk is there
   whenever the picker is, with a part type pressed or none. It is drawn a
   piece an item, so nothing is measured and it needs no anchor
@@ -1089,8 +1156,10 @@ card's trailing edge, and is a whole number of columns wide.
   below the window. Where scripts run the page scrolls down just far
   enough to bring in the list, a part type's first two candidates or the
   sentence in their place, or the strip's rows. It never scrolls so far
-  that the picker, or the open candidate's tag, leaves the top, and never
-  up. It scrolls smoothly unless the visitor asks for less motion.
+  that the picker, or the open candidate's tag, leaves the top, which is
+  under the held facts row where one is held (the window's scroll
+  padding), and never up. It scrolls smoothly unless the visitor asks for
+  less motion.
 - **The open candidate's rows.** A strip is a link to the page with its
   candidate open (the URL's `fitment.number`, with `fitment.side` for a
   sided fitment and `fitment.type` for one whose type is not the pressed
@@ -1161,14 +1230,18 @@ columns and is at least a row high.
 - **Narrow**, the stepped lines are not drawn, and neither are the leader
   lines: the cards they would end on move. The lines to the block are
   carried by the row's scroll (the parts that fit, above). Under 34 rem
-  the trunk's last stub runs into the eyelet of the names' first tag,
-  under the candidates, and a wire joins each tag to the next.
+  none runs from the cards to the block (rule 7's ruling). There the
+  trunk's last stub runs into the eyelet of the names' first tag, under
+  the candidates, and a wire joins each tag to the next.
 - A newly finished group draws its bracket and line in.
 - **The lines from the cards end on the block.** None runs on from it.
   Under the block the one line is the trunk, from the block's bottom edge
   straight down the gutter, with a stub to the picker and to each
-  candidate. In part-number mode the number's line ends in the eyelet of
-  the part's tag, and the trunk runs from that tag through its vehicles.
+  candidate. While the block's facts row is held at the window's top,
+  the trunk, the stubs and the names' wires pass under it, and the trunk
+  leaves its bottom edge. In part-number mode the number's line ends in
+  the eyelet of the part's tag, and the trunk runs from that tag through
+  its vehicles.
 - No line ends on a blank strip: with no block, none is drawn from the
   cards, and with no picker there is no trunk.
 
@@ -1179,7 +1252,7 @@ script. There are three kinds.
 
 | Kind | Used for | Width | Backdrop |
 | --- | --- | --- | --- |
-| Dialog (`dialog[popover]`) | Vocabularies, Developers, JSON, the check digit's sum, part-number mode's part types | `min(56rem, 100vw - 2rem)` | `rgb(10 18 26 / .55)` |
+| Dialog (`dialog[popover]`) | Vocabularies, Developers, JSON, the check digit's sum, part-number mode's part types, VIN problems | `min(56rem, 100vw - 2rem)` | `rgb(10 18 26 / .55)` |
 | Note (`.note[popover]`) | How a name on a tag was reached | up to `30rem` | `rgb(10 18 26 / .35)` |
 | Menu (`.menu[popover]`) | The VINs to try | `19rem` | none |
 
@@ -1234,6 +1307,16 @@ script. There are three kinds.
   rule in the vehicle group's blue.
 - **A dialog inside a card** (the check digit's sum) takes the panel's colours,
   not the manila's.
+- **VIN problems** (#398) is what the decoder says is wrong with a whole
+  VIN: a row each, its code in bold in the data face, its sentence, and,
+  muted after it, the positions it names, which the plate strikes; then,
+  where the decoder reads another VIN in its place, a link to it. It
+  opens with the focus on Close, as the other dialogs do, from the keys
+  that say the problems on the page (label tape, above). The field keeps
+  its own description of the wrong positions and stays invalid. Where the
+  decoder suggests another VIN and names no problem, the key reads
+  "Suggested VIN" and the VIN, in the tape's white with no count and no
+  triangle, on the block's stamp or, with no block, at the plate's foot.
 
 ## Good enough: forms and inputs
 

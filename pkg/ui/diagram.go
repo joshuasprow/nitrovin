@@ -298,17 +298,46 @@ func problemPositions(code int, vin, corrected string) []int {
 // the field's description: "Position 10 is wrong.", "Positions 9 and 10
 // are wrong.", "" for none.
 func (d diagram) WrongText() string {
-	if len(d.Wrong) == 0 {
+	switch len(d.Wrong) {
+	case 0:
+		return ""
+	case 1:
+		return positionsText(d.Wrong) + " is wrong."
+	}
+	return positionsText(d.Wrong) + " are wrong."
+}
+
+// positionsText names ps: "Position 10", "Positions 1, 2 and 3".
+func positionsText(ps []int) string {
+	if len(ps) == 1 {
+		return "Position " + strconv.Itoa(ps[0])
+	}
+	s := make([]string, len(ps))
+	for i, p := range ps {
+		s[i] = strconv.Itoa(p)
+	}
+	return "Positions " + strings.Join(s[:len(s)-1], ", ") + " and " + s[len(s)-1]
+}
+
+// Code is the decode's error code for p, 0 where it has none.
+func (p problem) Code() int { return p.code }
+
+// Sentence is p's text without its code: "Incorrect Model Year - …" of
+// "11 - Incorrect Model Year - …".
+func (p problem) Sentence() string {
+	if p.code == 0 {
+		return p.Text
+	}
+	return strings.TrimPrefix(p.Text, strconv.Itoa(p.code)+" - ")
+}
+
+// Where names the positions p names, the cells the plate strikes for
+// it: "Position 10"; "" for none.
+func (p problem) Where() string {
+	if len(p.Positions) == 0 {
 		return ""
 	}
-	if len(d.Wrong) == 1 {
-		return "Position " + strconv.Itoa(d.Wrong[0]) + " is wrong."
-	}
-	ps := make([]string, len(d.Wrong))
-	for i, p := range d.Wrong {
-		ps[i] = strconv.Itoa(p)
-	}
-	return "Positions " + strings.Join(ps[:len(ps)-1], ", ") + " and " + ps[len(ps)-1] + " are wrong."
+	return positionsText(p.Positions)
 }
 
 // newDiagram is the plate for vin, cleaned, before any decode: its cells
@@ -681,18 +710,21 @@ var surpriseVINs = []string{
 // fitView is the fit card as its template draws it: the card, the names
 // that hang under its block, the page's refusal, its last line, and the
 // decode's problems, which the block's stamp and the candidates' head
-// point to; Lead is the sentence the stamp leads with (diagram.Lead).
+// point to; Lead is the sentence the stamp leads with (diagram.Lead),
+// and FixV the VIN the decoder suggests, which the stamp names where
+// there is no problem.
 type fitView struct {
 	fitCard
 	Names    akaCard
 	Error    string
 	Problems []problem
 	Lead     string
+	FixV     string
 }
 
 // FitView is d's fit card with its names, its refusal and its problems.
 func (d diagram) FitView() fitView {
-	return fitView{fitCard: d.Fit, Names: d.Names, Error: d.Error, Problems: d.Problems, Lead: d.Lead()}
+	return fitView{fitCard: d.Fit, Names: d.Names, Error: d.Error, Problems: d.Problems, Lead: d.Lead(), FixV: d.FixV}
 }
 
 // Lead is the problem the vehicle's block's stamp leads with: the first

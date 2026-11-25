@@ -143,17 +143,20 @@ data-label are what it answers, which plate.js keeps as a recent VIN once
 it is whole; data-done the groups whose characters are all typed;
 data-wrong the positions the decode names wrong, whose cells plate.js
 strikes, with #vin-wrong saying them in words for the field's
-description (hidden: the problems say them on the page);
+description (hidden: the problems dialog says them);
 data-part and data-after the part type pressed and its page, and
 data-type, data-number, data-side and data-rows the candidate whose stock
 is open and the panel shown whole, which plate.js tells a history entry by.
-Its last part is what the decoder says is wrong with a whole VIN
-(problems, which the vehicle's block and the candidates' head link to),
-a strip of label tape with a warning triangle and, where the
-decoder reads another VIN in its place, a link to it. */}}
+What the decoder says is wrong with a whole VIN is a dialog, the VIN
+problems (#problems, a popover): each problem's code, its sentence and
+the positions it names, and, where the decoder reads another VIN in its
+place, a link to it. The vehicle's block, the candidates' head and the
+held facts row open it (fit); where no block is drawn, a stamp of label
+tape at the plate's foot does, the count and the leading problem. */}}
 {{define "answer" -}}
 <div id="answer" class="stage" data-vin="{{.VIN}}" data-label="{{.Label}}"{{if .Complete}} data-complete{{end}} data-done="{{range .Groups}}{{if .Done}}{{.Key}} {{end}}{{end}}"{{with .Wrong}} data-wrong="{{range .}}{{.}} {{end}}"{{end}}{{with .Fit.Part}} data-part="{{.}}"{{end}}{{with .Fit.After}} data-after="{{.}}"{{end}}{{with .Fit.Type}} data-type="{{.}}"{{end}}{{with .Fit.Number}} data-number="{{.}}"{{end}}{{with .Fit.Side}} data-side="{{.}}"{{end}}{{with .Fit.Rows}} data-rows="{{.}}"{{end}}>
 {{with .WrongText}}<p id="vin-wrong" class="visually-hidden" aria-hidden="true">{{.}}</p>
+{{end}}{{if and (or .Problems .FixV) (or .Ways (not .Fit.Types))}}<p class="pstamp">{{if .Problems}}<button type="button" class="vbad" popovertarget="problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg><b>{{len .Problems}} {{if eq (len .Problems) 1}}problem{{else}}problems{{end}}</b> <span class="s">{{.Lead}}</span></button>{{else}}{{template "vfix" .FixV}}{{end}}</p>
 {{end}}<div class="under" aria-hidden="true">
 {{range .Groups}}<span class="brk g-{{.Key}}{{if .Done}} done{{end}}"><span class="name">{{.Label}}</span></span>
 {{end}}</div>
@@ -177,10 +180,16 @@ decoder reads another VIN in its place, a link to it. */}}
 {{end}}</div>
 {{with .Ways}}<div class="choice"><p class="blank"><span>{{$.Error}}</span>{{range .}}<a href="{{.Href}}">{{.Text}}</a>{{end}}</p></div>
 {{else}}{{template "fit" .FitView}}{{end}}
-{{if or .Problems .Fix}}<div class="problems" id="problems" role="status"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>
-{{range .Problems}}<p>{{.Text}}</p>
-{{end}}{{with .Fix}}<p><a class="fix" href="{{.}}">Use <span class="mono">{{$.FixV}}</span> instead</a></p>{{end}}
-</div>{{end}}
+{{if or .Problems .Fix}}<dialog id="problems" class="pdialog" popover aria-labelledby="problems-h">
+<div class="dialog-head">
+<h2 id="problems-h">VIN problems</h2>
+<button type="button" popovertarget="problems" popovertargetaction="hide">Close</button>
+</div>
+{{with .Problems}}<ol class="plist">
+{{range .}}<li>{{with .Code}}<b class="mono">{{.}}</b> {{end}}<span>{{.Sentence}}</span>{{with .Where}} <span class="where">{{.}}</span>{{end}}</li>
+{{end}}</ol>
+{{end}}{{with .Fix}}<p class="fixline"><a class="fix" href="{{.}}">Use <span class="mono">{{$.FixV}}</span> instead</a></p>
+{{end}}</dialog>{{end}}
 </div>
 {{- end}}
 
@@ -251,12 +260,19 @@ vocabulary loaded, the names' place is a blank strip. */}}
 
 {{/* fit is the parts that fit (fit.go), under the cards, set on the
 cards' columns. Found, it is the vehicle's block, a strip of label tape
-that says what the vehicle is: the make, the model and the year it asked
-the catalog with, on the lines from their cards, "This vehicle", the
-catalog, and what the decode says of the vehicle to match a candidate's
-options against (.vfacts). Under the block is one band, the section's
-next row: the part type picker (#366), a key of the second tape on a
-short piece of label tape (.ptwrap), which names the pressed part type
+that says what the vehicle is: under its stamp, "This vehicle" and the
+catalog, its facts row (.vline), the make, the model and the year it
+asked the catalog with, on the lines from their cards, then what the
+decode says of the vehicle to match a candidate's options against
+(.vfacts): its details (.vdet) and the VIN's characters 4 to 8, then on
+a VIN with problems their count (.vcount), which opens them. While
+candidates are listed the facts row is held at the window's top, and
+on a phone it is one line that scrolls sideways and leads with the
+details (#401). The details take focus, so a keyboard scrolls them,
+and on a phone the line they are in. Under the block is one band, the
+section's next row: the part
+type picker (#366), a key of the second tape on a short piece of label
+tape (.ptwrap), which names the pressed part type
 and opens the part types dialog as its list, with a key beside it that
 clears the pressed one; and beside the picker the vehicle's names (aka),
 found or not, which a phone draws last, under the candidates. Under the
@@ -280,24 +296,31 @@ section's last line, on its columns. On a VIN with problems the block's
 stamp carries their count and a sentence, the first problem's that names
 a cell the plate strikes, else the decode's first (diagram.Lead), cut to
 its one line, and a stamp of label tape at the candidates' head, on the trunk,
-says to check the VIN before pulling; each links to the problems under
-the answer, and neither stops anything. Every link here but those is
-the page's own, which plate.js swaps in place (swap). */}}
+says to check the VIN before pulling; each opens the VIN problems dialog
+(answer), and neither stops anything. Every link here is the page's
+own, which plate.js swaps in place (swap). */}}
 {{define "fit" -}}
 <section class="fit" id="fit" aria-labelledby="fit-h">
 <h2 id="fit-h" class="visually-hidden">Parts that fit</h2>
 {{if .Types}}<span class="carry" aria-hidden="true"><span></span><span></span><span></span>{{if .Make}}<span></span><span></span><span></span>{{end}}</span>
 <div class="fitstrip">
-{{if .Problems}}<p class="stamp"><span class="of">This vehicle · {{.Catalog}}</span><a class="vbad" href="#problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg><b>{{len .Problems}} {{if eq (len .Problems) 1}}problem{{else}}problems{{end}}</b> <span class="s">{{.Lead}}</span></a></p>
+{{if .Problems}}<p class="stamp"><span class="of">This vehicle · {{.Catalog}}</span><button type="button" class="vbad" popovertarget="problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg><b>{{len .Problems}} {{if eq (len .Problems) 1}}problem{{else}}problems{{end}}</b> <span class="s">{{.Lead}}</span></button></p>
+{{else if .FixV}}<p class="stamp"><span class="of">This vehicle · {{.Catalog}}</span>{{template "vfix" .FixV}}</p>
 {{else}}<p class="stamp">This vehicle · {{.Catalog}}</p>
+{{end}}<div class="vline">
+{{with .Problems}}{{template "vcount" .}}
 {{end}}{{with .Make}}<span class="seg g-wmi"><span class="w">{{.}}</span></span>
 {{end}}<span class="seg g-vds"><span class="w">{{.Model}}</span></span>
 <span class="seg g-year"><span class="w">{{.Year}}</span></span>
-{{with .Facts}}<dl class="vfacts" aria-label="This vehicle, to match the options against">
-{{range .Rows}}<div><dt>{{.Label}}</dt><dd>{{.Value}}</dd></div>
-{{end}}{{with .Chars}}<div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd>{{range .}}<span class="vc"><b>{{.Char}}</b><small>{{.Pos}}</small></span>{{end}}</dd></div>
+{{if or .Facts .Problems}}<div class="vfacts" role="group" aria-label="This vehicle, to match the options against">
+{{with .Facts}}{{with .Rows}}<dl class="vdet" tabindex="0">
+{{range .}}<div><dt>{{.Label}}</dt><dd>{{.Value}}</dd></div>
 {{end}}</dl>
+{{end}}{{with .Chars}}<dl class="vchars"><div><dt class="visually-hidden">VIN 4–8</dt><dd>{{range .}}<span class="vc"><b>{{.Char}}</b><small>{{.Pos}}</small></span>{{end}}</dd></div></dl>
+{{end}}{{end}}{{with .Problems}}{{template "vcount" .}}
 {{end}}</div>
+{{end}}</div>
+</div>
 {{end}}{{if .Types}}<div class="ptwrap" data-spine="{{.Spine}}">
 <button type="button" id="pick-type" class="ptfield" popovertarget="part-types"><span class="plab">Part type</span><span class="nm">{{if .Pressed}}{{.Pressed}}{{else}}Choose a part type{{end}}</span><span class="n">{{.PickCount}}<span class="visually-hidden"> {{.PickNoun}}</span></span><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 6l5 5 5-5"/></svg></button>
 {{if .Pressed}}<a class="ptclear swap" id="clear-type" data-focus="pick-type" href="{{.Clear}}" aria-label="Clear {{.Pressed}}">×</a>
@@ -306,7 +329,7 @@ the page's own, which plate.js swaps in place (swap). */}}
 {{if .Types}}{{template "part-types-dialog" .Dialog}}
 {{if .Invite}}<p class="blank"><span>Choose a part type to see what fits this vehicle.</span></p>
 {{end}}{{with .NoneFit}}<p class="blank"><span>{{.}}</span></p>
-{{end}}{{if .Tags}}{{if .Problems}}<p class="pull"><a href="#problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>Check the VIN before pulling</a></p>
+{{end}}{{if .Tags}}{{if .Problems}}<p class="pull"><button type="button" popovertarget="problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>Check the VIN before pulling</button></p>
 {{end}}<ol class="cands" aria-label="Candidates: {{.Pressed}}">
 {{range .Tags}}<li class="cand"><div class="ltag line">
 <h3 class="numtape"><span class="num">{{.Number}}</span>{{if or .Side .Years}} <span class="of">{{with .Side}}<span class="side">{{.}}</span> {{end}}{{with .Years}}<span class="yrs">{{.}}</span>{{end}}</span>{{end}}</h3>
@@ -329,6 +352,24 @@ the page's own, which plate.js swaps in place (swap). */}}
 {{end}}{{end}}{{else}}<p class="blank"><span>{{.Blank}}</span>{{if .Add}}<button type="button" popovertarget="vocabularies">Add a catalog</button>{{end}}{{range .Ways}}<a href="{{.Href}}">{{.Text}}</a>{{end}}</p>
 {{end}}{{with .Error}}<p class="error" role="alert">{{.}}</p>
 {{end}}</section>
+{{- end}}
+
+{{/* vcount is a bad VIN's count in the vehicle's facts row, as the
+block's stamp says it, a key that opens the VIN problems (#401). It is
+written
+twice: first in the row, where a phone's line leads with it and a wide
+page draws it under the year, and in the details' group, where a
+tablet's draws it after the characters (ui.css); each width draws one. */}}
+{{define "vcount" -}}
+<button type="button" class="vcount" popovertarget="problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg><b>{{len .}} {{if eq (len .) 1}}problem{{else}}problems{{end}}</b></button>
+{{- end}}
+
+{{/* vfix is the key that opens the VIN problems where the decoder
+suggests another VIN and names no problem: "Suggested VIN" and the VIN,
+on the block's stamp or the plate's foot, with no count and no
+warning, for there is none. */}}
+{{define "vfix" -}}
+<button type="button" class="vbad vfix" popovertarget="problems"><b>Suggested VIN</b> <span class="s">{{.}}</span></button>
 {{- end}}
 
 {{/* stock-strip is a candidate's stock strip, at its tag's trailing end

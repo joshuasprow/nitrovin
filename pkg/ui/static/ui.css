@@ -144,7 +144,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
    control on a tag, on a print or on the plate, and one on label tape. A
    dialog's panel is the scheme's, wherever its markup is. */
 .card, .ltag, .stock-kind, .ptpick { --ring: var(--ring-pale); }
-.ptwrap, .problems { --ring: var(--ring-tape); }
+.ptwrap, .pstamp { --ring: var(--ring-tape); }
 dialog[popover], .note[popover] { --ring: var(--link); }
 /* Under a finger the part types list opens with the focus on itself
    (plate.js): from a keyboard there its ring is the page's, drawn inside
@@ -405,18 +405,17 @@ table.sum { width: auto; font-size: 13px; }
 table.sum th, table.sum td { white-space: nowrap; }
 table.sum td { text-align: center; padding: .2rem .45rem; }
 table.sum .skip { color: var(--muted); }
-/* What the decoder says is wrong with a whole VIN, and the VIN it would
-   read in its place: the page's own word on what was typed, so a strip
-   of label tape, stuck on, as wide as the plate, under the answer: a
-   warning triangle in the error colour as tape takes it, then its
-   sentences, raised white. It is under the answer at every width: over
-   the cards it would push the picker under a phone's fold on every VIN
-   with a problem. */
-.problems { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; align-content: center; gap: 0 var(--s2); box-sizing: border-box; min-height: 2.25rem; margin: var(--s4) 0 0; padding: var(--s1) var(--inset); font: var(--type-value-b); color: var(--on-tape); text-shadow: var(--tape-emboss);
-  background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck); }
-.problems p { grid-column: 2; margin: 0; }
-.problems svg { grid-row: 1 / span 9; align-self: start; width: 14px; height: 14px; margin-top: 2px; fill: none; stroke: #ff8a8a; stroke-width: 2.2; }
-.problems .fix { display: inline-block; padding-block: 3px; color: inherit; text-underline-offset: 3px; }
+/* The VIN problems (#problems): a dialog of what the decoder says is
+   wrong with a whole VIN, each problem a row, its code in the data face
+   before its sentence and, muted after it, the positions it names, which
+   the plate strikes; then the VIN the decoder would read in its place,
+   where it has one. Nothing of it is at the page's foot. */
+.plist { margin: 0; padding: 0; list-style: none; }
+.plist li { padding: .55rem 0; border-bottom: 1px solid var(--line); }
+.plist li b { margin-right: .35rem; }
+.plist .where { color: var(--muted); white-space: nowrap; }
+.fixline { margin: .9rem 0 0; }
+.fixline .fix { display: inline-block; padding-block: 3px; }
 
 /* ---- Under the cards --------------------------------------------------
    Everything under the cards is set on one module, the cards' column: a
@@ -466,7 +465,7 @@ table.sum .skip { color: var(--muted); }
    strip is the page's body text.
    Under 64rem one role is redefined, the display, 18px in every row
    and on a card (body, below). */
-.fitstrip .stamp, .vfacts dt, .vc small, .ptfield .plab, :is(.ptfield, .ptype) .n, .name .nvoc, .ink .k, .mk, .stk, .stk .sc small, .numtape .side, .stock-kind .bar, .stock-none, .vnames .voc { font: var(--type-micro); letter-spacing: var(--track-micro); text-transform: uppercase; }
+.fitstrip .stamp, .vfacts dt, .vc small, .vcount, .ptfield .plab, :is(.ptfield, .ptype) .n, .name .nvoc, .ink .k, .mk, .stk, .stk .sc small, .numtape .side, .stock-kind .bar, .stock-none, .vnames .voc { font: var(--type-micro); letter-spacing: var(--track-micro); text-transform: uppercase; }
 .receipt, .print :is(th, td), .stock-kind .kind, .ink, .vnames, .nrow .g-year, .name .none { font: var(--type-value); letter-spacing: normal; text-transform: none; }
 .print .rest td, .fold summary { font: var(--type-fine); letter-spacing: normal; text-transform: none; }
 .opts, .nw, .receipt a, .print .note strong, .name .info, .mk b, .vfacts dd, .vc b, .numtape .of { font: var(--type-value-b); letter-spacing: normal; text-transform: none; }
@@ -477,49 +476,94 @@ table.sum .skip { color: var(--muted); }
 
 /* The vehicle's block (page.html's fit): label tape, stuck on. Its stamp,
    "This vehicle" and the catalog, is a strip across its top; under it,
-   the catalog's make, its model and the year, each raised white over its
-   group's mark on the line that comes down from its card (.seg, whose
-   line is the last --drop above the block and ends on its top edge), then
-   what the decode says of the vehicle (.vfacts): a small label before
-   each value, in the size and face of a candidate's option text, which
-   they are read against, and the VIN's characters 4 to 8 over the
-   Vehicle group's mark, each with its position under it. No line runs to
-   the page's blank strips. */
-.fitstrip { --drop: 30px; --stamp-h: 1.5rem; display: grid; grid-template-columns: repeat(2, var(--wc)) minmax(0, 1fr); align-items: center; margin-top: var(--drop); min-height: 2.9rem; color: var(--on-tape);
+   the facts row (.vline): the catalog's make, its model and the year,
+   each raised white over its group's mark on the line that comes down
+   from its card (.seg, whose line is the last --drop above the block and
+   ends on its top edge), then what the decode says of the vehicle
+   (.vfacts): its details (.vdet), a small label before each value, in
+   the size and face of a candidate's option text, which they are read
+   against, and the VIN's characters 4 to 8 over the Vehicle group's
+   mark, each with its position under it, at the block's trailing end.
+   No line runs to the page's blank strips.
+   The facts row is as high at each width as --held says (below), so the
+   page knows how much of the window it covers when it is held. The
+   details never wrap: where they are wider than their room they scroll
+   sideways by themselves, and fade at an end with more beyond it (a
+   scroll-driven animation; without it they are cut square). */
+:root { --held: 4.625rem; }
+.fitstrip { --drop: 30px; --stamp-h: 1.5rem; --ring: var(--ring-tape); display: grid; grid-template-columns: repeat(2, var(--wc)) minmax(0, 1fr); grid-template-rows: var(--stamp-h) 2.125rem calc(var(--held) - 2.125rem); align-items: center; margin-top: var(--drop); color: var(--on-tape);
   background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck); }
 .fitstrip:has(.g-wmi) { grid-template-columns: repeat(3, var(--wc)) minmax(0, 1fr); }
 .fitstrip .stamp { grid-row: 1; grid-column: 1 / -1; display: flex; align-items: center; box-sizing: border-box; min-width: 0; height: var(--stamp-h); margin: 0; padding: 0 var(--inset); border-bottom: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss); }
 /* On a VIN with problems the stamp carries them after the catalog: the
    warning triangle and their count in the error colour as tape takes
-   it, then the first one's sentence, a link to the problems under the
-   answer. It keeps the stamp's one line, so the block is no taller:
+   it, then the first one's sentence, a key that opens the VIN problems
+   dialog. It keeps the stamp's one line, so the block is no taller:
    the catalog's name gives way first, then the sentence is cut with
-   "…", its link's name still whole. */
+   "…", its key's name still whole. */
 .fitstrip .stamp:has(.vbad) { gap: var(--s4); white-space: nowrap; }
 .fitstrip .stamp .of { flex: 0 1 auto; min-width: 0; max-width: 40%; overflow: hidden; text-overflow: ellipsis; }
 .vbad { flex: 0 1 auto; display: flex; align-items: center; gap: var(--s1) var(--s2); min-width: 0; margin-block: -3px; padding-block: 3px; color: inherit; text-decoration: none; }
-.vbad svg { flex: none; width: 12px; height: 12px; fill: none; stroke: #ff8a8a; stroke-width: 2.2; }
-.vbad b { flex: none; color: #ff8a8a; }
+:is(.vbad, .vcount) svg { flex: none; width: 12px; height: 12px; fill: none; stroke: #ff8a8a; stroke-width: 2.2; }
+:is(.vbad, .vcount) b { flex: none; color: #ff8a8a; }
+/* A suggested VIN with no problem says so in the tape's own white: it
+   is no warning. */
+.vfix b { color: inherit; }
 .vbad .s { min-width: 0; overflow: hidden; text-overflow: ellipsis; font: var(--type-value-b); letter-spacing: normal; text-transform: none; text-decoration: underline; text-underline-offset: 3px; }
 .vbad:focus-visible { outline-color: var(--ring-tape); }
+/* The keys that open the VIN problems keep the look of what they sit
+   on, words on tape: none is a key of metal. */
+button:is(.vbad, .vcount), .pull button { padding-inline: 0; text-align: left; color: inherit; text-shadow: inherit; background: none; border: 0; border-radius: 0; box-shadow: none; }
+button.vbad { font: inherit; letter-spacing: inherit; text-transform: inherit; }
+button:is(.vbad, .vcount):active, .pull button:active { transform: none; box-shadow: none; }
+/* Where a VIN has problems and no vehicle's block is drawn (no catalog,
+   or nothing fits), their key is a stamp of label tape at the plate's
+   foot, as the block's stamp would say it: the count and the leading
+   sentence, cut to one line. */
+.pstamp { display: flex; align-items: center; box-sizing: border-box; min-height: 1.5rem; margin: 0 0 var(--s2); padding: var(--s1) var(--inset); font: var(--type-micro); letter-spacing: var(--track-micro); text-transform: uppercase; white-space: nowrap; color: var(--on-tape); text-shadow: var(--tape-emboss);
+  background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck); }
 .fitstrip .g-wmi { --cm: #ff6b81; }
 .fitstrip .g-vds { --cm: #7db4ff; }
 .fitstrip .g-year { --cm: #ffb067; }
-.seg { position: relative; grid-row: 2; align-self: stretch; display: flex; align-items: center; justify-content: center; min-width: 0; padding: .35rem .3rem; text-align: center; }
+.vline { display: contents; }
+.vdet:focus-visible { outline: 3px solid var(--ring); outline-offset: -3px; }
+.seg { position: relative; grid-row: 2; align-self: stretch; display: flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: 0; padding: .35rem .3rem; text-align: center; }
 .seg .w { text-shadow: var(--tape-emboss); border-bottom: 3px solid var(--cm); padding-bottom: 1px; overflow-wrap: anywhere; }
 .seg::after { content: ""; position: absolute; left: calc(50% - 2.5px); top: calc(-1px - var(--drop) - var(--stamp-h)); height: calc(var(--drop) + 1px); border-left: 5px solid var(--c); filter: var(--stripe-lift); }
-.vfacts { position: relative; grid-row: 2; grid-column: -2; align-self: stretch; display: flex; flex-wrap: wrap; align-items: center; align-content: center; gap: 0 var(--s4); min-width: 0; margin: 0; padding: var(--s1) var(--inset); border-left: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss); }
-.vfacts > div { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.vfacts { position: relative; grid-row: 2; grid-column: -2; align-self: stretch; display: flex; align-items: center; gap: var(--s4); min-width: 0; padding: var(--s1) var(--inset); border-left: 1px solid rgb(255 255 255 / .18); text-shadow: var(--tape-emboss); }
+.vdet, .vchars, .vfacts dd { margin: 0; }
+.vdet { flex: 0 1 auto; display: flex; align-items: center; gap: var(--s4); min-width: 0; overflow: auto hidden; overscroll-behavior-x: contain; scrollbar-width: none; }
+.vdet > div { flex: none; display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
 .vfacts dt { color: #aeb7c0; text-shadow: none; }
-.vfacts dd { margin: 0; }
-/* The characters keep the block's trailing end, beside the details,
-   however many lines those take. */
-.vfacts:has(.vchars) { padding-right: calc(var(--inset) + 6.6rem + var(--s4)); }
-.vfacts > .vchars { position: absolute; right: var(--inset); top: 50%; transform: translateY(-50%); }
+@supports (animation-timeline: scroll()) {
+  .vdet { mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline); }
+}
+.vchars { position: relative; flex: none; margin-left: auto; }
 .vchars dd { display: flex; gap: 3px; }
+/* On a VIN with problems the facts row carries their count, as the
+   stamp says it, a link to them: held with the row, where the stamp is
+   not (#401). The page writes it twice. The one in the details' group
+   is drawn here, after the characters; the one that leads the row is
+   drawn on a phone, first on the line, and on a wide page under the
+   year (below). */
+.vcount { flex: none; display: flex; align-items: center; gap: var(--s1); min-height: 24px; color: inherit; text-decoration: none; text-shadow: var(--tape-emboss); }
+.vfacts > .vcount:first-child, .vdet + .vcount { margin-left: auto; }
+.vline > .vcount { display: none; }
 .vc { display: grid; justify-items: center; min-width: 1.15rem; }
 .vc b { width: 100%; text-align: center; border-bottom: 3px solid #7db4ff; }
 .vc small { color: #aeb7c0; text-shadow: none; }
+
+/* Held: while a part type's candidates are listed, the block's facts row
+   stays at the window's top as the page scrolls, at every width (#401).
+   The block sticks with its stamp and its top edge above the window, so
+   only the facts row and the block's foot show; the section's end lets
+   it go. The window's scroll padding is that height, so a row brought
+   into view, by focus, a link to a fragment or a press (plate.js's
+   reveal), stops under it, never beneath it. It lies over what scrolls
+   under it, the trunk and the tags hung from it, and under what opens:
+   the picker's list is in the top layer. Nothing animates as it sticks. */
+.fit:has(> .cands) > .fitstrip { position: sticky; top: calc(-1px - var(--stamp-h)); z-index: 5; }
+:root:has(.fit > .cands) { scroll-padding-top: calc(var(--held) + 3px); }
 
 /* The band under the block: the picker, two columns, and beside it the
    names' row, which reaches the block's trailing edge. The section is a
@@ -767,11 +811,11 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
 .cand::before { width: calc(var(--rail) - 2px); border-radius: 0 2.5px 2.5px 0; }
 /* At the candidates' head on a VIN with problems, a stamp of label
    tape, stuck on and tied to the trunk by a stub as the picker is, says
-   to check the VIN before pulling: a link to the problems under the
-   answer. It stops nothing. */
+   to check the VIN before pulling: a key that opens the VIN problems
+   dialog. It stops nothing. */
 .pull { position: relative; justify-self: start; display: flex; align-items: center; box-sizing: border-box; min-height: 2.25rem; margin: var(--s2) var(--end) 0 var(--rail); padding: 0 var(--inset); color: var(--on-tape); text-shadow: var(--tape-emboss);
   background: var(--tape); border: 1px solid var(--tape-edge); border-top-color: var(--tape-lit); border-bottom-width: 3px; border-radius: 2px; box-shadow: var(--lift-stuck); --ring: var(--ring-tape); }
-.pull a { display: flex; align-items: center; gap: var(--s2); min-height: 24px; font: var(--type-micro); letter-spacing: var(--track-micro); text-transform: uppercase; color: inherit; text-underline-offset: 3px; }
+.pull button { display: flex; align-items: center; gap: var(--s2); min-height: 24px; font: var(--type-micro); letter-spacing: var(--track-micro); text-transform: uppercase; text-decoration: underline; text-underline-offset: 3px; }
 .pull svg { flex: none; width: 12px; height: 12px; fill: none; stroke: #ff8a8a; stroke-width: 2.2; }
 .pull::after, .pull::before { content: ""; position: absolute; z-index: 2; background: var(--trunk); pointer-events: none; }
 .pull::after { left: calc(7px - var(--rail)); top: -1px; bottom: calc(-4px - var(--s2)); width: 5px; box-shadow: -1px 0 0 rgb(255 255 255 / .4), 1.5px 0 1px rgb(8 7 15 / .3); }
@@ -881,13 +925,17 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
 
 /* A wide page: the block's words are under their cards, the Maker's and
    the Vehicle's lines straight down to them and the Model year's stepped
-   left, and its stamp and details share its one row. A catalog that
-   files the vehicle under no make has nothing for the first column, so
-   the stamp is there, beside the catalog's word for the vehicle, which
-   it says whose it is, and the block is a row shorter. */
+   left, and its stamp and details share its one row, a detail a line:
+   two lines high, three where the decode has three. The facts row lays
+   its words on the block's columns (a subgrid). A catalog that files the
+   vehicle under no make has nothing for the first column, so the stamp
+   is there, beside the catalog's word for the vehicle, which it says
+   whose it is, and the block is a row shorter. */
 @media (width >= 64rem) {
+  :root { --held: 2.75rem; }
+  :root:has(.vdet > :nth-child(3)) { --held: 3.875rem; }
   .joins { height: 8px; }
-  .fitstrip, .fitstrip:has(.g-wmi) { --drop: 8px; --stamp-h: 20px; grid-template-columns: 170fr 170fr 170fr 510fr; min-height: 0; padding-inline: 15px; }
+  .fitstrip, .fitstrip:has(.g-wmi) { --drop: 8px; --stamp-h: 20px; grid-template-columns: 170fr 170fr 170fr 510fr; grid-template-rows: var(--stamp-h) var(--held); padding-inline: 15px; }
   .fitstrip .stamp { margin-inline: -15px; padding-left: calc(var(--rail) + var(--lead) + var(--inset) - 1px); }
   .fitstrip .g-wmi { grid-column: 1; }
   .fitstrip .g-vds { grid-column: 2; }
@@ -900,6 +948,19 @@ button.stk { flex-wrap: wrap; align-content: center; gap: 0 6px; }
   .fitstrip:not(:has(.g-wmi)) .stamp:has(.vbad) { display: contents; }
   .fitstrip:not(:has(.g-wmi)) .stamp .of { grid-row: 2; grid-column: 1; align-self: center; max-width: none; padding: var(--s1) var(--s2) var(--s1) calc(var(--rail) + var(--lead) + var(--inset) - 16px); white-space: normal; overflow-wrap: anywhere; }
   .fitstrip:not(:has(.g-wmi)) .vbad { grid-row: 1; grid-column: 1 / -1; box-sizing: border-box; height: var(--stamp-h); margin: 0 -15px; padding: 0 var(--inset) 0 calc(var(--rail) + var(--lead) + var(--inset) - 1px); white-space: nowrap; border-bottom: 1px solid rgb(255 255 255 / .18); }
+  .vline { grid-row: 2; grid-column: 1 / -1; align-self: stretch; display: grid; grid-template-columns: subgrid; }
+  .vline > * { grid-row: 1; }
+  .fitstrip:not(:has(.g-wmi)) .vline { grid-column: 2 / -1; }
+  .fitstrip:not(:has(.g-wmi)) .g-vds { grid-column: 1; }
+  .fitstrip:not(:has(.g-wmi)) .g-year { grid-column: 2; }
+  .vdet { flex-direction: column; gap: 0; align-self: stretch; align-items: flex-start; justify-content: center; }
+  /* The count is under the year, in its column, and the words stand at
+     the row's top over it: the words stay over their lines, and the
+     details keep their width. */
+  .vfacts > .vcount { display: none; }
+  .vline > .vcount { position: relative; z-index: 1; display: flex; grid-column: 3; align-self: end; justify-self: center; min-height: 0; margin-bottom: 3px; }
+  .fitstrip:not(:has(.g-wmi)) .vline > .vcount { grid-column: 2; }
+  .vline:has(> .vcount) > .seg { align-items: flex-start; padding-top: var(--s1); }
 }
 /* A narrow page, a tablet's or a phone's, is pressed with a finger. A
    row is 3.5rem, so the picker's key and a stock strip are 44px high
@@ -1092,11 +1153,12 @@ button.linkish:active { transform: none; box-shadow: none; }
   /* The parts that fit are outside the row that scrolls. The block's
      words are packed at its leading end, a module each, centred on the
      cards' columns as they rest (--wc, --wp, above), and its stamp and
-     details are rows of their own, edge to edge. The lines from the
-     cards, which move, are carried to it (.carry, below). */
+     details are rows of their own, edge to edge, the details one line,
+     as high as the characters at its end. The lines from the cards,
+     which move, are carried to it (.carry, below). */
   .fitstrip { padding-left: var(--wp); }
   .fitstrip :is(.stamp, .vfacts) { margin-left: calc(-1 * var(--wp)); }
-  .fitstrip .vfacts { grid-row: 3; grid-column: 1 / -1; border-left: 0; border-top: 1px solid rgb(255 255 255 / .18); }
+  .fitstrip .vfacts { grid-row: 3; grid-column: 1 / -1; padding-block: 0; border-left: 0; border-top: 1px solid rgb(255 255 255 / .18); }
   .fitstrip .seg::after { display: none; }
   @supports (animation-timeline: scroll()) {
     .hang { mask: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent) top / 100% calc(100% - 14px) no-repeat, linear-gradient(#000, #000) bottom / 100% 14px no-repeat; animation: nt-fade linear both; animation-timeline: scroll(self inline); }
@@ -1159,6 +1221,35 @@ button.linkish:active { transform: none; box-shadow: none; }
 }
 @media (width < 64rem) and (prefers-reduced-motion: no-preference) {
   .hang { scroll-behavior: smooth; }
+}
+
+/* A phone: the block's facts row is one line that scrolls sideways by
+   itself (#401), held or not, and leads with what a candidate's option
+   text is matched against: a bad VIN's count, so it is in sight while
+   the row is held, then the details, the characters, a rule, and the
+   words in their columns. It fades at an end
+   with more beyond it. The details take the focus there as on a wider
+   page, and the line is what a keyboard scrolls from them.
+   No line runs from the cards to the block here, a knowing break of rule
+   7 (docs/design/page.md): at rest the words are past the line's end,
+   and lines that followed them would need a view timeline a word, which
+   in Chrome drops the section's reading-flow to the markup's order. */
+@media (max-width: 34rem) {
+  :root { --held: 2.75rem; }
+  .fitstrip { grid-template-rows: var(--stamp-h) var(--held); }
+  .vline { grid-row: 2; grid-column: 1 / -1; align-self: stretch; display: flex; align-items: center; min-width: 0; margin-left: calc(-1 * var(--wp)); overflow: auto hidden; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .vline > .seg { order: 1; flex: none; width: var(--wc); }
+  .vline:has(.vdet, .vchars) > .seg:first-of-type { border-left: 1px solid rgb(255 255 255 / .18); }
+  .vline .vfacts { display: contents; }
+  .vline .vdet { flex: none; align-self: stretch; margin-left: var(--inset); overflow: visible; mask-image: none; animation: none; }
+  .vline .vchars { margin: 0 var(--inset) 0 var(--s4); }
+  .vline .vfacts > .vcount { display: none; }
+  .vline > .vcount { display: flex; margin-left: var(--inset); }
+  .vline:has(> .vcount) .vdet { margin-left: var(--s4); }
+  @supports (animation-timeline: scroll()) {
+    .vline { mask-image: linear-gradient(to right, transparent, #000 var(--nt-l), #000 calc(100% - var(--nt-r)), transparent); animation: nt-fade linear both; animation-timeline: scroll(self inline); }
+  }
+  .carry, #answer:has(.fitstrip) .cards::before, #answer:has(.fitstrip) .cards::after, #answer:has(.fitstrip .g-wmi) .cards > .card:first-child::after { display: none; }
 }
 
 /* A small window: the plate's cells are closer, and the one-cell groups'

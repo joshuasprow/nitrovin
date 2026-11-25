@@ -147,7 +147,7 @@ func TestPageFit(t *testing.T) {
 		t.Errorf("the pickup's part types %q; want %q", got, want)
 	}
 	for _, want := range []string{
-		`<p class="stamp">This vehicle · demo-catalog</p>`,
+		`<p class="stamp">This vehicle · demo-catalog</p>` + "\n" + `<div class="vline">`,
 		// The catalog's make, in its own word, with the Maker's line to it.
 		`<span class="seg g-wmi"><span class="w">Ford</span></span>` + "\n" + `<span class="seg g-vds"><span class="w">F150</span></span>`,
 		`<span class="seg g-year"><span class="w">2015</span></span>`,
@@ -407,16 +407,17 @@ func TestCatalogEntries(t *testing.T) {
 // its position, so "VIN G, 8th digit" is matched at a glance. The mark on
 // such a candidate says in plain words that the options are the reader's
 // to match. The block says it whatever is pressed, and before the names
-// and the candidates.
+// and the candidates. The details take focus, so a keyboard scrolls them
+// where they are wider than their room (#401).
 func TestPageFitFacts(t *testing.T) {
 	h := demoPages(t, true)
 	const pickup = "/?from.vin=1FTEW1EG7FFA12345"
 	s := fitSection(t, h, pickup+"&part.id=alternator")
 	for _, want := range []string{
-		`<dl class="vfacts" aria-label="This vehicle, to match the options against">`,
+		`<div class="vfacts" role="group" aria-label="This vehicle, to match the options against">` + "\n" + `<dl class="vdet" tabindex="0">`,
 		`<div><dt>Body</dt><dd>Pickup</dd></div>`,
 		`<div><dt>Engine</dt><dd>3.5 L · 6 cyl · Gasoline</dd></div>`,
-		`<div class="vchars"><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div>`,
+		`<dl class="vchars"><div><dt class="visually-hidden">VIN 4–8</dt><dd><span class="vc"><b>E</b><small>4</small></span><span class="vc"><b>W</b><small>5</small></span><span class="vc"><b>1</b><small>6</small></span><span class="vc"><b>E</b><small>7</small></span><span class="vc"><b>G</b><small>8</small></span></dd></div></dl>`,
 		`<span class="mk text">Match the options yourself</span>`,
 	} {
 		if !strings.Contains(s, want) {
@@ -447,8 +448,10 @@ func TestPageFitFacts(t *testing.T) {
 // the cell the decode names, a year code no year uses as a character no
 // VIN holds; a stamp at the candidates' head says to check the VIN; a
 // finished card with no value says why; and the field is invalid, its
-// description the wrong positions. Each links to the problems under the
-// answer. A good VIN's page has none of it.
+// description the wrong positions. Each opens the VIN problems, a
+// dialog, which lists each problem with its code and the positions it
+// names; nothing of them is at the page's foot. A good VIN's page has
+// none of it.
 func TestPageBadVIN(t *testing.T) {
 	h := demoPages(t, true)
 	h.errorTexts = map[int]string{
@@ -456,8 +459,10 @@ func TestPageBadVIN(t *testing.T) {
 		11:  "11 - Incorrect Model Year - Position 10 does not match valid model year codes (I, O, Q, U, Z, 0). Decoded data may not be accurate.",
 		400: "400 - Invalid Characters Present",
 	}
-	const stamp = `<p class="stamp"><span class="of">This vehicle · demo-catalog</span><a class="vbad" href="#problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>`
-	const pull = `<p class="pull"><a href="#problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>Check the VIN before pulling</a></p>` + "\n" + `<ol class="cands"`
+	const stamp = `<p class="stamp"><span class="of">This vehicle · demo-catalog</span><button type="button" class="vbad" popovertarget="problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>`
+	const pull = `<p class="pull"><button type="button" popovertarget="problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg>Check the VIN before pulling</button></p>` + "\n" + `<ol class="cands"`
+	const count3 = `<button type="button" class="vcount" popovertarget="problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg><b>3 problems</b></button>`
+	const dialog = `<dialog id="problems" class="pdialog" popover aria-labelledby="problems-h">` + "\n" + `<div class="dialog-head">` + "\n" + `<h2 id="problems-h">VIN problems</h2>` + "\n" + `<button type="button" popovertarget="problems" popovertargetaction="hide">Close</button>`
 	for _, c := range []struct {
 		target     string
 		want, lack []string
@@ -465,18 +470,25 @@ func TestPageBadVIN(t *testing.T) {
 		// A year code no year uses: U at position 10. The stamp leads with
 		// error 11, which names the struck cell, not the decode's first.
 		{"/?from.vin=1FTEW1EG0UFA12345&part.id=alternator", []string{
-			stamp + `<b>3 problems</b> <span class="s">11 - Incorrect Model Year - Position 10 does not match valid model year codes (I, O, Q, U, Z, 0). Decoded data may not be accurate.</span></a></p>`,
+			stamp + `<b>3 problems</b> <span class="s">11 - Incorrect Model Year - Position 10 does not match valid model year codes (I, O, Q, U, Z, 0). Decoded data may not be accurate.</span></button></p>`,
 			`<span class="cell g-year filled bad"><span class="ch">U</span></span>`,
 			`aria-describedby="vin-wrong answer" aria-invalid="true">`,
 			`<p id="vin-wrong" class="visually-hidden" aria-hidden="true">Position 10 is wrong.</p>`,
 			`<p class="why">11 - Incorrect Model Year - Position 10 does not match valid model year codes (I, O, Q, U, Z, 0). Decoded data may not be accurate.</p>`,
-			pull, `<div class="problems" id="problems" role="status">`,
-		}, []string{`<span class="cell g-check filled bad">`}},
+			pull, dialog,
+			`<li><b class="mono">11</b> <span>Incorrect Model Year - Position 10 does not match valid model year codes (I, O, Q, U, Z, 0). Decoded data may not be accurate.</span> <span class="where">Position 10</span></li>`,
+			// The facts row, held while candidates are read (#401), carries
+			// the stamp's count, a key to the problems: leading the row,
+			// where a phone's line starts and a wide page draws it under
+			// the year, and after the characters, where a tablet draws it.
+			`<div class="vline">` + "\n" + count3 + "\n" + `<span class="seg g-wmi">`,
+			`</dl>` + "\n" + count3 + "\n" + `</div>` + "\n" + `</div>`,
+		}, []string{`<span class="cell g-check filled bad">`, `class="problems"`, `href="#problems"`, `class="pstamp"`}},
 		// A character no VIN holds: I at position 13, which error 400's
 		// suggested VIN marks. The check digit's card has no sum to show,
 		// and says the decode's sentence.
 		{"/?from.vin=1FTEW1EG7FFAI2345&part.id=alternator", []string{
-			stamp + `<b>2 problems</b> <span class="s">400 - Invalid Characters Present</span></a></p>`,
+			stamp + `<b>2 problems</b> <span class="s">400 - Invalid Characters Present</span></button></p>`,
 			`<span class="cell g-serial filled bad"><span class="ch">I</span></span>`,
 			`<p id="vin-wrong" class="visually-hidden" aria-hidden="true">Position 13 is wrong.</p>`,
 			`<p class="why">1 - Check Digit (9th position) does not calculate properly</p>`,
@@ -485,7 +497,7 @@ func TestPageBadVIN(t *testing.T) {
 		// Nothing pressed: no candidates, so no stamp at their head.
 		{"/?from.vin=1FTEW1EG0UFA12345", []string{stamp}, []string{`class="pull"`}},
 		{"/?from.vin=1FTEW1EG7FFA12345&part.id=alternator", []string{`<p class="stamp">This vehicle · demo-catalog</p>`, `aria-describedby="answer">`},
-			[]string{"vbad", `class="pull"`, "aria-invalid", "vin-wrong", "data-wrong", `class="why`, ` bad"`, `id="problems"`}},
+			[]string{"vbad", "vcount", `class="pull"`, "aria-invalid", "vin-wrong", "data-wrong", `class="why`, ` bad"`, `id="problems"`}},
 	} {
 		status, _, body := response(t, h, "GET", c.target, nil)
 		if status != 200 {
@@ -512,5 +524,63 @@ func TestPageBadVIN(t *testing.T) {
 	d.Wrong = []int{9}
 	if got := d.Lead(); got != d.Problems[1].Text {
 		t.Errorf("cell 9 struck: the stamp leads with %q; want the problem that names it", got)
+	}
+}
+
+// suggesting is the demo's pages with a decode that names no problem and
+// suggests vin in the VIN's place, as a decoder may.
+type suggesting struct {
+	served
+	vin string
+}
+
+func (s suggesting) Decode(req contract.Request) (contract.Decode, error) {
+	dec, err := s.served.Decode(req)
+	dec.ErrorCodes, dec.CorrectedVIN = nil, contract.Null[string]{V: s.vin, Valid: true}
+	return dec, err
+}
+
+// TestPageSuggestedVIN (#398): a decode that suggests another VIN and
+// names no problem still opens the VIN problems, which shows the
+// suggestion. Its key reads "Suggested VIN" and the VIN, with no count
+// and no warning: on the vehicle's block's stamp where a block is drawn,
+// else at the plate's foot.
+func TestPageSuggestedVIN(t *testing.T) {
+	const want = "1FTEW1EG7FFA12345"
+	key := func(vin string) string {
+		return `<button type="button" class="vbad vfix" popovertarget="problems"><b>Suggested VIN</b> <span class="s">` + vin + `</span></button>`
+	}
+	dialog := func(vin string) string {
+		return `<a class="fix" href="/?from.vin=` + vin + `">Use <span class="mono">` + vin + `</span> instead</a>`
+	}
+	block := New(suggesting{served{demoTranslator(t, embedded(t), true)}, want}, log.New(io.Discard, "", 0))
+	honda := hondaDecode
+	honda.CorrectedVIN = contract.Null[string]{V: "1HGCM82633A004352", Valid: true}
+	plate := New(backend{info: hondaInfo, decode: &honda}, log.New(io.Discard, "", 0))
+	for _, c := range []struct {
+		name   string
+		h      *Handler
+		target string
+		want   []string
+	}{
+		{"a block drawn", block, "/?from.vin=1FTEW1EG9FFA12345&part.id=alternator",
+			[]string{`<p class="stamp"><span class="of">This vehicle · demo-catalog</span>` + key(want) + `</p>`, `<dialog id="problems" class="pdialog" popover`, dialog(want)}},
+		{"no block", plate, "/?from.vin=1HGCM82603A004352",
+			[]string{`<p class="pstamp">` + key("1HGCM82633A004352") + `</p>`, `<dialog id="problems" class="pdialog" popover`, dialog("1HGCM82633A004352")}},
+	} {
+		status, _, body := response(t, c.h, "GET", c.target, nil)
+		if status != 200 {
+			t.Errorf("%s: %d; want 200", c.name, status)
+		}
+		for _, w := range c.want {
+			if !strings.Contains(body, w) {
+				t.Errorf("%s: lacks %s\n%s", c.name, w, body)
+			}
+		}
+		for _, lack := range []string{`<ol class="plist">`, "problem</b>", "problems</b>", "M7 1.5l6 11H1z", `class="pull"`, `class="vcount"`, `aria-invalid`} {
+			if strings.Contains(body, lack) {
+				t.Errorf("%s: holds %s, with no problem", c.name, lack)
+			}
+		}
 	}
 }
