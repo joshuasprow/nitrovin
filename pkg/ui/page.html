@@ -277,8 +277,9 @@ there is nothing to list, the
 part types' place is a blank strip with a sentence, and the Vocabularies
 dialog's button or a link on. A refusal that names no cell is the
 section's last line, on its columns. On a VIN with problems the block's
-stamp carries their count and the first one's sentence, cut to its one
-line, and a stamp of label tape at the candidates' head, on the trunk,
+stamp carries their count and a sentence, the first problem's that names
+a cell the plate strikes, else the decode's first (diagram.Lead), cut to
+its one line, and a stamp of label tape at the candidates' head, on the trunk,
 says to check the VIN before pulling; each links to the problems under
 the answer, and neither stops anything. Every link here but those is
 the page's own, which plate.js swaps in place (swap). */}}
@@ -287,7 +288,7 @@ the page's own, which plate.js swaps in place (swap). */}}
 <h2 id="fit-h" class="visually-hidden">Parts that fit</h2>
 {{if .Types}}<span class="carry" aria-hidden="true"><span></span><span></span><span></span>{{if .Make}}<span></span><span></span><span></span>{{end}}</span>
 <div class="fitstrip">
-{{if .Problems}}<p class="stamp"><span class="of">This vehicle · {{.Catalog}}</span><a class="vbad" href="#problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg><b>{{len .Problems}} {{if eq (len .Problems) 1}}problem{{else}}problems{{end}}</b> <span class="s">{{(index .Problems 0).Text}}</span></a></p>
+{{if .Problems}}<p class="stamp"><span class="of">This vehicle · {{.Catalog}}</span><a class="vbad" href="#problems"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 1.5l6 11H1z M7 6v3 M7 10.6v.4"/></svg><b>{{len .Problems}} {{if eq (len .Problems) 1}}problem{{else}}problems{{end}}</b> <span class="s">{{.Lead}}</span></a></p>
 {{else}}<p class="stamp">This vehicle · {{.Catalog}}</p>
 {{end}}{{with .Make}}<span class="seg g-wmi"><span class="w">{{.}}</span></span>
 {{end}}<span class="seg g-vds"><span class="w">{{.Model}}</span></span>

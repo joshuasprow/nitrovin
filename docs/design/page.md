@@ -828,15 +828,22 @@ card's trailing edge, and is a whole number of columns wide.
   marks no candidate as the match.
 - **On a VIN with problems the block's stamp says so** (#398), after the
   catalog's name on the same strip: a warning triangle and the count, in
-  the error colour as tape takes it (`#ff8a8a`), then the decode's first
-  sentence, a bold row value underlined in the tape's white, the whole a
-  link to the problems under the answer. It keeps the strip's one line,
+  the error colour as tape takes it (`#ff8a8a`), then one of the decode's
+  sentences, a bold row value underlined in the tape's white, the whole a
+  link to the problems under the answer. The sentence is the first
+  problem's that names a cell the plate strikes (error 11's cell 10,
+  error 7's cells 1–3, a "!" in the suggested VIN), so the stamp says why
+  the red cell is red; where none does, it is the decode's first. On a
+  year code no year uses it is error 11's, not error 1's, which comes
+  first in the decode. It keeps the strip's one line,
   so the block is no taller: the catalog's name gives way to 40% of the
   strip, and the sentence is cut with "…", the link's name still whole.
   On a wide page whose catalog files the vehicle under no make, where
   the stamp shares the block's row, the link takes the strip across the
   top that a block with a make has, 24 px; the stamp stays beside the
-  catalog's word. With the vehicle found and a stock print open, the
+  catalog's word. That block grows, 52 to 77 px on the demo set's vPIC
+  catalog, the one place a VIN's problems cost height. *Ruled,
+  2026-11-24: accepted.* With the vehicle found and a stock print open, the
   first statement of the problem is in the first window at 1440, 768
   and 390 px, where the strip under the answer was at 1,130, 1,247 and
   1,613 px on a VIN whose year code no year uses.
