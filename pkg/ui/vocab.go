@@ -706,6 +706,7 @@ type workerFile struct {
 	FiledUnder string   `json:"filed_under,omitempty"`
 	Holds      string   `json:"holds,omitempty"`
 	Fields     []string `json:"fields,omitempty"`
+	Pin        []string `json:"pin,omitempty"`
 }
 
 // configFile is f, a file as /v1/info lists it, as the worker's config
@@ -714,7 +715,7 @@ type workerFile struct {
 func configFile(f contract.VocabularyFile) workerFile {
 	w := workerFile{Name: f.Name, Kind: f.Kind, Version: f.Version, Blake3: f.Blake3, Spine: f.Spine, Vehicles: f.Vehicles, FiledUnder: f.FiledUnder}
 	if f.StockCounts != nil {
-		w.Holds, w.Fields = f.Source, f.Fields
+		w.Holds, w.Fields, w.Pin = f.Source, f.Fields, f.Pin
 	}
 	return w
 }
@@ -724,7 +725,7 @@ func configFile(f contract.VocabularyFile) workerFile {
 func (w workerFile) served(kind vocab.Kind) contract.VocabularyFile {
 	f := contract.VocabularyFile{Name: w.Name, Kind: string(kind), Version: w.Version, Blake3: w.Blake3, Spine: w.Spine, Vehicles: w.Vehicles, FiledUnder: w.FiledUnder}
 	if kind == vocab.KindStock {
-		f.StockCounts = &contract.StockCounts{Source: w.Holds, Fields: w.Fields}
+		f.StockCounts = &contract.StockCounts{Source: w.Holds, Fields: w.Fields, Pin: w.Pin}
 	}
 	return f
 }

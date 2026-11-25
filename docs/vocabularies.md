@@ -605,6 +605,27 @@ of the names and stays as written. In Go, the order is the stock file's
 `vocab.File.Fields`, and a `stock.Source` returns each row's `Fields` in
 it: `vocab.AppendStockFields` orders one row's.
 
+**The fields a print keeps in view.** A header that declares `fields`
+may also carry `pin`: one or two distinct names, each among its
+`fields`. Under 34rem a row's print scrolls sideways inside paper
+narrower than it, and what the yard or the counter needs, the row to
+walk to and the price, can scroll off; the format names neither, so the
+header says which. The first name is held at the print's leading edge
+beside the row's id, the second at its trailing edge:
+
+```json
+{"format":1,"kind":"stock","name":"shelf-order","version":"2026.11.01","source":"shelf","as_of":"2026-11-03","catalog":"parts-catalog","fields":["stock_number","condition","price","warranty"],"pin":["stock_number","price"]}
+```
+
+A `pin` that is no array, is empty, names three or more, names one twice,
+or names one that is not in `fields` is a fault at `/pin`, and so is any
+`pin` in a header with no `fields` (or `[]`). It changes no answer's
+rows: `/v1/info` reports it beside the source's `fields`, absent when
+the header pins none, and `list` names no stock source, as before.
+`testdata/vocab/stock/order`'s shelf pins its stock number and price,
+and its yard pins nothing; the demo yard pins `row`, the row to walk to.
+In Go, it is the stock file's `vocab.File.Pin`.
+
 A shelf whose catalog is not loaded, a row in neither form, a duplicate
 id, a part the catalog's spine lacks, and a vehicle its vehicle
 vocabulary has no entry for are faults. `serve` publishes no stock; a
@@ -658,7 +679,8 @@ its stock number last, and no view can change that:
 
 Each row is put in that order as it is read, every member as `jsonb`'s
 text writes it, and the names the header leaves out follow in `jsonb`'s
-order.
+order. It may pin one or two of those `fields` (**The fields a print
+keeps in view**, above), as a file's header does.
 
 **The relation's columns.** nitrovin dictates column names, never SQL: a
 view renames a system's own columns. Each is read in one of a few types:

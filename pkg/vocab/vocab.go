@@ -132,10 +132,14 @@ type File struct {
 	// reads both from its database. A stock file's Fields are the order
 	// its header declares of its rows' fields (ADR 0019), nil when it
 	// declares none: a file's rows are read into it, a connector's as
-	// they are read from its database.
+	// they are read from its database. Pin is what its header pins of
+	// those fields (#404): one or two of them, each in Fields, the first
+	// held at a print's leading edge and the second at its trailing
+	// edge; nil when it pins none.
 	Holds        StockHolds
 	AsOf         string
 	StockCatalog string
+	Pin          []string
 	// Connector is a stock file's connector (ADR 0020), nil for a file
 	// whose lines are its rows: a connector's file has a header and no
 	// lines, and its rows are read from a database at request time.

@@ -202,6 +202,60 @@ func TestStockConnector(t *testing.T) {
 	}
 }
 
+// TestStockPin: a stock header, a file's or a connector's, may pin one or
+// two distinct names of its fields (#404); every other pin is refused at
+// /pin, and so is a pin under a header that declares no fields.
+func TestStockPin(t *testing.T) {
+	const file = `{"format":1,"kind":"stock","name":"y","version":"1","source":"yard","as_of":"2026-11-01"`
+	const connector = `{"format":1,"kind":"stock","name":"y","version":"1","source":"yard","connector":{"postgres":{"relation":"stock.yard","dsn_env":"DSN"}}`
+	const fields = `,"fields":["stock_number","row","price"]`
+	for _, head := range []struct{ name, head string }{{"a file's", file}, {"a connector's", connector}} {
+		for _, tc := range []struct{ name, extra, want string }{
+			{"not an array", fields + `,"pin":"row"`, `:1: /pin: must be an array of strings`},
+			{"null", fields + `,"pin":null`, `:1: /pin: must be an array of strings`},
+			{"empty", fields + `,"pin":[]`, `:1: /pin: must name one or two fields, not 0`},
+			{"three names", fields + `,"pin":["row","price","stock_number"]`, `:1: /pin: must name one or two fields, not 3`},
+			{"not a string", fields + `,"pin":["row",7]`, `:1: /pin: must be a string`},
+			{"a repeated name", fields + `,"pin":["row","row"]`, `:1: /pin: duplicate field "row"`},
+			{"a repeated name, one escaped", fields + `,"pin":["row","r\u006fw"]`, `:1: /pin: duplicate field "row"`},
+			{"a name not in fields", fields + `,"pin":["row","color"]`, `:1: /pin: "color" is not among the header's fields`},
+			{"no fields", `,"pin":["row"]`, `:1: /pin: pins only fields the header declares, and it declares none`},
+			{"empty fields", `,"fields":[],"pin":["row"]`, `:1: /pin: pins only fields the header declares, and it declares none`},
+		} {
+			t.Run(head.name+" "+tc.name, func(t *testing.T) {
+				dir := t.TempDir()
+				if err := os.WriteFile(filepath.Join(dir, "stock.jsonl"), []byte(head.head+tc.extra+"}\n"), 0o644); err != nil {
+					t.Fatal(err)
+				}
+				_, err := Open(dir)
+				if err == nil || !strings.Contains(err.Error(), tc.want) {
+					t.Errorf("got %v\nwant a fault with %q", err, tc.want)
+				}
+			})
+		}
+		for _, tc := range []struct {
+			name, extra string
+			want        []string
+		}{
+			{"one name", fields + `,"pin":["row"]`, []string{"row"}},
+			{"two names", fields + `,"pin":["row","price"]`, []string{"row", "price"}},
+			{"none", fields, nil},
+		} {
+			dir := t.TempDir()
+			if err := os.WriteFile(filepath.Join(dir, "stock.jsonl"), []byte(head.head+tc.extra+"}\n"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			files, err := Open(dir)
+			if err != nil {
+				t.Fatalf("%s header, %s: %v", head.name, tc.name, err)
+			}
+			if got := files[0].Pin; !slices.Equal(got, tc.want) || (tc.want == nil) != (got == nil) {
+				t.Errorf("%s header, %s: pin %q; want %q", head.name, tc.name, got, tc.want)
+			}
+		}
+	}
+}
+
 // TestStockDrift: an orphan shelf row, whose number the catalog lacks
 // current or retired, is drift, and a retired number is not; a field name
 // that looks personal (any of the five words in its name, nested fields

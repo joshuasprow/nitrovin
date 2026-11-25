@@ -1909,6 +1909,17 @@
                   },
                   "description": "The field names a stock source's header declares, in the order every row's fields are answered in (ADR 0019); absent when it declares none and for every other kind."
                 },
+                "pin": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 2,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": "The one or two of its fields a stock source's header pins (#404), each also in fields: the first held at a print's leading edge beside the row's id, the second at its trailing edge; absent when it pins none and for every other kind."
+                },
                 "as_of": {
                   "type": "string",
                   "minLength": 1,
@@ -2153,6 +2164,11 @@
                         {
                           "required": [
                             "fields"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "pin"
                           ]
                         },
                         {

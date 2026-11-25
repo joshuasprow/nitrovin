@@ -88,6 +88,10 @@ type StockCounts struct {
 	// Fields are the names its header declares, in the order every
 	// row's fields are answered in; absent when it declares none.
 	Fields []string `json:"fields,omitempty"`
+	// Pin is what its header pins of Fields (#404): one or two names,
+	// the first held at a print's leading edge, the second at its
+	// trailing edge; absent when it pins none.
+	Pin []string `json:"pin,omitempty"`
 	// AsOf and Rows are a stock file's, absent for a connector, whose
 	// rows and their times are read at request time.
 	AsOf string `json:"as_of,omitempty"`

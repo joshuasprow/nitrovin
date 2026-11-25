@@ -683,7 +683,7 @@ func nameAt(raw []byte, ptr string) (string, error) {
 }
 
 // headerNames are a header's fields; headerFields picks each kind's.
-var headerNames = []string{"format", "kind", "name", "version", "data_month", "subject", "fields", "spine", "vehicles", "release", "source", "as_of", "catalog", "connector", "filed_under", "case"}
+var headerNames = []string{"format", "kind", "name", "version", "data_month", "subject", "fields", "spine", "vehicles", "release", "source", "as_of", "catalog", "connector", "filed_under", "case", "pin"}
 
 // headerFields are the indexes in headerNames of each kind's header
 // fields.
@@ -692,7 +692,7 @@ var headerFields = map[Kind][]int{
 	KindExtensionSet: {0, 1, 2, 3, 4},
 	KindVocabulary:   {0, 1, 2, 3, 4, 5, 6, 7, 15},
 	KindCatalog:      {0, 1, 2, 3, 4, 7, 8, 9, 14},
-	KindStock:        {0, 1, 2, 3, 6, 9, 10, 11, 12, 13},
+	KindStock:        {0, 1, 2, 3, 6, 9, 10, 11, 12, 13, 16},
 }
 
 // header reads line 1.
@@ -701,7 +701,7 @@ func (f *File) header(line []byte) error {
 	if err != nil {
 		return err
 	}
-	var v, scratch [16][]byte
+	var v, scratch [17][]byte
 	if _, _, ok := members(raw, headerNames, v[:]); !ok {
 		return errAt("", "must be an object")
 	}
@@ -765,7 +765,7 @@ func (f *File) header(line []byte) error {
 	case KindCatalog:
 		return f.catalogHeader(v[7], v[8], v[9], v[14])
 	case KindStock:
-		return f.stockHeader(v[10], v[11], v[12], v[9], v[13], v[6])
+		return f.stockHeader(v[10], v[11], v[12], v[9], v[13], v[6], v[16])
 	case KindVocabulary:
 	default:
 		return nil

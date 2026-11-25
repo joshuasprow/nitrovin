@@ -1,4 +1,4 @@
-{"format":1,"kind":"stock","name":"shelf-order","version":"2026.11.01","source":"shelf","as_of":"2026-11-03","catalog":"parts-catalog","fields":["stock_number","condition","price","warranty"]}
+{"format":1,"kind":"stock","name":"shelf-order","version":"2026.11.01","source":"shelf","as_of":"2026-11-03","catalog":"parts-catalog","fields":["stock_number","condition","price","warranty"],"pin":["stock_number","price"]}
 {"id":"R-1","location":"west","type":"engine","number":"EN-57","fields":{"tag":"T-9","miles":61250,"price":1850.00,"status":"on shelf","condition":"A","stock_number":"E500"}}
 {"id":"R-2","location":"west","type":"engine","number":"EN-57","fields":{"comments":"turns over; sold \"as is\"","price":9.5e2,"stock_number":"E501"}}
 {"id":"R-3","location":"west","type":"engine","number":"EN-57","fields":{"tag":"T-11","miles":null}}

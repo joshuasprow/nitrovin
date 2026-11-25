@@ -222,9 +222,14 @@
         "catalog": { "$ref": "#/$defs/Name", "description": "A shelf's catalog, the one its numbers belong to. It must be loaded. A yard names none." },
         "release": { "type": "string", "minLength": 1, "description": "The catalog release a shelf's numbers are under; an answer marks catalog_mismatch when it is not the loaded catalog's. A connector reads it from release_relation instead." },
         "fields": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 }, "description": "The order of its rows' fields (ADR 0019): every row's fields are answered with these names first, in this order, for those the row has, then the row's other fields in the source's order, each value verbatim. It orders and never cuts, and a name no row has is no fault. Absent or empty: the source's order. A file's author can write each line in order instead; a connector's cannot, as jsonb keeps an object's keys by length, then bytes." },
+        "pin": { "type": "array", "minItems": 1, "maxItems": 2, "uniqueItems": true, "items": { "type": "string", "minLength": 1 }, "description": "One or two of the names in fields that a print of a row keeps in view (#404): the first held at its leading edge beside the row's id, the second at its trailing edge. Each must be in fields, and a header with pin must declare fields." },
         "connector": { "$ref": "#/$defs/StockConnector" }
       },
       "allOf": [
+        {
+          "if": { "required": ["pin"] },
+          "then": { "required": ["fields"], "properties": { "fields": { "minItems": 1 } } }
+        },
         {
           "if": { "properties": { "source": { "const": "shelf" } } },
           "then": { "required": ["catalog"] },
